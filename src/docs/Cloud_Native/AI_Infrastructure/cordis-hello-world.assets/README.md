@@ -3,6 +3,10 @@
 配套 wiki 页：`src/docs/Cloud_Native/AI_Infrastructure/cordis-hello-world.md`
 （概念页：[`cordis.md`](../cordis.md)）
 
+> ⚠️ 本目录位于 wiki 的 mdBook 源树内：跑 wiki 构建（`make build`）前请先删除
+> `node_modules/` 与 `dist/`，否则它们会被整体拷进 `book/`。
+> （本 wiki 的 Latest updates 扫描已跳过 `.assets` 与 `node_modules`。）
+
 ## 前置
 
 - Node.js >= 22（用 `npm run dev` 时 tsx 负责跑 TS，不挑 Node 小版本；

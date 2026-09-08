@@ -36,6 +36,12 @@ def _read_title(filepath: str) -> str | None:
 def md_files_with_date(root: str) -> list[str]:
     md_files = {}
     for dirpath, dirnames, filenames in os.walk(root):
+        # 附件/生成目录里的 .md 不是 wiki 页面（如 *.assets/README.md、
+        # node_modules 依赖自带的 README.md），不应出现在 Latest updates：
+        # 直接剪枝，不进入这些目录。
+        dirnames[:] = [d for d in dirnames
+                       if not d.endswith('.assets')
+                       and d not in ('node_modules', 'dist', '.git')]
         for filename in filenames:
             if filename.endswith('.md'):
                 if filename in META_FILES:

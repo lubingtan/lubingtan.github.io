@@ -33,6 +33,8 @@ node hello-world.ts
 
 三种跑法输出一致，见下方「预期输出」。
 
+> 若之后要构建整个 wiki（仓库根目录 `make build`），请先删除本目录的 `node_modules/` 与 `dist/`——mdBook 会把 src 下非 markdown 文件整体拷进 `book/`（Latest updates 扫描已跳过 `.assets` 与 `node_modules`）。
+
 ## 完整代码
 
 源码文件：[hello-world.ts](./cordis-hello-world.assets/hello-world.ts)（工程内其余文件：`package.json`、`tsconfig.json`、`README.md`）
