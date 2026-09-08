@@ -1,0 +1,22 @@
+{
+  "name": "cordis-hello-world",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cordis Hello World — 可本地 build & run 的最小 demo（配套 wiki 页 cordis-hello-world.md）",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "tsx hello-world.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/hello-world.js"
+  },
+  "dependencies": {
+    "cordis": "4.0.0-rc.9"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

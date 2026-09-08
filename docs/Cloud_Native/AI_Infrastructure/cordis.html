@@ -1,0 +1,391 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Cordis：时空可组合性元框架 - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../searchindex-c9c9f7e7.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../toc-7aaafdfe.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/AI_Infrastructure/cordis.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="cordis时空可组合性元框架"><a class="header" href="#cordis时空可组合性元框架">Cordis：时空可组合性元框架</a></h1>
+<blockquote>
+<p>论文背景：<a href="https://github.com/cordiverse/paper"><em>A Programming Paradigm for Spatiotemporal Composability</em></a>（北大 × DeepSeek-AI，88 页 preprint）
+上游：<a href="https://github.com/cordiverse/cordis">cordiverse/cordis</a>（MIT，作者 Shigma；本文基线 core v4.0.0-rc.9，较 2026-08 研究快照 8cc9e33/rc.8 又前进 20 commits）
+主要使用方：<strong>DeepSeek Harness</strong>（vendor 引入，发布为 <code>@deepseek-ai/cordis</code>）、<strong>Koishi</strong> 聊天机器人框架（4000+ 插件）
+想亲手跑一遍上面的语义？→ <a href="./cordis-hello-world.html">Cordis Hello World：跑通可逆副作用与响应式依赖</a>（~70 行可运行 demo）</p>
+</blockquote>
+<h2 id="这是什么"><a class="header" href="#这是什么">这是什么</a></h2>
+<p>Cordis 是一个 <strong>Node.js/TypeScript 元框架</strong>——不面向任何具体领域，唯一职责是提供**动态组合（dynamic composition）**语义：组件可在运行时被加载、卸载、重配，且保证——</p>
+<ul>
+<li><strong>时间可组合（Temporal composability）</strong>：卸载组件时，它做过的所有修改（事件、资源、服务）被<strong>完整有序撤销</strong>；</li>
+<li><strong>空间可组合（Spatial composability）</strong>：组件<strong>声明式表达依赖</strong>，依赖出现/消失/更换实现时，系统<strong>响应式</strong>激活/停用相关组件。</li>
+</ul>
+<p>它把经典 PL 理论中的 <strong>effect / coeffect</strong> 从编译期静态标注“提升“为运行时机制（revertible effects + reactive coeffects），使动态组合的保证成为<strong>结构性保证</strong>，而非依赖插件作者自觉。配套论文给出了完整演算与元理论证明。</p>
+<p>核心只有约 2000 行 TypeScript，依赖仅 <code>@standard-schema/spec</code> + <code>cosmokit</code>。</p>
+<h2 id="五个核心概念"><a class="header" href="#五个核心概念">五个核心概念</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>概念</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Context</strong></td><td>一切交互的载体（Proxy 化对象）。服务占据稳定的 <code>ctx.&lt;key&gt;</code>；所有 effect/coeffect 操作都通过它进行。</td></tr>
+<tr><td><strong>Service</strong></td><td>具名服务，通过 <code>ctx.provide()</code> 安装；其他插件经 <code>ctx[key]</code> 或 <code>inject</code> 消费，而不是 import 具体实现。</td></tr>
+<tr><td><strong>Plugin / Component</strong></td><td>带可选 <code>inject</code>/<code>provide</code> 与 <code>apply(ctx, config)</code> 的函数、类或对象；<code>ctx.plugin()</code> 实例化。</td></tr>
+<tr><td><strong>Fiber</strong></td><td>组件的<strong>一次实例化</strong>，携带生命周期状态机（PENDING → LOADING → ACTIVE → FAILED → UNLOADING → DISPOSED）与唯一 <code>uid</code>。</td></tr>
+<tr><td><strong>Effect</strong></td><td><code>ctx.effect(callback)</code>：注册即返回 disposer（逆）；运行时自动跟踪、卸载时 <strong>LIFO 逆序回收</strong>。<code>ctx.on()</code>、<code>ctx.provide()</code>、<code>ctx.plugin()</code> 全部归约为 effect。</td></tr>
+<tr><td><strong>Events</strong></td><td>类型化事件，5 种分发：<code>emit</code>（观察）、<code>waterfall</code>（around-middleware）、<code>parallel</code>、<code>serial</code>、<code>bail</code>（短路）。</td></tr>
+</tbody>
+</table>
+</div>
+<p>补充：<strong>inject</strong> = 依赖声明（coeffect）；<strong>isolate</strong> = 同一 key 在不同 realm 解析到独立绑定；<strong>intercept</strong> = 不改变解析结果、只调整使用方式的配置叠加。</p>
+<h2 id="架构"><a class="header" href="#架构">架构</a></h2>
+<p>三层结构：核心库（effect/coeffect 系统）→ 声明式加载器（配置调和 + HMR）→ 应用框架（Koishi / DeepSeek Harness）。</p>
+<pre class="mermaid">flowchart TB
+    subgraph App["应用层（领域框架）"]
+        KOISHI["Koishi 聊天机器人\n4000+ 插件"]
+        HARNESS["DeepSeek Harness\nAgent 运行时（vendor）"]
+    end
+    subgraph Loader["编排层"]
+        LOADER["plugin-loader\nLoader / EntryTree / Entry"]
+        INCLUDE["plugin-include\nYAML/JSON 配置 + patch"]
+        HMR["plugin-hmr\n热模块替换"]
+    end
+    subgraph Core["核心库 packages/core"]
+        CTX["Context（Proxy）"]
+        REFLECT["ReflectService\nstore / isolate / intercept"]
+        FIBER["Fiber 生命周期状态机"]
+        REG["RegistryService"]
+        EVT["EventsService\nemit/waterfall/parallel/serial/bail"]
+    end
+    App --&gt; Loader --&gt; Core
+</pre>
+
+<p>Fiber 生命周期（惯性状态机，<code>fiber.inertia</code> 保证“一次迁移必须跑完“）：</p>
+<pre class="mermaid">stateDiagram-v2
+    [*] --&gt; PENDING
+    PENDING --&gt; LOADING: 目标非空
+    LOADING --&gt; ACTIVE: apply 完成且目标不变
+    LOADING --&gt; UNLOADING: 执行中目标变化（部分回滚）
+    ACTIVE --&gt; UNLOADING: 目标变 ⊥ 或提供者更换
+    UNLOADING --&gt; INACTIVE: 回收完毕且目标为 ⊥
+    UNLOADING --&gt; LOADING: 回收完毕但目标仍非空（链式重载）
+    LOADING --&gt; FAILED: apply 抛错
+    INACTIVE --&gt; [*]: uid 清空
+</pre>
+
+<h2 id="核心机制"><a class="header" href="#核心机制">核心机制</a></h2>
+<h3 id="1-可逆副作用一切归约到-ctxeffect"><a class="header" href="#1-可逆副作用一切归约到-ctxeffect">1. 可逆副作用：一切归约到 <code>ctx.effect</code></a></h3>
+<pre><code class="language-text">execute(callback, guard):
+    iter ← callback()                    // 函数或 yield disposer 的生成器
+    inverse ← id
+    while guard():                       // 迭代边界检查（惰性中断点）
+        (value, done) ← await iter.next()
+        if value: inverse ← value ∘ inverse   // LIFO 累积逆
+        if done: break
+    return inverse
+
+effect(ctx, callback):
+    armed ← true
+    task ← execute(callback, () → armed)
+    dispose():                            // 幂等；中断在途迭代；一次性回收
+        if not armed: return
+        armed ← false
+        recover ← await task; recover()
+        ctx.dispose ← dispose ∘ ctx.dispose  // 提升到父上下文（递归可逆）
+    return dispose
+</code></pre>
+<p>论文对应：effect context <code>∂Γ = Γ × (Γ→Γ)</code>（状态 + 累加器）、twisted composition monoid <code>(f₁,g₁)∘(f₂,g₂)=(f₁∘f₂, g₂∘g₁)</code>、<code>recover(γ,φ)=(φ(γ), id)</code>。<strong>撤销一个 effect 本身也是 effect</strong>——disposer 可嵌套、可被父级再包装。</p>
+<h3 id="2-响应式依赖inject--notify--惯性迁移"><a class="header" href="#2-响应式依赖inject--notify--惯性迁移">2. 响应式依赖：inject + notify + 惯性迁移</a></h3>
+<pre><code class="language-text">refresh(fiber):
+    target ← computeTarget(fiber)          // 每个声明 key → 提供者 uid（⊥=不该运行）
+    if target = fiber.target: return       // 幂等
+    fiber.target ← target
+    if fiber.inertia: return               // 迁移在途，仅记录目标
+    target ≠ ⊥ ? 启动 reload : 标记 UNLOADING 并启动 unload
+
+reload: 提交视图 → execute(apply, guard) → dispose ← recover ∘ dispose
+        → 目标不变则 ACTIVE + notify；否则链入 unload
+unload: 先 await 全部受影响依赖者 → await dispose()（LIFO 回收）
+        → 目标为 ⊥ 则 INACTIVE，否则链入 reload
+</code></pre>
+<p>三点支撑依赖排序（论文 Theorem 63）：<strong>先提交视图再执行</strong>（卸载期间依赖仍可读）；<strong>先标记 UNLOADING 再排逆</strong>（提供者先停，依赖者先重算）；<strong>回收前 await 依赖者</strong>（提供者图按需遍历，终止性由 Theorem 66 保证）。</p>
+<h3 id="3-属性访问即-coeffect-强制"><a class="header" href="#3-属性访问即-coeffect-强制">3. 属性访问即 coeffect 强制</a></h3>
+<p><code>ctx.&lt;service&gt;</code> 的 Proxy 解析：沿 fiber 链向上找 <code>committed</code>（已提交视图）→ 命中即返回；若 <code>key ∈ fiber.inject</code> 而未激活则抛 <code>INACTIVE_ACCESS</code>；到 root 未声明抛 <code>UNDECLARED_ACCESS</code>。与裸 <code>ctx.get()</code>（查 store、不失败）不同，属性访问在使用点强制规范。</p>
+<h3 id="4-hmr-三阶段无开发者标注的-accept-边界"><a class="header" href="#4-hmr-三阶段无开发者标注的-accept-边界">4. HMR 三阶段（无开发者标注的 accept 边界）</a></h3>
+<ol>
+<li><strong>模块分类</strong>：stashed ∪ imports 的不动点——imports 有 accepted 则 accepted，imports 全 declined 则 declined，环路兜底 declined；</li>
+<li><strong>陈旧 entry 检测</strong>：沿 declined 边界的传递 import 闭包与 accepted 相交的 entry；</li>
+<li><strong>事务性重载</strong>：清 ESM loadCache + CJS require.cache（备份）→ 重 import → dispose 旧 fiber、建新 fiber；任一失败则恢复缓存、重装旧插件（绝不进入半重载状态）。</li>
+</ol>
+<p>工程细节：兼容 Node 22–24 内部 <code>ModuleLoader</code>（<code>--expose-internals</code> / <code>node-addon-require-builtin</code>）；Node 24 的 loadCache 须用 <code>Map.prototype.delete</code> 直操；externals（框架模块）变化触发完整重启。</p>
+<h2 id="为什么-deepseek-harness-选它"><a class="header" href="#为什么-deepseek-harness-选它">为什么 DeepSeek Harness 选它</a></h2>
+<ul>
+<li><strong>Service 可运行时消失</strong>：MCP server 崩溃、LLM provider 限流、watcher 被杀——传统 DI 假设 bind 后一直存在，Cordis 假设 service 随时出现/消失。<code>inject</code> 依赖方自动停用、恢复后自动重新 apply，<strong>框架级保证，无需手写重连</strong>。</li>
+<li><strong>配置即组合</strong>：cordis.yml 一行一个插件实例，改配置触发局部 HMR（不重启、不丢 session 状态）；Profile/Bundle 分层 patch 直接复用 Include 机制。</li>
+<li><strong>Waterfall 事件 = 决策链</strong>：<code>tools/pre-execute → execute → post-execute</code>、<code>agent/request</code>、<code>llm/stream</code> 等均为 around-middleware，多个独立插件组成有序决策链（权限→审批→超时→执行），可短路可包装。</li>
+<li><strong>Effect-scoped 资源管理</strong>：MCP 连接、PTY session、file watcher、background job 统一 <code>ctx.effect(() =&gt; { acquire(); return () =&gt; release() })</code>。</li>
+<li>vendor 进仓库（<code>vendor/cordis</code>，<code>@deepseek-ai/cordis</code> 4.0.2）+ 18 项本地修改（reentrant disposal race 修复、事务性配置 reload、懒配置求值等），换取完全可审计、可 patch、版本锁定。</li>
+</ul>
+<h2 id="与同类方案的对比"><a class="header" href="#与同类方案的对比">与同类方案的对比</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>Cordis</th><th>传统 DI（InversifyJS/NestJS）</th><th>VSCode 插件</th><th>webpack/vite HMR</th></tr>
+</thead>
+<tbody>
+<tr><td>运行时卸载单个组件</td><td>逆序回收全部 effect</td><td>无自动 dispose</td><td>需重启 extension host</td><td>需开发者声明 accept</td></tr>
+<tr><td>依赖响应式激活/停用</td><td>inject + notify</td><td>无</td><td>无结构契约</td><td>—</td></tr>
+<tr><td>形式化基础</td><td>演算 + 元理论证明</td><td>无</td><td>无</td><td>无</td></tr>
+<tr><td>粒度</td><td>组件级（共享地址空间）</td><td>对象级</td><td>进程级</td><td>模块级</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="相关页面"><a class="header" href="#相关页面">相关页面</a></h2>
+<ul>
+<li><a href="./cordis-hello-world.html">Cordis Hello World</a> — 可运行的 ~70 行最小 demo（effect/inject/provide 全部跑一遍，含「函数插件要用箭头函数」等实测踩坑）</li>
+<li><a href="./kagent.html">kagent</a> — K8s 原生 Agent 框架（CNCF），用 CRD/Controller 编排 agent；Cordis 走的是“进程内插件编排 + 事件决策链“的另一条路线，两者对比可看 agent 运行时选型</li>
+<li><a href="./agent-substrate.html">Agent Substrate</a> / <a href="./agent-sandbox.html">Agent Sandbox</a> — 沙箱执行环境，与 Cordis 的 effect 化资源管理互补</li>
+</ul>
+<h2 id="延伸阅读"><a class="header" href="#延伸阅读">延伸阅读</a></h2>
+<ul>
+<li>论文：<a href="https://github.com/cordiverse/paper">A Programming Paradigm for Spatiotemporal Composability</a></li>
+<li>上游仓库：<a href="https://github.com/cordiverse/cordis">cordiverse/cordis</a></li>
+<li>cordis-primer：<a href="https://deepseek-harness.github.io/deepseek-harness/reference/cordis-primer">DeepSeek Harness 文档</a></li>
+<li>背景：<a href="https://damodev.csdn.net/6a7e568b662f9a54cb9c7e72.html">为什么用 Cordis 做 AI Agent 运行时：从 QQ 机器人框架到 DeepSeek Harness</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../docs/Cloud_Native/AI_Infrastructure/cordis-hello-world.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../cordis-hello-world.assets.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../docs/Cloud_Native/AI_Infrastructure/cordis-hello-world.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../cordis-hello-world.assets.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../highlight-abc7f01d.js"></script>
+        <script src="../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../theme/mermaid-init-1bb4d447.js"></script>
+        <script src="../../../theme/mermaid-eefea253.min.js"></script>
+
+
+
+    </div>
+    </body>
+</html>
