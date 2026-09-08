@@ -187,6 +187,7 @@ Next.js 构建的 Web 界面，提供 agent 的创建、管理、对话的可视
 | **Google ADK** | Python agent runtime 基于 Google ADK 框架 |
 | **A2A Protocol** | Agent 间通信标准，BYO agent 的互操作接口 |
 | **MCP Protocol** | Agent 调用外部工具的标准协议 |
+| **Cordis**（[见页面](../AI_Infrastructure/cordis.md)） | 另一条 Agent 运行时路线：进程内插件编排（effect/coeffect + 事件决策链），DeepSeek Harness 的内核；kagent 是 K8s 声明式编排，Cordis 是运行时动态组合 |
 
 ## 参考
 
