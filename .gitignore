@@ -3,3 +3,4 @@
 *.dtmp
 bin/
 book/
+.repos/

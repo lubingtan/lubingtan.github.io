@@ -29,6 +29,8 @@
 - [kagent](./Cloud_Native/AI_Infrastructure/kagent.md) — CNCF K8s 原生 AI Agent 框架：声明式 CRD、Agent Controller、A2A Handler Mux、MCP 工具生态、ADK Runtime
 - [Cordis](./Cloud_Native/AI_Infrastructure/cordis.md) — 时空可组合性元框架：可逆副作用（effect）+ 响应式依赖（coeffect）、Fiber 生命周期状态机、声明式 Loader、HMR；DeepSeek Harness 的插件内核
 - [Cordis Hello World](./Cloud_Native/AI_Infrastructure/cordis-hello-world.md) — ~70 行可运行 demo：effect/inject/provide 的「上手即跑」演示（服务消失/恢复自动停用/复活、LIFO 回收、箭头函数插件踩坑）
+- [HAMi](./Cloud_Native/AI_Infrastructure/hami.md) — CNCF 异构 AI 算力虚拟化与调度：extender 选点、设备级策略链、14 家加速器后端、与 MIG/MPS/GPU Operator 的边界
+- [HAMi-core](./Cloud_Native/AI_Infrastructure/hami-core.md) — 容器内 CUDA 劫持实现：ld.so.preload / dlsym / cuGetProcAddress 三路接管、显存账本、算力令牌桶
 
 ### Cluster Lifecycle
 

@@ -85,6 +85,15 @@ Kueue 通过 job framework 提供可扩展的作业集成，内置支持：
 - cert-manager — Webhook 证书管理
 - Ginkgo/Gomega — 测试框架
 
+## 与 HAMi 的集成
+
+Kueue 负责「作业级准入 + 队列配额」，HAMi 负责「Pod 级设备切分 + 设备感知放置」，两者是上下游关系：
+
+- 通过 Kueue 的 **ResourceTransformation** 把 HAMi 的资源（如 `nvidia.com/gpumem`、`nvidia.com/gpucores`）映射成 Kueue 可配额的名义资源，从而在 ClusterQueue 里对「显存份额」做队列级配额与借用；
+- 作业被 Kueue 准入后，Pod 仍由 HAMi 调度器（extender）完成 GPU 设备选择与绑定，Kueue 不关心具体落在哪张卡。
+
+这与 Kueue + Volcano 的分工类似：队列层只决定「能不能开始」，设备层决定「用哪张卡、切多少」。详见 [HAMi](../AI_Infrastructure/hami.md)。
+
 ## 参考
 
 - [Kueue GitHub](https://github.com/kubernetes-sigs/kueue)
