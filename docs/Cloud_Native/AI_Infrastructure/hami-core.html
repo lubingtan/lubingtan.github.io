@@ -1,0 +1,488 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>HAMi-core：容器内 CUDA 劫持与资源隔离 - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../searchindex-e97e9397.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../toc-34f46ad6.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/AI_Infrastructure/hami-core.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="hami-core容器内-cuda-劫持与资源隔离"><a class="header" href="#hami-core容器内-cuda-劫持与资源隔离">HAMi-core：容器内 CUDA 劫持与资源隔离</a></h1>
+<blockquote>
+<p>HAMi-core（仓库名 <code>HAMi-core</code>，产物 <code>libvgpu.so</code>）是 HAMi 的<strong>容器内运行时</strong>。它不改 <code>libcudart.so</code>、不改 <code>libcuda.so</code>、不改驱动，而是在进程的<strong>符号解析路径</strong>上做手脚，把 CUDA 调用接管到自己的包装函数里，从而落实显存配额和算力配额。</p>
+<p>对应 HAMi 侧的使用方式见 <a href="./hami.html">HAMi：Kubernetes 异构 AI 算力虚拟化与调度</a>。</p>
+</blockquote>
+<h2 id="一它怎么进入容器"><a class="header" href="#一它怎么进入容器">一、它怎么进入容器</a></h2>
+<p>device plugin 在 <code>Allocate()</code> 返回的 <code>Mounts</code> 里（<code>pkg/device-plugin/nvidiadevice/nvinternal/plugin/server.go:1555</code>）：</p>
+<pre><code class="language-go">Mount{ContainerPath: "/usr/local/vgpu/libvgpu.so", HostPath: GetLibPath(), ReadOnly: true},
+Mount{ContainerPath: "/etc/ld.so.preload", HostPath: hostHookPath + "/vgpu/ld.so.preload", ReadOnly: true},
+</code></pre>
+<p><code>ld.so.preload</code> 文件只有一行：</p>
+<pre><code>/usr/local/vgpu/libvgpu.so
+</code></pre>
+<p>所以容器里<strong>每个动态链接的进程</strong>启动时，<code>libvgpu.so</code> 会先于 <code>libcuda.so</code> 被加载进全局符号作用域。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>场景</th><th>注入方式</th></tr>
+</thead>
+<tbody>
+<tr><td>默认 <code>hami-core</code> 模式</td><td>挂载 <code>libvgpu.so</code> + <code>/etc/ld.so.preload</code></td></tr>
+<tr><td>整卡分配</td><td>device plugin 自动注入 <code>CUDA_DISABLE_CONTROL=true</code>，跳过 preload 挂载</td></tr>
+<tr><td>remote GPU（Lupine）</td><td>改用 <code>LD_PRELOAD</code> 环境变量（<code>pkg/device/remotegpu/device.go</code>）</td></tr>
+<tr><td>MIG / MPS 模式</td><td>不走 libvgpu，由 MIG/MPS 自身机制隔离</td></tr>
+</tbody>
+</table>
+</div>
+<p>device plugin 还会注入配额与上下文：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>环境变量 / 文件</th><th>作用</th></tr>
+</thead>
+<tbody>
+<tr><td><code>CUDA_DEVICE_MEMORY_LIMIT_&lt;i&gt;</code></td><td>第 i 张卡的显存上限，如 <code>3000m</code>（支持 k/m/g 后缀）</td></tr>
+<tr><td><code>CUDA_DEVICE_SM_LIMIT</code></td><td>算力上限百分比（0–100）</td></tr>
+<tr><td><code>CUDA_DEVICE_MEMORY_SHARED_CACHE</code></td><td>每容器共享记账文件路径（如 <code>/usr/local/vgpu/usage.cache</code>）</td></tr>
+<tr><td><code>CUDA_DEVICE_MEMORY_LIMIT</code> / <code>CUDA_DEVICE_SM_LIMIT</code>（无下标）</td><td>兜底值，作用于所有卡</td></tr>
+<tr><td><code>/overrideEnv</code>（<code>limit-delivery=file</code>）</td><td>等价的 KEY=VALUE 文件，进程启动时读取后 <code>setenv</code></td></tr>
+<tr><td><code>CUDA_DISABLE_CONTROL</code></td><td><code>true</code> 时整体关闭注入</td></tr>
+<tr><td><code>CUDA_OVERSUBSCRIBE</code></td><td><code>true</code> 时允许显存超卖</td></tr>
+<tr><td><code>CUDA_TASK_PRIORITY</code></td><td>任务优先级（0 高 / 1 低）</td></tr>
+<tr><td><code>LIBCUDA_LOG_LEVEL</code></td><td>libvgpu 日志级别</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="二核心思路不改库改符号解析"><a class="header" href="#二核心思路不改库改符号解析">二、核心思路：不改库，改“符号解析”</a></h2>
+<p><code>libcudart</code> 并不把 driver API 静态链接进来，而是<strong>运行期按名字取函数指针</strong>：老版本用 <code>dlsym</code>，CUDA 11.3+/12 用 <code>cuGetProcAddress</code>。HAMi-core 同时接管这两个入口，再加上 ELF 的全局符号抢占，形成三条路径：</p>
+<pre class="mermaid">flowchart TB
+    APP[应用 / Framework] --&gt; RT[libcudart.so]
+    APP --&gt;|直接链接 libcuda| DRV
+    RT --&gt;|"① dlsym / cuGetProcAddress 查函数指针"| HOOK
+    RT --&gt;|正常调用| DRV[libcuda.so]
+    HOOK[HAMi-core 包装函数] --&gt;|查真实函数表| DRV
+    PRELOAD["ld.so.preload 全局符号抢占&lt;br/&gt;（导出同名 cu* 符号）"] --&gt; APP
+    style HOOK fill:#e8f5e9
+</pre>
+
+<h3 id="路径-aldsopreload-全局符号抢占"><a class="header" href="#路径-aldsopreload-全局符号抢占">路径 A：<code>ld.so.preload</code> 全局符号抢占</a></h3>
+<p><code>libvgpu.so</code> 导出了所有同名的 <code>cuXxx</code> 函数（例如 <code>cuMemAlloc_v2</code>）。ELF 全局符号查找顺序是「可执行文件 → preload 库 → 依赖库」，因此<strong>直接链接 <code>libcuda</code> 的程序</strong>，其 PLT 会绑定到包装函数而不是驱动函数。</p>
+<blockquote>
+<p>细节：仓库的生产构建走 <code>build.sh</code>，固定 <code>CMAKE_BUILD_TYPE=Debug</code>，不加 <code>-fvisibility=hidden</code>，所以这些包装符号默认可见——全局抢占才成立。</p>
+</blockquote>
+<h3 id="路径-b劫持-dlsym"><a class="header" href="#路径-b劫持-dlsym">路径 B：劫持 <code>dlsym</code></a></h3>
+<p><code>libvgpu</code> 的 <code>dlsym</code> 用<strong>汇编</strong>实现（<code>src/dlsym_entry.S</code>）。原因很关键：<code>dlsym(RTLD_NEXT, ...)</code> 的语义取决于<strong>调用者的返回地址</strong>，用 C 函数包装会破坏它。x86-64 版本的核心逻辑：</p>
+<pre><code class="language-asm">dlsym:
+    cmpq $-1, %rdi            # handle == RTLD_NEXT ?
+    jne .Ldispatch
+    pushq %rdi; pushq %rsi    # 保留原始参数
+    call libvgpu_get_real_dlsym
+    popq %rsi; popq %rdi
+    jmp *%rax                 # 尾跳，调用者返回地址仍在栈上
+.Ldispatch:
+    jmp libvgpu_dlsym_dispatch
+</code></pre>
+<p>普通查询进入 <code>libvgpu_dlsym_dispatch()</code>（<code>src/libvgpu.c:97</code>）：</p>
+<pre><code class="language-c">if (symbol[0]=='c' &amp;&amp; symbol[1]=='u') {            // 所有 cu* 符号
+    if (strcmp(symbol,"cuGetExportTable") != 0)
+        pthread_once(&amp;pre_cuinit_flag, (void(*)(void))preInit);
+    void *f = real_dlsym(vgpulib, symbol);          // 在 libvgpu 自身里找同名符号
+    if (f != NULL) return f;                        // 返回包装函数
+}
+</code></pre>
+<p><code>vgpulib</code> 是 <code>dlopen("/usr/local/vgpu/libvgpu.so")</code> 的句柄。谁查 <code>cuMemAlloc_v2</code>，就返回 libvgpu 自己的 <code>cuMemAlloc_v2</code>。<code>RTLD_NEXT</code> 查询被原样转发给 libc，语义不变。</p>
+<h3 id="路径-c劫持-cugetprocaddress"><a class="header" href="#路径-c劫持-cugetprocaddress">路径 C：劫持 <code>cuGetProcAddress</code></a></h3>
+<p>CUDA 11.3+/12 的 driver API 走 lazy 查表：<code>cuGetProcAddress(symbol, &amp;pfn, cudaVersion, flags)</code>。只拦 <code>dlsym</code> 会漏掉主路径，所以 libvgpu 导出并实现了 <code>cuGetProcAddress</code> / <code>cuGetProcAddress_v2</code>（<code>src/cuda/hook.c:361</code>、<code>:398</code>）：</p>
+<pre><code class="language-c">*pfn = find_symbols_in_table_by_cudaversion(symbol, cudaVersion);  // 先给包装函数
+if (strcmp(symbol, "cuGetProcAddress") == 0) {                     // 自己查自己
+    ... *pfn = _cuGetProcAddress;                                  // 返回 trampoline
+}
+if (*pfn == NULL) {                                                // 不认识的符号
+    return CUDA_OVERRIDE_CALL(cuda_library_entry, cuGetProcAddress, symbol, pfn, ...);
+}
+</code></pre>
+<ul>
+<li>查询 <code>cuGetProcAddress</code> 本身时返回 trampoline，保证后续所有 lazy 查询仍被接管；</li>
+<li>查表按 <code>_v3</code> → <code>_v2</code> → 原名逐级回退，兼容不同 CUDA 版本；</li>
+<li>不认识的符号回落到真实驱动。</li>
+</ul>
+<h3 id="真实函数表与初始化时序"><a class="header" href="#真实函数表与初始化时序">真实函数表与初始化时序</a></h3>
+<p>所有包装函数最终要调用真正的驱动函数，这张表在 <code>preInit()</code> 中一次性建好（<code>src/cuda/hook.c:250</code>）：</p>
+<pre><code class="language-c">table = dlopen("libcuda.so.1", RTLD_NOW | RTLD_NODELETE);  // NODELETE 保证句柄一直有效
+for (i = 0; i &lt; CUDA_ENTRY_END; i++)
+    cuda_library_entry[i].fn_ptr = real_dlsym(table, cuda_library_entry[i].name);
+</code></pre>
+<p>找不到就回退 <code>RTLD_NEXT</code>，再找不到就用 <code>prior_function()</code> 去掉 <code>_v2</code>/降版本号继续找（兼容老驱动）。NVML 同理 <code>dlopen("libnvidia-ml.so.1")</code>。</p>
+<p>初始化是懒加载的：</p>
+<ol>
+<li>第一次 <code>dlsym</code> 一个 <code>cu*</code> 符号 → <code>preInit()</code>：建表、注册 <code>pthread_atfork</code>；</li>
+<li>第一次 <code>cuInit()</code> → <code>preInit()</code> + 真实 <code>cuInit()</code> + <code>postInit()</code>：初始化分配器、解析 <code>CUDA_VISIBLE_DEVICES</code> 映射、用 NVML 反查宿主 PID、启动算力 watcher；</li>
+<li><code>fork()</code> 后子进程重置 post-init 状态，但复用同一份共享内存记账区域。</li>
+</ol>
+<h2 id="三显存隔离"><a class="header" href="#三显存隔离">三、显存隔离</a></h2>
+<h3 id="配额来源"><a class="header" href="#配额来源">配额来源</a></h3>
+<pre><code class="language-c">// multiprocess_memory_limit.c: get_limit_from_env / do_init_device_memory_limits
+CUDA_DEVICE_MEMORY_LIMIT_&lt;i&gt;  →  第 i 张卡的 limit[i]
+CUDA_DEVICE_MEMORY_LIMIT      →  所有卡的兜底
+/overrideEnv                  →  进程启动时加载，setenv 后走同一套逻辑
+</code></pre>
+<p>解析支持 <code>3000m</code>、<code>3g</code>、<code>1024m</code> 等写法；<code>0</code> 表示不限制。</p>
+<h3 id="分配路径"><a class="header" href="#分配路径">分配路径</a></h3>
+<pre><code class="language-c">CUresult cuMemAlloc_v2(CUdeviceptr* dptr, size_t bytesize) {
+    ENSURE_RUNNING();                 // 初始化 + 等待调度状态
+    return allocate_raw(dptr, bytesize);
+}
+</code></pre>
+<p><code>allocate_raw → add_chunk</code>（<code>src/allocator/allocator.c</code>）：</p>
+<pre><code class="language-c">if (reserve_device_memory(dev, size) != 0)          // ① 锁内预占额度
+    return CUDA_ERROR_OUT_OF_MEMORY;
+res = CUDA_OVERRIDE_CALL(cuda_library_entry, cuMemAlloc_v2, address, size);  // ② 真实分配
+if (res != CUDA_SUCCESS) { release_device_memory(dev, size); return res; }
+LIST_ADD(device_overallocated, e);                   // ③ 记录 地址→大小→设备
+</code></pre>
+<p><code>reserve_device_memory</code> 内部就是 <code>oom_check_impl</code>（<code>allocator.c:37</code>）：</p>
+<pre><code class="language-c">size_t new_allocated = usage + addon;
+if (new_allocated &gt; limit) {
+    clear_proc_slot_nolock(1);      // 先清理已退出进程占用的槽位
+    return CUDA_ERROR_OUT_OF_MEMORY;
+}
+</code></pre>
+<p>释放路径 <code>cuMemFree_v2 → free_raw → remove_chunk</code> 反向扣减。除 <code>cuMemAlloc_v2</code> 外，<code>cuMemAllocManaged</code>、<code>cuMemAllocPitch</code>、<code>cuMemCreate</code>（VMM）、<code>cuMemAllocAsync</code> / <code>cuMemAllocFromPoolAsync</code>（cudaMallocAsync 池）、array/mipmap 等也都有对应记账，避免绕过。</p>
+<h3 id="多进程共享记账"><a class="header" href="#多进程共享记账">多进程共享记账</a></h3>
+<p>一个容器里往往有多个进程（DataLoader worker、多进程推理、fork 出来的子进程），配额必须按<strong>容器</strong>而不是按进程算。做法是：</p>
+<ul>
+<li>记账放在 <code>mmap</code> 的共享内存文件里，路径来自 <code>CUDA_DEVICE_MEMORY_SHARED_CACHE</code>（默认 <code>/usr/local/vgpu/usage.cache</code>）；没有该变量时用 <code>POD_UID</code> + <code>CONTAINER_NAME</code> 拼出 <code>/usr/local/vgpu/containers/&lt;pod&gt;_&lt;ctr&gt;/usage.cache</code>；</li>
+<li>region 里每个进程一个 slot，每个 slot 按设备记录 <code>total / context / module / data</code> 四类用量；</li>
+<li>读写用 <strong>seqlock</strong>（奇数表示写入中）做无锁一致性读，分配/释放前先用文件锁 <code>lock_shrreg()</code> 串行化“检查+预占”；</li>
+<li>进程退出注册 <code>atexit</code> 清理槽位；OOM 时如果发现死进程槽位，会先清理再重试；</li>
+<li>CUDA context 创建时把 <code>context_size</code>（约 100 MiB 的估算值）计入用量，避免“空 context 不占显存”的漏洞（<code>src/cuda/context.c</code>）。</li>
+</ul>
+<h3 id="让框架看到配额"><a class="header" href="#让框架看到配额">让框架“看到”配额</a></h3>
+<p>仅拒绝超额分配还不够：PyTorch 等框架启动时会查询显存总量来决定 caching allocator 池大小。所以这些查询被改写成虚拟视图：</p>
+<pre><code class="language-c">// cuDeviceTotalMem_v2
+*bytes = limit;
+
+// cuMemGetInfo_v2
+out_total = min(limit, drv_total);
+out_free  = limit - usage;      // 已用部分对应用不可见
+
+// nvmlDeviceGetMemoryInfo / _v2
+used  = usage;
+total = min(limit, physical_total);
+free  = total - used;
+</code></pre>
+<p>这样容器内 <code>nvidia-smi</code>、<code>pynvml</code>、<code>torch.cuda.mem_get_info()</code> 看到的都是被切分后的小卡。设备数量/可见性则由容器运行时按 <code>CUDA_VISIBLE_DEVICES</code> 与挂载决定，libvgpu 只维护 <code>cuda_to_nvml</code> 的下标映射。</p>
+<h2 id="四算力隔离"><a class="header" href="#四算力隔离">四、算力隔离</a></h2>
+<p>算力限制不是硬件分区，而是<strong>基于反馈的时间片调度</strong>：</p>
+<pre><code class="language-c">// cuLaunchKernel / cuLaunchKernelEx / cuLaunchCooperativeKernel
+ENSURE_RUNNING();
+ensure_post_init();
+pre_launch_kernel();
+if (pidfound == 1)
+    rate_limiter(gridDimX*gridDimY*gridDimZ, blockDimX*blockDimY*blockDimZ);
+// 然后才调真实 cuLaunchKernel
+</code></pre>
+<p><code>rate_limiter()</code>（<code>multiprocess_utilization_watcher.c:39</code>）维护每卡的令牌桶 <code>g_cur_cuda_cores</code>：</p>
+<pre><code class="language-c">kernel_size = grids;                 // 用 grid 乘积近似本次 kernel 的“算力量”
+do {
+    before = g_cur_cuda_cores[dev];
+    if (before &lt; 0) { nanosleep(&amp;g_cycle /*10ms*/); goto CHECK; }
+    after = before - kernel_size;
+} while (!CAS(&amp;g_cur_cuda_cores[dev], before, after));
+</code></pre>
+<p>令牌为负时阻塞 kernel 下发，从而降低单位时间内的 kernel 吞吐。令牌总量由 watcher 线程（默认 120 ms 一轮）动态调整：</p>
+<ol>
+<li>通过 NVML 读取<strong>本容器进程</strong>的真实 SM 利用率（需要先反查到宿主 PID）；</li>
+<li>用比例反馈 <code>delta()</code> 比较目标 <code>CUDA_DEVICE_SM_LIMIT</code> 与实测值，决定加/减令牌；</li>
+<li>写入共享变量，影响所有进程的下一次 kernel 启动。</li>
+</ol>
+<p>相关开关：</p>
+<ul>
+<li><code>CUDA_DEVICE_SM_LIMIT=100</code> 或未设置 → 不限速；</li>
+<li><code>CUDA_TASK_PRIORITY</code>：v1.1 起的两级优先级（高优先级任务独享时不受限）；</li>
+<li><code>CUDA_OVERSUBSCRIBE=true</code>：允许超卖；</li>
+<li><code>CUDA_DISABLE_CONTROL=true</code>：整体关闭；</li>
+<li>反查宿主 PID 失败（<code>pidfound=0</code>）时，<strong>算力限制自动降级</strong>，只保留显存限制。</li>
+</ul>
+<h2 id="五失效场景软隔离的代价"><a class="header" href="#五失效场景软隔离的代价">五、失效场景（软隔离的代价）</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>场景</th><th>结果</th></tr>
+</thead>
+<tbody>
+<tr><td>静态链接 / musl（Alpine）/ 非 glibc</td><td><code>ld.so.preload</code> 不生效，hook 失效</td></tr>
+<tr><td>setuid 程序</td><td>动态链接器忽略 preload</td></tr>
+<tr><td>DinD、直接 ioctl <code>/dev/nvidia*</code>、绕过 CUDA 库访问显存</td><td>记账与限制都拦不住</td></tr>
+<tr><td>容器内 <code>/etc/ld.so.preload</code> 被覆盖</td><td>注入失效</td></tr>
+<tr><td><code>CUDA_DISABLE_CONTROL=true</code></td><td>主动关闭</td></tr>
+<tr><td>MIG / MPS 模式</td><td>不走 libvgpu</td></tr>
+<tr><td>CUDA 版本 / 驱动不匹配</td><td>符号表缺失时回退失败，功能降级或报错</td></tr>
+<tr><td>宿主 PID 反查失败</td><td>算力限制关闭，仅显存生效</td></tr>
+<tr><td>多租户争用</td><td>显存是账本式限制、算力是反馈式限速，无法提供硬 SLA</td></tr>
+</tbody>
+</table>
+</div>
+<p>结论：<strong>hami-core 适合“提高利用率、做弹性共享”，不适合“合规硬隔离”</strong>——后者应该用 MIG。</p>
+<h2 id="六源码导读"><a class="header" href="#六源码导读">六、源码导读</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>文件</th><th>内容</th></tr>
+</thead>
+<tbody>
+<tr><td><code>src/libvgpu.c</code></td><td><code>dlsym</code> 分发、<code>preInit</code>/<code>postInit</code>、trampoline、NVML/CUDA hook 分派</td></tr>
+<tr><td><code>src/dlsym_entry.S</code></td><td>x86-64 / aarch64 的 <code>dlsym</code> 汇编入口，处理 <code>RTLD_NEXT</code></td></tr>
+<tr><td><code>src/cuda/hook.c</code></td><td>真实函数表加载、<code>cuGetProcAddress</code> 劫持、符号版本回退</td></tr>
+<tr><td><code>src/cuda/memory.c</code></td><td>显存分配/释放、<code>cuMemGetInfo</code>、kernel 启动包装</td></tr>
+<tr><td><code>src/cuda/context.c</code></td><td>context 生命周期与 context 大小记账</td></tr>
+<tr><td><code>src/cuda/device.c</code></td><td><code>cuDeviceTotalMem</code> 等设备查询改写</td></tr>
+<tr><td><code>src/allocator/allocator.c</code></td><td><code>oom_check</code>、预占/释放、分配列表、async/pool 记账</td></tr>
+<tr><td><code>src/multiprocess/multiprocess_memory_limit.c</code></td><td>配额解析、共享内存 region、进程 slot、seqlock</td></tr>
+<tr><td><code>src/multiprocess/multiprocess_utilization_watcher.c</code></td><td>令牌桶、<code>rate_limiter</code>、利用率反馈闭环</td></tr>
+<tr><td><code>src/nvml/hook.c</code> / <code>nvml_entry.c</code></td><td>NVML 包装与显存视图伪造</td></tr>
+<tr><td><code>src/include/libcuda_hook.h</code></td><td><code>CUDA_OVERRIDE_CALL</code> 宏与 hook 表结构</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="参考"><a class="header" href="#参考">参考</a></h2>
+<ul>
+<li><a href="https://github.com/Project-HAMi/HAMi-core">HAMi-core 仓库</a>（本地 <code>.repos/hami/libvgpu</code>）· <a href="https://github.com/Project-HAMi/HAMi-core/blob/main/README.md">README</a></li>
+<li><a href="https://project-hami.io/docs/core-concepts/gpu-virtualization">官方文档：GPU 虚拟化原理</a></li>
+<li>相关：<a href="./hami.html">HAMi 项目总览</a> · <a href="../Kubernetes/4_kube-scheduler源码分析.html">kube-scheduler 源码分析</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../docs/Cloud_Native/AI_Infrastructure/cordis.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../docs/Cloud_Native/AI_Infrastructure/hami.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../docs/Cloud_Native/AI_Infrastructure/cordis.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../docs/Cloud_Native/AI_Infrastructure/hami.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../highlight-abc7f01d.js"></script>
+        <script src="../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../theme/mermaid-init-1bb4d447.js"></script>
+        <script src="../../../theme/mermaid-eefea253.min.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

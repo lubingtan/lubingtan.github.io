@@ -35,10 +35,10 @@
             const path_to_root = "../../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../../searchindex-c9c9f7e7.js";
+            window.path_to_searchindex_js = "../../../../searchindex-e97e9397.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../../toc-7aaafdfe.js"></script>
+        <script src="../../../../toc-34f46ad6.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -183,6 +183,11 @@
                         <h1 id="cordis-hello-world本地可-build--run-的最小-demo"><a class="header" href="#cordis-hello-world本地可-build--run-的最小-demo">Cordis Hello World（本地可 build / run 的最小 demo）</a></h1>
 <p>配套 wiki 页：<code>src/docs/Cloud_Native/AI_Infrastructure/cordis-hello-world.md</code>
 （概念页：<a href="../cordis.html"><code>cordis.md</code></a>）</p>
+<blockquote>
+<p>⚠️ 本目录位于 wiki 的 mdBook 源树内：跑 wiki 构建（<code>make build</code>）前请先删除
+<code>node_modules/</code> 与 <code>dist/</code>，否则它们会被整体拷进 <code>book/</code>。
+（本 wiki 的 Latest updates 扫描已跳过 <code>.assets</code> 与 <code>node_modules</code>。）</p>
+</blockquote>
 <h2 id="前置"><a class="header" href="#前置">前置</a></h2>
 <ul>
 <li>Node.js &gt;= 22（用 <code>npm run dev</code> 时 tsx 负责跑 TS，不挑 Node 小版本；

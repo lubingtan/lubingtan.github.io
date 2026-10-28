@@ -1,0 +1,503 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>HAMi：Kubernetes 异构 AI 算力虚拟化与调度 - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../searchindex-e97e9397.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../toc-34f46ad6.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/AI_Infrastructure/hami.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="hamikubernetes-异构-ai-算力虚拟化与调度"><a class="header" href="#hamikubernetes-异构-ai-算力虚拟化与调度">HAMi：Kubernetes 异构 AI 算力虚拟化与调度</a></h1>
+<blockquote>
+<p>HAMi（Heterogeneous AI Computing Virtualization Middleware）是 CNCF 孵化项目，给 Kubernetes 加一层「GPU/NPU 切分 + 设备感知调度」：一张卡按显存 MiB 和算力百分比分给多个 Pod，应用不改代码、驱动不改，继续用标准 <code>resources.limits</code>。</p>
+</blockquote>
+<h2 id="项目档案"><a class="header" href="#项目档案">项目档案</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>项</th><th>值</th></tr>
+</thead>
+<tbody>
+<tr><td>仓库</td><td><a href="https://github.com/Project-HAMi/HAMi">https://github.com/Project-HAMi/HAMi</a></td></tr>
+<tr><td>前身</td><td><code>k8s-vGPU-scheduler</code>（2021 年）</td></tr>
+<tr><td>许可证 / 语言</td><td>Apache-2.0 / Go（约 12.5 万行）+ C/CUDA（HAMi-core）</td></tr>
+<tr><td>CNCF 阶段</td><td>Sandbox（2024-08）→ <strong>Incubating</strong>（2026-07）</td></tr>
+<tr><td>最新 release</td><td>v2.10.0（2026-08-21）；master 已领先 tag 280 个提交</td></tr>
+<tr><td>社区</td><td>约 5,000 stars / 875 forks（2026-10），2026 年 786 次提交</td></tr>
+<tr><td>文档</td><td><a href="https://project-hami.io/docs/">https://project-hami.io/docs/</a>（中英日，版本化）</td></tr>
+<tr><td>支持的加速器</td><td>NVIDIA、AMD、昇腾、寒武纪、海光、天数、昆仑芯、沐曦、摩尔线程、燧原、壁仞、AWS Neuron、VastAI、远程 GPU（Lupine）</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="为什么需要它"><a class="header" href="#为什么需要它">为什么需要它</a></h2>
+<p>把整张 GPU 分配给 Pod 会带来三个结构性问题：</p>
+<ol>
+<li><strong>碎片化</strong>：小模型/推理任务占满一整张卡，显存利用率长期低于 20%。</li>
+<li><strong>调度盲区</strong>：默认调度器只看到 <code>nvidia.com/gpu: 1</code> 这个整数，不知道显存、算力、GPU 间拓扑，无法做设备级放置。</li>
+<li><strong>异构难统一</strong>：不同厂商的 device plugin 和资源名各不相同，平台团队要维护多套工作负载配置。</li>
+</ol>
+<p>HAMi 的回答是：在 device plugin 层把设备「虚拟化」成可切分资源，在调度器扩展点做设备感知放置，在容器内用运行时 hook 落实显存/算力上限。</p>
+<p><img src="hami.assets/gpu-sharing-example.png" alt="GPU 共享前后对比"></p>
+<h2 id="整体架构"><a class="header" href="#整体架构">整体架构</a></h2>
+<p><img src="hami.assets/architecture.png" alt="HAMi 架构"></p>
+<blockquote>
+<p>上图来自 HAMi 官方仓库（Apache-2.0）。</p>
+</blockquote>
+<pre class="mermaid">flowchart LR
+    subgraph CP[控制面]
+        W[Mutating Webhook] --&gt; S[Scheduler Extender]
+        S --&gt; KS[kube-scheduler&lt;br/&gt;同 Pod 内的 sidecar]
+        S --&gt; NODE[Node 注解&lt;br/&gt;设备注册信息]
+    end
+    subgraph DP[数据面]
+        DPg[Device Plugin] --&gt;|Allocate: env + mounts| C[业务容器]
+        MON[vGPU Monitor] --&gt;|Prometheus 指标| P[Prometheus]
+        C --&gt;|libvgpu.so 劫持 CUDA| GPU[(物理 GPU)]
+    end
+    S --&gt;|vgpu-devices-allocated| DPg
+</pre>
+
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>组件</th><th>位置</th><th>职责</th></tr>
+</thead>
+<tbody>
+<tr><td>Scheduler Extender</td><td><code>cmd/scheduler</code>、<code>pkg/scheduler</code></td><td><code>/filter</code> 选节点 + 设备、<code>/bind</code> 加锁分配；同时提供 webhook 与 <code>/refit</code>（NUMA refit）</td></tr>
+<tr><td>kube-scheduler sidecar</td><td>chart <code>scheduler.kubeScheduler</code></td><td>标准调度器，配置为 HAMi extender 的调用方；默认开启，也可换成外部调度器</td></tr>
+<tr><td>Device Plugin</td><td><code>cmd/device-plugin/nvidia</code></td><td>注册 vGPU 资源、写节点设备注解、<code>Allocate()</code> 注入 <code>libvgpu.so</code> 与 limits 环境变量</td></tr>
+<tr><td>vGPU Monitor</td><td><code>cmd/vGPUmonitor</code></td><td>容器级显存/利用率采集，暴露 Prometheus 指标并做反馈</td></tr>
+<tr><td>Mutating Webhook</td><td><code>pkg/scheduler/webhook.go</code></td><td>校验 Pod，改 <code>schedulerName</code>，拦截伪造分配注解、privileged + GPU 等危险组合</td></tr>
+</tbody>
+</table>
+</div>
+<p>关键端口：extender <code>127.0.0.1:9444</code>（仅同 Pod 的 kube-scheduler 调用）、HTTP/webhook <code>0.0.0.0:9443</code>、scheduler metrics <code>:9395</code>、monitor metrics <code>:9394</code>。</p>
+<p>一个值得注意的设计是：<strong>HAMi 的 <code>/filter</code> 不是纯过滤</strong>。它在 Filter 内部完成设备可用性判断（<code>Fit</code>）和节点/设备打分，直接挑出唯一最优节点并返回，相当于把选点决策提前到 Filter，而不是走 extender 的 prioritize 协议。这样做的代价是必须自己实现完整打分，好处是能把「设备级」信息纳入决策——标准调度器只认识整数卡数。</p>
+<h2 id="一次-gpu-pod-的完整链路"><a class="header" href="#一次-gpu-pod-的完整链路">一次 GPU Pod 的完整链路</a></h2>
+<pre class="mermaid">sequenceDiagram
+    participant U as 用户
+    participant API as kube-apiserver
+    participant WH as HAMi Webhook
+    participant KS as kube-scheduler
+    participant EXT as HAMi Extender
+    participant DP as Device Plugin
+    participant K as kubelet
+    participant C as 容器
+
+    U-&gt;&gt;API: 创建 Pod（limits: nvidia.com/gpu/gpumem/...）
+    API-&gt;&gt;WH: AdmissionReview
+    WH--&gt;&gt;API: 改写 schedulerName + 校验注解
+    API-&gt;&gt;KS: 进入调度队列
+    KS-&gt;&gt;EXT: /filter（候选节点列表）
+    EXT-&gt;&gt;EXT: Fit 设备 + 打分 + 预占 + 写 vgpu-devices-to-allocate
+    EXT--&gt;&gt;KS: 只返回 1 个节点名
+    KS-&gt;&gt;EXT: /bind
+    EXT-&gt;&gt;EXT: 抢节点锁（hami.io/mutex.lock）
+    EXT-&gt;&gt;API: Patch 注解 + Binding
+    API-&gt;&gt;K: Pod 绑定到节点
+    K-&gt;&gt;DP: Allocate()
+    DP--&gt;&gt;K: 环境变量 + libvgpu.so/ld.so.preload 挂载
+    K-&gt;&gt;C: 启动容器
+    C-&gt;&gt;C: 进程启动时加载 libvgpu，CUDA 调用被接管
+</pre>
+
+<p>分配结果写在 Pod 注解里（<code>hami.io/vgpu-devices-allocated</code>），device plugin 的 <code>Allocate()</code> 读注解、拼出 <code>CUDA_DEVICE_MEMORY_LIMIT_&lt;i&gt;</code>、<code>CUDA_DEVICE_SM_LIMIT</code> 等环境变量，并把 <code>libvgpu.so</code> 与 <code>/etc/ld.so.preload</code> 挂进容器。容器里 CUDA 进程一启动就被劫持，具体机制见 <a href="./hami-core.html">HAMi-core：容器内 CUDA 劫持与资源隔离</a>。</p>
+<h2 id="资源模型"><a class="header" href="#资源模型">资源模型</a></h2>
+<p>以 NVIDIA 为例：</p>
+<pre><code class="language-yaml">resources:
+  limits:
+    nvidia.com/gpu: 1          # 申请 1 张物理卡
+    nvidia.com/gpumem: 3000    # 显存 3000 MiB
+    nvidia.com/gpucores: 30    # 算力 30%
+# 或者 nvidia.com/gpumem-percentage: 25（与 gpumem 二选一）
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>资源/注解</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>nvidia.com/gpu</code></td><td>物理 GPU 张数；节点上注册的值是「每卡 <code>deviceSplitCount</code>（默认 10）个虚拟槽位」</td></tr>
+<tr><td><code>nvidia.com/gpumem</code></td><td>显存上限（MiB）</td></tr>
+<tr><td><code>nvidia.com/gpumem-percentage</code></td><td>显存上限（物理卡百分比），与 gpumem 互斥</td></tr>
+<tr><td><code>nvidia.com/gpucores</code></td><td>算力上限（0–100）</td></tr>
+<tr><td><code>nvidia.com/use-gputype</code> / <code>nouse-gputype</code></td><td>指定/排除 GPU 型号</td></tr>
+<tr><td><code>nvidia.com/use-gpuuuid</code> / <code>nouse-gpuuuid</code></td><td>指定/排除 GPU UUID</td></tr>
+<tr><td><code>nvidia.com/numa-bind</code></td><td>要求 GPU 落在同一 NUMA 节点</td></tr>
+</tbody>
+</table>
+</div>
+<p>其它厂商的资源名由 chart <code>devices.&lt;vendor&gt;</code> 配置（如 <code>metax-tech.com/sgpu</code>、<code>huawei.com/Ascend910</code>），语义各不相同：有的只支持整卡或固定切分（如壁仞 SVI 2/4 分区），有的支持显存+算力双配额。</p>
+<h2 id="调度策略"><a class="header" href="#调度策略">调度策略</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>层级</th><th>策略</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td>节点</td><td><code>binpack</code>（默认）</td><td>优先填满已用节点，减少碎片</td></tr>
+<tr><td>节点</td><td><code>spread</code></td><td>优先空闲节点，降低争用</td></tr>
+<tr><td>设备</td><td><code>binpack</code> / <code>spread</code></td><td>节点内挑卡方向</td></tr>
+<tr><td>设备</td><td><code>topology-aware</code></td><td>按 GPU 间拓扑（NVLink/PCIe/NUMA）挑选组合</td></tr>
+<tr><td>设备</td><td><code>mutex</code></td><td>只选完全空闲的 GPU（独占语义）</td></tr>
+<tr><td>设备</td><td><code>numa</code></td><td>以 NUMA 节点作为排序键，可与 binpack/spread 组合</td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>集群默认值在 chart 的 <code>scheduler.defaultSchedulerPolicy</code>（默认节点 binpack、设备 spread）。</li>
+<li>Pod 用 <code>hami.io/node-scheduler-policy</code>、<code>hami.io/gpu-scheduler-policy</code> 覆盖。</li>
+<li>v2.10 起 GPU 策略支持<strong>逗号分隔的策略链</strong>，如 <code>mutex,binpack,numa</code>：过滤型策略先筛，排序型策略按书写顺序逐级比较。</li>
+<li>并发安全靠<strong>节点级分布式锁</strong>（<code>hami.io/mutex.lock</code> 注解 + 重试）；同一 PodGroup 的成员抢锁失败会重试（<code>--node-lock-retry-timeout</code>，默认 28s），避免 gang 调度被锁竞争打断。</li>
+<li>设备打分权重可用 <code>hami.io/device-scoring-weights</code> 按 Pod 调整。</li>
+</ul>
+<h2 id="设备抽象与异构后端"><a class="header" href="#设备抽象与异构后端">设备抽象与异构后端</a></h2>
+<p>所有厂商实现同一个接口（<code>pkg/device/devices.go</code>）：</p>
+<pre><code class="language-go">type Devices interface {
+    CommonWord() string
+    MutateAdmission(ctr *corev1.Container, pod *corev1.Pod) (bool, error)
+    GenerateResourceRequests(ctr *corev1.Container) (ContainerDeviceRequest, error)
+    Fit(devices []*DeviceUsage, request ContainerDeviceRequest, pod *corev1.Pod,
+        nodeInfo *NodeInfo, allocated *PodDevices) (bool, map[string]ContainerDevices, string)
+    ScoreNode(node *corev1.Node, podDevices PodSingleDevice,
+        previous []*DeviceUsage, policy string) float32
+    AddResourceUsage(pod *corev1.Pod, n *DeviceUsage, ctr *ContainerDevice) error
+    PatchAnnotations(pod *corev1.Pod, annoinput *map[string]string, pd PodDevices) map[string]string
+    GetNodeDevices(n corev1.Node) ([]*DeviceInfo, error)
+    // ...
+}
+</code></pre>
+<p>调度器启动时由 <code>pkg/scheduler/config</code> 把各后端注册进全局 <code>device.DevicesMap</code>。NVIDIA 节点有四种运行模式：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>模式</th><th>隔离方式</th><th>特点</th></tr>
+</thead>
+<tbody>
+<tr><td><code>hami-core</code>（默认）</td><td>容器内 <code>libvgpu.so</code> 劫持 CUDA</td><td>任意 NVIDIA 卡，MiB/1% 粒度，软隔离</td></tr>
+<tr><td><code>mig</code></td><td>NVIDIA MIG 实例</td><td>硬件隔离；v2.10 起支持 Flexible MIG，按需建删、免 drain</td></tr>
+<tr><td><code>mps</code></td><td>CUDA MPS</td><td>并发执行，按进程隔离算力</td></tr>
+<tr><td><code>remote</code></td><td>Lupine 远程 GPU</td><td>本节点只作 GPU 服务端，跨节点分配</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="部署与运维"><a class="header" href="#部署与运维">部署与运维</a></h2>
+<p>前置条件（NVIDIA 路径）：驱动 ≥ 440、NVIDIA Container Toolkit、containerd/Docker/CRI-O 默认 runtime、Kubernetes ≥ 1.23、glibc ≥ 2.17、kernel ≥ 3.10。</p>
+<pre><code class="language-bash">kubectl label nodes &lt;node&gt; gpu=on
+helm repo add hami-charts https://project-hami.github.io/HAMi/
+helm install hami hami-charts/hami -n kube-system
+kubectl apply -f examples/nvidia/default_use.yaml
+</code></pre>
+<p>运维要点：</p>
+<ul>
+<li><strong>chart 结构</strong>：scheduler Deployment（含 kube-scheduler sidecar）、device plugin DaemonSet（含 monitor 容器）、webhook 证书 patch Job、RBAC、ServiceMonitor（可选）；厂商配置集中在 <code>devices.&lt;vendor&gt;</code>。</li>
+<li><strong>高可用</strong>：<code>scheduler.leaderElect=true</code> + <code>replicas&gt;1</code>，自动创建 PDB。</li>
+<li><strong>与 GPU Operator 共存</strong>：必须设 <code>devicePlugin.enabled=false</code>，否则 <code>nvidia.com/gpu</code> 重复注册；节点上只能有一个 GPU 管理插件。</li>
+<li><strong>OpenShift / SELinux</strong>：<code>platform.openshift=true</code>、<code>selinux.enabled=true</code> 处理 relabel。</li>
+<li><strong>可观测性</strong>：scheduler 指标在 <code>:9395</code>，monitor 在 <code>:9394</code>，均带 Prometheus 格式；官方有 Grafana dashboard 与 HAMi-WebUI。</li>
+<li><strong>升级注意</strong>：DRA 已拆到独立的 <a href="https://github.com/Project-HAMi/HAMi-dra">HAMi-DRA</a> chart；AMD 走独立的 <code>amd-device-plugin</code>。</li>
+</ul>
+<h2 id="生态集成"><a class="header" href="#生态集成">生态集成</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>项目</th><th>集成方式</th></tr>
+</thead>
+<tbody>
+<tr><td>vLLM</td><td>以显存上限运行推理，多个模型共享同一张卡（见 <a href="../../Machine_Learning/Inference/vLLM%20Production%20Stack实战.html">vLLM Production Stack 实战</a>）</td></tr>
+<tr><td>Volcano</td><td>gang 调度 + 队列/多级优先级；Volcano 也有自己的 vGPU device plugin，二者择一</td></tr>
+<tr><td>Kueue</td><td>作业级准入与配额；通过 ResourceTransformation 把 HAMi 资源暴露给 Kueue（见 <a href="../../Cloud_Native/Kubernetes/kueue.html">Kueue</a>）</td></tr>
+<tr><td>Prometheus / Grafana</td><td>容器级显存与算力指标、调度器分配指标</td></tr>
+<tr><td>NVIDIA GPU Operator</td><td>驱动/Toolkit 由 Operator 管，调度与切分由 HAMi 管</td></tr>
+<tr><td>HAMi-DRA</td><td>基于 Kubernetes DRA 的过渡实现，独立 chart 发布</td></tr>
+<tr><td>KAI Scheduler</td><td>由 KAI 决策、HAMi-core 执行隔离（KAI Resource Isolator）</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="与同类方案对比"><a class="header" href="#与同类方案对比">与同类方案对比</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>方案</th><th>隔离强度</th><th>切分粒度</th><th>硬件要求</th><th>调度感知</th><th>多厂商</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>HAMi（hami-core）</strong></td><td>软（API 拦截 + 配额）</td><td>MiB / 1%</td><td>任意 NVIDIA（驱动 ≥440）</td><td>设备级</td><td>✅ 12+</td></tr>
+<tr><td>NVIDIA MIG</td><td>硬（硬件分区）</td><td>固定 profile</td><td>Ampere+（A100/H100 等）</td><td>MIG 拓扑</td><td>❌</td></tr>
+<tr><td>NVIDIA MPS</td><td>软（SM 分区，显存共享）</td><td>算力配额</td><td>Volta+</td><td>部分</td><td>❌</td></tr>
+<tr><td>time-slicing</td><td>无显存隔离</td><td>时间片</td><td>任意</td><td>无</td><td>❌</td></tr>
+<tr><td>GPU Operator</td><td>不涉及切分</td><td>—</td><td>—</td><td>无</td><td>❌</td></tr>
+<tr><td>阿里 cGPU</td><td>软</td><td>显存/算力</td><td>阿里云栈</td><td>部分</td><td>❌</td></tr>
+</tbody>
+</table>
+</div>
+<p>选择建议：<strong>要硬隔离/SLA 合规选 MIG；要通用卡上的弹性共享与统一异构调度选 HAMi</strong>。两者也能在同一集群按节点混用（<code>operatingmode</code> 按节点配置）。</p>
+<h2 id="已知限制与风险"><a class="header" href="#已知限制与风险">已知限制与风险</a></h2>
+<ul>
+<li><strong>软隔离</strong>：隔离建立在「进程通过 CUDA 库调用驱动」这一假设上，绕过库的路径（DinD、直接 ioctl、静态链接、musl）都会失效；多租户噪声只能 best-effort，不能替代 MIG。</li>
+<li><strong>平台限制</strong>：仅 Linux（glibc ≥ 2.17）；同一节点只能有一个 GPU 管理插件；容器内已有 <code>/etc/ld.so.preload</code> 时可能冲突。</li>
+<li><strong>版本耦合</strong>：依赖 CUDA 符号版本（<code>_v2</code>/<code>_v3</code>）与驱动行为，CUDA 大版本升级需要回归；MIG/MPS 模式与 hami-core 行为差异大。</li>
+<li><strong>账本误差</strong>：显存限制按申请量记账，context、碎片、对齐需要补偿参数（<code>CONTEXT_SIZE</code>、<code>memoryFactor</code>），实际占用可能略超配额。</li>
+<li><strong>算力限制依赖宿主 PID</strong>：反查失败时降级为只限显存（日志会出现 <code>SET_TASK_PID FAILED</code>）。</li>
+</ul>
+<h2 id="源码导读"><a class="header" href="#源码导读">源码导读</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>路径</th><th>内容</th></tr>
+</thead>
+<tbody>
+<tr><td><code>cmd/scheduler/main.go</code></td><td>extender 入口、端口与 flag、leader election</td></tr>
+<tr><td><code>pkg/scheduler/scheduler.go</code></td><td>Filter/Bind、节点锁、PodManager、配额与指标</td></tr>
+<tr><td><code>pkg/scheduler/webhook.go</code></td><td>admission 校验与改写</td></tr>
+<tr><td><code>pkg/scheduler/policy/</code></td><td>节点/设备打分与策略链</td></tr>
+<tr><td><code>pkg/device/devices.go</code></td><td><code>Devices</code> 接口、设备模型、序列化</td></tr>
+<tr><td><code>pkg/device/nvidia/</code></td><td>NVIDIA 后端（含 MIG、NUMA、拓扑）</td></tr>
+<tr><td><code>cmd/device-plugin/nvidia/</code></td><td>device plugin 注册与 Allocate</td></tr>
+<tr><td><code>cmd/vGPUmonitor/</code></td><td>指标采集与 limits 反馈</td></tr>
+<tr><td><code>charts/hami/</code></td><td>Helm chart（values 里能看到全部可配项）</td></tr>
+<tr><td><code>libvgpu/</code>（子模块）</td><td>HAMi-core：CUDA hook 实现</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="参考"><a class="header" href="#参考">参考</a></h2>
+<ul>
+<li><a href="https://github.com/Project-HAMi/HAMi">HAMi 仓库</a> · <a href="https://github.com/Project-HAMi/HAMi-core">HAMi-core</a></li>
+<li><a href="https://project-hami.io/docs/">官方文档</a> · <a href="https://project-hami.io/zh/blog/hami-v2-10-0-release">v2.10.0 发布说明</a></li>
+<li><a href="https://www.cncf.io/blog/2026/07/15/hami-becomes-a-cncf-incubating-project/">CNCF 晋升公告</a></li>
+<li>相关：kube-scheduler 的 <a href="../Kubernetes/4_kube-scheduler源码分析.html#scheduler-extender扩展点">Scheduler Extender</a>、<a href="../Kubernetes/kueue.html">Kueue</a>、<a href="./hami-core.html">HAMi-core</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../docs/Cloud_Native/AI_Infrastructure/hami-core.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../cordis-hello-world.assets.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../docs/Cloud_Native/AI_Infrastructure/hami-core.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../cordis-hello-world.assets.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../highlight-abc7f01d.js"></script>
+        <script src="../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../theme/mermaid-init-1bb4d447.js"></script>
+        <script src="../../../theme/mermaid-eefea253.min.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

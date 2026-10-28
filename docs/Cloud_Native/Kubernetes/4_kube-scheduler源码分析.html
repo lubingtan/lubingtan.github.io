@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-c9c9f7e7.js";
+            window.path_to_searchindex_js = "../../../searchindex-e97e9397.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-7aaafdfe.js"></script>
+        <script src="../../../toc-34f46ad6.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -492,6 +492,22 @@ func updatePluginList(pluginList interface{}, pluginSet config.PluginSet, plugin
 <h6 id="postbind"><a class="header" href="#postbind">PostBind</a></h6>
 <pre><code class="language-Go">fwk.RunPostBindPlugins(bindingCycleCtx, state, assumedPod, scheduleResult.SuggestedHost)
 </code></pre>
+<h2 id="scheduler-extender扩展点"><a class="header" href="#scheduler-extender扩展点">Scheduler Extender（扩展点）</a></h2>
+<p>除了 Framework 插件，kube-scheduler 还支持通过 <strong>Extender</strong> 把调度决策外置给一个 HTTP 服务（<code>KubeSchedulerConfiguration.extenders</code>）。Extender 可以参与三个环节：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>环节</th><th>HTTP 端点</th><th>作用</th></tr>
+</thead>
+<tbody>
+<tr><td>Filter</td><td><code>/filter</code></td><td>在默认 Filter 之后进一步剔除节点（请求体含 Pod 与候选节点）</td></tr>
+<tr><td>Prioritize</td><td><code>/prioritize</code></td><td>给节点打分；分数按 extender 的 <code>weight</code> 叠加到默认打分上</td></tr>
+<tr><td>Bind</td><td><code>/bind</code></td><td>由 extender 代替调度器执行绑定（常用于需要自定义分配结果的场景）</td></tr>
+</tbody>
+</table>
+</div>
+<p>典型配置字段：<code>urlPrefix</code>、<code>filterVerb</code>、<code>prioritizeVerb</code>、<code>bindVerb</code>、<code>nodeCacheCapable</code>、<code>httpTimeout</code>、<code>weight</code>、<code>managedResources</code>。Extender 是<strong>进程外扩展</strong>，因此排队、缓存与超时都由自己负责；<code>httpTimeout</code> 必须覆盖内部重试时间。</p>
+<p>一个有意思的工程实践是 <a href="../AI_Infrastructure/hami.html">HAMi</a>：它在 <code>/filter</code> 中自己完成设备级 <code>Fit</code> 与节点打分，然后<strong>只返回一个节点名</strong>，相当于把选点决策提前到 Filter（因为标准调度器只认识整数卡数，看不到显存/算力/GPU 拓扑）；<code>/bind</code> 则负责加节点锁、写入设备分配注解并完成 Binding。这也是 extender 模式「用 Filter 做选择」的典型变体。</p>
 
                     </main>
 

@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-c9c9f7e7.js";
+            window.path_to_searchindex_js = "../../../searchindex-e97e9397.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-7aaafdfe.js"></script>
+        <script src="../../../toc-34f46ad6.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -257,6 +257,13 @@
 <li>cert-manager — Webhook 证书管理</li>
 <li>Ginkgo/Gomega — 测试框架</li>
 </ul>
+<h2 id="与-hami-的集成"><a class="header" href="#与-hami-的集成">与 HAMi 的集成</a></h2>
+<p>Kueue 负责「作业级准入 + 队列配额」，HAMi 负责「Pod 级设备切分 + 设备感知放置」，两者是上下游关系：</p>
+<ul>
+<li>通过 Kueue 的 <strong>ResourceTransformation</strong> 把 HAMi 的资源（如 <code>nvidia.com/gpumem</code>、<code>nvidia.com/gpucores</code>）映射成 Kueue 可配额的名义资源，从而在 ClusterQueue 里对「显存份额」做队列级配额与借用；</li>
+<li>作业被 Kueue 准入后，Pod 仍由 HAMi 调度器（extender）完成 GPU 设备选择与绑定，Kueue 不关心具体落在哪张卡。</li>
+</ul>
+<p>这与 Kueue + Volcano 的分工类似：队列层只决定「能不能开始」，设备层决定「用哪张卡、切多少」。详见 <a href="../AI_Infrastructure/hami.html">HAMi</a>。</p>
 <h2 id="参考"><a class="header" href="#参考">参考</a></h2>
 <ul>
 <li><a href="https://github.com/kubernetes-sigs/kueue">Kueue GitHub</a></li>

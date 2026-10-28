@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-c9c9f7e7.js";
+            window.path_to_searchindex_js = "../../../searchindex-e97e9397.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-7aaafdfe.js"></script>
+        <script src="../../../toc-34f46ad6.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -208,6 +208,9 @@ npm start
 <pre><code class="language-bash">node hello-world.ts
 </code></pre>
 <p>三种跑法输出一致，见下方「预期输出」。</p>
+<blockquote>
+<p>若之后要构建整个 wiki（仓库根目录 <code>make build</code>），请先删除本目录的 <code>node_modules/</code> 与 <code>dist/</code>——mdBook 会把 src 下非 markdown 文件整体拷进 <code>book/</code>（Latest updates 扫描已跳过 <code>.assets</code> 与 <code>node_modules</code>）。</p>
+</blockquote>
 <h2 id="完整代码"><a class="header" href="#完整代码">完整代码</a></h2>
 <p>源码文件：<a href="./cordis-hello-world.assets/hello-world.ts">hello-world.ts</a>（工程内其余文件：<code>package.json</code>、<code>tsconfig.json</code>、<code>README.md</code>）</p>
 <pre><code class="language-ts">// hello-world.ts — Cordis Hello World：可逆副作用 + 响应式依赖最小演示
