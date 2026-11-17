@@ -33,8 +33,9 @@ def _read_title(filepath: str) -> str | None:
         pass
     return None
 
-def md_files_with_date(root: str) -> list[str]:
-    md_files = {}
+def md_files_with_date(root: str) -> dict[str, list[str]]:
+    """Group wiki pages by their creation date."""
+    md_files: dict[str, list[str]] = {}
     for dirpath, dirnames, filenames in os.walk(root):
         # 附件/生成目录里的 .md 不是 wiki 页面（如 *.assets/README.md、
         # node_modules 依赖自带的 README.md），不应出现在 Latest updates：
@@ -47,40 +48,36 @@ def md_files_with_date(root: str) -> list[str]:
                 if filename in META_FILES:
                     continue
                 full_path = os.path.join(dirpath, filename)
-                updated_date = get_git_updated_date(full_path)
-                if updated_date not in md_files:
-                    md_files[updated_date] = []
-                md_files[updated_date].append(full_path)
+                created_date = get_git_created_date(full_path)
+                md_files.setdefault(created_date, []).append(full_path)
     return md_files
 
-def get_git_updated_date(file_path: str) -> str:
+def get_git_created_date(file_path: str) -> str:
+    """Return the date the wiki page was created, i.e. first committed to git.
+
+    `git log --follow` keeps tracking the page across renames/moves, so a page
+    keeps its original creation date after being relocated. git log prints
+    commits newest first, therefore the last entry is the creation commit.
+    Files not committed yet fall back to the current date.
+    """
     import subprocess
     try:
         result = subprocess.run(
-            ['git', 'log', '--diff-filter=M', '--follow', '--format=%ad', '--date=short', '--', file_path],
+            ['git', 'log', '--follow', '--format=%ad', '--date=short', '--', file_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
             check=True
         )
-        date = result.stdout
-        # if date is empty, return the date that the file was created
-        if not date.strip():
-            result = subprocess.run(
-                ['git', 'log', '--diff-filter=A', '--follow', '--format=%ad', '--date=short', '--', file_path],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                check=True
-            )
-            date = result.stdout
-        # if date is still empty, return the current date
-        if not date.strip():
-            from datetime import datetime
-            date = datetime.now().strftime('%Y-%m-%d')
-        return date
+        # use the oldest commit touching the file as its creation date
+        dates = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+        if dates:
+            return dates[-1]
     except subprocess.CalledProcessError:
         return "Unknown Date"
+    # if git has no history for the file yet, return the current date
+    from datetime import datetime
+    return datetime.now().strftime('%Y-%m-%d')
 
 if __name__ == '__main__':
     if len(sys.argv) > 1: # we check if we received any argument
@@ -97,7 +94,7 @@ if __name__ == '__main__':
     # and now, we can just modify the content of the first chapter
     files_group_by_date = md_files_with_date('src/docs/')
     lines = []
-    # get latest 10 dates
+    # show the pages with the 10 most recent creation dates, newest first
     for date in sorted(files_group_by_date.keys(), reverse=True)[:10]:
         lines.append(f"## {date}\n")
         for file in sorted(files_group_by_date[date]):
