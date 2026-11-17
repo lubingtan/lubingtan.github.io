@@ -240,6 +240,40 @@ Actor 状态机：`SUSPENDED → RESUMING → RUNNING → SUSPENDING → SUSPEND
 - 格式仍是稀疏 zstd（magic `ATESPRSE`，format v2），新增并行 zstd 帧、ranged/composite 对象读、上传内存预算
 - 节点本地 `internal/snapshotcache` 缓存最近快照，供同节点快速 resume；node reboot 用 boot-id 清理
 
+### Worker 故障与 Actor 恢复
+
+**一句话**：已 SUSPENDED 的 actor 基本不受影响；**RUNNING 的 actor 会随 worker 一起丢状态、被标记 CRASHED**，但能回退到最近一次完成的外部快照再 resume——丢的是"上次快照之后"的状态。
+
+Worker Pod 消失的常见原因：WorkerPool 滚动升级/缩容、节点 drain、Spot VM 回收、Pod/节点故障。控制面逻辑在 `cmd/ateapi/internal/controlapi/workflow_worker_delete.go`：一旦确认 worker Pod 没了，`DeleteWorker` 工作流会 drain 该 worker、把它承载的每个 actor 置为 `CRASHED`、清空 assignment，并尽力回收节点上的 actor 运行目录；语义见 `docs/reference/api-guide.md#eviction`。
+
+| 故障时 actor 状态 | 结果 | 数据损失 |
+|---|---|---|
+| **SUSPENDED**（不在 worker 上） | 不受影响；可从对象存储（或节点本地副本）resume 到任意 worker | 无 |
+| **RUNNING**（被立即杀掉，如节点断电/OOM/强制删除） | sandbox 随 Pod 消失，actor → `CRASHED`；需 `revert` → `resume` | 上次 completed 外部快照之后的状态全部丢失 |
+| **RUNNING + SIGTERM 优雅驱逐** | 有 30min 窗口，窗口内完成 suspend 就能在别的 worker 恢复 | 窗口内完成 **同步** suspend：无损失；否则同上一行 |
+| **SUSPENDING / 异步 suspend 上传未完成** | 本地快照随节点消失；resume 若仍找到上传可恢复，否则 `CRASHED` → 回退到更早的 completed 快照 | 可能丢最新一次快照 |
+
+**驱逐（Eviction）细节**：
+
+- Pod 收到 `SIGTERM` 后 worker 停止接新 actor，并向其承载的每个 actor **主进程**转发 `SIGTERM`；每个 actor 有 **30 分钟**（`workloadGracePeriod`，固定且短于 Pod 1h terminationGrace）完成 suspend
+- Substrate **不会替 actor 自动 suspend**：必须由 harness/应用在窗口内调用 `SuspendActor`，并建议用**同步模式**（`kubectl ate suspend actor --mode=sync`）——异步 suspend 默认要等 `--snapshot-upload-delay`（默认 5min）才后台上传，节点提前消失则快照一起丢
+- Spot VM 回收可能只给 15s–2min（GKE Spot 默认 15s），远小于 30min 窗口；没 suspend 完就是 `CRASHED`
+- 一个 worker 承载多个 actor 时，它们会一起 `CRASHED`，各自独立 revert + resume
+
+**恢复步骤**（`CRASHED` 不能直接 resume，会返回 `FAILED_PRECONDITION`）：
+
+```shell
+kubectl ate get actor <name> -a <atespace> -o yaml   # 看 state=ACTOR_STATE_CRASHED 与 status.snapshots
+kubectl ate revert actor <name> -a <atespace>        # 回到 last completed external snapshot，状态变 SUSPENDED
+kubectl ate resume actor <name> -a <atespace>        # 或等下一次请求经 router 触发 resume
+```
+
+注意事项：
+
+- revert 回退到 `status.snapshots` 中最近一次**已完成**的外部快照（首次运行则是 Golden Snapshot）；节点本地 checkpoint 与半成品快照会被清理
+- **CSI 外部卷不随快照回退**：external volume 的内容不在快照里，revert 后卷仍是崩溃前内容；`DurableDir` 卷在快照内，会一起回退
+- 恢复粒度是"最近一次快照"，不是"崩溃瞬间"；对状态敏感的场景应配合 30min 窗口内的同步 suspend，或主动 `Tag` 保留关键快照
+
 ### 沙箱后端
 
 沙箱 class 由 `WorkerPool.spec.sandboxClasses[].name`（`gvisor|microvm`）决定；`ActorTemplate` 通过 `workerSelector` 选池，**不再直接带 `sandboxClass`**。沙箱二进制/资产来自 `SandboxConfig`，运行时下发到节点 content-addressed **asset cache**（hardlink 复用 + 按字节预算淘汰），而不是烘进 worker 镜像。
