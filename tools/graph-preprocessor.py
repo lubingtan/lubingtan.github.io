@@ -139,9 +139,17 @@ def _graph_html(nodes, edges, categories):
 <div id="graph-container" style="border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;background:#fafafa;"></div>
 <div id="graph-legend" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;"></div>
 
-<script src="https://d3js.org/d3.v7.min.js"></script>
+<!-- d3 is vendored under src/assets/ because the d3js.org CDN is unreachable
+     on some networks, which left the page blank (same reason mermaid is
+     served locally from theme/). -->
+<script src="assets/d3.v7.min.js"></script>
 <script>
 (function() {{
+  if (typeof d3 === 'undefined') {{
+    document.getElementById('graph-container').textContent =
+      'd3.js 加载失败（assets/d3.v7.min.js），关系图无法渲染。';
+    return;
+  }}
   const nodes = {nodes_json};
   const edges = {edges_json};
   const colors = {colors_json};
@@ -181,11 +189,17 @@ def _graph_html(nodes, edges, categories):
     .attr('d', 'M0,-5L10,0L0,5')
     .attr('fill', '#bbb');
 
+  // Many wiki pages have no cross-links (degree 0). Repulsion alone pushes
+  // those isolated nodes ~1000px away, far outside the 748x580 canvas, so
+  // only a couple of nodes used to stay visible. Weak springs towards the
+  // centre keep every node inside the view.
   const simulation = d3.forceSimulation(nodes)
-    .force('link', d3.forceLink(edges).id(d => d.id).distance(120))
-    .force('charge', d3.forceManyBody().strength(-400))
+    .force('link', d3.forceLink(edges).id(d => d.id).distance(100))
+    .force('charge', d3.forceManyBody().strength(-250))
     .force('center', d3.forceCenter(width / 2, height / 2))
-    .force('collision', d3.forceCollide().radius(d => d.radius + 4));
+    .force('collision', d3.forceCollide().radius(d => d.radius + 4))
+    .force('x', d3.forceX(width / 2).strength(0.12))
+    .force('y', d3.forceY(height / 2).strength(0.12));
 
   const link = zoomGroup.append('g')
     .attr('stroke', '#bbb')
