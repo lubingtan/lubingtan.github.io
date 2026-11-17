@@ -24,7 +24,7 @@
 
 ### AI Infrastructure
 
-- [Agent Substrate](./Cloud_Native/AI_Infrastructure/agent-substrate.md) — Google 高密度 Agent 沙箱 Runtime：Actor/Worker 双层模型、suspend/resume 快照、gVisor/Kata 隔离、8 个 Binary 控制面
+- [Agent Substrate](./Cloud_Native/AI_Infrastructure/agent-substrate.md) — CNCF 高密度 Agent 沙箱 Runtime（v1.0.0）：Actor/Worker 多路复用、VOLUMES/ROOTFS/MEMORY 快照、PostgreSQL+OpenFGA 控制面、SPIFFE 身份与 egress 网关
 - [Agent Sandbox](./Cloud_Native/AI_Infrastructure/agent-sandbox.md) — K8s 原生沙箱执行环境：WarmPool 预热池、SandboxClaim 生命周期、7 层安全隔离、Router 请求路由与认证
 - [kagent](./Cloud_Native/AI_Infrastructure/kagent.md) — CNCF K8s 原生 AI Agent 框架：声明式 CRD、Agent Controller、A2A Handler Mux、MCP 工具生态、ADK Runtime
 - [Cordis](./Cloud_Native/AI_Infrastructure/cordis.md) — 时空可组合性元框架：可逆副作用（effect）+ 响应式依赖（coeffect）、Fiber 生命周期状态机、声明式 Loader、HMR；DeepSeek Harness 的插件内核

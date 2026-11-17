@@ -183,7 +183,8 @@ Next.js 构建的 Web 界面，提供 agent 的创建、管理、对话的可视
 
 | 项目 | 关系 |
 |---|---|
-| **Agent Sandbox** | kagent 集成 Agent Substrate 为 SandboxAgent，提供沙箱隔离执行 |
+| **Agent Substrate**（[见页面](./agent-substrate.md)） | kagent 1.0 起每个 agent 都跑在 Agent Substrate 上（SandboxAgent）：快照多路复用 + zero-trust 沙箱隔离，两家均为 CNCF 项目 |
+| **Agent Sandbox**（[见页面](./agent-sandbox.md)） | K8s 原生沙箱执行环境（WarmPool + SandboxClaim），与 Agent Substrate 是相邻/可叠加的路线 |
 | **Google ADK** | Python agent runtime 基于 Google ADK 框架 |
 | **A2A Protocol** | Agent 间通信标准，BYO agent 的互操作接口 |
 | **MCP Protocol** | Agent 调用外部工具的标准协议 |
