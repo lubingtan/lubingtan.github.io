@@ -35,7 +35,7 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-6dcd2aef.js";
+            window.path_to_searchindex_js = "../../../searchindex-503adfc3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../../toc-34f46ad6.js"></script>
@@ -358,7 +358,8 @@ kagent mcp install prometheus
 <tr><th>项目</th><th>关系</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>Agent Sandbox</strong></td><td>kagent 集成 Agent Substrate 为 SandboxAgent，提供沙箱隔离执行</td></tr>
+<tr><td><strong>Agent Substrate</strong>（<a href="./agent-substrate.html">见页面</a>）</td><td>kagent 1.0 起每个 agent 都跑在 Agent Substrate 上（SandboxAgent）：快照多路复用 + zero-trust 沙箱隔离，两家均为 CNCF 项目</td></tr>
+<tr><td><strong>Agent Sandbox</strong>（<a href="./agent-sandbox.html">见页面</a>）</td><td>K8s 原生沙箱执行环境（WarmPool + SandboxClaim），与 Agent Substrate 是相邻/可叠加的路线</td></tr>
 <tr><td><strong>Google ADK</strong></td><td>Python agent runtime 基于 Google ADK 框架</td></tr>
 <tr><td><strong>A2A Protocol</strong></td><td>Agent 间通信标准，BYO agent 的互操作接口</td></tr>
 <tr><td><strong>MCP Protocol</strong></td><td>Agent 调用外部工具的标准协议</td></tr>

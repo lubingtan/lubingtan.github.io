@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-6dcd2aef.js";
+            window.path_to_searchindex_js = "searchindex-503adfc3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-34f46ad6.js"></script>
@@ -228,11 +228,19 @@
 
 <div id="graph-legend" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;"></div>
 
-<script src="https://d3js.org/d3.v7.min.js"></script>
+<!-- d3 is vendored under src/assets/ because the d3js.org CDN is unreachable
+     on some networks, which left the page blank (same reason mermaid is
+     served locally from theme/). -->
+<script src="assets/d3.v7.min.js"></script>
 <script>
 (function() {
-  const nodes = [{"id": "Operation/Linux/Bash以及命令行工具技巧集合", "name": "Bash以及命令行工具技巧集合", "category": "Operation / Linux", "path": "docs/Operation/Linux/Bash%E4%BB%A5%E5%8F%8A%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%B7%A5%E5%85%B7%E6%8A%80%E5%B7%A7%E9%9B%86%E5%90%88.html", "degree": 0}, {"id": "Operation/Development_Environment/WIndows开发环境配置", "name": "WIndows开发环境配置", "category": "Operation / Development Environment", "path": "docs/Operation/Development_Environment/WIndows%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE.html", "degree": 0}, {"id": "Operation/Development_Environment/Docker环境配置", "name": "Docker环境配置", "category": "Operation / Development Environment", "path": "docs/Operation/Development_Environment/Docker%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE.html", "degree": 0}, {"id": "Machine_Learning/Inference/Model Mesh Serving: 一种可以大规模部署ML模型的解决方案", "name": "Model Mesh Serving: 一种可以大规模部署ML模型的解决方案", "category": "Machine Learning / Inference", "path": "docs/Machine_Learning/Inference/Model%20Mesh%20Serving%3A%20%E4%B8%80%E7%A7%8D%E5%8F%AF%E4%BB%A5%E5%A4%A7%E8%A7%84%E6%A8%A1%E9%83%A8%E7%BD%B2ML%E6%A8%A1%E5%9E%8B%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88.html", "degree": 0}, {"id": "Machine_Learning/Inference/vLLM Production Stack实战", "name": "vLLM Production Stack 实战", "category": "Machine Learning / Inference", "path": "docs/Machine_Learning/Inference/vLLM%20Production%20Stack%E5%AE%9E%E6%88%98.html", "degree": 0}, {"id": "Machine_Learning/High_Performance_Computing/ompi架构介绍", "name": "Open MPI 架构介绍", "category": "Machine Learning / High Performance Computing", "path": "docs/Machine_Learning/High_Performance_Computing/ompi%E6%9E%B6%E6%9E%84%E4%BB%8B%E7%BB%8D.html", "degree": 1}, {"id": "Machine_Learning/High_Performance_Computing/slurm", "name": "Slurm: HPC 集群工作负载管理器", "category": "Machine Learning / High Performance Computing", "path": "docs/Machine_Learning/High_Performance_Computing/slurm.html", "degree": 3}, {"id": "Cloud_Native/Cluster_Lifecycle/cluster-api", "name": "Cluster API: 声明式集群生命周期管理", "category": "Cloud Native / Cluster Lifecycle", "path": "docs/Cloud_Native/Cluster_Lifecycle/cluster-api.html", "degree": 0}, {"id": "Cloud_Native/Linux_Container/容器知识备忘录", "name": "一份容器知识备忘录", "category": "Cloud Native / Linux Container", "path": "docs/Cloud_Native/Linux_Container/%E5%AE%B9%E5%99%A8%E7%9F%A5%E8%AF%86%E5%A4%87%E5%BF%98%E5%BD%95.html", "degree": 0}, {"id": "Cloud_Native/CICD/devops-thinking", "name": "DevOps 理念与实践", "category": "Cloud Native / CICD", "path": "docs/Cloud_Native/CICD/devops-thinking.html", "degree": 0}, {"id": "Cloud_Native/AI_Infrastructure/agent-sandbox", "name": "Agent Sandbox: K8s 原生沙箱执行环境", "category": "Cloud Native / AI Infrastructure", "path": "docs/Cloud_Native/AI_Infrastructure/agent-sandbox.html", "degree": 3}, {"id": "Cloud_Native/AI_Infrastructure/hami", "name": "HAMi：Kubernetes 异构 AI 算力虚拟化与调度", "category": "Cloud Native / AI Infrastructure", "path": "docs/Cloud_Native/AI_Infrastructure/hami.html", "degree": 8}, {"id": "Cloud_Native/AI_Infrastructure/agent-substrate", "name": "Agent Substrate: 高密度 Agent 沙箱 Runtime", "category": "Cloud Native / AI Infrastructure", "path": "docs/Cloud_Native/AI_Infrastructure/agent-substrate.html", "degree": 4}, {"id": "Cloud_Native/AI_Infrastructure/cordis", "name": "Cordis：时空可组合性元框架", "category": "Cloud Native / AI Infrastructure", "path": "docs/Cloud_Native/AI_Infrastructure/cordis.html", "degree": 10}, {"id": "Cloud_Native/AI_Infrastructure/cordis-hello-world", "name": "Cordis Hello World：跑通可逆副作用与响应式依赖", "category": "Cloud Native / AI Infrastructure", "path": "docs/Cloud_Native/AI_Infrastructure/cordis-hello-world.html", "degree": 8}, {"id": "Cloud_Native/AI_Infrastructure/hami-core", "name": "HAMi-core：容器内 CUDA 劫持与资源隔离", "category": "Cloud Native / AI Infrastructure", "path": "docs/Cloud_Native/AI_Infrastructure/hami-core.html", "degree": 5}, {"id": "Cloud_Native/AI_Infrastructure/kagent", "name": "kagent: K8s 原生 AI Agent 框架", "category": "Cloud Native / AI Infrastructure", "path": "docs/Cloud_Native/AI_Infrastructure/kagent.html", "degree": 4}, {"id": "Cloud_Native/AI_Infrastructure/cordis-hello-world.assets/README", "name": "Cordis Hello World（本地可 build / run 的最小 demo）", "category": "Cloud Native / AI Infrastructure", "path": "docs/Cloud_Native/AI_Infrastructure/cordis-hello-world.assets/README.html", "degree": 1}, {"id": "Cloud_Native/Kubernetes/5_client-go list & watch 原理", "name": "client-go list & watch 原理", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/5_client-go%20list%20%26%20watch%20%E5%8E%9F%E7%90%86.html", "degree": 0}, {"id": "Cloud_Native/Kubernetes/k8s之pleg", "name": "k8s之pleg", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/k8s%E4%B9%8Bpleg.html", "degree": 0}, {"id": "Cloud_Native/Kubernetes/kueue", "name": "Kueue: Kubernetes 原生作业队列管理器", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/kueue.html", "degree": 7}, {"id": "Cloud_Native/Kubernetes/cni详解", "name": "cni详解", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/cni%E8%AF%A6%E8%A7%A3.html", "degree": 0}, {"id": "Cloud_Native/Kubernetes/rbac", "name": "rbac", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/rbac.html", "degree": 0}, {"id": "Cloud_Native/Kubernetes/flowschema", "name": "flowschema", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/flowschema.html", "degree": 0}, {"id": "Cloud_Native/Kubernetes/4_kube-scheduler源码分析", "name": "k8s scheduler 源码分析", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/4_kube-scheduler%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90.html", "degree": 3}, {"id": "Cloud_Native/Kubernetes/1_kubernetes概念", "name": "**What** is Kubernetes", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/1_kubernetes%E6%A6%82%E5%BF%B5.html", "degree": 0}, {"id": "Cloud_Native/Kubernetes/kubernetes_ha", "name": "kubernetes_ha", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/kubernetes_ha.html", "degree": 0}, {"id": "Cloud_Native/Kubernetes/6_service相关", "name": "What is Kubernetes Service", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/6_service%E7%9B%B8%E5%85%B3.html", "degree": 0}, {"id": "Cloud_Native/Kubernetes/kubelet原理", "name": "Kubelet 原理", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/kubelet%E5%8E%9F%E7%90%86.html", "degree": 0}, {"id": "Cloud_Native/Kubernetes/2_kubernetes-api-server", "name": "2_kubernetes-api-server", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/2_kubernetes-api-server.html", "degree": 0}, {"id": "Cloud_Native/Kubernetes/1-1_k8s工作负载", "name": "Pod", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/1-1_k8s%E5%B7%A5%E4%BD%9C%E8%B4%9F%E8%BD%BD.html", "degree": 1}, {"id": "Distributed_Systems/mesos", "name": "Apache Mesos: 分布式系统内核", "category": "Distributed Systems / mesos.md", "path": "docs/Distributed_Systems/mesos.html", "degree": 2}];
-  const edges = [{"source": "Machine_Learning/High_Performance_Computing/slurm", "target": "Machine_Learning/High_Performance_Computing/ompi架构介绍"}, {"source": "Machine_Learning/High_Performance_Computing/slurm", "target": "Cloud_Native/Kubernetes/kueue"}, {"source": "Cloud_Native/AI_Infrastructure/hami", "target": "Cloud_Native/AI_Infrastructure/hami-core"}, {"source": "Cloud_Native/AI_Infrastructure/hami", "target": "Cloud_Native/Kubernetes/kueue"}, {"source": "Cloud_Native/AI_Infrastructure/hami", "target": "Cloud_Native/Kubernetes/kueue"}, {"source": "Cloud_Native/AI_Infrastructure/hami", "target": "Cloud_Native/AI_Infrastructure/hami-core"}, {"source": "Cloud_Native/AI_Infrastructure/agent-substrate", "target": "Cloud_Native/AI_Infrastructure/kagent"}, {"source": "Cloud_Native/AI_Infrastructure/agent-substrate", "target": "Cloud_Native/AI_Infrastructure/agent-sandbox"}, {"source": "Cloud_Native/AI_Infrastructure/cordis", "target": "Cloud_Native/AI_Infrastructure/cordis-hello-world"}, {"source": "Cloud_Native/AI_Infrastructure/cordis", "target": "Cloud_Native/AI_Infrastructure/cordis-hello-world"}, {"source": "Cloud_Native/AI_Infrastructure/cordis", "target": "Cloud_Native/AI_Infrastructure/kagent"}, {"source": "Cloud_Native/AI_Infrastructure/cordis", "target": "Cloud_Native/AI_Infrastructure/agent-substrate"}, {"source": "Cloud_Native/AI_Infrastructure/cordis", "target": "Cloud_Native/AI_Infrastructure/agent-sandbox"}, {"source": "Cloud_Native/AI_Infrastructure/cordis-hello-world", "target": "Cloud_Native/AI_Infrastructure/cordis"}, {"source": "Cloud_Native/AI_Infrastructure/cordis-hello-world", "target": "Cloud_Native/AI_Infrastructure/cordis"}, {"source": "Cloud_Native/AI_Infrastructure/cordis-hello-world", "target": "Cloud_Native/AI_Infrastructure/cordis"}, {"source": "Cloud_Native/AI_Infrastructure/cordis-hello-world", "target": "Cloud_Native/AI_Infrastructure/kagent"}, {"source": "Cloud_Native/AI_Infrastructure/cordis-hello-world", "target": "Cloud_Native/AI_Infrastructure/agent-substrate"}, {"source": "Cloud_Native/AI_Infrastructure/cordis-hello-world", "target": "Cloud_Native/AI_Infrastructure/agent-sandbox"}, {"source": "Cloud_Native/AI_Infrastructure/hami-core", "target": "Cloud_Native/AI_Infrastructure/hami"}, {"source": "Cloud_Native/AI_Infrastructure/hami-core", "target": "Cloud_Native/AI_Infrastructure/hami"}, {"source": "Cloud_Native/AI_Infrastructure/hami-core", "target": "Cloud_Native/Kubernetes/4_kube-scheduler源码分析"}, {"source": "Cloud_Native/AI_Infrastructure/kagent", "target": "Cloud_Native/AI_Infrastructure/cordis"}, {"source": "Cloud_Native/AI_Infrastructure/cordis-hello-world.assets/README", "target": "Cloud_Native/AI_Infrastructure/cordis"}, {"source": "Cloud_Native/Kubernetes/kueue", "target": "Cloud_Native/Kubernetes/1-1_k8s工作负载"}, {"source": "Cloud_Native/Kubernetes/kueue", "target": "Cloud_Native/Kubernetes/4_kube-scheduler源码分析"}, {"source": "Cloud_Native/Kubernetes/kueue", "target": "Cloud_Native/AI_Infrastructure/hami"}, {"source": "Cloud_Native/Kubernetes/4_kube-scheduler源码分析", "target": "Cloud_Native/AI_Infrastructure/hami"}, {"source": "Distributed_Systems/mesos", "target": "Machine_Learning/High_Performance_Computing/slurm"}, {"source": "Distributed_Systems/mesos", "target": "Cloud_Native/Kubernetes/kueue"}];
+  if (typeof d3 === 'undefined') {
+    document.getElementById('graph-container').textContent =
+      'd3.js 加载失败（assets/d3.v7.min.js），关系图无法渲染。';
+    return;
+  }
+  const nodes = [{"id": "Operation/Linux/Bash以及命令行工具技巧集合", "name": "Bash以及命令行工具技巧集合", "category": "Operation / Linux", "path": "docs/Operation/Linux/Bash%E4%BB%A5%E5%8F%8A%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%B7%A5%E5%85%B7%E6%8A%80%E5%B7%A7%E9%9B%86%E5%90%88.html", "degree": 0}, {"id": "Operation/Development_Environment/WIndows开发环境配置", "name": "WIndows开发环境配置", "category": "Operation / Development Environment", "path": "docs/Operation/Development_Environment/WIndows%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE.html", "degree": 0}, {"id": "Operation/Development_Environment/Docker环境配置", "name": "Docker环境配置", "category": "Operation / Development Environment", "path": "docs/Operation/Development_Environment/Docker%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE.html", "degree": 0}, {"id": "Machine_Learning/Inference/Model Mesh Serving: 一种可以大规模部署ML模型的解决方案", "name": "Model Mesh Serving: 一种可以大规模部署ML模型的解决方案", "category": "Machine Learning / Inference", "path": "docs/Machine_Learning/Inference/Model%20Mesh%20Serving%3A%20%E4%B8%80%E7%A7%8D%E5%8F%AF%E4%BB%A5%E5%A4%A7%E8%A7%84%E6%A8%A1%E9%83%A8%E7%BD%B2ML%E6%A8%A1%E5%9E%8B%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88.html", "degree": 0}, {"id": "Machine_Learning/Inference/vLLM Production Stack实战", "name": "vLLM Production Stack 实战", "category": "Machine Learning / Inference", "path": "docs/Machine_Learning/Inference/vLLM%20Production%20Stack%E5%AE%9E%E6%88%98.html", "degree": 0}, {"id": "Machine_Learning/High_Performance_Computing/ompi架构介绍", "name": "Open MPI 架构介绍", "category": "Machine Learning / High Performance Computing", "path": "docs/Machine_Learning/High_Performance_Computing/ompi%E6%9E%B6%E6%9E%84%E4%BB%8B%E7%BB%8D.html", "degree": 1}, {"id": "Machine_Learning/High_Performance_Computing/slurm", "name": "Slurm: HPC 集群工作负载管理器", "category": "Machine Learning / High Performance Computing", "path": "docs/Machine_Learning/High_Performance_Computing/slurm.html", "degree": 3}, {"id": "Cloud_Native/Cluster_Lifecycle/cluster-api", "name": "Cluster API: 声明式集群生命周期管理", "category": "Cloud Native / Cluster Lifecycle", "path": "docs/Cloud_Native/Cluster_Lifecycle/cluster-api.html", "degree": 0}, {"id": "Cloud_Native/Linux_Container/容器知识备忘录", "name": "一份容器知识备忘录", "category": "Cloud Native / Linux Container", "path": "docs/Cloud_Native/Linux_Container/%E5%AE%B9%E5%99%A8%E7%9F%A5%E8%AF%86%E5%A4%87%E5%BF%98%E5%BD%95.html", "degree": 0}, {"id": "Cloud_Native/CICD/devops-thinking", "name": "DevOps 理念与实践", "category": "Cloud Native / CICD", "path": "docs/Cloud_Native/CICD/devops-thinking.html", "degree": 0}, {"id": "Cloud_Native/AI_Infrastructure/agent-sandbox", "name": "Agent Sandbox: K8s 原生沙箱执行环境", "category": "Cloud Native / AI Infrastructure", "path": "docs/Cloud_Native/AI_Infrastructure/agent-sandbox.html", "degree": 4}, {"id": "Cloud_Native/AI_Infrastructure/hami", "name": "HAMi：Kubernetes 异构 AI 算力虚拟化与调度", "category": "Cloud Native / AI Infrastructure", "path": "docs/Cloud_Native/AI_Infrastructure/hami.html", "degree": 8}, {"id": "Cloud_Native/AI_Infrastructure/agent-substrate", "name": "Agent Substrate: 高密度 Agent 沙箱 Runtime", "category": "Cloud Native / AI Infrastructure", "path": "docs/Cloud_Native/AI_Infrastructure/agent-substrate.html", "degree": 5}, {"id": "Cloud_Native/AI_Infrastructure/cordis", "name": "Cordis：时空可组合性元框架", "category": "Cloud Native / AI Infrastructure", "path": "docs/Cloud_Native/AI_Infrastructure/cordis.html", "degree": 10}, {"id": "Cloud_Native/AI_Infrastructure/cordis-hello-world", "name": "Cordis Hello World：跑通可逆副作用与响应式依赖", "category": "Cloud Native / AI Infrastructure", "path": "docs/Cloud_Native/AI_Infrastructure/cordis-hello-world.html", "degree": 8}, {"id": "Cloud_Native/AI_Infrastructure/hami-core", "name": "HAMi-core：容器内 CUDA 劫持与资源隔离", "category": "Cloud Native / AI Infrastructure", "path": "docs/Cloud_Native/AI_Infrastructure/hami-core.html", "degree": 5}, {"id": "Cloud_Native/AI_Infrastructure/kagent", "name": "kagent: K8s 原生 AI Agent 框架", "category": "Cloud Native / AI Infrastructure", "path": "docs/Cloud_Native/AI_Infrastructure/kagent.html", "degree": 6}, {"id": "Cloud_Native/AI_Infrastructure/cordis-hello-world.assets/README", "name": "Cordis Hello World（本地可 build / run 的最小 demo）", "category": "Cloud Native / AI Infrastructure", "path": "docs/Cloud_Native/AI_Infrastructure/cordis-hello-world.assets/README.html", "degree": 1}, {"id": "Cloud_Native/Kubernetes/5_client-go list & watch 原理", "name": "client-go list & watch 原理", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/5_client-go%20list%20%26%20watch%20%E5%8E%9F%E7%90%86.html", "degree": 0}, {"id": "Cloud_Native/Kubernetes/k8s之pleg", "name": "k8s之pleg", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/k8s%E4%B9%8Bpleg.html", "degree": 0}, {"id": "Cloud_Native/Kubernetes/kueue", "name": "Kueue: Kubernetes 原生作业队列管理器", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/kueue.html", "degree": 7}, {"id": "Cloud_Native/Kubernetes/cni详解", "name": "cni详解", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/cni%E8%AF%A6%E8%A7%A3.html", "degree": 0}, {"id": "Cloud_Native/Kubernetes/rbac", "name": "rbac", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/rbac.html", "degree": 0}, {"id": "Cloud_Native/Kubernetes/flowschema", "name": "flowschema", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/flowschema.html", "degree": 0}, {"id": "Cloud_Native/Kubernetes/4_kube-scheduler源码分析", "name": "k8s scheduler 源码分析", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/4_kube-scheduler%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90.html", "degree": 3}, {"id": "Cloud_Native/Kubernetes/1_kubernetes概念", "name": "**What** is Kubernetes", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/1_kubernetes%E6%A6%82%E5%BF%B5.html", "degree": 0}, {"id": "Cloud_Native/Kubernetes/kubernetes_ha", "name": "kubernetes_ha", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/kubernetes_ha.html", "degree": 0}, {"id": "Cloud_Native/Kubernetes/6_service相关", "name": "What is Kubernetes Service", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/6_service%E7%9B%B8%E5%85%B3.html", "degree": 0}, {"id": "Cloud_Native/Kubernetes/kubelet原理", "name": "Kubelet 原理", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/kubelet%E5%8E%9F%E7%90%86.html", "degree": 0}, {"id": "Cloud_Native/Kubernetes/2_kubernetes-api-server", "name": "2_kubernetes-api-server", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/2_kubernetes-api-server.html", "degree": 0}, {"id": "Cloud_Native/Kubernetes/1-1_k8s工作负载", "name": "Pod", "category": "Cloud Native / Kubernetes", "path": "docs/Cloud_Native/Kubernetes/1-1_k8s%E5%B7%A5%E4%BD%9C%E8%B4%9F%E8%BD%BD.html", "degree": 1}, {"id": "Distributed_Systems/mesos", "name": "Apache Mesos: 分布式系统内核", "category": "Distributed Systems / mesos.md", "path": "docs/Distributed_Systems/mesos.html", "degree": 2}];
+  const edges = [{"source": "Machine_Learning/High_Performance_Computing/slurm", "target": "Machine_Learning/High_Performance_Computing/ompi架构介绍"}, {"source": "Machine_Learning/High_Performance_Computing/slurm", "target": "Cloud_Native/Kubernetes/kueue"}, {"source": "Cloud_Native/AI_Infrastructure/hami", "target": "Cloud_Native/AI_Infrastructure/hami-core"}, {"source": "Cloud_Native/AI_Infrastructure/hami", "target": "Cloud_Native/Kubernetes/kueue"}, {"source": "Cloud_Native/AI_Infrastructure/hami", "target": "Cloud_Native/Kubernetes/kueue"}, {"source": "Cloud_Native/AI_Infrastructure/hami", "target": "Cloud_Native/AI_Infrastructure/hami-core"}, {"source": "Cloud_Native/AI_Infrastructure/agent-substrate", "target": "Cloud_Native/AI_Infrastructure/kagent"}, {"source": "Cloud_Native/AI_Infrastructure/agent-substrate", "target": "Cloud_Native/AI_Infrastructure/agent-sandbox"}, {"source": "Cloud_Native/AI_Infrastructure/cordis", "target": "Cloud_Native/AI_Infrastructure/cordis-hello-world"}, {"source": "Cloud_Native/AI_Infrastructure/cordis", "target": "Cloud_Native/AI_Infrastructure/cordis-hello-world"}, {"source": "Cloud_Native/AI_Infrastructure/cordis", "target": "Cloud_Native/AI_Infrastructure/kagent"}, {"source": "Cloud_Native/AI_Infrastructure/cordis", "target": "Cloud_Native/AI_Infrastructure/agent-substrate"}, {"source": "Cloud_Native/AI_Infrastructure/cordis", "target": "Cloud_Native/AI_Infrastructure/agent-sandbox"}, {"source": "Cloud_Native/AI_Infrastructure/cordis-hello-world", "target": "Cloud_Native/AI_Infrastructure/cordis"}, {"source": "Cloud_Native/AI_Infrastructure/cordis-hello-world", "target": "Cloud_Native/AI_Infrastructure/cordis"}, {"source": "Cloud_Native/AI_Infrastructure/cordis-hello-world", "target": "Cloud_Native/AI_Infrastructure/cordis"}, {"source": "Cloud_Native/AI_Infrastructure/cordis-hello-world", "target": "Cloud_Native/AI_Infrastructure/kagent"}, {"source": "Cloud_Native/AI_Infrastructure/cordis-hello-world", "target": "Cloud_Native/AI_Infrastructure/agent-substrate"}, {"source": "Cloud_Native/AI_Infrastructure/cordis-hello-world", "target": "Cloud_Native/AI_Infrastructure/agent-sandbox"}, {"source": "Cloud_Native/AI_Infrastructure/hami-core", "target": "Cloud_Native/AI_Infrastructure/hami"}, {"source": "Cloud_Native/AI_Infrastructure/hami-core", "target": "Cloud_Native/AI_Infrastructure/hami"}, {"source": "Cloud_Native/AI_Infrastructure/hami-core", "target": "Cloud_Native/Kubernetes/4_kube-scheduler源码分析"}, {"source": "Cloud_Native/AI_Infrastructure/kagent", "target": "Cloud_Native/AI_Infrastructure/agent-substrate"}, {"source": "Cloud_Native/AI_Infrastructure/kagent", "target": "Cloud_Native/AI_Infrastructure/agent-sandbox"}, {"source": "Cloud_Native/AI_Infrastructure/kagent", "target": "Cloud_Native/AI_Infrastructure/cordis"}, {"source": "Cloud_Native/AI_Infrastructure/cordis-hello-world.assets/README", "target": "Cloud_Native/AI_Infrastructure/cordis"}, {"source": "Cloud_Native/Kubernetes/kueue", "target": "Cloud_Native/Kubernetes/1-1_k8s工作负载"}, {"source": "Cloud_Native/Kubernetes/kueue", "target": "Cloud_Native/Kubernetes/4_kube-scheduler源码分析"}, {"source": "Cloud_Native/Kubernetes/kueue", "target": "Cloud_Native/AI_Infrastructure/hami"}, {"source": "Cloud_Native/Kubernetes/4_kube-scheduler源码分析", "target": "Cloud_Native/AI_Infrastructure/hami"}, {"source": "Distributed_Systems/mesos", "target": "Machine_Learning/High_Performance_Computing/slurm"}, {"source": "Distributed_Systems/mesos", "target": "Cloud_Native/Kubernetes/kueue"}];
   const colors = {"Cloud Native / AI Infrastructure": "#326ce5", "Cloud Native / CICD": "#4caf50", "Cloud Native / Cluster Lifecycle": "#ff9800", "Cloud Native / Kubernetes": "#f44336", "Cloud Native / Linux Container": "#9c27b0", "Distributed Systems / mesos.md": "#00bcd4", "Machine Learning / High Performance Computing": "#ff5722", "Machine Learning / Inference": "#607d8b", "Operation / Development Environment": "#8bc34a", "Operation / Linux": "#e91e63"};
   const defaultColor = '#9e9e9e';
 
@@ -270,11 +278,17 @@
     .attr('d', 'M0,-5L10,0L0,5')
     .attr('fill', '#bbb');
 
+  // Many wiki pages have no cross-links (degree 0). Repulsion alone pushes
+  // those isolated nodes ~1000px away, far outside the 748x580 canvas, so
+  // only a couple of nodes used to stay visible. Weak springs towards the
+  // centre keep every node inside the view.
   const simulation = d3.forceSimulation(nodes)
-    .force('link', d3.forceLink(edges).id(d => d.id).distance(120))
-    .force('charge', d3.forceManyBody().strength(-400))
+    .force('link', d3.forceLink(edges).id(d => d.id).distance(100))
+    .force('charge', d3.forceManyBody().strength(-250))
     .force('center', d3.forceCenter(width / 2, height / 2))
-    .force('collision', d3.forceCollide().radius(d => d.radius + 4));
+    .force('collision', d3.forceCollide().radius(d => d.radius + 4))
+    .force('x', d3.forceX(width / 2).strength(0.12))
+    .force('y', d3.forceY(height / 2).strength(0.12));
 
   const link = zoomGroup.append('g')
     .attr('stroke', '#bbb')
@@ -715,28 +729,91 @@ Claim 删除 → GC 级联删 Sandbox → Pod/PVC/SVC
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="agent-substrate-高密度-agent-沙箱-runtime-1"><a class="header" href="#agent-substrate-高密度-agent-沙箱-runtime-1">Agent Substrate: 高密度 Agent 沙箱 Runtime</a></h1>
+<blockquote>
+<p><strong>页面基线（2026-11-17 追更）</strong>：本地仓库 <code>/home/lubingtan/go/src/github.com/agent-substrate/substrate</code> 已追到 <code>main@d283af4eb</code>（2026-11-17，1718 commits），<strong>v1.0.0 “Fully armed and operational” 已于 2026-11-05 发布</strong>。旧页面的内容基线约为 2026-07-31（<code>cbdeb7dbe</code>，425 commits），距今已有 <strong>1293 个提交</strong>。旧页面中的 Redis、<code>ateom</code>、单 actor/worker、Pause、FULL/DATA 快照等描述已被 1.0 架构淘汰，本页按 HEAD 重写，并在文末附「与 2026-07 版页面的差异」对照表。</p>
+</blockquote>
+<h2 id="tldr这次追更发现了什么"><a class="header" href="#tldr这次追更发现了什么">TL;DR：这次追更发现了什么</a></h2>
+<ol>
+<li><strong>GA 了</strong>：v0.1.0（09-09）→ v0.6.0（10-22）约每周一个 minor 之后，v1.0.0（11-05）发布；README 从 “VERY early development / 不做兼容承诺” 改为 “committed to compatibility”，并给出 API/CLI/配置/数据/回滚四类兼容规则。</li>
+<li><strong>状态存储换底座</strong>：ValKey/Redis 被 <strong>PostgreSQL</strong> 彻底替换（<code>atepg</code>，<code>#640</code>/<code>#940</code>），授权模型内嵌 <strong>OpenFGA</strong>；Redis 分布式锁改为进程内 actor 锁 + PG 租约/outbox。</li>
+<li><strong>组件改名 + 扩张</strong>：<code>ateom-gvisor/microvm</code> → <code>ateworker-gvisor/microvm</code>；新增 <code>ate-idp-server</code>、<code>ate-setup</code>、<code>objectstore-plugin</code>、<code>credential-provider</code>、<code>envoy-dataplane</code>；<code>cmd/</code> 从 9 个目录变为 14 个。</li>
+<li><strong>一个 worker 跑多个 actor</strong>：Worker 从“同时只承载 1 个 actor“变为可承载多个（受容量与 <code>--max-actors</code> 默认 1000 限制）；Actor 开始声明 CPU/内存 limits，调度器按容量记账。</li>
+<li><strong>快照模型重做</strong>：FULL/DATA 作用域 → <code>VOLUMES &lt; ROOTFS &lt; MEMORY</code> 三级 fidelity；suspend 默认<strong>异步</strong>（先写节点本地快照、后台上传）；新增 <code>RevertActor</code>、<code>Tag</code>（不可变快照别名/保留）、节点本地快照缓存。</li>
+<li><strong>安全从零补到 zero-trust</strong>：per-actor 1h SPIFFE 证书 + actor JWT（OIDC IDP）、出口网关 <code>atenet-egress</code> + 凭证注入（secret 不进 sandbox）、EgressPolicy 默认拒绝、OpenFGA ReBAC、ate-system 默认拒绝 NetworkPolicy、worker 权限收紧（gVisor 9 caps / microVM 11 caps，均 <code>privileged:false</code>）。</li>
+<li><strong>入口路由换了</strong>：不再用 DNS/Host 选 actor，改为 <code>ate-target-actor: &lt;atespace&gt;/&lt;actor&gt;</code> header + mTLS CONNECT 到 worker 内 <code>atunnel</code>（默认 8443）；<code>atenet dns</code> 删除，改为每 sandbox 一个 DNS relay。</li>
+<li><strong>安装/CLI/可观测性成熟</strong>：<code>hack/install-ate*.sh</code> → <code>go run ./cmd/ate-setup deploy ...</code>；<code>kubectl ate proxy actor</code>；Hugo 文档站 <a href="https://ate.dev">ate.dev</a>；OTel Weaver 指标注册表 + 首份 SLO/告警规范。</li>
+<li><strong>生态</strong>：2026-11 捐赠 <strong>CNCF Sandbox</strong>；kagent 1.0 起每个 agent 跑在 Substrate 上；README 主演示 8 个 Pod 承载 ~250 个有状态 actor（10x–30x oversubscription）。</li>
+<li><strong>指标双口径</strong>：架构文档的 north star 仍是 100ms p95 / 10 亿 actor / 1000 wakeups/s（<strong>目标</strong>），对外 GA 口径是 resume &lt; 500ms、&gt; 500 activations/s（<strong>承诺/演示口径</strong>），仓库内没有 p95 实测数字。</li>
+</ol>
 <h2 id="what-is-agent-substrate"><a class="header" href="#what-is-agent-substrate">What is Agent Substrate</a></h2>
-<p><a href="https://github.com/agent-substrate/substrate">Agent Substrate</a> 是一个面向大规模 agent 部署的高密度运行时环境，构建于 Kubernetes 之上。核心理念：把大量 <strong>actor</strong>（agent 应用实例）映射到少量预热的 <strong>worker</strong>（K8s Pod），通过<strong>亚秒级的 suspend/resume</strong> 实现空闲 agent 的高密度多路复用。</p>
-<p>关键洞察：agent 工作负载大部分时间处于空闲状态。当空闲时 agent 被 suspend（checkpoint 到对象存储快照），worker 释放给其他 actor 使用；当请求到达时 actor 从快照 resume 到任意可用 worker。这解耦了 actor 生命周期和 K8s Pod 生命周期——K8s 管理低频基础设施（worker Pod），专用控制面管理高频低延迟的 actor 调度。</p>
+<p><a href="https://github.com/agent-substrate/substrate">Agent Substrate</a> 是 Google 发起、2026-11 已捐赠 CNCF（Sandbox）的高密度 Agent 沙箱运行时。1.0 的对外定位是 <strong>“zero-trust sandboxing for millions of agents on Kubernetes”</strong>：在标准 K8s 之上，把大量有状态 <strong>actor</strong>（agent 应用实例）多路复用到少量预热的 <strong>worker</strong> Pod，空闲 agent 被 checkpoint 出内存、请求到达时快速 restore 回来。</p>
+<p>核心叙事没变：agent 大部分时间在等模型、等工具、等输入；把空闲 actor 快照到对象存储并释放 worker，用时间维度换密度。变的是 1.0 补齐了 v0.0.0 时仅有“愿景“的安全、身份、网络、存储和运维层：</p>
 <ul>
-<li>Go 1.26.3，Apache 2.0，早期开发阶段（v0.0.0）</li>
-<li>Google 背景（非官方产品），425 commits</li>
-<li>沙箱后端：gVisor (<code>runsc</code> checkpoint/restore) + Kata Containers on Cloud Hypervisor microVM</li>
+<li><strong>始终沙箱化</strong>：每个 actor 跑在独立 gVisor（<code>runsc</code>）或 Cloud Hypervisor microVM 里，纯 Linux 容器不被支持</li>
+<li><strong>per-actor 身份</strong>：默认签发短生命周期 SPIFFE X.509；出口网关可按策略铸造 per-actor JWT，均可与外部身份系统联邦</li>
+<li><strong>sandbox 内零凭证</strong>：actor 不持有 API key、云 token 或身份证书，出站凭证由 <code>atenet-egress</code> 在沙箱外注入</li>
+<li><strong>默认拒绝网络</strong>：入站只走 <code>atenet-router</code>，横向与出站受 egress 策略约束</li>
+<li><strong>可插拔策略边界</strong>：egress 网关是可替换的 PEP（策略执行点），可接自研授权/DLP/prompt 注入扫描</li>
 </ul>
-<p><strong>目标指标</strong>：100ms p95 激活延迟，单集群 10 亿 actor</p>
-<h2 id="双层状态模型"><a class="header" href="#双层状态模型">双层状态模型</a></h2>
-<p>Agent Substrate 刻意将状态分为两层（协议 etcd 的扩展限制）：</p>
+<p><strong>规模指标</strong>（两套口径，注意区分）：</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>层</th><th>存储</th><th>内容</th><th>更新频率</th></tr>
+<tr><th>口径</th><th>内容</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>系统配置</strong>（CRD）</td><td>K8s API Server / etcd</td><td>WorkerPool, ActorTemplate, SandboxConfig</td><td>低频（infra 变更）</td></tr>
-<tr><td><strong>动态实例状态</strong></td><td>ValKey/Redis</td><td>Atespace, Actor, Worker, ActorSnapshot</td><td>高频（数千次/秒）</td></tr>
+<tr><td>内部 north star（<code>docs/concepts/architecture.md</code>）</td><td>激活延迟 100ms p95；单集群 10 亿 actor；1000 wakeups/s（均为<strong>目标</strong>，非实测）</td></tr>
+<tr><td>对外 GA 口径（README / overview）</td><td>resume <strong>&lt; 500ms</strong>；<strong>&gt; 500 activations/s</strong>；10x+ 密度；演示 8 Pod / ~250 actor（10x–30x oversubscription）</td></tr>
 </tbody>
 </table>
 </div>
+<p><strong>项目元数据</strong>：</p>
+<ul>
+<li>Go <strong>1.27.0</strong>（<code>toolchain go1.27.4</code>），module 改为 <strong><code>go.ate.dev/substrate</code></strong>（vanity import），Apache 2.0</li>
+<li>2026-11-17 <code>main</code> 共 <strong>1718</strong> commits；v1.0.0 之后 main 仍有后续提交（本页按 HEAD 描述）</li>
+<li>沙箱后端：gVisor（默认）+ Kata Containers on Cloud Hypervisor microVM</li>
+<li>文档站：<a href="https://ate.dev">ate.dev</a>（Hugo docsite，<code>docs/</code> 与 <code>site/</code> 同仓）</li>
+</ul>
+<h2 id="版本演进2026-07--2026-11"><a class="header" href="#版本演进2026-07--2026-11">版本演进（2026-07 → 2026-11）</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Tag</th><th>日期</th><th>备注</th></tr>
+</thead>
+<tbody>
+<tr><td>v0.0.0</td><td>2026-05-19</td><td>初始开源快照，旧 wiki 页面的研究对象</td></tr>
+<tr><td>v0.1.0</td><td>2026-09-09</td><td>第一个 minor；此时 Postgres、atunnel、多 actor worker API 已合入</td></tr>
+<tr><td>v0.2.0</td><td>2026-09-25</td><td></td></tr>
+<tr><td>v0.3.0</td><td>2026-09-30</td><td></td></tr>
+<tr><td>v0.4.0</td><td>2026-10-07</td><td></td></tr>
+<tr><td>v0.5.0</td><td>2026-10-14</td><td></td></tr>
+<tr><td>v0.6.0</td><td>2026-10-22</td><td>1.0 前最后一版；<code>ateom → ateworker</code>、vanity import 均在此前后落地</td></tr>
+<tr><td>v1.0.0</td><td><strong>2026-11-05</strong></td><td>“Fully armed and operational”；GA + 兼容性承诺；另有 <code>v1.0.0-rc.1/2/3</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>阶段特征：</p>
+<ul>
+<li><strong>2026-07~08（基建补齐）</strong>：Postgres 替代 Redis（<code>#640</code>/<code>#940</code>）、<code>atunnel</code> 引入（7-27）、egress 网关与凭证注入（9 月中）、actor 身份 SPIFFE/JWT（8 月）、多 actor worker API（9-03）</li>
+<li><strong>2026-09（0.1~0.2）</strong>：多 actor worker 实现落地（<code>#1836</code>）、API 风格统一起步、OpenFGA 逐 RPC 授权</li>
+<li><strong>2026-10（0.3~0.6）</strong>：<code>ateom → ateworker</code> 改名、Go vanity import、sandbox asset cache、objectstore-plugin、<code>Tag</code>/<code>Revert</code>/异步 suspend、Hugo 文档站、SLO/OTel 指标</li>
+<li><strong>2026-11（1.0）</strong>：GA、version-skew/升级策略、DCO 取代 Google CLA、CNCF 捐赠、Egress 凭证注入转正</li>
+</ul>
+<h2 id="状态模型v10-版三层"><a class="header" href="#状态模型v10-版三层">状态模型（v1.0 版：三层）</a></h2>
+<p>旧页面的“双层模型（CRD + Redis）“已过时。1.0 是 <strong>K8s CRD（低频基础设施）+ 控制面 PostgreSQL（高频实例状态，含 OpenFGA 授权数据）+ 对象存储（快照）</strong> 三层：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>层</th><th>存储</th><th>资源</th><th>更新频率</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>K8s 基础设施</strong></td><td>K8s API Server / etcd</td><td><code>WorkerPool</code>、<code>SandboxConfig</code>、<code>CSIDriverConfig</code>（3 个 CRD）</td><td>低频（infra 变更）</td></tr>
+<tr><td><strong>控制面实例状态</strong></td><td><strong>PostgreSQL</strong>（<code>atepg</code>，owner/read-write 双角色，goose 迁移）</td><td><code>Atespace</code>、<code>ActorTemplate</code>、<code>Actor</code>、<code>Worker</code>、<code>ActorAssignment</code>、<code>Tag</code>、<code>EgressPolicy</code>、<code>AccessPolicy</code>；OpenFGA 关系元组同库</td><td>高频（数千次/秒）</td></tr>
+<tr><td><strong>快照</strong></td><td>GCS / S3（经 <code>objectstore-plugin</code> sidecar）</td><td>Golden / Last / Tag 快照</td><td>每次 suspend/restore</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>为什么换 Postgres</strong>：etcd 不适合百万级离散资源与高频写；Postgres 提供事务、租约（lease）、outbox 和成熟的运维（Cloud SQL/BYO DB）。Redis 时代的 per-actor 分布式锁改为“进程内 <code>actorlock</code> + PG 租约“，worker 舰队镜像仍由 <code>ateapi</code> 内存持有，但改为 PG watch 轮询同步。</p>
 <h2 id="核心概念"><a class="header" href="#核心概念">核心概念</a></h2>
 <div class="table-wrapper">
 <table>
@@ -744,467 +821,332 @@ Claim 删除 → GC 级联删 Sandbox → Pod/PVC/SVC
 <tr><th>概念</th><th>说明</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>Actor</strong></td><td>agent 实例（派生自 ActorTemplate），地址 <code>(atespace, name)</code>。在 worker 之间迁移，suspend/resume 是核心操作</td></tr>
-<tr><td><strong>Atespace</strong></td><td>Actor 的隔离边界（类似 K8s namespace，但全局作用域）</td></tr>
-<tr><td><strong>Worker</strong></td><td>一条 WorkerPool Deployment 中的 Pod 记录。同持仅承载一个 actor（ACTIVE/DRAINING）</td></tr>
-<tr><td><strong>WorkerPool</strong></td><td>CRD——声明预热计算容量和 worker 规格</td></tr>
-<tr><td><strong>ActorTemplate</strong></td><td>CRD——actor 的不变定义（镜像、资源、沙箱类型），创建时生成 Golden Snapshot</td></tr>
-<tr><td><strong>Golden Snapshot</strong></td><td>ActorTemplate 创建时一次性产生的初始 checkpoint。actor 首次 resume 从此恢复</td></tr>
-<tr><td><strong>Last Snapshot</strong></td><td>每个 actor 最近的快照，suspend 时写入，resume 时用于恢复</td></tr>
-<tr><td><strong>Suspend</strong></td><td>休眠 actor：checkpoint → snapshot → 上传 GCS/S3 → 释放 worker</td></tr>
-<tr><td><strong>Pause</strong></td><td>短时挂起：快照保留在节点本地，恢复时优先调度回同一节点（数据亲和性）</td></tr>
-<tr><td><strong>Resume</strong></td><td>激活 actor：从快照恢复到任何可用 worker，非冷启动</td></tr>
+<tr><td><strong>Actor</strong></td><td>agent 实例（派生自 ActorTemplate），地址 <code>(atespace, name)</code>。可 suspend/resume，在 worker 间迁移</td></tr>
+<tr><td><strong>Atespace</strong></td><td>Actor 的隔离边界（类似 namespace，但全局作用域，非 K8s namespace）。ActorTemplate/Actor/Tag 都归属 atespace</td></tr>
+<tr><td><strong>Worker</strong></td><td>一个 worker Pod 的控制面记录。状态 <code>ACTIVE / UNAVAILABLE / DRAINING</code>；<strong>可同时承载多个 actor</strong>（<code>ActorAssignment</code> 子资源，受容量与 actor 上限约束）</td></tr>
+<tr><td><strong>WorkerPool</strong></td><td>CRD——声明预热算力；<code>spec.template.resources.limits</code> 定义每个 worker 的<strong>容量</strong>，由 <code>atecontroller</code> reconcile 成 Deployment</td></tr>
+<tr><td><strong>SandboxConfig</strong></td><td>集群级 CRD——按 sandbox class 固定沙箱二进制/资产（<code>runsc</code>、microVM kernel/firmware 等）；沙箱二进制不再烘进 worker 镜像</td></tr>
+<tr><td><strong>ActorTemplate</strong></td><td>actor 的不变定义（镜像、资源、env、快照配置）。<strong>已是 ate API 资源，不再是 K8s CRD</strong>，存控制面 Postgres；创建时默认生成 Golden Snapshot</td></tr>
+<tr><td><strong>Golden Snapshot</strong></td><td>ActorTemplate 创建时一次性产生的初始 checkpoint（version 0）；可配置 <code>mode=DISABLED</code> 关闭</td></tr>
+<tr><td><strong>Last Snapshot</strong></td><td>每个 actor 最近一次 suspend 产生的快照，下次 resume 使用</td></tr>
+<tr><td><strong>Tag</strong></td><td>atespace 级、不可变、可跨 atespace 发布的快照别名/保留（`TagScope=ATESPACE</td></tr>
+<tr><td><strong>Suspend</strong></td><td>休眠 actor：checkpoint → 本地快照 → （默认异步）上传对象存储 → 释放 worker；支持 `mode=SYNCHRONOUS</td></tr>
+<tr><td><strong>Resume</strong></td><td>激活 actor：从本地或对象存储快照恢复到可用 worker，非冷启动</td></tr>
+<tr><td><strong>Revert</strong></td><td>把 RUNNING/CRASHED（或带本地快照）的 actor 回退到最近一次 durable 快照并置为 SUSPENDED</td></tr>
+<tr><td><strong>EgressPolicy</strong></td><td>Actor 的子资源（每 actor 一个 <code>default</code>，<strong>非 K8s CRD</strong>）：出站 allowlist + 凭证注入效果</td></tr>
+<tr><td><strong>AccessPolicy</strong></td><td>Global / atespace 级单例授权策略（OpenFGA ReBAC）</td></tr>
 </tbody>
 </table>
 </div>
+<blockquote>
+<p>已移除：旧页面的 <strong>Pause</strong>（快照留节点本地）独立操作与 <code>PAUSING/PAUSED</code> 状态。<code>PauseActor</code> RPC 已删除（<code>#2813</code>），语义由异步 suspend + 节点本地快照（locality）承接。</p>
+</blockquote>
 <h2 id="架构-1"><a class="header" href="#架构-1">架构</a></h2>
 <pre class="mermaid">flowchart TB
-    subgraph Control["Agent Substrate Control Plane"]
-        API["ateapi\n(gRPC control plane)"]
-        STORE[("ValKey/Redis\nState Store")]
-        CTRL["atecontroller\n(CRD reconciler)"]
+    subgraph CP["Control Plane (ate-system)"]
+        API["ate-api-server (ateapi)\ngRPC · scheduler · workflow engine"]
+        PG[("PostgreSQL\n实例状态 + OpenFGA")]
+        IDP["ate-idp-server\nOIDC discovery / JWKS"]
+        PCC["podcertcontroller\npod/服务/DB 三类证书 signer"]
     end
 
-    subgraph Node["Node"]
-        ATELET["atelet (DaemonSet)\nimage pulls, OCI bundles,\nsnapshot streaming"]
-        WORKER["Worker Pod\n(ateom + sandbox runtime)"]
+    subgraph K8S["Kubernetes"]
+        CRDS["WorkerPool / SandboxConfig\n/ CSIDriverConfig"]
+        CTRL["atecontroller"]
+        POOL["WorkerPool → Deployment"]
     end
 
-    subgraph Net["Networking (atenet)"]
-        DNS["atenet DNS\nactor DNS suffix"]
-        ROUTER["atenet-router\n(Envoy + ext_proc)"]
+    subgraph NODE["Node"]
+        ATELET["atelet (DaemonSet)\nasset cache · snapshot mover · CSI"]
+        subgraph WPOD["Worker Pod"]
+            AW["ateworker-gvisor | ateworker-microvm\n+ atunnel (ingress/egress/dns)"]
+            SB["sandbox: runsc / Kata+CH microVM"]
+        end
+        OSPN["objectstore-plugin\n(node mode)"]
     end
 
-    SNAPSHOTS[("GCS/S3\nsnapshot storage")]
-    CRDS["WorkerPool / ActorTemplate\n/ SandboxConfig CRDs"]
+    subgraph NET["atenet"]
+        ROUTER["atenet-router\nEnvoy + ext_proc"]
+        EGRESS["atenet-egress\nPEP + credential injection"]
+    end
 
-    CLIENT["kagent / frameworks"] --&gt;|gRPC Control| API
-    API &lt;--&gt; STORE
-    API --&gt;|"AteomHerder gRPC (mTLS)"| ATELET
-    ATELET --&gt;|Ateom gRPC| WORKER
-    ATELET &lt;--&gt;|checkpoint/restore| SNAPSHOTS
-    CTRL --&gt;|reconciles| CRDS
+    OSPC["objectstore-plugin (control mode)"]
+    OBJ[("GCS / S3\nsnapshots")]
+    CPROV["credential-provider\n(kubernetes-secrets)"]
+    CLIENT["kagent / SDK / kubectl-ate proxy"]
 
-    USER["End user"] --&gt;|HTTP Host: actor.atespace...| ROUTER
-    ROUTER --&gt;|DNS lookup| DNS
-    ROUTER --&gt;|"ext_proc: ResumeActor gRPC"| API
-    ROUTER --&gt;|mTLS tunnel| WORKER
+    CLIENT --&gt;|"ate-target-actor: ns/actor"| ROUTER
+    ROUTER --&gt;|ResumeActor| API
+    API --&gt;|Restore/Suspend| ATELET
+    ATELET --&gt;|gRPC| AW
+    AW --&gt; SB
+    API &lt;--&gt; PG
+    API -.-&gt;|pod 证书| PCC
+    IDP -.-&gt;|JWKS| EGRESS
+    AW --&gt;|出站 CONNECT| EGRESS
+    EGRESS --&gt;|取 secret| CPROV
+    ATELET --- OSPN --- OBJ
+    API --- OSPC --- OBJ
+    CRDS --&gt; CTRL --&gt; POOL
+    POOL --&gt; ATELET
 </pre>
 
-<h2 id="8-个-binary"><a class="header" href="#8-个-binary">8 个 Binary</a></h2>
+<p><strong>API 规模</strong>：proto 移到 <code>api/ateapi/v1/ateapi.proto</code>（<code>package substrate.ateapi.v1</code>）。控制面 <code>Control</code> 服务 <strong>42 个 RPC</strong>（旧版 14 个），另有 <code>WorkerService</code> <strong>8 个 RPC</strong>（worker 注册/心跳/epoch/上报/证书铸造）。风格统一为 <code>ResourceMetadata</code> 固定 field 1、<code>ListOptions{page_size,page_token}</code>、<code>DeleteOptions</code>、<code>delete_time</code>，并用 K8s declarative validation 注解表达作用域。</p>
+<h2 id="组件与-binary"><a class="header" href="#组件与-binary">组件与 Binary</a></h2>
+<p><code>cmd/</code> 下共 <strong>14 个组件目录</strong>；v1.0 发布镜像白名单为 10 个 + <code>envoy-dataplane</code>，另发布 <code>kubectl-ate</code> 静态二进制，<code>ate-setup</code> 为安装工具（<code>go run</code>），<code>benchmarking</code> 为开发工具。</p>
 <div class="table-wrapper">
 <table>
 <thead>
 <tr><th>Binary</th><th>部署方式</th><th>功能</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>ateapi</strong></td><td>Deployment (HA)</td><td>控制面——actor 生命周期、调度、快照编排，gRPC API</td></tr>
-<tr><td><strong>atelet</strong></td><td>DaemonSet</td><td>节点 supervisor——镜像拉取、OCI bundle 组装、快照流传输</td></tr>
-<tr><td><strong>atecontroller</strong></td><td>Deployment</td><td>CRD reconciler（WorkerPool→Deployment、ActorTemplate→golden snapshot）</td></tr>
-<tr><td><strong>atenet</strong></td><td>Deployment/DaemonSet</td><td>DNS server + Envoy router + <code>ext_proc</code>（请求到达时触发 actor resume）</td></tr>
-<tr><td><strong>ateom-gvisor</strong></td><td>worker Pod sidecar</td><td>gVisor sandbox herder——<code>runsc</code> checkpoint/restore</td></tr>
-<tr><td><strong>ateom-microvm</strong></td><td>worker Pod sidecar</td><td>microVM herder——Kata + Cloud Hypervisor，<code>userfaultfd</code> restore</td></tr>
-<tr><td><strong>podcertcontroller</strong></td><td>Deployment</td><td>Pod 证书签名——短生命周期 mTLS 身份</td></tr>
-<tr><td><strong>kubectl-ate</strong></td><td>本地 CLI</td><td>kubectl 插件——管理 atespace/actor/worker</td></tr>
+<tr><td><strong>ateapi</strong></td><td>Deployment（HA）</td><td>控制面 gRPC：actor 生命周期、调度、快照编排、workflow、OpenFGA 授权</td></tr>
+<tr><td><strong>atecontroller</strong></td><td>Deployment</td><td>K8s CRD reconciler（WorkerPool→Deployment、NetworkPolicy 等）</td></tr>
+<tr><td><strong>atelet</strong></td><td>DaemonSet</td><td>节点 supervisor：镜像/沙箱资产缓存、快照搬运、CSI、device plugin、worker 同步</td></tr>
+<tr><td><strong>ateworker-gvisor</strong></td><td>worker Pod 主容器</td><td>gVisor sandbox 宿主 + <code>atunnel</code>（ingress/egress/DNS relay），驱动 <code>runsc</code></td></tr>
+<tr><td><strong>ateworker-microvm</strong></td><td>worker Pod 主容器</td><td>microVM 宿主（Kata + Cloud Hypervisor），驱动快照/恢复</td></tr>
+<tr><td><strong>atenet</strong></td><td>Deployment/DaemonSet</td><td><code>router</code>（Envoy ext_proc 触发 resume）+ <code>sdsmint</code>（mTLS SDS）</td></tr>
+<tr><td><strong>atenet-egress</strong></td><td>Deployment</td><td>出站策略执行 + 凭证注入（同一 <code>atenet</code> 二进制的 egress 模式）</td></tr>
+<tr><td><strong>ate-idp-server</strong></td><td>Deployment</td><td>actor JWT 的 OIDC discovery / JWKS 发布</td></tr>
+<tr><td><strong>podcertcontroller</strong></td><td>Deployment</td><td>签发短生命周期 Pod 证书：pod identity、服务 DNS、<strong>Postgres 客户端</strong>三类 signer</td></tr>
+<tr><td><strong>objectstore-plugin</strong></td><td>sidecar</td><td><code>objectstore.v1</code>（Unix socket）：node 模式给 atelet、control 模式给 ateapi，backed by GCS/S3</td></tr>
+<tr><td><strong>credential-provider (kubernetes-secrets)</strong></td><td>Deployment</td><td>把 <code>ate-secret://</code> 解析为 K8s Secret；egress 凭证注入链中唯一有 Secret 读权限的组件</td></tr>
+<tr><td><strong>dataplane/envoy</strong></td><td>镜像</td><td><code>envoy-dataplane</code>：Envoy v1.39.5 + Rust dynamic module（egress policy 去重/共享）</td></tr>
+<tr><td><strong>kubectl-ate</strong></td><td>本地 CLI</td><td>kubectl 插件：actor/template/atespace/tag/worker/egress-policy/access-policy/proxy/admin</td></tr>
+<tr><td><strong>ate-setup</strong></td><td>本地工具</td><td>安装/卸载/发布：`deploy ate-system</td></tr>
 </tbody>
 </table>
 </div>
 <h2 id="核心机制"><a class="header" href="#核心机制">核心机制</a></h2>
-<h3 id="actor-suspendresume-流程"><a class="header" href="#actor-suspendresume-流程">Actor Suspend/Resume 流程</a></h3>
+<h3 id="激活resume流程"><a class="header" href="#激活resume流程">激活（Resume）流程</a></h3>
 <pre class="mermaid">sequenceDiagram
     participant C as Client
     participant R as atenet-router
-    participant A as ateapi
+    participant A as ate-api-server
     participant L as atelet
-    participant T as ateom
+    participant T as ateworker / atunnel
+    participant S as snapshot storage
     participant SB as Actor sandbox
 
-    C-&gt;&gt;R: "HTTP request (Host=actor.atespace...)"
-    R-&gt;&gt;R: "parking lot admit (backpressure if full)"
-    R-&gt;&gt;A: "ResumeActor request"
-    A-&gt;&gt;A: "acquire per-actor distributed lock (Redis)"
-    A-&gt;&gt;A: "Schedule worker (constraints + local snapshots)"
-    A-&gt;&gt;A: "claim worker (optimistic concurrency)"
-    A-&gt;&gt;L: "AteomHerder Restore (mTLS)"
-    L-&gt;&gt;T: "Ateom RestoreWorkload (mTLS)"
-    T-&gt;&gt;T: "restore sandbox (runsc / userfaultfd VM)"
+    C-&gt;&gt;R: 请求（ate-target-actor: atespace/actor）
+    R-&gt;&gt;R: parking lot 准入（饱和时暂存重试，默认 5s/1024 条）
+    R-&gt;&gt;A: ResumeActor(atespace, actor)
+    A-&gt;&gt;A: 认证（mTLS SPIFFE / Bearer JWT）+ OpenFGA 按 atespace 授权
+    A-&gt;&gt;A: actor 锁（进程内 + PG 租约）→ 按容量/runtime 调度 worker
+    A-&gt;&gt;A: PG 事务认领 worker + ActorAssignment（epoch 防脑裂）
+    A-&gt;&gt;L: Restore
+    L-&gt;&gt;S: 节点无本地快照时，经 objectstore-plugin 下载
+    L-&gt;&gt;T: RestoreWorkload（mTLS）
+    T-&gt;&gt;T: 恢复 sandbox（runsc restore / CH OnDemand userfaultfd）+ 网络
     T--&gt;&gt;L: ready
     L--&gt;&gt;A: worker pod IP
-    A--&gt;&gt;R: "worker assignment"
-    R-&gt;&gt;T: "mTLS tunnel to worker (ORIGINAL_DST)"
-    T-&gt;&gt;SB: "forward request (private veth)"
-    SB--&gt;&gt;C: response
+    A--&gt;&gt;R: worker assignment
+    R-&gt;&gt;T: mTLS CONNECT（8443）到 atunnel
+    T-&gt;&gt;SB: 转发到 actor 端口（默认 :80）
+    SB--&gt;&gt;C: 响应
 
-    Note over A,SB: later: SuspendActor checkpoints back to storage, frees worker
+    Note over A,SB: 之后：SuspendActor checkpoint，按 sync/async 上传，释放 worker
 </pre>
 
-<p><strong>分步说明（与时序图对应）：</strong></p>
-<p><strong>步骤 ① — 请求到达 Router</strong> (<code>C→R</code>)：客户端通过 atenet DNS 解析 actor 域名 <code>(actor).(atespace).actors.resources.substrate.ate.dev</code>，Router 从 Host header 中提取 <code>(actor, atespace)</code> 目标地址。</p>
-<p><strong>步骤 ② — Parking Lot 准入</strong> (<code>R→R</code>)：Router 的 <code>ext_proc</code> 处理器检查 worker 池是否有空闲容量。如果池子饱和，请求进入有界 parking lot——不直接返回 503，而是等待 worker 释放后重试。同时用 <code>singleflight.Group</code> 对并发请求去重（同一 actor 只发起一次 ResumeActor RPC）。默认 5s 重试预算，超时返回 503。</p>
-<p><strong>步骤 ③ — ResumeActor RPC</strong> (<code>R→A</code>)：Router 通过 gRPC（mTLS）调用 ateapi 的 <code>ResumeActor</code>，传入 <code>(atespace, actor name)</code>。</p>
-<p><strong>步骤 ④ — 分布式锁</strong> (<code>A→A</code>)：ateapi 在 Redis 中获取 per-actor 的分布式锁，确保同一个 actor 不会被并行在不同 worker 上恢复（防止脑裂）。</p>
-<p><strong>步骤 ⑤ — Worker 调度</strong> (<code>A→A</code>)：调度器扫描 worker cache（ateapi 持有的 worker 舰队内存镜像），随机选择一个满足约束的<strong>空闲</strong> worker——约束包括沙箱 class（gVisor/microVM）、worker 的 node selector、以及是否有本地 pause 快照（数据亲和性优先调度回同一节点）。</p>
-<p><strong>步骤 ⑥ — 认领 Worker</strong> (<code>A→A</code>)：通过 Redis 乐观并发控制（version check）将 <code>worker.assignment</code> 设置为该 actor。如果并发冲突（另一个请求抢先认领了该 worker），重新调度。</p>
-<p><strong>步骤 ⑦ — AteomHerder 下发</strong> (<code>A→L</code>)：ateapi 通过 mTLS gRPC 向目标节点上的 atelet（DaemonSet）发送 <code>Restore</code>/<code>Run</code> 指令。</p>
-<p><strong>步骤 ⑧ — Ateom 恢复</strong> (<code>L→T</code>)：atelet 从 GCS/S3 拉取快照（稀疏 zstd 压缩，并行多对象下载），通过 mTLS gRPC 调用 worker Pod 内 ateom sidecar 的 <code>RestoreWorkload</code>。</p>
-<p><strong>步骤 ⑨ — 沙箱恢复</strong> (<code>T→T</code>)：</p>
+<p>要点：</p>
 <ul>
-<li><strong>gVisor</strong>：<code>runsc restore</code>（checkpoint/restore 恢复进程树）</li>
-<li><strong>microVM</strong>：Kata + Cloud Hypervisor，<code>userfaultfd</code> 按需分页恢复 VM 内存快照（容器 rootfs 写入通过 <code>tmpfs</code> overlay 保持在 guest RAM 中）</li>
+<li><strong>入口不靠 Host/DNS</strong>：调用方（kagent、SDK、<code>kubectl ate proxy actor</code>）在请求里带 <code>ate-target-actor: &lt;atespace&gt;/&lt;actor&gt;</code>；<code>Host</code> 只作为应用 authority</li>
+<li><strong>任意端口</strong>：默认端口 80 之外，用 HTTP <code>CONNECT &lt;actor-dns&gt;:&lt;port&gt;</code> 访问（目前仅 HTTP(S)；裸 TCP 未支持）</li>
+<li><strong>parking lot</strong>：池子饱和时不直接 503，而是有界暂存并重试 ResumeActor（默认预算 5s、容量 1024），并发请求用 singleflight 去重</li>
+<li><strong>快照 runtime 绑定</strong>：MEMORY restore 优先挑“仍提供快照 runtime 版本“的 worker；无兼容 worker 时降级为 ROOTFS 冷启动</li>
+<li><strong>本地优先</strong>：suspend 后节点保留本地快照（locality），同节点 resume 不走对象存储；<code>--snapshot-detach-delay</code> 后删除本地副本</li>
 </ul>
-<p><strong>步骤 ⑩⑪ — Worker 就绪</strong> (<code>T→L→A</code>)：ateom 报告恢复完成 → atelet 将 worker pod IP 返回 ateapi。</p>
-<p><strong>步骤 ⑫ — 路由目标</strong> (<code>A→R</code>)：ateapi 将 <code>ateomPodIp</code> 返回给 Router。</p>
-<p><strong>步骤 ⑬ — mTLS 隧道</strong> (<code>R→T</code>)：Router 通过 Envoy <code>ORIGINAL_DST</code> cluster 建立到 <code>workerIP:443</code> 的 mTLS 隧道（atunnel 监听于此）。Envoy 保留原始 Host header，atunnel 根据 actor DNS 名做二次认证。</p>
-<p><strong>步骤 ⑭⑮ — 请求转发</strong> (<code>T→SB→C</code>)：atunnel 将请求转发到 actor 容器的 <code>:80</code> 端口（私有 veth 接口）。响应沿原路返回。</p>
-<p><strong>Suspend 流程（时序图 Note）</strong>：空闲 actor 超时后触发 suspend——gVisor <code>runsc checkpoint</code> → 文件列表上报 atelet → 流式上传 GCS/S3，释放 worker。快照 manifest 固定了创建它的沙箱二进制版本，restore 时不可变，保证跨版本可复现。</p>
-<h3 id="actor-快照"><a class="header" href="#actor-快照">Actor 快照</a></h3>
-<p>Suspend 时写入 GCS/S3 的快照包含三部分：</p>
-<p><strong>FULL 作用域</strong>（suspend 默认）：</p>
+<h3 id="休眠suspendrevert-与快照"><a class="header" href="#休眠suspendrevert-与快照">休眠（Suspend）、Revert 与快照</a></h3>
+<p>Actor 状态机：<code>SUSPENDED → RESUMING → RUNNING → SUSPENDING → SUSPENDED</code>，另有 <code>CRASHED</code>。</p>
+<p><strong>同步 vs 异步 suspend</strong>：</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>内容</th><th>说明</th></tr>
+<tr><th>模式</th><th>行为</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>进程内存</strong></td><td>容器内所有进程的完整内存状态——代码、堆、栈、文件描述符。gVisor 通过 <code>runsc checkpoint</code> 捕获 sentry 管理的整个进程树；microVM 通过 Cloud Hypervisor 捕获完整 VM 内存快照</td></tr>
-<tr><td><strong>Rootfs delta</strong></td><td>容器文件系统自 OCI 镜像启动后的所有写入变更。gVisor 以 overlay delta 保存；microVM 中 rootfs 写入通过 <code>tmpfs</code> overlay 保留在 guest RAM 内</td></tr>
-<tr><td><strong>DurableDir 卷</strong></td><td>用户声明的持久化目录——actor 的应用数据。gVisor 限制 1 个，microVM 支持多个</td></tr>
+<tr><td><strong>异步（默认）</strong></td><td>写完节点本地 checkpoint 即返回（<code>durableSnapshot=PENDING</code>）；<code>atelet</code> 后台按 <code>--snapshot-upload-delay</code> 上传并上报，置 <code>COMPLETED</code></td></tr>
+<tr><td><strong>同步</strong></td><td>上传完成后 <code>SuspendActor</code> 才返回，<code>durableSnapshot</code> 直接 <code>COMPLETED</code></td></tr>
 </tbody>
 </table>
 </div>
-<p><strong>DATA 作用域</strong>（<code>onPause</code>/<code>onCommit</code> 触发）：仅保存 DurableDir 卷。恢复时从 OCI 镜像冷启动进程，再挂载数据卷。适用于“只需要保留数据，不关心进程状态“的场景。</p>
-<p><strong>两种快照类型</strong>：</p>
+<p><strong>RevertActor</strong>：RUNNING/CRASHED（或带本地快照的 SUSPENDED）actor 可回退到最近一次 durable 快照，终止当前 sandbox、丢弃本地 checkpoint，下次 resume 从该快照恢复。</p>
+<p><strong>快照内容（fidelity 阶梯）</strong>：</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>类型</th><th>何时创建</th><th>说明</th></tr>
+<tr><th><code>preferredFidelity</code></th><th>包含内容</th><th>说明</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>Golden Snapshot</strong></td><td>ActorTemplate 创建时</td><td>从临时启动的 actor 捕获初始状态。所有 actor 首次 resume 共享此快照</td></tr>
-<tr><td><strong>Last Snapshot</strong></td><td>每次 Suspend</td><td>每个 actor 独立的最新快照，下次 resume 从此恢复</td></tr>
+<tr><td><strong>VOLUMES</strong></td><td><code>DurableDir</code> 卷</td><td>只保数据，恢复时从 OCI 镜像冷启动</td></tr>
+<tr><td><strong>ROOTFS</strong></td><td>VOLUMES + 容器可写 rootfs overlay</td><td>冷启动但保留文件系统变更</td></tr>
+<tr><td><strong>MEMORY</strong>（默认）</td><td>ROOTFS + 进程内存/进程树</td><td>从挂起点原样恢复；与 <code>sandboxRuntime</code> 版本绑定</td></tr>
 </tbody>
 </table>
 </div>
-<p>快照 manifest 固定创建时的沙箱二进制版本（content-addressed <code>runsc</code>/Cloud Hypervisor 路径），确保跨版本 restore 可复现。存储时使用稀疏 zstd 压缩，atelet 并行多对象流式下载。</p>
-<h3 id="沙箱后端gvisor--microvm"><a class="header" href="#沙箱后端gvisor--microvm">沙箱后端（gVisor / microVM）</a></h3>
-<p>Agent Substrate 通过<strong>可插拔沙箱 class</strong> 支持两种 Runtime。ActorTemplate 的 <code>sandboxClass</code> 字段决定使用哪种，WorkerPool 在创建 Worker Pod 时注入对应的 ateom sidecar。</p>
-<p><strong>架构分工</strong>：</p>
-<pre><code>ActorTemplate.sandboxClass ──→ WorkerPool ──→ Worker Pod
-                                                    │
-SandboxConfig (CRD) ──→ 固定沙箱二进制版本             │
-  runsc / kernel + firmware                        │
-                                                    ↓
-                                              ateom sidecar
-                                         (gVisor 或 microVM)
-</code></pre>
+<p><strong>Golden / Last / Tag</strong>：Golden 来自 ActorTemplate 创建；Last 来自每次 suspend；<code>Tag</code> 是不可变别名 + 保留 pin，可从其他 atespace 引用（发布 scope）。快照存 <code>&lt;location&gt;/atespaces/&lt;ns&gt;/actors/&lt;uid&gt;/snapshots/&lt;uuid&gt;</code>，Tag/Golden 在 <code>&lt;location&gt;/atespaces/&lt;ns&gt;/tags/&lt;uid&gt;</code>。</p>
+<p><strong>存储管道</strong>：</p>
 <ul>
-<li><strong>SandboxConfig</strong>（集群级 CRD）：为一类 Runtime 固定二进制版本（content-addressed）。多个 ActorTemplate 共享同一 SandboxConfig，统一升级沙箱版本</li>
-<li><strong>atelet</strong>（DaemonSet）：节点 supervisor——按 SandboxConfig 中固定的二进制版本拉取 <code>runsc</code> 或 Cloud Hypervisor 二进制，组装 OCI bundle，通过 gRPC 下发给 ateom</li>
-<li><strong>ateom</strong>（Worker Pod sidecar）：实际驱动沙箱进程——解耦 Pod 生命周期和沙箱进程生命周期</li>
+<li><code>atelet</code>/<code>ateapi</code> 自身<strong>没有对象存储凭据</strong>：分别通过本地 <code>objectstore-plugin</code> sidecar 的 node/control 模式搬运快照；GCS 上 node 侧还会用 atelet 的 JWT 换“仅限该 actor 快照前缀“的短时 token（S3 per-actor 限定尚在计划）</li>
+<li>格式仍是稀疏 zstd（magic <code>ATESPRSE</code>，format v2），新增并行 zstd 帧、ranged/composite 对象读、上传内存预算</li>
+<li>节点本地 <code>internal/snapshotcache</code> 缓存最近快照，供同节点快速 resume；node reboot 用 boot-id 清理</li>
 </ul>
-<p><strong>gVisor（默认）</strong>：</p>
+<h3 id="沙箱后端"><a class="header" href="#沙箱后端">沙箱后端</a></h3>
+<p>沙箱 class 由 <code>WorkerPool.spec.sandboxClasses[].name</code>（<code>gvisor|microvm</code>）决定；<code>ActorTemplate</code> 通过 <code>workerSelector</code> 选池，<strong>不再直接带 <code>sandboxClass</code></strong>。沙箱二进制/资产来自 <code>SandboxConfig</code>，运行时下发到节点 content-addressed <strong>asset cache</strong>（hardlink 复用 + 按字节预算淘汰），而不是烘进 worker 镜像。</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>项目</th><th>说明</th></tr>
+<tr><th>项目</th><th>gVisor（默认）</th><th>microVM</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>实现</strong></td><td><code>cmd/ateom-gvisor</code> 驱动 <code>runsc</code> 二进制（运行时 content-addressed 拉取）</td></tr>
-<tr><td><strong>Suspend</strong></td><td><code>runsc checkpoint</code> → 捕获 sentry 管理的完整进程树 → 文件列表上报 atelet → 稀疏 zstd 压缩上传</td></tr>
-<tr><td><strong>Resume</strong></td><td><code>runsc restore</code> → 恢复进程树到运行态</td></tr>
-<tr><td><strong>限制</strong></td><td>仅支持 1 个 DurableDir 卷；需要 <code>--allow-connected-on-save</code> 绕过网络恢复 bug</td></tr>
+<tr><td><strong>实现</strong></td><td><code>ateworker-gvisor</code> 驱动 <code>runsc</code></td><td><code>ateworker-microvm</code> 驱动 Kata guest + Cloud Hypervisor</td></tr>
+<tr><td><strong>Suspend</strong></td><td><code>runsc checkpoint</code>；<code>fs/</code>、<code>rootfs/</code> 由 <code>runsc fscheckpoint</code> 分开产出（VOLUMES/ROOTFS 可单独快照）</td><td>CH 原生内存快照（config/state/sparse memory ranges）；rootfs upper 另打包 tar</td></tr>
+<tr><td><strong>Resume</strong></td><td><code>runsc restore</code> 恢复进程树</td><td>OnDemand（userfaultfd 按需分页）；CH 新版本无条件 prefault 时回退 Copy</td></tr>
+<tr><td><strong>rootfs 写层</strong></td><td>overlay delta 单独保存</td><td><strong>host 侧 overlay</strong>（只读 OCI lower + per-actor 可写 upper），经单一 virtio-fs share 进 guest，占宿主 page cache 而非 guest RAM</td></tr>
+<tr><td><strong>DurableDir</strong></td><td>1 个（历史限制仍在）</td><td>多个（virtio-fs share 下子目录，快照打成 tar）</td></tr>
+<tr><td><strong>CPU/内存</strong></td><td>limits 进 OCI spec；CPU 配额换算 <code>--cpu-num-from-quota</code></td><td>limits 设 CH vCPU 数与 guest RAM；最低 128 MiB</td></tr>
+<tr><td><strong>隔离</strong></td><td>用户态内核（syscall 拦截）</td><td>硬件虚拟化（VM 边界）+ device plugin 注入 <code>/dev/kvm</code></td></tr>
+<tr><td><strong>权限</strong></td><td>9 caps，<code>privileged:false</code></td><td>11 caps，<code>privileged:false</code>（详见下文 Worker 权限）</td></tr>
+<tr><td><strong>超限</strong></td><td>超内存只杀该 actor，不连累同 worker</td><td>同上（PSI 感知时）</td></tr>
 </tbody>
 </table>
 </div>
-<p><strong>microVM（Kata + Cloud Hypervisor）</strong>：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>项目</th><th>说明</th></tr>
-</thead>
-<tbody>
-<tr><td><strong>实现</strong></td><td><code>cmd/ateom-microvm</code> 在 Kata Containers guest 内运行 Cloud Hypervisor VM</td></tr>
-<tr><td><strong>Suspend</strong></td><td>仅内存快照（无 rootfs delta）——容器 rootfs 写入通过 <code>tmpfs</code> overlay 保持在 guest RAM 内</td></tr>
-<tr><td><strong>Resume</strong></td><td><code>userfaultfd</code> 按需分页恢复 VM 内存——不需要一次性加载完整快照</td></tr>
-<tr><td><strong>DurableDir</strong></td><td>host-backed、通过第二块可写 virtio-fs share 挂载，快照中以 tar 传输。支持多个卷</td></tr>
-<tr><td><strong>容器镜像</strong></td><td>必需 glibc（<code>debian:stable-slim</code>），因为 Cloud Hypervisor 二进制需要 glibc + mount/umount</td></tr>
-</tbody>
-</table>
-</div>
-<p><strong>对比</strong>：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th></th><th>gVisor</th><th>microVM</th></tr>
-</thead>
-<tbody>
-<tr><td><strong>隔离级别</strong></td><td>用户态内核（syscall 拦截）</td><td>硬件虚拟化（VM 边界）</td></tr>
-<tr><td><strong>快照内容</strong></td><td>进程树 + rootfs delta + DurableDir</td><td>VM 内存（含 rootfs tmpfs） + DurableDir</td></tr>
-<tr><td><strong>恢复方式</strong></td><td><code>runsc restore</code> 一次性恢复</td><td><code>userfaultfd</code> 按需分页</td></tr>
-<tr><td><strong>DurableDir</strong></td><td>1 个</td><td>多个</td></tr>
-<tr><td><strong>冷启动恢复</strong></td><td>恢复进程状态（快）</td><td>可选从 OCI 镜像冷启动</td></tr>
-</tbody>
-</table>
-</div>
-<h4 id="如何绕过-k8s-容器运行时"><a class="header" href="#如何绕过-k8s-容器运行时">如何绕过 K8s 容器运行时</a></h4>
-<p>Agent Substrate <strong>不需要</strong>对 Kubernetes 做任何特殊配置——不需要 <code>RuntimeClass</code>，不需要安装 gVisor/Kata 的 K8s 集成（如 <code>containerd-shim-runsc</code>）。</p>
-<pre><code>K8s 层:  Worker Pod = 标准 Pod (runc/containerd)
-              │
-              └── ateom sidecar (普通容器进程)
-                      │
-Agent Substrate 层:      │  在 Pod 内部 exec 沙箱 Runtime
-                      ↓
-              runsc / Cloud Hypervisor
-                      │
-                      ↓
-              Actor sandbox (gVisor sentry / microVM guest)
-</code></pre>
-<p>Worker Pod 本身是<strong>标准 K8s Pod</strong>——用普通的 <code>runc</code> 通过 containerd 启动，不设 <code>runtimeClassName</code>。ateom sidecar 也是一个普通容器进程，运行在 Pod 的 cgroup 内。沙箱是 ateom <strong>在 Pod 内部手动 exec</strong> 启动的，完全绕开了 K8s 的容器栈（kubelet → CRI → containerd → runc）。</p>
-<p><strong>SandboxConfig 的角色</strong>：SandboxConfig CRD 通过 content-addressing 固定二进制的精确版本（如 <code>runsc@sha256:abc123</code> 或 Cloud Hypervisor 的 kernel + firmware）。atelet 在节点上按需拉取这些二进制到本地缓存，再通过 gRPC 传给 ateom。这意味着沙箱版本的升级与 K8s 节点升级完全解耦——改 SandboxConfig 即可全局生效。</p>
-<h4 id="worker-pod-的权限模型"><a class="header" href="#worker-pod-的权限模型">Worker Pod 的权限模型</a></h4>
-<p>Worker Pod <strong>不是被沙箱保护的对象</strong>——它本身就是沙箱的宿主。ateom sidecar 以 root（UID 0）运行，直接在 Pod 内部 exec 沙箱 Runtime。关键是容器启动时注入的 Linux capabilities 和特权配置。</p>
-<p><strong>gVisor worker</strong>（<code>runAsUser: 0, privileged: false</code>）：</p>
-<p>先 drop ALL，再加回必需的 13 个 capability：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>Capability</th><th>用途</th></tr>
-</thead>
-<tbody>
-<tr><td><code>SYS_ADMIN</code></td><td>mount、pivot_root、cgroup delegation（重新挂载 <code>/sys/fs/cgroup</code> 为读写）</td></tr>
-<tr><td><code>SYS_PTRACE</code></td><td>追踪沙箱应用进程</td></tr>
-<tr><td><code>SYS_CHROOT</code></td><td>chroot 到 sandbox rootfs</td></tr>
-<tr><td><code>NET_ADMIN</code>, <code>NET_RAW</code></td><td>配置 actor 的 veth 和 nftables 规则</td></tr>
-<tr><td><code>SETUID</code>, <code>SETGID</code>, <code>SETPCAP</code>, <code>SETFCAP</code></td><td>runsc gofer 的用户命名空间身份映射</td></tr>
-<tr><td><code>DAC_OVERRIDE</code>, <code>FOWNER</code>, <code>CHOWN</code>, <code>MKNOD</code></td><td>OCI rootfs 解包和 device node 创建</td></tr>
-</tbody>
-</table>
-</div>
-<p>额外配置：</p>
+<p><strong>一个 worker 多个 actor</strong>：<code>ateworker --max-actors</code> 默认 1000；每个 actor 有独立 cgroup、netns、sandbox；Worker 记录 <code>capacity/allocated</code>。旧页面“同持仅承载一个 actor“已作废。</p>
+<p><strong>绕过 K8s 容器栈（设计未变）</strong>：worker Pod 本身是标准 K8s Pod（runc/containerd 启动，无 <code>runtimeClassName</code>）；<code>ateworker</code> 在 Pod 内直接 exec <code>runsc</code>/Cloud Hypervisor，沙箱完全绕过 kubelet→CRI→containerd→runc 链条。区别是二进制与资产改为运行时从 <code>SandboxConfig</code> + objectstore 获取并缓存。</p>
+<h3 id="网络栈"><a class="header" href="#网络栈">网络栈</a></h3>
+<p><strong>Ingress（atenet-router）</strong>：</p>
 <ul>
-<li><strong>AppArmor: Unconfined</strong> — 需要 remount <code>/sys/fs/cgroup</code>，默认 profile 会拦截（GKE COS 会强制检查）</li>
-<li><strong>seccomp: RuntimeDefault</strong> — 不需要禁用 seccomp</li>
-<li><strong>私有 cgroup namespace</strong> — <code>/sys/fs/cgroup</code> 是 Pod 自身的 cgroup scope，ateom 在其中为每个 actor 创建子 cgroup leaf</li>
+<li><code>atenet</code> 只剩 <code>router</code> + <code>sdsmint</code>；旧 <code>atenet dns</code> 已删除</li>
+<li>Envoy <code>ext_proc</code> 读 <code>ate-target-actor</code> → ResumeActor → 得到 worker assignment → 向 worker <code>atunnel</code> 建 <strong>mTLS CONNECT（8443）</strong>，转发到 actor 端口</li>
+<li><code>--upstream-connect=false</code> 时退回 HTTPS:443；worker Pod 的 80 端口不是 actor 的直达入口</li>
+<li><strong>per-sandbox DNS relay</strong>：每个 actor 独立 netns，DNS 由 <code>atunnel</code> 的 relay 处理；hostname 只有命中该 actor 的 egress 策略才解析，否则 NXDOMAIN（策略变更约 5s 生效）</li>
+<li>router 下游 mTLS + <code>--ingress-allowed-spiffe-ids</code> 精确白名单；未配置时 router 不服务任何流量</li>
 </ul>
-<p><strong>microVM worker</strong>（<code>runAsUser: 0, privileged: true</code>）：</p>
-<p>直接给完整特权模式——Kata + Cloud Hypervisor 需要 <code>/dev/kvm</code>（HostPath CharDevice）、vhost 设备、mount 等广泛的宿主机访问。</p>
-<p><code>/dev/kvm</code> 通过 HostPath 显式挂载：</p>
-<pre><code class="language-yaml">volumes:
-  - name: dev-kvm
-    hostPath:
-      path: /dev/kvm
-      type: CharDevice
-containers:
-  - volumeMounts:
-      - name: dev-kvm
-        mountPath: /dev/kvm
-</code></pre>
-<p>Node 调度：通过 <code>nodeSelector: ate.dev/sandboxClass=microvm</code> 固定到 KVM 节点。</p>
-<p><strong>atelet（DaemonSet）</strong>：<code>runAsUser: 0, runAsGroup: 0, capabilities: drop ALL</code>——仅需要 root 做 image pull 和 OCI bundle 组装，不需要额外 capability。沙箱二进制拉取和缓存完全是用户态操作。</p>
-<p><strong>唯一特殊要求</strong>：microVM 的 Worker Pod 镜像需要 glibc（<code>debian:stable-slim</code>），因为 Cloud Hypervisor 二进制是动态链接的，依赖 glibc + mount/umount。</p>
-<h3 id="actor-资源管理"><a class="header" href="#actor-资源管理">Actor 资源管理</a></h3>
-<p>Actor <strong>不设独立的 CPU/memory requests 或 limits</strong>。这与 K8s Pod 模型根本不同：</p>
-<pre><code>K8s:  Pod requests=100m CPU  → 调度器找到满足条件的节点 → Pod 一直占用
-Substrate: Actor 无资源声明    → 调度器找空闲 Worker     → 运行期间占用 Worker
-                                → Suspend 后释放 Worker  → 零资源消耗
-</code></pre>
-<p><strong>WorkerPod 是资源边界</strong>：WorkerPool 预创建 N 个固定规格的 Worker Pod（类似 <code>requests: 2CPU, 4Gi</code>）。Actor 运行时“借用“所在 worker 的全部资源——如果 worker 有 2CPU，actor 最多用 2CPU。Suspend 后，快照上传，worker 释放，该 worker 可以承载其他 actor。资源利用率通过<strong>时间维度的多路复用</strong>来实现：N 个 actor ↔ M 个 worker（N ≫ M），而非 K8s 的 1 Pod ↔ 确定的资源分配。</p>
-<p>cgroup 层面：ateom 为每个 actor 容器在 worker Pod 的 cgroup 树下创建子 cgroup leaf——actor 的 CPU/memory 消耗计入 worker Pod 的 cgroup 统计，从 K8s 视角来看就是 worker Pod 的资源使用。</p>
-<h3 id="调度器"><a class="header" href="#调度器">调度器</a></h3>
-<p>有独立的调度器（<code>ateapi/internal/scheduling/</code>），但<strong>刻意保持简单</strong>——瓶颈不在调度算法，而在 Redis 状态延迟和快照恢复速度。</p>
-<p><strong>调度流程</strong>：</p>
-<pre><code>ScheduleWorker(actor):
-  candidates = []
-  for each worker in workerCache:
-    if worker.assignment == nil          // 空闲
-       and worker.sandboxClass == actor.sandboxClass
-       and worker.state == ACTIVE
-       and actor.labels match worker.labels
-       and (actor无localNode要求 或 worker.node在localNodes内)
-    then candidates.append(worker)
-
-  if candidates is empty:
-    return ErrNoCapacity  // → Router parking lot 重试
-  return candidates[random()]  // 均匀随机
-</code></pre>
-<p><strong>关键组件</strong>：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>组件</th><th>功能</th></tr>
-</thead>
-<tbody>
-<tr><td><strong>workerCache</strong></td><td>ateapi 内存中的 worker 舰队镜像——K8s Informer 实时同步，O(1) 扫描</td></tr>
-<tr><td><strong>约束匹配</strong></td><td>sandbox class（gVisor/microVM）、worker labels、node selectors、local snapshot 亲和性</td></tr>
-<tr><td><strong>乐观并发认领</strong></td><td>Redis <code>UpdateWorker( expectedVersion )</code> → 冲突时重调度</td></tr>
-<tr><td><strong>无抢占/优先级</strong></td><td>没有 DRF、fair-share、priority。复杂度在 suspend/resume 和路由层</td></tr>
-</tbody>
-</table>
-</div>
-<p><strong>与 K8s Scheduler 对比</strong>：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th></th><th>K8s Scheduler</th><th>Agent Substrate Scheduler</th></tr>
-</thead>
-<tbody>
-<tr><td><strong>调度对象</strong></td><td>Pod（持久分配）</td><td>Actor（临时分配，suspend 后释放）</td></tr>
-<tr><td><strong>调度频率</strong></td><td>低频（Pod 创建/删除）</td><td>高频（每次 actor 激活/休眠）</td></tr>
-<tr><td><strong>约束复杂度</strong></td><td>多插件（亲和性、污点、拓扑、资源拟合）</td><td>简单过滤（class + labels + node）</td></tr>
-<tr><td><strong>状态存储</strong></td><td>etcd（异步 watch）</td><td>workerCache 内存镜像 + Redis（乐观锁）</td></tr>
-<tr><td><strong>目标延迟</strong></td><td>秒级</td><td>亚毫秒级（claim worker 仅一次 Redis 调用）</td></tr>
-</tbody>
-</table>
-</div>
+<p><strong>Egress（atenet-egress）</strong>：</p>
+<ul>
+<li>actor 出站 TCP 被 nftables REDIRECT，经 <code>atunnel</code> 收进 mTLS CONNECT 隧道 → <code>atenet-egress</code> 验证 actor 证书链/ActorIdentity 扩展 → 向 ate-api-server 复核 actor 存在/UID/已放置 → 按 <code>EgressPolicy</code> 放行或拒绝</li>
+<li><strong>失败关闭</strong>：PEP 未配置/失败即 drop；非 TCP 与 UDP 53 之外全丢；link-local 地址被 ateworker 拒绝</li>
+<li><code>EgressPolicy</code>：<code>http</code> / <code>https</code>（MITM）/ <code>tls_passthrough</code> 三类规则，只做 allowlist（≤256 条，未匹配即拒绝）；ActorTemplate 级 golden policy 有 preview gate</li>
+<li><strong>凭证注入</strong>：<code>effects.replaceHeaders</code> + <code>credentialUri</code>（<code>ate-secret://&lt;provider&gt;/&lt;path&gt;</code>）或 <code>actorJwt</code>；secret 永不进入 sandbox；provider 侧按 atespace→namespace 授权，注入失败 403/500/503 全 fail-closed</li>
+<li><strong>MITM trust bundle</strong>：<code>systemInfo</code> volume 的 <code>trustBundle</code> 数据源（<code>egress-mitm.ate.dev</code> + <code>system-roots.ate.dev</code>）注入 actor 文件系统</li>
+<li>默认数据面 Envoy v1.39.5 + Rust dynamic module（EgressPolicy 去重、H2 多路复用）；<code>agentgateway</code> 是可选实验 overlay，不是默认路径</li>
+</ul>
+<h3 id="资源管理与调度"><a class="header" href="#资源管理与调度">资源管理与调度</a></h3>
+<ul>
+<li><strong>Actor 现在必须声明资源</strong>：<code>ActorTemplate.resources.limits</code> 必填（<code>cpuMillicores</code> + <code>memoryBytes</code>），per-container limits 可选</li>
+<li><strong>Worker 容量</strong>：<code>WorkerPool.spec.template.resources.limits</code> 定义容量；调度要求 worker 剩余容量 ≥ actor limits + runtime overhead；容量缺失时该维度视为“无约束“</li>
+<li><strong>runtime overhead 记账</strong>：microVM 的 VMM/virtiofsd 等宿主开销由 worker 上报并计入容量</li>
+<li><strong>调度器</strong>（<code>cmd/ateapi/internal/scheduling/</code>）：workerCache 内存舰队镜像 + 约束匹配（sandbox class、runtime 版本、worker/template selector、必需节点、limits）；<strong>power of two choices</strong> 优先负载较低的 worker；无抢占/优先级；无容量时返回 <code>ErrNoCapacity</code> → router parking lot</li>
+<li>与 K8s Scheduler 对比：调度对象是 actor（临时分配、suspend 即释放）、频率高、约束简单、状态在 PG + 内存镜像</li>
+</ul>
 <h3 id="workflow-engine"><a class="header" href="#workflow-engine">Workflow Engine</a></h3>
-<p>所有多步 actor 操作都实现为<strong>幂等步骤序列</strong>，由通用 workflow 引擎执行。关键可靠性模式：如果服务器在操作中途崩溃，客户端只需重试相同 RPC，每步的 <code>IsComplete()</code> 检查会跳过已完成的工作——“Client-Driven Forward Recovery”。</p>
-<h2 id="demo-详解-claude-code-multiplex"><a class="header" href="#demo-详解-claude-code-multiplex">Demo 详解: claude-code-multiplex</a></h2>
-<p>这个 demo 用 2 个 worker 承载 3 个 AI agent，是理解 Substrate 全部底层原理的最佳入口。</p>
-<h3 id="demo-结构"><a class="header" href="#demo-结构">Demo 结构</a></h3>
-<pre><code>WorkerPool: 2 个 gVisor worker Pod
-ActorTemplates × 3: agent-luna, agent-mars, agent-orion
-  └── 同一 workload 镜像，不同 TASK prompt
-  └── 每 45s 调用一次 claude --print，其余时间 sleep
-</code></pre>
-<p>三个 agent 的 workload 就是一个 shell 脚本循环：</p>
-<pre><code class="language-bash">while true; do
-  claude --print "${TASK}"           # 调用 Claude API 执行 LLM 推理
-  sleep "${INTERVAL_SECONDS}"        # 空闲 45s
-done
-</code></pre>
-<p>任何一个 agent 在 <code>sleep</code> 的空闲窗口内都会被 Substrate 自动 suspend（checkpoint 到 GCS），worker 释放给其他 agent。3 个 agent 竞争 2 个 worker，至少有一个时刻处于 suspend 状态。</p>
-<h3 id="完整生命周期走读"><a class="header" href="#完整生命周期走读">完整生命周期走读</a></h3>
-<p>以 <code>agent-luna</code> 为例，从冷启动到第三次 resume：</p>
-<pre><code>时间轴
-  │
-  ├─ T0: 部署 WorkerPool(2) + 3 个 ActorTemplate
-  │     atecontroller 创建 2 个 Worker Pod，注入 ateom-gvisor sidecar (gVisor 13 capability)
-  │     ActorTemplate 触发 Golden Snapshot 创建（冷启动 checkpoint）
-  │
-  ├─ T1: 首次访问 agent-luna
-  │     Client → atenet DNS → Router → 解析 Host header 提取 (agent-luna, namespace)
-  │     │
-  │     ├─ Router ext_proc: parking lot admit（有空闲 worker，直通）
-  │     ├─ Router → ateapi: ResumeActor(agent-luna)
-  │     ├─ ateapi: 分布式锁 → 调度器随机选 worker-1 → 乐观锁认领 worker-1
-  │     ├─ ateapi → atelet(node-1): Restore(Golden Snapshot)
-  │     ├─ atelet: 从 GCS 拉取 Golden Snapshot（稀疏 zstd）
-  │     ├─ atelet → ateom: RestoreWorkload
-  │     ├─ ateom: runsc restore（恢复进程树：bash + sleep 状态 + 内存计数器）
-  │     ├─ ateom → atunnel: 就绪，监听 :443
-  │     ├─ ateapi ← atelet: worker-1 pod IP
-  │     └─ Router: Envoy ORIGINAL_DST → worker-1:443 (mTLS) → atunnel → actor :80
-  │
-  │     此时 bash 进程从 suspend 点恢复，继续执行 sleep 后续。
-  │     agent-luna 占据 worker-1，执行 claude --print，返回结果，进入 sleep 45s。
-  │
-  ├─ T2: agent-luna 在 sleep 中，agent-mars 被访问
-  │     Router → ateapi: ResumeActor(agent-mars)
-  │     ateapi 调度器: worker-1 被占用 → 选 worker-2 → 恢复 agent-mars
-  │     agent-mars 占据 worker-2。两个 worker 都被占用，agent-orion 处于 suspended。
-  │
-  ├─ T3: agent-luna sleep 超时，Substrate 自动 Suspend
-  │     ateapi → ateom: SuspendActor
-  │     ateom: runsc checkpoint → 进程树 + rootfs delta + DurableDir 快照
-  │     atelet: 稀疏 zstd 压缩 → 流式上传 GCS（Last Snapshot）
-  │     worker-1 释放（assignment = nil），回到调度池
-  │     agent-luna 状态: SUSPENDED（零资源消耗）
-  │
-  ├─ T4: agent-orion 被访问
-  │     Router → ateapi: ResumeActor(agent-orion)
-  │     调度器: worker-1 空闲 → 恢复 agent-orion 到 worker-1
-  │
-  └─ T5: agent-luna sleep 结束，45s 后有新请求到达
-        Router → ateapi: ResumeActor(agent-luna)
-        调度器: 两个 worker 都忙 → parking lot 等待
-        500ms 后 agent-mars 进入 sleep → Suspend → worker-2 释放
-        调度器选中 worker-2 → 恢复 agent-luna 的 Last Snapshot
-        bash 进程继续 sleep 后的代码 → claude --print → 返回结果
-</code></pre>
-<h3 id="涉及的全部原理"><a class="header" href="#涉及的全部原理">涉及的全部原理</a></h3>
-<h4 id="双层状态模型-1"><a class="header" href="#双层状态模型-1">双层状态模型</a></h4>
-<p>WorkerPool(2) → Worker Pod 由 K8s 管理（低频，分钟级）；actor 的 RUNNING/SUSPENDED 状态由 Redis 管理（高频，秒级）。这避免了百万 actor 的状态写爆 etcd。</p>
-<h4 id="worker-pod-权限"><a class="header" href="#worker-pod-权限">Worker Pod 权限</a></h4>
-<p>ateom-gvisor sidecar 以 <code>runAsUser:0, drop ALL + 13 capability</code> 运行，在 Pod 内 exec <code>runsc</code> 创建 gVisor sandbox。</p>
-<h4 id="绕过-k8s-容器栈"><a class="header" href="#绕过-k8s-容器栈">绕过 K8s 容器栈</a></h4>
-<p><code>runsc</code> 由 ateom 直接 exec，不经过 kubelet → CRI → containerd → runc 链条。Worker Pod 本身是标准 K8s Pod，沙箱在 Pod 内部创建。</p>
-<h4 id="调度器-1"><a class="header" href="#调度器-1">调度器</a></h4>
-<p>随机选择空闲 worker，约束匹配（sandbox class + labels），乐观并发认领。无优先级/抢占——瓶颈在 Redis 延迟和快照恢复，不在调度算法。</p>
-<h4 id="快照系统"><a class="header" href="#快照系统">快照系统</a></h4>
-<p>Golden Snapshot（T0 冷启动创建，agent 首次 resume 用）→ Last Snapshot（T3 自动 suspend 时创建，T5 resume 用）。FULL 作用域（进程树 + rootfs delta）。</p>
-<h4 id="actor-资源管理-1"><a class="header" href="#actor-资源管理-1">Actor 资源管理</a></h4>
-<p>无独立 requests/limits。agent-luna 在 RUNNING 时占用 worker-1 的全部资源（2CPU/4Gi），SUSPENDED 时消耗 0 资源。3 个 agent ↔ 2 个 worker，通过时间维度多路复用。</p>
-<h4 id="request-parking"><a class="header" href="#request-parking">Request Parking</a></h4>
-<p>T5 时两个 worker 都忙，Router 不立即返回 503，而是持有请求重试 ResumeActor（默认 5s 预算），等待 worker 释放。通过 <code>singleflight.Group</code> 去重。</p>
-<h4 id="路由"><a class="header" href="#路由">路由</a></h4>
-<pre><code>DNS 解析 agent-luna.ns.actors.resources.substrate.ate.dev
-  → Envoy ext_proc 触发 ResumeActor
-  → ORIGINAL_DST 改道到 worker IP
-  → atunnel mTLS :443 → 私有 veth → actor :80
-</code></pre>
-<p>整个过程对客户端透明——客户端只知道 actor DNS 名。</p>
-<h4 id="suspend-触发机制"><a class="header" href="#suspend-触发机制">Suspend 触发机制</a></h4>
-<p>Suspend 不是“检测到 <code>sleep</code>“触发的，而是<strong>空闲超时</strong>。ateapi 追踪每个 actor 的空闲时长——当 actor 在配置的时间窗口内没有收到 HTTP 请求、且进程处于可 checkpoint 状态（线程 quiesced，无活跃 syscall），自动发起 Suspend。<code>sleep</code> 只是让进程进入完全静止状态，使 <code>runsc checkpoint</code> 能瞬间完成。</p>
-<h4 id="suspendresume"><a class="header" href="#suspendresume">Suspend/Resume</a></h4>
-<p><code>runsc checkpoint</code> 捕获 bash + sleep + claude 的完整进程状态 → 上传 GCS → 释放 worker。下次 resume 时 <code>runsc restore</code>，bash 从 <code>sleep</code> 后继续执行，不知道自已被迁移过。</p>
-<h4 id="两种-actor-运行模式"><a class="header" href="#两种-actor-运行模式">两种 Actor 运行模式</a></h4>
+<p>所有多步 actor 操作仍是<strong>幂等步骤序列</strong>（<code>workflow_*.go</code>），每步从持久化状态派生 <code>IsComplete()</code>，客户端重试同一 RPC 即可跳过已完成步骤（client-driven forward recovery）。1.0 的变更：状态持久化到 PG、新增 revert/delete/suspend-async/assignment reconcile 等工作流。</p>
+<h2 id="安全模型10-的重点"><a class="header" href="#安全模型10-的重点">安全模型（1.0 的重点）</a></h2>
+<p>安全边界：<strong>sandbox / gateways / control plane / storage</strong> 四层（见 <code>docs/security/security.md</code> 与 <code>security-boundaries.svg</code>）。核心原则用 Met / In Progress / Future / Out of Scope 状态表逐条声明。</p>
+<h3 id="身份三层"><a class="header" href="#身份三层">身份（三层）</a></h3>
+<ol>
+<li><strong>组件 SPIFFE mTLS</strong>：控制面/数据面全部 mTLS，仅放行本地健康检查；<code>podcertcontroller</code> 有 3 个 signer（pod identity、服务 DNS、Postgres 客户端证书）</li>
+<li><strong>per-actor 短生命周期 X.509（1h）</strong>：证书含 ActorIdentity 扩展（OID <code>1.3.6.1.4.1.11129.2.12.2</code>）、<code>purpose=atunnel</code>、绑定 atespace/name/UID，只发给 actor 当前所在 worker；<code>atunnel</code> 经 node-local <code>atelet</code> 向 ate-api-server 换取</li>
+<li><strong>actor JWT</strong>：<code>MintActorJwt</code> RPC + <code>ate-idp-server</code> 提供 OIDC discovery/JWKS；<code>sub=actor/&lt;atespace&gt;/&lt;name&gt;</code>；签名池 <code>actor-id-jwt-pool</code>，<code>kubectl ate admin add/activate/remove-jwt-key</code> 手动轮换；支持联邦与 key rotation 文档</li>
+</ol>
+<p>API 调用方认证：TLS 客户端证书（第一个 URI SAN 作为 SPIFFE principal）或 Bearer JWT（<code>jwtProviders</code> 配置 K8s SA / Google / CI OIDC）；命名空间需 <code>ate.dev/api-access=true</code>。</p>
+<h3 id="授权openfga"><a class="header" href="#授权openfga">授权（OpenFGA）</a></h3>
+<ul>
+<li>内嵌 OpenFGA ReBAC，模型 <code>cmd/ateapi/internal/authz/model.fga</code>，<strong>逐 RPC 检查，无规则即拒</strong></li>
+<li><code>AccessPolicy</code> global / atespace 单例：角色 global owner/viewer，atespace owner/editor/viewer；系统角色 <code>controller</code>/<code>egress_gateway</code>/<code>ingress_router</code>/<code>atelet</code>/<code>api_server_sidecar</code>（凭 pod 证书获得）</li>
+<li>只有 <code>egress_gateway</code> 能 <code>MintActorJwt</code></li>
+<li><code>--authz-bootstrap-owners</code> 必填（否则 ate-api-server 不启动）；默认 <code>ate-client</code> 有显式安全警告</li>
+<li>网络侧：<code>ate-system</code> 默认拒绝 ingress + 组件级 NetworkPolicy</li>
+</ul>
+<h3 id="worker-pod-权限updated"><a class="header" href="#worker-pod-权限updated">Worker Pod 权限（updated）</a></h3>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th></th><th>HTTP Server Actor</th><th>Autonomous Script Actor</th></tr>
+<tr><th></th><th>gVisor worker</th><th>microVM worker</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>形态</strong></td><td>长期运行 HTTP server，监听 <code>:80</code></td><td>脚本/程序，启动后自主执行，sleep → Suspend → Resume 循环</td></tr>
-<tr><td><strong>连续执行</strong></td><td>持续在线，每次 HTTP 请求触发处理</td><td>启动 → 执行 → sleep → Suspend → 再 Resume</td></tr>
-<tr><td><strong>输入</strong></td><td>HTTP request body（每次可不同）</td><td>环境变量（冷启动时固化，suspend/resume 不变）</td></tr>
-<tr><td><strong>输出</strong></td><td>HTTP response（调用方同步拿到）</td><td>stdout/stderr（<code>kubectl logs</code>）</td></tr>
-<tr><td><strong>示例</strong></td><td>sandbox demo: <code>POST /process</code></td><td>claude-code-multiplex: <code>claude --print</code></td></tr>
+<tr><td><strong>privileged</strong></td><td><code>false</code></td><td><code>false</code></td></tr>
+<tr><td><strong>allowPrivilegeEscalation</strong></td><td><code>false</code></td><td><code>false</code></td></tr>
+<tr><td><strong>runAs</strong></td><td>UID/GID 0</td><td>UID/GID 0</td></tr>
+<tr><td><strong>capabilities</strong></td><td>drop ALL + <strong>9 个</strong>：<code>NET_ADMIN, SYS_ADMIN, SETUID, SETGID, DAC_OVERRIDE, FOWNER, CHOWN, NET_RAW, SETFCAP</code></td><td>drop ALL + <strong>11 个</strong>：上面去掉 <code>NET_RAW</code>，加 <code>MKNOD, FSETID, SETPCAP</code></td></tr>
+<tr><td><strong>seccomp/AppArmor</strong></td><td>Unconfined（runsc 需要 mount/pivot_root）</td><td>Unconfined（virtiofsd 需要）</td></tr>
 </tbody>
 </table>
 </div>
-<h4 id="输入输出模式"><a class="header" href="#输入输出模式">输入/输出模式</a></h4>
-<p><strong>输入</strong>：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>方式</th><th>传递路径</th><th>何时生效</th></tr>
-</thead>
-<tbody>
-<tr><td><strong>HTTP body</strong></td><td>Client → Router → atunnel → actor <code>:80</code></td><td>每次请求实时</td></tr>
-<tr><td><strong>环境变量</strong></td><td><code>ActorTemplate.spec.containers[].env</code> → OCI spec → Golden Snapshot → 进程启动</td><td>冷启动时固化</td></tr>
-</tbody>
-</table>
-</div>
-<p>以 TASK 参数为例：CRD env 写入 Golden Snapshot → atelet restore 时注入容器 → <code>run.sh</code> 中 <code>${TASK}</code> 被 bash 展开：<code>claude --print "${TASK}"</code>。环境变量固化在 Golden Snapshot 中，要换 TASK 需删除 actor 重新冷启动。HTTP 模式无此限制。</p>
-<p><strong>输出</strong>：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>方式</th><th>去向</th><th>谁读取</th></tr>
-</thead>
-<tbody>
-<tr><td><strong>HTTP response</strong></td><td>Client ← Router ← atunnel ← actor</td><td>调用方同步拿到</td></tr>
-<tr><td><strong>stdout/stderr</strong></td><td>容器 stdout → <code>kubectl logs</code></td><td>运维 / log collector</td></tr>
-<tr><td><strong>DurableDir 文件</strong></td><td>actor 容器内 → 随快照持久化</td><td>下次 resume 的 actor 自己</td></tr>
-</tbody>
-</table>
-</div>
-<p><strong>stdin 桥接</strong>：Substrate 不参与 stdin 传递（Router 只转发 TCP）。HTTP Server Actor 可在应用层桥接 HTTP body → 子进程 stdin：</p>
-<pre><code class="language-go">cmd := exec.CommandContext(ctx, req.Command[0], req.Command[1:]...)
-cmd.Stdin = strings.NewReader(req.Stdin)  // HTTP body → fd 0
+<p><code>atelet</code> 也从 <code>privileged:true</code> 收紧为 drop ALL + 4 个 caps（CHOWN/DAC_OVERRIDE/FOWNER/FSETID）；<code>/dev/kvm</code> 改由 atelet 的 device plugin 注入。<strong>仍然开放</strong>：worker 以 root 运行且保留 <code>SYS_ADMIN</code>/<code>NET_ADMIN</code>、无 user namespace、seccomp/AppArmor Unconfined——security.md 标为 In Progress。</p>
+<h3 id="威胁模型"><a class="header" href="#威胁模型">威胁模型</a></h3>
+<ul>
+<li><code>docs/security/threat-model.md</code>：7 个场景章节、<strong>42 条带 ID 威胁（T-01..T-43，缺 T-12）</strong>，不再写实现状态，由 CI 的 security-status-report skill 对代码动态评估</li>
+<li><code>docs/threats.json</code>：同 42 条机器可读清单（priority / mitigating_invariants / suggested mitigations），供 CI 消费</li>
+</ul>
+<h3 id="已知限制"><a class="header" href="#已知限制">已知限制</a></h3>
+<p>atespace 名不可复用；无 per-actor/per-template 授权；所有 atelet 共享身份；无 groups；actor→actor 内建授权仍是 Future；worker 可观察/修改其承载的 actor；snapshot tainting 仍 Future。</p>
+<h2 id="部署cli-与运维"><a class="header" href="#部署cli-与运维">部署、CLI 与运维</a></h2>
+<h3 id="安装ate-setup"><a class="header" href="#安装ate-setup">安装（ate-setup）</a></h3>
+<pre><code class="language-shell"># 创建 kind 集群 + 本地 registry
+hack/create-kind-cluster.sh
+
+export ATE_INSTALL_KIND=true
+# 安装 Substrate（credential provider 与 ingress SPIFFE 白名单为必填）
+go run ./cmd/ate-setup deploy ate-system --credential-provider='{"name":"k8s.io"}' \
+  --ingress-allowed-spiffe-ids=spiffe://cluster.local/ns/ate-system/sa/atenet-client
+
+# 安装 demo（counter）
+go run ./cmd/ate-setup deploy demo counter
+
+# 本地代理访问 actor（mTLS，替代 port-forward + Host 头）
+kubectl ate proxy actor my-counter-1 -a ate-demo-counter
+curl -X POST -i http://localhost:8000/
 </code></pre>
-<h2 id="与-kagentagent-sandbox-的关系"><a class="header" href="#与-kagentagent-sandbox-的关系">与 kagent、Agent Sandbox 的关系</a></h2>
-<p>三个项目形成了 AI 基础设施的技术栈：</p>
-<pre><code>┌─────────────────────────────────────────────────┐
-│ kagent (Agent CRD + Controller + A2A)           │  ← Agent 声明式框架
-│ 定义 Agent 的模型、工具、prompt，部署与对话       │
-├─────────────────────────────────────────────────┤
-│ Agent Sandbox (WarmPool + SandboxClaim + Router) │  ← K8s 原生沙箱执行
-│ 预创建沙箱 Pod，Claim 领取，Router 代理请求       │
-├─────────────────────────────────────────────────┤
-│ Agent Substrate (Actor/Worker + 快照 Suspend)    │  ← 高密度沙箱 Runtime
-│ 亚秒级 suspend/resume，actor-worker 多路复用     │
-└─────────────────────────────────────────────────┘
+<ul>
+<li>子命令：<code>deploy ate-system|atelet|apiserver|ate-controller|atenet|podcertificate-controller|sandboxconfig|postgres</code>、<code>deploy demo NAME</code>、<code>setup csi</code>、<code>publish release-images|release-binaries</code> 等</li>
+<li>配置文档 <code>install.ate.dev/v1alpha1</code>（<code>--config</code>/<code>ATE_CONFIG</code>），每次 deploy 把解析结果写入 <code>installs/</code>（默认 <code>~/.cache/ate-setup</code>），供升级/回滚重放</li>
+<li>主要 flag：<code>--kind</code>、<code>--image-repo/--image-tag</code>（预构建镜像）、<code>--atenet-dataplane envoy|agentgateway</code>、<code>--cordon-system-infra-components</code>、<code>--sandbox-classes gvisor,microvm</code>、<code>--preview</code>、<code>--cluster-size size0|size10</code></li>
+<li>旧 <code>hack/install-ate.sh</code>、<code>hack/install-ate-kind.sh</code> 已删除</li>
+</ul>
+<h3 id="kubectl-ate"><a class="header" href="#kubectl-ate">kubectl-ate</a></h3>
+<p>verb 化：<code>create/get/update/delete/resume/suspend/revert/logs/top/proxy/admin</code> × <code>actor/actor-template/atespace/tag/worker/egress-policy/access-policy</code>。</p>
+<ul>
+<li><code>proxy actor</code>（本地 mTLS 代理）、<code>revert actor</code>、<code>tag</code>（快照别名/跨 atespace 发布）、<code>egress-policy</code>、<code>access-policy</code>、<code>top workers</code>、<code>admin *-jwt-key</code>（JWT 密钥轮换）、<code>logs actor --source=containers|lifecycle</code></li>
+<li>移除 <code>pause</code>（随 PauseActor RPC 删除）、<code>admin debug-flush-redis</code>（Redis 后端消失）；认证默认从 mTLS 改为 ServiceAccount token/JWT（<code>--token-file</code>）</li>
+<li><code>--preview</code> 启用 preview 能力；<code>--trace</code> 传 trace ID 给服务端</li>
+</ul>
+<h3 id="升级与版本策略10-起生效"><a class="header" href="#升级与版本策略10-起生效">升级与版本策略（1.0 起生效）</a></h3>
+<p><code>docs/reference/version-skew-policy.md</code>：patch/minor 兼容、不支持跳 minor、新 major 需重装；组件升级顺序 <code>podcertificate-controller → atelet → workers → ate-api-server → ate-controller → atenet → clients</code>；CRD 兼容期只加可选字段；DB schema 只前滚；快照 manifest 未知字段忽略。preview 功能用 <code>--preview</code> 门控（<code>docs/dev/preview-gates.md</code> 定义 preview/GA 两态）。</p>
+<h3 id="可观测性"><a class="header" href="#可观测性">可观测性</a></h3>
+<ul>
+<li>OTel 属性 <code>ate.*</code>（<code>internal/ateattr</code>）：actor/atespace/uid/template/container 等；actor 自身同名 key 被丢弃</li>
+<li><strong>OTel Weaver 指标注册表</strong> <code>docs/metrics/registry/</code>（29 个 metric group，CI 校验）；新增 30+ <code>ate.*</code> 指标（lifecycle、scheduler assignment、restore/checkpoint duration、snapshot、imagecache/filecache、workerpool）</li>
+<li>actor lifecycle / usage events over OTLP；<code>OTEL_METRICS_EXPORTER=otlp|prometheus|none</code>；kind 集群自带 Prometheus + OTel Collector + Jaeger</li>
+<li>首份 SLO/告警规范 <code>docs/guides/slos-and-alerts.md</code>（SLI/SLO + error budget + PromQL + GMP 告警规则）</li>
+</ul>
+<h2 id="demo"><a class="header" href="#demo">Demo</a></h2>
+<p><code>demos/</code> 下 7 个 demo 目录，<code>ate-setup deploy demo</code> 注册 9 个（含 <code>counter-microvm</code>、<code>egress-microvm</code>），全部带 Hugo 文档与 YouTube 讲解。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Demo</th><th>展示能力</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>counter</strong></td><td>内存计数 + 容器 rootfs + DurableDir 三层状态跨 suspend/resume 保留（README 主演示）</td></tr>
+<tr><td><strong>sandbox</strong></td><td>有状态交互式 shell（Alpine）：命令间 cd/变量重置，但文件跨快照保留</td></tr>
+<tr><td><strong>jupyter</strong></td><td>未改动的 <code>quay.io/jupyter/base-notebook</code> 当 actor，浏览器访问即恢复（验证 WebSocket ingress）</td></tr>
+<tr><td><strong>multi-template</strong></td><td>两个不同 ActorTemplate/不同 atespace 共用一个 WorkerPool（<code>workerSelector</code> 集群级匹配）</td></tr>
+<tr><td><strong>parking</strong></td><td>2 worker 池过载时 router 暂存并重试 resume，而非 503</td></tr>
+<tr><td><strong>egress</strong></td><td>actor 出站经 egress gateway 透明隧道 + actor 身份认证（Envoy / agentgateway 两套数据面）</td></tr>
+<tr><td><strong>claude-code-multiplex</strong></td><td>3 个 Claude Code agent 复用 2 个 worker（150s walkthrough），旧页面详解对应的 demo 仍在</td></tr>
+</tbody>
+</table>
+</div>
+<p>README 主演示视频：8 个 Pod 承载 ~250 个有状态 actor，卖点 Actor Teleport / Full-State Persistence / 10x–30x oversubscription。旧页面的 claude-code-multiplex 生命周期走读仍成立，1.0 的差异是：ateworker（原 ateom）、<code>ate-target-actor</code> header + CONNECT 8443、默认异步 suspend、worker 可多 actor。</p>
+<h2 id="与-kagentagent-sandboxagent-executor-的关系"><a class="header" href="#与-kagentagent-sandboxagent-executor-的关系">与 kagent、Agent Sandbox、Agent Executor 的关系</a></h2>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│ kagent / Agent Executor（Agent 框架与编排）              │  ← 声明式 agent / 分布式 runtime
+├─────────────────────────────────────────────────────────┤
+│ Agent Substrate（Actor/Worker 多路复用 + 快照 + 安全边界）│  ← 高密度沙箱 Runtime
+├─────────────────────────────────────────────────────────┤
+│ Kubernetes（Pod / 自动扩缩 / NetworkPolicy / CSI）        │  ← 基础设施
+└─────────────────────────────────────────────────────────┘
 </code></pre>
 <div class="table-wrapper">
 <table>
@@ -1212,23 +1154,60 @@ cmd.Stdin = strings.NewReader(req.Stdin)  // HTTP body → fd 0
 <tr><th></th><th><a href="#kagent-k8s-原生-ai-agent-框架-1">kagent</a></th><th><a href="#agent-sandbox-k8s-原生沙箱执行环境-1">Agent Sandbox</a></th><th>Agent Substrate</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>层级</strong></td><td>Agent 框架（声明式）</td><td>沙箱执行（K8s 原生）</td><td>沙箱 Runtime（底层）</td></tr>
-<tr><td><strong>核心抽象</strong></td><td>Agent, ModelConfig, RemoteMCPServer</td><td>Sandbox, WarmPool, Claim</td><td>Actor, Worker, ActorTemplate</td></tr>
-<tr><td><strong>Pod 模型</strong></td><td>1 Agent = 1 Deployment</td><td>1 Sandbox = 1 Pod + PVC</td><td>N Actors → M Workers（多路复用）</td></tr>
-<tr><td><strong>启动延迟</strong></td><td>K8s Deployment 冷启动</td><td>WarmPool 预热（Pool → Claim 领取）</td><td>亚秒级快照 resume（100ms p95 目标）</td></tr>
-<tr><td><strong>隔离机制</strong></td><td>MCP 协议、A2A 协议</td><td>gVisor/Kata、NetworkPolicy、SA token 禁用</td><td>gVisor runsc checkpoint/restore、Kata Cloud Hypervisor microVM</td></tr>
-<tr><td><strong>路由</strong></td><td>A2A Handler Mux（agent 间通信）</td><td>Sandbox Router（X-Sandbox header 代理）</td><td>atenet DNS + Envoy ext_proc（Host-based）</td></tr>
-<tr><td><strong>状态管理</strong></td><td>K8s CRD + PostgreSQL + pgvector</td><td>K8s CRD + 内存 FIFO 队列</td><td>CRD（低频）+ ValKey/Redis（高频）</td></tr>
-<tr><td><strong>适用场景</strong></td><td>多框架 Agent 管理（ADK/LangGraph/CrewAI）</td><td>不受信任代码执行（AI Agent runtime）</td><td>大规模 agent 部署（目标 10 亿 actor）</td></tr>
+<tr><td><strong>层级</strong></td><td>Agent 框架（CNCF Sandbox）</td><td>K8s 原生沙箱执行</td><td>沙箱 Runtime（底层）</td></tr>
+<tr><td><strong>核心抽象</strong></td><td>Agent, ModelConfig, A2A</td><td>Sandbox, WarmPool, Claim</td><td>Actor, Worker, ActorTemplate, Tag</td></tr>
+<tr><td><strong>Pod 模型</strong></td><td>1 Agent 1 Deployment（1.0 起可走 Substrate）</td><td>1 Sandbox = 1 Pod + PVC</td><td>N Actors → M Workers</td></tr>
+<tr><td><strong>启动延迟</strong></td><td>K8s 冷启动</td><td>WarmPool 预热</td><td>快照 resume（对外 &lt;500ms）</td></tr>
+<tr><td><strong>状态管理</strong></td><td>K8s CRD + PostgreSQL</td><td>K8s CRD + 内存队列</td><td>K8s CRD + PostgreSQL + 对象存储</td></tr>
+<tr><td><strong>安全边界</strong></td><td>MCP/A2A、K8s RBAC</td><td>gVisor/Kata、NetworkPolicy</td><td>zero-trust：SPIFFE/JWT、egress 网关、OpenFGA</td></tr>
 </tbody>
 </table>
 </div>
-<p>三者可以叠加使用：kagent 声明 Agent → SandboxAgent 使用 Agent Substrate 做沙箱执行 → Agent Sandbox 提供 Router 认证与网络隔离。也可以各自独立使用。</p>
+<ul>
+<li><strong>kagent</strong>：CNCF Sandbox 项目；README 明确其用 Substrate 跑“沙箱化、有状态“的 agent 负载，kagent 1.0（与 Substrate 1.0 同期）宣布 <strong>每个 agent 都跑在 Agent Substrate 上</strong>（<a href="https://kagent.dev/blog/kagent-v1-0-release">公告</a>）；<code>kagent install</code> 可一次装 Substrate + PostgreSQL</li>
+<li><strong>Agent Executor（google/ax）</strong>：分布式 agent runtime，用 Substrate 做底层执行，README 保留为生态示例</li>
+<li>集成仓库政策：非平凡端到端集成放 <code>agent-substrate/&lt;repo&gt;</code>（如 <code>execution-sandbox</code>、<code>always-on-agent</code>）；GCP Secret Manager credential provider 已移出核心仓到 <code>agent-substrate-plugins/</code></li>
+</ul>
+<h2 id="与-2026-07-版页面的差异"><a class="header" href="#与-2026-07-版页面的差异">与 2026-07 版页面的差异</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>旧页面（~2026-07-31）</th><th>现状（HEAD / v1.0.0）</th></tr>
+</thead>
+<tbody>
+<tr><td>“早期开发阶段（v0.0.0）”“425 commits”</td><td>v1.0.0（2026-11-05）GA，1718 commits，兼容性承诺生效</td></tr>
+<tr><td>Go 1.26.3，module <code>github.com/agent-substrate/substrate</code></td><td>Go 1.27.0（toolchain 1.27.4），module <code>go.ate.dev/substrate</code></td></tr>
+<tr><td>8 个 binary（含 <code>ateom-gvisor/microvm</code>）</td><td>14 个 <code>cmd/</code> 目录；<code>ateom-*</code> → <code>ateworker-*</code>；新增 ate-setup/ate-idp-server/objectstore-plugin/credential-provider/envoy-dataplane</td></tr>
+<tr><td>动态状态存 ValKey/Redis</td><td>PostgreSQL（atepg + goose，owner/read-write 双角色）；锁改 actorlock + PG 租约</td></tr>
+<tr><td>ActorTemplate 是 CRD</td><td>ActorTemplate 是 ate gRPC 资源（存 Postgres）；K8s CRD 只剩 WorkerPool/SandboxConfig/CSIDriverConfig</td></tr>
+<tr><td>Worker 同时只承载 1 个 actor，状态 IDLE/BUSY</td><td>Worker 可承载多个 actor（capacity/allocated + ActorAssignment），状态 ACTIVE/UNAVAILABLE/DRAINING</td></tr>
+<tr><td>Actor 不设 CPU/内存 requests/limits</td><td><code>ActorTemplate.resources.limits</code> 必填，调度按容量 + runtime overhead 记账</td></tr>
+<tr><td>调度器随机选空闲 worker</td><td>容量感知 + power of two choices + runtime 兼容匹配</td></tr>
+<tr><td>Pause 是核心操作（PAUSING/PAUSED）</td><td>PauseActor RPC 删除；suspend 分同步/异步；新增 RevertActor</td></tr>
+<tr><td>快照 FULL / DATA 作用域</td><td>VOLUMES / ROOTFS / MEMORY 三级 fidelity + preferredFidelity；新增 Tag</td></tr>
+<tr><td>gVisor 整体 checkpoint；microVM rootfs 在 guest tmpfs</td><td>gVisor <code>fscheckpoint</code> 拆分；microVM rootfs 改 host-backed overlay 经 virtio-fs；新增 sandbox asset cache</td></tr>
+<tr><td>入口用 DNS + <code>Host: &lt;actor&gt;.&lt;atespace&gt;...</code></td><td>入口用 <code>ate-target-actor</code> header + mTLS CONNECT 到 atunnel（8443）；atenet dns 删除，改 per-sandbox DNS relay</td></tr>
+<tr><td>（无出口网关）</td><td>atenet-egress + EgressPolicy + 凭证注入 + MITM trust bundle，默认拒绝、fail-closed</td></tr>
+<tr><td>（无身份/授权实现）</td><td>SPIFFE mTLS + per-actor X.509 + actor JWT（ate-idp-server）+ OpenFGA ReBAC + AccessPolicy</td></tr>
+<tr><td>gVisor 13 caps / microVM privileged</td><td>均 privileged:false；gVisor 9 caps / microVM 11 caps（seccomp/AppArmor 仍 Unconfined）</td></tr>
+<tr><td><code>hack/install-ate-kind.sh</code> + port-forward + Host 头</td><td><code>ate-setup</code> + <code>kubectl ate proxy actor</code> + 安装配置文档 + installs 记录</td></tr>
+<tr><td>指标：100ms p95 / 10 亿 actor（目标）</td><td>north star 目标未变；对外 GA 口径 resume &lt;500ms、&gt;500 activations/s、10x–30x</td></tr>
+<tr><td>扁平 docs/ 与 Google 内部项目叙事</td><td>Hugo 文档站 ate.dev；2026-11 捐赠 CNCF Sandbox；kagent 1.0 深度集成</td></tr>
+</tbody>
+</table>
+</div>
 <h2 id="参考-1"><a class="header" href="#参考-1">参考</a></h2>
 <ul>
-<li><a href="https://github.com/agent-substrate/substrate">Agent Substrate GitHub</a></li>
-<li><a href="https://github.com/agent-substrate/substrate/blob/main/docs/architecture.md">Architecture doc</a></li>
+<li>仓库（本地基线）：<code>/home/lubingtan/go/src/github.com/agent-substrate/substrate</code> @ <code>d283af4eb</code>（2026-11-17）</li>
+<li><a href="https://github.com/agent-substrate/substrate">Agent Substrate GitHub</a> / <a href="https://ate.dev">文档站 ate.dev</a></li>
+<li><a href="https://github.com/agent-substrate/substrate/blob/main/docs/concepts/architecture.md">Architecture</a>｜<a href="https://github.com/agent-substrate/substrate/blob/main/docs/reference/resource-model.md">Resource Model</a>｜<a href="https://github.com/agent-substrate/substrate/blob/main/docs/get-started/quickstart.md">Quickstart</a></li>
+<li><a href="https://github.com/agent-substrate/substrate/blob/main/docs/security/security.md">Security Overview</a>｜<a href="https://github.com/agent-substrate/substrate/blob/main/docs/security/threat-model.md">Threat Model</a>｜<a href="https://github.com/agent-substrate/substrate/blob/main/docs/guides/authorization.md">Authorization (OpenFGA)</a></li>
+<li><a href="https://github.com/agent-substrate/substrate/blob/main/docs/guides/egress-traffic.md">Egress Traffic</a>｜<a href="https://github.com/agent-substrate/substrate/blob/main/docs/guides/egress-credential-injection.md">Egress Credential Injection</a>｜<a href="https://github.com/agent-substrate/substrate/blob/main/docs/guides/actor-jwts.md">Actor JWTs</a></li>
+<li><a href="https://github.com/agent-substrate/substrate/blob/main/docs/reference/api-guide.md">API Guide</a>｜<a href="https://github.com/agent-substrate/substrate/blob/main/docs/reference/kubectl-ate.md">kubectl-ate</a>｜<a href="https://github.com/agent-substrate/substrate/blob/main/docs/reference/version-skew-policy.md">Version Skew Policy</a></li>
+<li><a href="https://github.com/agent-substrate/substrate/releases/tag/v1.0.0">v1.0.0 Release</a>｜<a href="https://kagent.dev/blog/kagent-v1-0-release">kagent 1.0 公告</a>｜<a href="https://github.com/google/ax">Agent Executor</a></li>
 </ul>
+<h2 id="附注旧页面基线修正"><a class="header" href="#附注旧页面基线修正">附注：旧页面基线修正</a></h2>
+<p>旧页面记录的 ingest 日期是 2026-07-09（当时仓库 HEAD 为 <code>86cd169b7</code>，273 commits），但页面内容（425 commits、13 caps、atunnel、微 VM 权限等）实际对应 <strong>2026-07-31 的 <code>cbdeb7dbe</code>（425 commits）</strong>；页面文件本身提交于 2026-08-01/08-04。这说明旧 wiki 写入时混用了两个时间点。本页的差异区间按 <strong><code>cbdeb7dbe</code>（~07-31）→ <code>d283af4eb</code>（11-17）= 1293 commits</strong> 计算；正文的关键变更均已用 commit hash 或文档路径交叉核对。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="cordis-hello-world跑通可逆副作用与响应式依赖-1"><a class="header" href="#cordis-hello-world跑通可逆副作用与响应式依赖-1">Cordis Hello World：跑通可逆副作用与响应式依赖</a></h1>
 <blockquote>
@@ -2272,7 +2251,8 @@ kagent mcp install prometheus
 <tr><th>项目</th><th>关系</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>Agent Sandbox</strong></td><td>kagent 集成 Agent Substrate 为 SandboxAgent，提供沙箱隔离执行</td></tr>
+<tr><td><strong>Agent Substrate</strong>（<a href="#agent-substrate-高密度-agent-沙箱-runtime-1">见页面</a>）</td><td>kagent 1.0 起每个 agent 都跑在 Agent Substrate 上（SandboxAgent）：快照多路复用 + zero-trust 沙箱隔离，两家均为 CNCF 项目</td></tr>
+<tr><td><strong>Agent Sandbox</strong>（<a href="#agent-sandbox-k8s-原生沙箱执行环境-1">见页面</a>）</td><td>K8s 原生沙箱执行环境（WarmPool + SandboxClaim），与 Agent Substrate 是相邻/可叠加的路线</td></tr>
 <tr><td><strong>Google ADK</strong></td><td>Python agent runtime 基于 Google ADK 框架</td></tr>
 <tr><td><strong>A2A Protocol</strong></td><td>Agent 间通信标准，BYO agent 的互操作接口</td></tr>
 <tr><td><strong>MCP Protocol</strong></td><td>Agent 调用外部工具的标准协议</td></tr>
