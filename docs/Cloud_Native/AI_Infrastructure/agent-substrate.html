@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-503adfc3.js";
+            window.path_to_searchindex_js = "../../../searchindex-d7664c22.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-34f46ad6.js"></script>
+        <script src="../../../toc-2da8c43c.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -442,6 +442,40 @@
 <li><code>atelet</code>/<code>ateapi</code> 自身<strong>没有对象存储凭据</strong>：分别通过本地 <code>objectstore-plugin</code> sidecar 的 node/control 模式搬运快照；GCS 上 node 侧还会用 atelet 的 JWT 换“仅限该 actor 快照前缀“的短时 token（S3 per-actor 限定尚在计划）</li>
 <li>格式仍是稀疏 zstd（magic <code>ATESPRSE</code>，format v2），新增并行 zstd 帧、ranged/composite 对象读、上传内存预算</li>
 <li>节点本地 <code>internal/snapshotcache</code> 缓存最近快照，供同节点快速 resume；node reboot 用 boot-id 清理</li>
+</ul>
+<h3 id="worker-故障与-actor-恢复"><a class="header" href="#worker-故障与-actor-恢复">Worker 故障与 Actor 恢复</a></h3>
+<p><strong>一句话</strong>：已 SUSPENDED 的 actor 基本不受影响；<strong>RUNNING 的 actor 会随 worker 一起丢状态、被标记 CRASHED</strong>，但能回退到最近一次完成的外部快照再 resume——丢的是“上次快照之后“的状态。</p>
+<p>Worker Pod 消失的常见原因：WorkerPool 滚动升级/缩容、节点 drain、Spot VM 回收、Pod/节点故障。控制面逻辑在 <code>cmd/ateapi/internal/controlapi/workflow_worker_delete.go</code>：一旦确认 worker Pod 没了，<code>DeleteWorker</code> 工作流会 drain 该 worker、把它承载的每个 actor 置为 <code>CRASHED</code>、清空 assignment，并尽力回收节点上的 actor 运行目录；语义见 <code>docs/reference/api-guide.md#eviction</code>。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>故障时 actor 状态</th><th>结果</th><th>数据损失</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>SUSPENDED</strong>（不在 worker 上）</td><td>不受影响；可从对象存储（或节点本地副本）resume 到任意 worker</td><td>无</td></tr>
+<tr><td><strong>RUNNING</strong>（被立即杀掉，如节点断电/OOM/强制删除）</td><td>sandbox 随 Pod 消失，actor → <code>CRASHED</code>；需 <code>revert</code> → <code>resume</code></td><td>上次 completed 外部快照之后的状态全部丢失</td></tr>
+<tr><td><strong>RUNNING + SIGTERM 优雅驱逐</strong></td><td>有 30min 窗口，窗口内完成 suspend 就能在别的 worker 恢复</td><td>窗口内完成 <strong>同步</strong> suspend：无损失；否则同上一行</td></tr>
+<tr><td><strong>SUSPENDING / 异步 suspend 上传未完成</strong></td><td>本地快照随节点消失；resume 若仍找到上传可恢复，否则 <code>CRASHED</code> → 回退到更早的 completed 快照</td><td>可能丢最新一次快照</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>驱逐（Eviction）细节</strong>：</p>
+<ul>
+<li>Pod 收到 <code>SIGTERM</code> 后 worker 停止接新 actor，并向其承载的每个 actor <strong>主进程</strong>转发 <code>SIGTERM</code>；每个 actor 有 <strong>30 分钟</strong>（<code>workloadGracePeriod</code>，固定且短于 Pod 1h terminationGrace）完成 suspend</li>
+<li>Substrate <strong>不会替 actor 自动 suspend</strong>：必须由 harness/应用在窗口内调用 <code>SuspendActor</code>，并建议用<strong>同步模式</strong>（<code>kubectl ate suspend actor --mode=sync</code>）——异步 suspend 默认要等 <code>--snapshot-upload-delay</code>（默认 5min）才后台上传，节点提前消失则快照一起丢</li>
+<li>Spot VM 回收可能只给 15s–2min（GKE Spot 默认 15s），远小于 30min 窗口；没 suspend 完就是 <code>CRASHED</code></li>
+<li>一个 worker 承载多个 actor 时，它们会一起 <code>CRASHED</code>，各自独立 revert + resume</li>
+</ul>
+<p><strong>恢复步骤</strong>（<code>CRASHED</code> 不能直接 resume，会返回 <code>FAILED_PRECONDITION</code>）：</p>
+<pre><code class="language-shell">kubectl ate get actor &lt;name&gt; -a &lt;atespace&gt; -o yaml   # 看 state=ACTOR_STATE_CRASHED 与 status.snapshots
+kubectl ate revert actor &lt;name&gt; -a &lt;atespace&gt;        # 回到 last completed external snapshot，状态变 SUSPENDED
+kubectl ate resume actor &lt;name&gt; -a &lt;atespace&gt;        # 或等下一次请求经 router 触发 resume
+</code></pre>
+<p>注意事项：</p>
+<ul>
+<li>revert 回退到 <code>status.snapshots</code> 中最近一次<strong>已完成</strong>的外部快照（首次运行则是 Golden Snapshot）；节点本地 checkpoint 与半成品快照会被清理</li>
+<li><strong>CSI 外部卷不随快照回退</strong>：external volume 的内容不在快照里，revert 后卷仍是崩溃前内容；<code>DurableDir</code> 卷在快照内，会一起回退</li>
+<li>恢复粒度是“最近一次快照“，不是“崩溃瞬间“；对状态敏感的场景应配合 30min 窗口内的同步 suspend，或主动 <code>Tag</code> 保留关键快照</li>
 </ul>
 <h3 id="沙箱后端"><a class="header" href="#沙箱后端">沙箱后端</a></h3>
 <p>沙箱 class 由 <code>WorkerPool.spec.sandboxClasses[].name</code>（<code>gvisor|microvm</code>）决定；<code>ActorTemplate</code> 通过 <code>workerSelector</code> 选池，<strong>不再直接带 <code>sandboxClass</code></strong>。沙箱二进制/资产来自 <code>SandboxConfig</code>，运行时下发到节点 content-addressed <strong>asset cache</strong>（hardlink 复用 + 按字节预算淘汰），而不是烘进 worker 镜像。</p>

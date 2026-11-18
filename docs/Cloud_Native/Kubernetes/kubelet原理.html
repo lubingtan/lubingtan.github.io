@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-503adfc3.js";
+            window.path_to_searchindex_js = "../../../searchindex-d7664c22.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-34f46ad6.js"></script>
+        <script src="../../../toc-2da8c43c.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -244,6 +244,10 @@
 <li>调用CRI接口StartContainer启动container；</li>
 <li>调用生命周期中设置的钩子 post start；</li>
 </ol>
+<h2 id="延伸阅读"><a class="header" href="#延伸阅读">延伸阅读</a></h2>
+<ul>
+<li><a href="./容器运行时.html">容器运行时全链路：OCI、CRI、containerd、shim 与 RuntimeClass</a> —— 本文只讲到 <code>containerRuntime.SyncPod</code> 这一层；CRI 的 gRPC 接口定义、containerd 如何把 CRI 请求翻译成 OCI spec、shim 如何持有容器进程、RuntimeClass 的 handler 如何一路传到运行时，见该页。</li>
+</ul>
 
                     </main>
 
