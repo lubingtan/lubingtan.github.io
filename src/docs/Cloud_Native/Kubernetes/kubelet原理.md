@@ -79,3 +79,7 @@ Sandbox沙箱是一种程序的隔离运行机制，其目的是限制不可信�
 6. 调用CRI接口StartContainer启动container；
 7. 调用生命周期中设置的钩子 post start；
 
+
+## 延伸阅读
+
+- [容器运行时全链路：OCI、CRI、containerd、shim 与 RuntimeClass](./容器运行时.md) —— 本文只讲到 `containerRuntime.SyncPod` 这一层；CRI 的 gRPC 接口定义、containerd 如何把 CRI 请求翻译成 OCI spec、shim 如何持有容器进程、RuntimeClass 的 handler 如何一路传到运行时，见该页。

@@ -18,6 +18,7 @@
 - [FlowSchema](./Cloud_Native/Kubernetes/flowschema.md) — kube-apiserver 的流量控制与 API 优先级机制
 - [PLEG](./Cloud_Native/Kubernetes/k8s之pleg.md) — Pod Lifecycle Event Generator 的原理与僵尸进程排查
 - [Kubelet 原理](./Cloud_Native/Kubernetes/kubelet原理.md) — kubelet 创建 Pod 的完整流程：syncLoop、PLEG、容器运行时
+- [容器运行时全链路：OCI、CRI、containerd、shim 与 RuntimeClass](./Cloud_Native/Kubernetes/容器运行时.md) — 从 kubelet 到容器进程：五个概念的边界、代码级调用链、shim 生命周期与 RuntimeClass handler 解析
 - [Kubernetes 高可用](./Cloud_Native/Kubernetes/kubernetes_ha.md) — stacked etcd 与 external etcd 两种 HA 拓扑方案
 - [RBAC](./Cloud_Native/Kubernetes/rbac.md) — 基于角色的访问控制：用户创建、证书签名请求、权限绑定
 - [Kueue](./Cloud_Native/Kubernetes/kueue.md) — Kubernetes 原生作业队列管理器：配额管理、公平共享、抢占与多集群调度
