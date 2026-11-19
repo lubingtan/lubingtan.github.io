@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-d7664c22.js";
+            window.path_to_searchindex_js = "../../../searchindex-a4bdd9af.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-2da8c43c.js"></script>
+        <script src="../../../toc-aca9e1c8.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -346,7 +346,7 @@
 <p>OCI 官方列的 runtime 实现（<a href="https://github.com/opencontainers/runtime-spec/blob/92249139eea7161e13745abd4cb6d0ea02a3227a/implementations.md#L7-L20">implementations.md#L7-L20</a>）：</p>
 <ul>
 <li>普通容器：<strong>runc</strong>（参考实现）、crun（C）、youki（Rust）、systemd-nspawn</li>
-<li>虚拟化/用户态内核：<strong>runsc</strong>（gVisor，用户态内核）、<strong>kata-runtime</strong>（轻量 VM）、runv</li>
+<li>虚拟化/用户态内核：<strong>runsc</strong>（gVisor，用户态内核）、<strong>kata-runtime</strong>（轻量 VM）、runv —— 三者的隔离边界与实现原理见 <a href="../Virtualization/沙箱与虚拟化技术全景.html">沙箱与虚拟化技术全景</a></li>
 </ul>
 <p>它们对上层提供同一套语义，因此 containerd 可以只实现一次“调用 runtime“，就支持所有 OCI runtime —— 这也是 <strong>RuntimeClass</strong> 能把 runc/gVisor/Kata 统一到同一个 API 下的原因。</p>
 <hr>
@@ -780,6 +780,9 @@ runtime_path = "/usr/bin/containerd-shim-kata-v2"
 </table>
 </div>
 <p><strong>RuntimeClass 本身不提供隔离</strong>，它只是“选择器 + 调度约束 + 开销声明“；隔离来自被选中的 runtime/shim。这也是为什么“用了 RuntimeClass 就安全了“是错的 —— 关键看 handler 指向什么。</p>
+<blockquote>
+<p>表中 <code>runsc</code> 与 <code>kata</code> 的隔离机制（用户态内核 vs 硬件虚拟化）、启动/内存开销与选型建议，见 <a href="../Virtualization/沙箱与虚拟化技术全景.html">沙箱与虚拟化技术全景</a>。</p>
+</blockquote>
 <h3 id="85-失败语义与常见坑"><a class="header" href="#85-失败语义与常见坑">8.5 失败语义与常见坑</a></h3>
 <div class="table-wrapper">
 <table>
@@ -973,6 +976,7 @@ kubectl get pod &lt;pod&gt; -o jsonpath='{.spec.runtimeClassName}{"\n"}{.spec.ov
 <li><a href="../Linux_Container/容器知识备忘录.html">容器知识备忘录</a></li>
 <li><a href="./cni详解.html">CNI 详解</a></li>
 <li><a href="../AI_Infrastructure/agent-sandbox.html">Agent Sandbox</a>（沙箱运行时与 gVisor/Kata 的实践）</li>
+<li><a href="../Virtualization/沙箱与虚拟化技术全景.html">沙箱与虚拟化技术全景：KVM、QEMU、Firecracker、Kata、gVisor</a>（本文 runsc/kata 两种 runtimes 的隔离边界、开销与选型）</li>
 </ul>
 
                     </main>

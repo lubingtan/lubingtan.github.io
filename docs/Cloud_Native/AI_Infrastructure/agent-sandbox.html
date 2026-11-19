@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-d7664c22.js";
+            window.path_to_searchindex_js = "../../../searchindex-a4bdd9af.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-2da8c43c.js"></script>
+        <script src="../../../toc-aca9e1c8.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -331,6 +331,9 @@ Claim 删除 → GC 级联删 Sandbox → Pod/PVC/SVC
 </tbody>
 </table>
 </div>
+<blockquote>
+<p>三种隔离边界（共享内核 / 用户态内核 / 硬件虚拟化）的代码级原理、启动与内存开销、以及 gVisor vs Kata 的选型，见 <a href="../Virtualization/沙箱与虚拟化技术全景.html">沙箱与虚拟化技术全景</a>。</p>
+</blockquote>
 <p>Pod 级安全上下文：<code>runAsNonRoot</code>, <code>allowPrivilegeEscalation: false</code>, <code>capabilities.drop: ["ALL"]</code>, <code>seccompProfile: RuntimeDefault</code></p>
 <h3 id="2-serviceaccount-隔离"><a class="header" href="#2-serviceaccount-隔离">2. ServiceAccount 隔离</a></h3>
 <p>默认 <code>automountServiceAccountToken = false</code>。即使沙箱被攻破，也无法通过 SA token 访问 K8s API Server，阻止集群级提权。</p>
