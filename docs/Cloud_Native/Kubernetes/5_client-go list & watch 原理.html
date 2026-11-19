@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-a4bdd9af.js";
+            window.path_to_searchindex_js = "../../../searchindex-795994c4.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-aca9e1c8.js"></script>
+        <script src="../../../toc-2fda9a29.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -398,6 +398,11 @@ func (wc *watchChan) startWatching(watchClosedCh chan struct{}) {
 <p>在run方法中，接受nextCh，并调用handler</p>
 </li>
 </ol>
+<h2 id="延伸阅读"><a class="header" href="#延伸阅读">延伸阅读</a></h2>
+<ul>
+<li><a href="./控制面高可用方案.html">Kubernetes 控制面高可用方案</a> —— client-go 的 Lease 选主（<code>leaderelection</code> 包）如何实现 KCM/scheduler/kube-vip 的热备切换；多 apiserver 入口为什么必须靠 VIP/LB，而不是 client-go 自己做故障转移。</li>
+<li><a href="./控制面事故处理手册.html">Kubernetes 控制面事故处理手册</a> —— watch/list 重连风暴、informer 全量 list 对 apiserver 与 etcd 的冲击，以及 APF 429 的处置（R8）。</li>
+</ul>
 
                     </main>
 
@@ -452,8 +457,8 @@ func (wc *watchChan) startWatching(watchClosedCh chan struct{}) {
         <!-- Custom JS scripts -->
         <script src="../../../theme/giscus-edff37af.js"></script>
         <script src="../../../theme/goatcounter-6da6732a.js"></script>
-        <script src="../../../theme/mermaid-init-1bb4d447.js"></script>
-        <script src="../../../theme/mermaid-eefea253.min.js"></script>
+        <script src="../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../theme/mermaid-init-7cdebe5d.js"></script>
 
 
 

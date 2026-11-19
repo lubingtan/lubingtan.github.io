@@ -1,0 +1,740 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>镜像懒加载：stargz、Nydus、SOCI 与 OverlayBD - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../searchindex-795994c4.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../toc-2fda9a29.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/Linux_Container/镜像懒加载.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="镜像懒加载stargznydussoci-与-overlaybd"><a class="header" href="#镜像懒加载stargznydussoci-与-overlaybd">镜像懒加载：stargz、Nydus、SOCI 与 OverlayBD</a></h1>
+<p>传统拉镜像的流程是“先下载完整 layer，再解包成 rootfs，最后启动容器“。懒加载（lazy pulling / lazy loading）把这个顺序倒过来：<strong>先让容器跑起来，用到哪个文件再去 registry 取那段字节</strong>。</p>
+<p>这不是一个镜像格式技巧，而是一整条链路的配合：registry 要支持按字节范围读，镜像层要能随机访问，节点上要有 FUSE / EROFS / 块设备这类“按需取数“的运行时，containerd 侧还要有 remote snapshotter 协议来跳过“下载并解包整层“这一步。本文按“先机制、后各家实现“的顺序讲清楚这条链路，以及 stargz/eStargz、Nydus、SOCI、OverlayBD 四种实现的差异、适用边界和排障方法。</p>
+<blockquote>
+<p><strong>引用约定</strong>：代码/格式级论断固定到 2026-11 拉取的 commit，链接形如 <code>https://github.com/&lt;org&gt;/&lt;repo&gt;/blob/&lt;40位sha&gt;/&lt;path&gt;#Lx-Ly</code>，行号与本地 checkout 一致；官方文档 URL 直接引用。版本基线：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>项目</th><th>commit</th><th>本文用途</th></tr>
+</thead>
+<tbody>
+<tr><td>containerd</td><td><code>b7a25261e029d68978bbf290df0a62fc819b3c51</code></td><td>remote snapshotter 协议、unpack、labels</td></tr>
+<tr><td>containerd/stargz-snapshotter</td><td><code>6ee88d95406f1d6242fd6d12ed4de0492d91d8f5</code></td><td>eStargz 格式、stargz snapshotter、stargz-store</td></tr>
+<tr><td>awslabs/soci-snapshotter</td><td><code>8b347fe825312441c5d5b357768727175e352ad5</code></td><td>SOCI index / zTOC / span</td></tr>
+<tr><td>dragonflyoss/nydus</td><td><code>6aa3f8f185cb81e330b64382103d697b47f6c903</code></td><td>RAFS、nydusd、nydus-image</td></tr>
+<tr><td>containerd/nydus-snapshotter</td><td><code>8a458b9b674fc133e3beb1db306db11ad5097a6f</code></td><td>K8s 侧部署、fs_driver</td></tr>
+<tr><td>containerd/accelerated-container-image</td><td><code>0806b5ec1b3ce3262b8ab9c9ba499f6bbe8b4ae0</code></td><td>OverlayBD / TurboOCI</td></tr>
+<tr><td>google/crfs</td><td><code>71d77da419c90be7b05d12e59945ac7a8c94a543</code></td><td>stargz 前身，仅作背景</td></tr>
+</tbody>
+</table>
+</div>
+<p>兄弟页面：snapshotter 接口本身与本地快照细节见 <a href="./镜像快照器snapshotter.html">镜像快照器snapshotter</a>；下层联合挂载与层语义见 <a href="./OverlayFS与镜像层.html">OverlayFS与镜像层</a>；pull/unpack 在整条链路中的位置见 <a href="../Kubernetes/容器运行时.html">容器运行时</a>。</p>
+</blockquote>
+<hr>
+<h2 id="1-一分钟版本"><a class="header" href="#1-一分钟版本">1. 一分钟版本</a></h2>
+<p><strong>一句话</strong>：懒加载 = 不先把完整 layer 落到本地，而是让 snapshotter 返回一个“远程快照“，容器 rootfs 立刻可挂载，文件内容在首次访问时通过 HTTP Range 从 registry（或对象存储/P2P 网络）按需读取。</p>
+<p>它成立需要四个前提，同时也是四种代价：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>前提 / 代价</th><th>具体含义</th><th>不满足的后果</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>registry 支持 Range</strong></td><td>能对 blob 做 <code>Range: bytes=...</code> 分段读取，即 OCI distribution-spec 的 blob 分段拉取</td><td>只能退化成整层下载（404/416，或被中间代理抹掉 Range）</td></tr>
+<tr><td><strong>镜像格式可随机访问</strong></td><td>层内部有索引：eStargz 的 TOC、RAFS 的 chunk 索引、SOCI 的 zTOC、OverlayBD 的块索引</td><td>就算知道文件偏移，也得解压/扫描整层</td></tr>
+<tr><td><strong>运行时支持 FUSE / EROFS / 块设备</strong></td><td><code>/dev/fuse</code>、内核 EROFS 模块、TCMU/configfs/loop 等</td><td>snapshotter 无法挂载，直接回退或启动失败</td></tr>
+<tr><td><strong>能接受冷读放大</strong></td><td>首读走网络、延迟高于本地盘；需要 prefetch、缓存、索引构建来摊平</td><td>启动后顺序读全量数据的负载会比传统 pull 更慢</td></tr>
+</tbody>
+</table>
+</div>
+<p>全景图（以一次 pull + 启动为单位）：</p>
+<pre class="mermaid">flowchart LR
+    subgraph REG["Registry / 对象存储"]
+        BLOB["layer blob&lt;br/&gt;支持 HTTP Range"]
+        META["manifest / config /&lt;br/&gt;TOC / zTOC / bootstrap / index"]
+    end
+
+    subgraph NODE["节点"]
+        CD["containerd&lt;br/&gt;pull + unpack"]
+        SN["remote snapshotter&lt;br/&gt;stargz / soci / nydus / overlaybd"]
+        FS["按需读取层&lt;br/&gt;FUSE 挂载点 / EROFS / 块设备"]
+        OV["overlayfs merged rootfs"]
+        UP[("upperdir&lt;br/&gt;本地可写层")]
+        C["容器进程"]
+        CS[("content store&lt;br/&gt;manifest/config/小索引")]
+    end
+
+    CD --&gt;|"Prepare + containerd.io/snapshot/* labels"| SN
+    SN --&gt;|"ErrAlreadyExists（远程快照已就绪）"| CD
+    SN --&gt;|"按需读"| BLOB
+    SN --&gt;|"读元数据"| META
+    SN --&gt; FS
+    FS --&gt; OV
+    OV --&gt; C
+    OV -.-&gt;|"写入"| UP
+    CD &lt;--&gt; CS
+</pre>
+
+<p>一句话链路（后文逐段展开）：</p>
+<pre><code class="language-text">registry ──(Range)──&gt; FUSE / EROFS / 块设备 ──&gt; overlayfs lowerdir ──&gt; 容器 rootfs
+                          ▲
+                    remote snapshotter
+                          ▲
+              containerd unpacker 的 Prepare
+</code></pre>
+<hr>
+<h2 id="2-为什么需要懒加载"><a class="header" href="#2-为什么需要懒加载">2. 为什么需要懒加载</a></h2>
+<p>三个动机，都可以用“拉取时间 × 镜像大小 × 副本数“来理解：</p>
+<ol>
+<li><strong>拉取时间占比高</strong>。SOCI 项目 README 引用的 FAST ’16 研究结论是：镜像下载占容器启动时间的 76%，而平均只有 6.4% 的数据是容器启动真正需要的（<a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/README.md#L16-L18">soci-snapshotter README#L16-L18</a>）；stargz-snapshotter README 也引用了同一个 76% 结论（<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/README.md#L16">stargz-snapshotter README#L16</a>）。注意这是 2016 年的研究样本，不能直接套到今天的镜像分布上。</li>
+<li><strong>大镜像 + 冷节点</strong>。AI/数据类镜像动辄 GB 级，节点本地盘又不一定放得下多副本；完整 pull 既要带宽也要磁盘。</li>
+<li><strong>启动风暴</strong>。一次发布/扩容会有大量 Pod 同时拉同一个镜像，registry 带宽被打满。懒加载把“集中下载“摊成“按需读 + 后台预取“，配合 P2P（Dragonfly）或镜像预热可以进一步削峰。</li>
+</ol>
+<p>代价同样明确：首次访问文件要等网络；索引构建/镜像转换增加 CI 负担；FUSE 路径有用户态/内核态切换开销；节点上多了一份元数据内存/磁盘开销。这些会在第 8.2 节“什么情况不该用“里集中展开。</p>
+<hr>
+<h2 id="3-containerd-侧机制remote-snapshotter-与-future-snapshot"><a class="header" href="#3-containerd-侧机制remote-snapshotter-与-future-snapshot">3. containerd 侧机制：remote snapshotter 与 “future snapshot”</a></h2>
+<p>各家实现（stargz / SOCI / Nydus / OverlayBD）都复用同一套 containerd 协议。先把这个协议讲清楚，后面四节才不会重复。</p>
+<h3 id="31-普通-pullunpack-做了什么"><a class="header" href="#31-普通-pullunpack-做了什么">3.1 普通 pull/unpack 做了什么</a></h3>
+<p>containerd 里，镜像内容先进入 content store，再由 snapshotter 逐层解包成 committed snapshot，最后在顶层建 active snapshot 作为容器可写层。官方文档把三步写得很直白：内容加载、逐层 apply（即 unpacking）、创建 active snapshot（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/content-flow.md#L20-L23">containerd content-flow.md#L20-L23</a>）。对 overlayfs 这类本地 snapshotter，每一层都必须“下载完整 blob → 解压 tar → 写进上层目录“。</p>
+<h3 id="32-remote-snapshotter用-erralreadyexists-表达快照已经存在"><a class="header" href="#32-remote-snapshotter用-erralreadyexists-表达快照已经存在">3.2 remote snapshotter：用 <code>ErrAlreadyExists</code> 表达“快照已经存在“</a></h3>
+<p>containerd 的 remote snapshotter 机制允许 snapshotter “复用存在于远程的 snapshot”，从而<strong>不拉 layer 就完成 prepare</strong>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/snapshotters/remote-snapshotter.md#L5-L7">remote-snapshotter.md#L5-L7</a>）。协议核心只有两条：</p>
+<ol>
+<li><strong>Prepare 时带 <code>containerd.io/snapshot.ref</code></strong>：unpacker 调 <code>Prepare</code> 时会把目标 chainID 放进这个 label，并合并用户传入的 <code>containerd.io/snapshot/*</code> 前缀标签（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/snapshotters/remote-snapshotter.md#L92-L94">remote-snapshotter.md#L92-L94</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/snapshotter.go#L37-L42">snapshotter.go#L37-L42</a>）。</li>
+<li><strong>snapshotter 返回 <code>ErrAlreadyExists</code></strong>：表示“这个 chainID 的提交快照已经在远程就绪（即所谓 <em>future snapshot</em>）“。containerd 收到后用 <code>Stat(chainID)</code> 确认，然后<strong>跳过该层的 fetch 和 apply</strong>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/snapshotters/remote-snapshotter.md#L116-L121">remote-snapshotter.md#L116-L121</a>）。</li>
+</ol>
+<p>unpacker 里的实际代码就是这段逻辑：</p>
+<pre><code class="language-go">mounts, err = sn.Prepare(ctx, key, parent, opts...)
+if err != nil {
+    if errdefs.IsAlreadyExists(err) {
+        if snInfo, err := sn.Stat(ctx, chainID); err != nil {
+            // ...
+        } else {
+            log.G(ctx).Debugf("snapshot %s with chainID %s already exists, skip extraction of blob %q", ...)
+            return nil, nil   // 跳过这一层
+        }
+    }
+}
+</code></pre>
+<p>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/unpack/unpacker.go#L506-L521">containerd core/unpack/unpacker.go#L506-L521</a>）</p>
+<p>关键细节：<strong>layer 根本不会进入这次 fetch 的例行路径</strong>。unpacker 的 <code>Unpack</code> handler 在拿到 manifest 时把 layer 描述符从 children 里摘掉、只返回非 layer 内容（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/unpack/unpacker.go#L284">unpacker.go#L284</a>），等 config 解析出 diffIDs 后才在 goroutine 里逐层处理；而真正触发下载的 <code>startFetch(i)</code> 位于 Prepare 成功之后（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/unpack/unpacker.go#L602">unpacker.go#L602</a>）。所以一旦 Prepare 返回 <code>ErrAlreadyExists</code>，这一层就是“零下载“。</p>
+<h3 id="33-标签snapshotter-怎么知道去哪个-registry-取什么"><a class="header" href="#33-标签snapshotter-怎么知道去哪个-registry-取什么">3.3 标签：snapshotter 怎么知道去哪个 registry 取什么</a></h3>
+<p>snapshotter 只拿到 chainID 是不够的，还需要镜像引用、layer digest 等。协议约定：所有快照器专用标签都必须以 <code>containerd.io/snapshot/</code> 为前缀（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/snapshotters/remote-snapshotter.md#L35-L36">remote-snapshotter.md#L35-L36</a>）。两种传递方式：</p>
+<ul>
+<li><code>snapshots.WithLabels(...)</code>：静态标签，随 <code>WithPullSnapshotter</code> 传入；</li>
+<li><code>WithImageHandlerWrapper(snapshotters.AppendInfoHandlerWrapper(ref))</code>：动态给每一层 descriptor 追加 annotations（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/snapshotters/remote-snapshotter.md#L62-L71">remote-snapshotter.md#L62-L71</a>）。containerd 的 CRI 插件、nerdctl、moby 都用这个 wrapper。</li>
+</ul>
+<p>wrapper 会写入 <code>containerd.io/snapshot/cri.image-ref</code>、<code>.../cri.layer-digest</code>、<code>.../cri.image-layers</code> 等标签（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/pkg/snapshotters/annotations.go#L32-L44">pkg/snapshotters/annotations.go#L32-L44</a>），供 remote snapshotter 去 registry 查层。<strong>这也解释了 CRI 里常见的开关</strong>：<code>disable_snapshot_annotations = false</code> 必须设置，否则这些 annotations 不会传到 snapshotter。</p>
+<p>客户端侧的两个关键选项是 <code>WithPullUnpack</code> 和 <code>WithPullSnapshotter</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/client/client_opts.go#L161-L166">client_opts.go#L161-L166</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/client/client_opts.go#L177-L183">client_opts.go#L177-L183</a>）：</p>
+<pre><code class="language-go">image, err := client.Pull(ctx, ref,
+    containerd.WithPullUnpack,
+    containerd.WithPullSnapshotter("my-remote-snapshotter"),
+)
+</code></pre>
+<h3 id="34-时序对比普通-unpack-vs-remote-snapshot"><a class="header" href="#34-时序对比普通-unpack-vs-remote-snapshot">3.4 时序对比：普通 unpack vs remote snapshot</a></h3>
+<pre class="mermaid">sequenceDiagram
+    autonumber
+    participant U as containerd unpacker
+    participant S as snapshotter
+    participant R as registry / 对象存储
+
+    U-&gt;&gt;U: Dispatch：manifest+config 下载，layer 从 children 摘出
+    alt 本地快照器（overlayfs）
+        U-&gt;&gt;R: 下载整层 blob
+        U-&gt;&gt;S: Prepare(key, parent)
+        S--&gt;&gt;U: mounts(active)
+        U-&gt;&gt;S: Apply(解包整层) → Commit(chainID)
+    else 远程快照器（stargz / soci / nydus / overlaybd）
+        U-&gt;&gt;S: Prepare(key, parent, labels: snapshot.ref=chainID, cri.image-ref, ...)
+        S-&gt;&gt;R: 读取 footer/TOC/zTOC/bootstrap/index（Range）
+        S--&gt;&gt;U: ErrAlreadyExists（future snapshot 已提交）
+        U-&gt;&gt;S: Stat(chainID) → 确认存在
+        Note over U: 跳过该层 fetch + apply（startFetch 不执行）
+        U-&gt;&gt;S: Mounts → 容器启动
+        Note over S,R: 容器运行中按需读
+        S-&gt;&gt;R: GET blob Range: bytes=...
+    end
+</pre>
+
+<h3 id="35-那-layer-去哪了content-store-与-lazy-store"><a class="header" href="#35-那-layer-去哪了content-store-与-lazy-store">3.5 那 layer 去哪了：content store 与 lazy store</a></h3>
+<p>在 containerd 的 remote snapshotter 路径下，<strong>被远程快照接管的 layer 不会进入 content store</strong>：unpacker 在 Prepare 返回 <code>ErrAlreadyExists</code> 后就跳过了这一层的 fetch（见 3.2），content store 里主要留下 manifest/config 和 index 这类小对象。真正按需取数的是 snapshotter 自己：它拿着 registry 凭据，直接对 blob 发 HTTP Range 请求，命中本地缓存则直接返回。</p>
+<blockquote>
+<p>实现细节并不完全统一：nydus-snapshotter 还有“在 pull 时转换镜像“之类的模式，所以它的 K8s 部署文档要求 <code>discard_unpacked_layers = false</code>、把层保留在 content store 里供后续按需拉取和共享（见 5.4）。判断某个方案是否需要 content store 里的层，以它自己的文档为准。</p>
+</blockquote>
+<p>这和 CRI-O/Podman 的路径不同，后者用的是 <strong>additional layer store</strong>（附加层存储），最典型的是 stargz-store：它把 eStargz 层按 <code>&lt;mountpoint&gt;/base64(imageref)/&lt;layerdigest&gt;/{diff,info,use}</code> 的目录结构暴露给容器存储，作为 overlay 的额外层来源（<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/docs/INSTALL.md#L5-L27">stargz-snapshotter INSTALL.md#L5-L27</a>），配置写在 <code>/etc/containers/storage.conf</code> 的 <code>additionallayerstores</code> 里（<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/docs/INSTALL.md#L88-L96">INSTALL.md#L88-L96</a>）。</p>
+<blockquote>
+<p>常见误解：stargz-store 不是 containerd 的 content-store 插件。containerd 的 proxy plugin 确实支持 <code>snapshot</code>、<code>content</code>、<code>diff</code> 三种类型（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/PLUGINS.md#L60-L63">PLUGINS.md#L60-L63</a>），理论上可以写一个“按需取 blob 片段“的 content 代理；但本文涉及的四个项目走的都是 snapshotter 路径，而不是 content-store 代理。</p>
+</blockquote>
+<hr>
+<h2 id="4-stargz--estargz"><a class="header" href="#4-stargz--estargz">4. stargz / eStargz</a></h2>
+<p>stargz 是 Google CRFS 提出的 “seekable tar.gz”，eStargz 是 containerd 社区在 stargz 基础上扩展的、仍然向后兼容 OCI 镜像的格式。</p>
+<h3 id="41-问题gzip-流不可-seek"><a class="header" href="#41-问题gzip-流不可-seek">4.1 问题：gzip 流不可 seek</a></h3>
+<p>CRFS README 把问题写得很清楚：容器镜像是 tar.gz，tar 本身没有索引，gzip 流也不能 seek；想读 <code>/var/lib/foo/data</code> 这 1KB，传统做法要拉几百 GB 的流来解压到那个 entry（<a href="https://github.com/google/crfs/blob/71d77da419c90be7b05d12e59945ac7a8c94a543/README.md#L43-L52">crfs README#L43-L52</a>）。</p>
+<p>解法利用了 gzip 的一个特性：<strong>多个 gzip member 可以拼接成一个合法 gzip 流</strong>。于是把 tar 里每个文件单独压成一个 gzip member，再在末尾放一个“索引“，就同时满足“仍然是合法 tar.gz“和“能按偏移取单文件“（<a href="https://github.com/google/crfs/blob/71d77da419c90be7b05d12e59945ac7a8c94a543/README.md#L54-L62">crfs README#L54-L62</a>）。</p>
+<h3 id="42-estargz-的-tocfooter-与-offset"><a class="header" href="#42-estargz-的-tocfooter-与-offset">4.2 eStargz 的 TOC、footer 与 offset</a></h3>
+<p>eStargz 的 blob 结构是：<code>gzip(tar header + file1)</code> + <code>gzip(file2)</code> + … + <code>gzip(TOC tar entry)</code> + <code>footer</code>。每个非空普通文件和每个元数据组件都单独压缩，因此每个文件的 gzip header 位置是已知的；大文件还可以切成多个 gzip member（chunk）（<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/docs/estargz.md#L36-L54">estargz.md#L36-L54</a>）。</p>
+<pre><code class="language-text">+----------------+----------------+----------------+----------------+---------+
+| gzip(tar hdr)  | gzip(file A)   | gzip(file B)   | gzip(TOC)      | footer  |
+| file A payload |                |                | stargz.index.json | 51B  |
++----------------+----------------+----------------+----------------+---------+
+        ^ offset_A       ^ offset_B       ^ offset_TOC           ^ 记录 offset_TOC
+</code></pre>
+<ul>
+<li><strong>TOC</strong> 必须是 tar 的最后一个 entry，文件名为 <code>stargz.index.json</code>，记录除 TOC 自身外所有 entry 的元数据（<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/docs/estargz.md#L60-L63">estargz.md#L60-L63</a>）。</li>
+<li><strong>TOCEntry 的关键字段</strong>：<code>offset</code>（该文件/块 gzip header 在 blob 中的偏移）、<code>chunkOffset</code>/<code>chunkSize</code>（块在解压后文件内的位置/大小）、<code>chunkDigest</code>（块内容摘要，用于逐块校验）（<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/docs/estargz.md#L96-L103">estargz.md#L96-L103</a>、<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/docs/estargz.md#L163-L180">estargz.md#L163-L180</a>）。</li>
+<li><strong>footer</strong> 是固定 51 字节的空 gzip member，其 Extra field 里编码了 TOC 的偏移；运行时先读 footer，再读 TOC，再按 TOC 里的 offset 只取需要的区间（<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/docs/estargz.md#L196-L217">estargz.md#L196-L217</a>）。</li>
+<li>注意 eStargz 的 footer 与 CRFS 原始 stargz 的 47 字节 footer <strong>不兼容</strong>：eStargz 按 RFC1952 补了 SI1/SI2/LEN 字段（<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/docs/estargz.md#L219-L222">estargz.md#L219-L222</a>、<a href="https://github.com/google/crfs/blob/71d77da419c90be7b05d12e59945ac7a8c94a543/stargz/stargz.go#L38-L49">crfs stargz.go#L38-L49</a>）。</li>
+</ul>
+<h3 id="43-stargz-snapshotter-架构"><a class="header" href="#43-stargz-snapshotter-架构">4.3 stargz-snapshotter 架构</a></h3>
+<p><code>containerd-stargz-grpc</code> 是一个 containerd proxy plugin（<code>type = "snapshot"</code>），通过 unix socket 注册；它把 eStargz 层从 registry 远程挂载成 FUSE 目录，再把 FUSE 目录作为 overlayfs 的 lowerdir 提供给容器（<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/docs/overview.md#L12-L14">overview.md#L12-L14</a>、<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/docs/overview.md#L43-L56">overview.md#L43-L56</a>）；Mounts 返回 <code>type = "overlay"</code>、<code>lowerdir=</code> 指向各层路径，见 <a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/snapshot/snapshot.go#L653-L660">snapshot/snapshot.go#L653-L660</a>）。</p>
+<p>在 snapshotter 的 <code>Prepare</code> 里可以看到完整语义：创建 active snapshot → 如果标签里带 <code>containerd.io/snapshot.ref</code>，尝试 <code>prepareRemoteSnapshot</code> → 成功则自己 <code>commit</code> 并返回 <code>ErrAlreadyExists</code>，失败则回退到普通解包（<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/snapshot/snapshot.go#L242-L271">snapshot/snapshot.go#L242-L271</a>）。它用的标签是 <code>containerd.io/snapshot/remote/stargz.reference</code>、<code>.../stargz.digest</code>、<code>.../stargz.layers</code> 等（<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/fs/source/source.go#L64-L80">fs/source/source.go#L64-L80</a>）。</p>
+<p>几个工程细节值得知道：</p>
+<ul>
+<li><strong>状态目录</strong> <code>/.stargz-snapshotter</code> 里有每层的 JSON 元数据，<code>fetchedPercent</code> 表示后台预取进度，到 100% 就表示该层已完整落盘（<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/docs/overview.md#L83-L95">overview.md#L83-L95</a>）。这是排查“到底有没有懒加载成功“最直接的入口。</li>
+<li><strong>fuse manager</strong>：把 FUSE 文件系统进程从 snapshotter 主进程里拆出去，这样重启 snapshotter 不会导致容器 rootfs 不可用；但 fuse manager 自身重启仍会触发 remount（<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/docs/overview.md#L120-L140">overview.md#L120-L140</a>）。</li>
+<li>提供 <code>metadata_store = "db"</code> 选项，把每层元数据落盘，缓解大镜像场景下的内存占用（<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/docs/overview.md#L320-L330">overview.md</a>）。</li>
+</ul>
+<h3 id="44-prefetch把入口文件排到最前面"><a class="header" href="#44-prefetch把入口文件排到最前面">4.4 prefetch：把“入口文件“排到最前面</a></h3>
+<p>eStargz 用 tar entry 的<strong>顺序</strong>编码预取提示：把优先文件放在前部，用 <code>.prefetch.landmark</code> 标记边界，其余文件放后面；没有优先文件时放 <code>.no.prefetch.landmark</code>（<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/docs/estargz.md#L228-L245">estargz.md#L228-L245</a>）。</p>
+<p><code>ctr-remote image optimize</code> 会先按镜像的 entrypoint/env 跑一遍沙箱容器、profile 所有文件访问，把访问到的文件按访问顺序排到前部（<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/docs/estargz.md#L247-L261">estargz.md#L247-L261</a>）。运行时 snapshotter 用一次 HTTP Range 请求把这段连续区间预取下来，从而把“懒加载的冷读开销“压到接近本地解包。这也是为什么官方 benchmark 里 “estargz-noopt” 的 run 阶段会变慢，而带优化的 “estargz” 能明显缓解（<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/README.md#L30-L35">README.md</a>）。</p>
+<h3 id="45-接入方式与-zstdchunked"><a class="header" href="#45-接入方式与-zstdchunked">4.5 接入方式与 zstd:chunked</a></h3>
+<p>containerd CRI 侧的最小配置（<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/docs/overview.md#L43-L56">overview.md#L43-L56</a>）：</p>
+<pre><code class="language-toml"># containerd 2.x：version = 3，CRI 插件 ID 改为 io.containerd.cri.v1.images
+version = 3
+
+[proxy_plugins]
+  [proxy_plugins.stargz]
+    type = "snapshot"
+    address = "/run/containerd-stargz-grpc/containerd-stargz-grpc.sock"
+  [proxy_plugins.stargz.exports]
+    root = "/var/lib/containerd-stargz-grpc/"
+
+[plugins."io.containerd.cri.v1.images"]
+  snapshotter = "stargz"
+  disable_snapshot_annotations = false
+</code></pre>
+<blockquote>
+<p><strong>版本坑</strong>：上面这段路径是 containerd 2.x 的写法（字段位置以 <a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/cri/config.md#L236-L239">containerd docs/cri/config.md#L236-L239</a> 为准）。stargz 自己的 <code>overview.md</code> 仍写 containerd 1.x 的 <code>[plugins."io.containerd.grpc.v1.cri".containerd]</code>；1.x 配置在 2.x 里对应 <code>version = 2</code>，而 <code>version = 3</code> 下必须换新插件 ID，否则配置不会生效。</p>
+</blockquote>
+<p>Kubernetes 场景还需要给 kubelet 加 <code>--image-service-endpoint=unix:///run/containerd-stargz-grpc/containerd-stargz-grpc.sock</code>，让 snapshotter 代理 CRI ImageService 并校验 DiffID（<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/docs/overview.md#L65">overview.md#L65</a>）。</p>
+<p>除了 gzip 的 eStargz，这个版本还支持 <strong>zstd:chunked</strong> 格式（<code>estargz/zstdchunked</code>），用 zstd 帧 + 独立 footer 实现可 seek，并把 TOC 位置写进 annotations（<a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/estargz/zstdchunked/zstdchunked.go#L29-L45">zstdchunked.go#L29-L45</a>）。生产上是否使用以官方文档和 nerdctl 的 <code>image convert</code> 支持为准。</p>
+<hr>
+<h2 id="5-nydus"><a class="header" href="#5-nydus">5. Nydus</a></h2>
+<p>Nydus 来自 Dragonfly 社区，思路和 stargz 不同：不再保留“每层一个 tar.gz“，而是把镜像重构成 <strong>元数据（bootstrap）+ 数据（blob）</strong> 两部分。</p>
+<h3 id="51-rafsbootstrap--blob"><a class="header" href="#51-rafsbootstrap--blob">5.1 RAFS：bootstrap + blob</a></h3>
+<p>RAFS 是一个“元数据与数据分离“的文件系统镜像：元数据在 bootstrap（一棵 merkle 树，目录/文件节点 + 子节点 hash），数据在 blob 文件里，按 <strong>1MB</strong> 定长切块，块与块之间做 chunk 级去重（<a href="https://github.com/dragonflyoss/nydus/blob/6aa3f8f185cb81e330b64382103d697b47f6c903/docs/nydus-design.md#L29-L30">nydus-design.md#L29-L30</a>、<a href="https://github.com/dragonflyoss/nydus/blob/6aa3f8f185cb81e330b64382103d697b47f6c903/docs/nydus-design.md#L88-L96">nydus-design.md#L88-L96</a>）。块支持 lz4/gzip/zstd 压缩（<a href="https://github.com/dragonflyoss/nydus/blob/6aa3f8f185cb81e330b64382103d697b47f6c903/docs/nydus-design.md#L98-L101">nydus-design.md#L98-L101</a>），每个块在 chunk info 里都有 digest，读取时可独立校验（<a href="https://github.com/dragonflyoss/nydus/blob/6aa3f8f185cb81e330b64382103d697b47f6c903/docs/nydus-design.md#L81-L82">nydus-design.md#L81-L82</a>）。</p>
+<p>为什么这能同时支持顺序读和随机读：</p>
+<ul>
+<li>读目录/属性只需要 bootstrap，不需要碰 blob；</li>
+<li>读文件时按 bootstrap 里的 chunk 索引算出 blob 偏移，发一次 1MB 粒度的 Range 请求；</li>
+<li>blob 内 chunk 连续排列，顺序读时预取器可以把多个后端读请求合并成一个更大的 Range（<a href="https://github.com/dragonflyoss/nydus/blob/6aa3f8f185cb81e330b64382103d697b47f6c903/docs/prefetch.md#L5-L7">prefetch.md#L5-L7</a>）。</li>
+</ul>
+<h3 id="52-nydus-image-与-nydusify"><a class="header" href="#52-nydus-image-与-nydusify">5.2 nydus-image 与 nydusify</a></h3>
+<p><code>nydus-image create</code> 从 tar 或目录构建 RAFS/Nydus 镜像，有 Native / Zran / Tarfs 三种模式（<a href="https://github.com/dragonflyoss/nydus/blob/6aa3f8f185cb81e330b64382103d697b47f6c903/docs/nydus-image.md#L23-L30">nydus-image.md#L23-L30</a>）；<code>nydus-image merge</code> 可以把多个层的 RAFS 合并成一个，在构建期就应用 OCI/overlayfs 的层覆盖规则，<strong>运行时不再需要 overlayfs</strong>（<a href="https://github.com/dragonflyoss/nydus/blob/6aa3f8f185cb81e330b64382103d697b47f6c903/docs/nydus-image.md#L160-L162">nydus-image.md#L160-L162</a>）。这个“合并层“是 Nydus 相对其他方案最独特的加速点：容器 rootfs 只需要挂一个文件系统。</p>
+<p><code>nydusify convert</code> 负责把 OCI 镜像转成 Nydus 镜像并推送（<a href="https://github.com/dragonflyoss/nydus/blob/6aa3f8f185cb81e330b64382103d697b47f6c903/docs/nydusify.md#L5-L7">nydusify.md#L5-L7</a>），还可以把 blob 推到 OSS/S3、用 chunk-dict 做跨镜像去重。K8s 侧用 <code>nydusify convert --merge-platform</code> 生成带有 nydus alternative manifest 的 OCI index，nydus-snapshotter 侧开启 index detection 后可以透明识别，普通客户端则仍按原 manifest 拉普通镜像（<a href="https://github.com/containerd/nydus-snapshotter/blob/8a458b9b674fc133e3beb1db306db11ad5097a6f/docs/index_detection.md#L5">index_detection.md#L5</a>）。</p>
+<h3 id="53-nydusd-与-fs_driver"><a class="header" href="#53-nydusd-与-fs_driver">5.3 nydusd 与 fs_driver</a></h3>
+<p><code>nydusd</code> 是用户态守护进程，对外暴露 FUSE 挂载点或 Virtio-FS 挂载点（<a href="https://github.com/dragonflyoss/nydus/blob/6aa3f8f185cb81e330b64382103d697b47f6c903/docs/nydusd.md#L3">nydusd.md#L3</a>）。nydus-snapshotter 支持四种 fs_driver（<a href="https://github.com/containerd/nydus-snapshotter/blob/8a458b9b674fc133e3beb1db306db11ad5097a6f/docs/setup_snapshotter_by_daemonset.md#L119">setup_snapshotter_by_daemonset.md#L119</a>）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>fs_driver</th><th>路径</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td><code>fusedev</code></td><td>用户态 FUSE</td><td>默认，最通用，需要 <code>/dev/fuse</code></td></tr>
+<tr><td><code>fscache</code></td><td>内核 fscache + FUSE</td><td>利用内核缓存框架</td></tr>
+<tr><td><code>blockdev</code></td><td>块设备</td><td>镜像块设备场景，要求内核/环境支持</td></tr>
+<tr><td><code>proxy</code></td><td>代理</td><td>把请求转给外部 nydusd/服务</td></tr>
+</tbody>
+</table>
+</div>
+<p>另外还有实验性的 <strong>Tarfs</strong> 子模式：直接用 tar 文件作为数据 blob，并把每层导出成 raw disk image，通过 loopdev 以 <strong>EROFS</strong> 挂载（<a href="https://github.com/containerd/nydus-snapshotter/blob/8a458b9b674fc133e3beb1db306db11ad5097a6f/docs/tarfs.md#L3-L17">tarfs.md#L3-L17</a>）。这是“内核态 EROFS“路径，和 Rafs v6 的元数据兼容 EROFS 是两回事：</p>
+<ul>
+<li><strong>tarfs</strong>：实验特性，需要内核启用 EROFS；containerd 的 EROFS 文档标注内核模块要求 <strong>Linux 5.4+</strong>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/snapshotters/erofs.md#L116-L118">containerd erofs.md#L116-L118</a>）。nydus 文档本身未写最低内核版本，选型时应以目标发行版内核为准。</li>
+<li><strong>Rafs v6</strong>：元数据格式与 in-kernel EROFS 兼容（<a href="https://github.com/dragonflyoss/nydus/blob/6aa3f8f185cb81e330b64382103d697b47f6c903/docs/nydus-design.md#L29-L30">nydus-design.md#L29-L30</a>），但在本文固定的版本里仍标注为进行中。</li>
+</ul>
+<p>容器看到的最终挂载由 <code>nydus-overlayfs</code> 这个 mount helper 完成：snapshotter 返回 <code>type = "fuse.nydus-overlayfs"</code> 的 mount，并把额外参数（nydusd 配置、snapshot 目录等）以 base64 编码塞进 <code>extraoption</code>，helper 会解析并过滤掉它，再执行真正的 overlay 挂载（<a href="https://github.com/dragonflyoss/nydus/blob/6aa3f8f185cb81e330b64382103d697b47f6c903/docs/nydus-overlayfs.md#L3-L20">nydus-overlayfs.md#L3-L20</a>）。Kata 场景则可以把这段信息直接交给 shim 处理。</p>
+<h3 id="54-kubernetes-部署与-dragonfly"><a class="header" href="#54-kubernetes-部署与-dragonfly">5.4 Kubernetes 部署与 Dragonfly</a></h3>
+<p>nydus-snapshotter 平常以 DaemonSet 形式部署（官方提供 Helm chart，可用 <code>FS_DRIVER</code> 环境变量选择 fs_driver），containerd 侧把 <code>snapshotter</code> 指向 <code>nydus</code>。官方文档特别说明两个 CRI 开关的理由：</p>
+<ul>
+<li><code>disable_snapshot_annotations = false</code>：nydus 需要 annotations 里的镜像信息去拉镜像；</li>
+<li><code>discard_unpacked_layers = false</code>：GC 不能在 unpack 后删除层，因为后续按需读取和共享还要用（<a href="https://github.com/containerd/nydus-snapshotter/blob/8a458b9b674fc133e3beb1db306db11ad5097a6f/docs/run_nydus_in_kubernetes.md#L37-L48">run_nydus_in_kubernetes.md#L37-L48</a>）。</li>
+</ul>
+<p>大规模集群里通常把 nydusd 的 registry 请求代理到 Dragonfly：支持 <strong>HTTP proxy 模式</strong>（经 dfdaemon）和 <strong>SDK 模式</strong>（直接走 Dragonfly client，与 scheduler 协调 P2P 任务）两种（<a href="https://github.com/dragonflyoss/nydus/blob/6aa3f8f185cb81e330b64382103d697b47f6c903/docs/nydus-dragonfly.md#L15-L22">nydus-dragonfly.md#L15-L22</a>）。这是 Nydus 在“多节点、同镜像“场景的核心卖点：懒加载 + P2P 一起解决 registry 带宽瓶颈。</p>
+<hr>
+<h2 id="6-sociseekable-oci"><a class="header" href="#6-sociseekable-oci">6. SOCI（Seekable OCI）</a></h2>
+<p>SOCI 是 AWS 主导的方案，最大的特点一句话：<strong>镜像不动，额外生成一个索引工件</strong>。</p>
+<h3 id="61-设计要点"><a class="header" href="#61-设计要点">6.1 设计要点</a></h3>
+<p>SOCI 的目标是让标准 OCI 镜像“无需构建期转换“就能懒加载：不修改原镜像，而是生成一个独立的 <strong>SOCI index</strong> 放在 registry 里，紧挨着镜像（<a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/README.md#L8-L11">README.md#L8-L11</a>）。SOCI index 本身是一个 OCI image manifest：</p>
+<ul>
+<li><code>subject</code> 指向被索引的镜像 manifest（<a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/docs/index.md#L29-L36">index.md#L29-L36</a>）；</li>
+<li><code>layers</code> 按镜像层顺序排列，每项是一个 zTOC（<a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/docs/index.md#L41-L47">index.md#L41-L47</a>）。</li>
+</ul>
+<p><strong>zTOC</strong> = TOC + zInfo：</p>
+<ul>
+<li>TOC 记录每个文件在<strong>解压后 tar</strong> 里的偏移等元数据；</li>
+<li>zInfo 是一组“压缩引擎状态检查点“，每个检查点对应层里一个可独立解压的区间，即 <strong>span</strong>（<a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/docs/index.md#L65-L69">index.md#L65-L69</a>、<a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/docs/glossary.md#L24-L25">glossary.md#L24-L25</a>）。</li>
+</ul>
+<p>运行时，SOCI snapshotter 为每个被索引的层建一个 FUSE 挂载（挂载类型可见为 <code>fuse.rawBridge</code>，<a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/docs/getting-started.md#L253-L255">getting-started.md#L253-L255</a>），读文件时按“文件 → 解压偏移 → 所在 span → 压缩层偏移“换算后发 Range 请求。span 大小默认 4 MiB（<code>--span-size</code>，<a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/docs/cli-usage.md#L37">cli-usage.md#L37</a>）。</p>
+<h3 id="62-v1-与-v2两种索引关联方式"><a class="header" href="#62-v1-与-v2两种索引关联方式">6.2 v1 与 v2：两种索引关联方式</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>版本</th><th>关联方式</th><th>优点</th><th>代价</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>v1</strong></td><td>独立工件，用 OCI Referrers API 发现（或显式 <code>--soci-index-digest</code>）</td><td>不动镜像、可独立增删</td><td>弱引用：registry 有写权限的人随时能加/删索引，运行时行为可能被外部改变</td></tr>
+<tr><td><strong>v2</strong></td><td>轻量转换生成 <strong>SOCI-enabled image</strong>，index 打包进新镜像</td><td>强绑定、可随镜像跨 registry 复制、可走正常发布流程</td><td>多一个镜像；但 layer 与原始镜像共享，只多几 KB 元数据</td></tr>
+</tbody>
+</table>
+</div>
+<p>v2 的“轻量转换“明确写了会复用原镜像的 layer，新增的只是 zTOC 等元数据（<a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/docs/soci-index-manifest-v2.md#L13-L16">soci-index-manifest-v2.md#L13-L16</a>）；从 snapshotter v0.10.0 起默认只消费 v2，v1 需要显式打开（<a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/docs/soci-index-manifest-v2.md#L20">soci-index-manifest-v2.md#L20</a>）。</p>
+<p>配置里的 <code>pull_modes</code> 对应这些模式：<code>soci_v1</code>（默认关闭）、<code>soci_v2</code>（默认开启）、<code>parallel_pull_unpack</code>（默认关闭；打开后完全跳过懒加载，走并行下载+解包）（<a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/docs/config.md#L109-L117">config.md#L109-L117</a>）。</p>
+<h3 id="63-回退语义sparse-index"><a class="header" href="#63-回退语义sparse-index">6.3 回退语义：sparse index</a></h3>
+<p>SOCI 允许“部分层没有索引“：有 zTOC 的层走 FUSE 懒加载，没有的层在启动时同步下载并解包；整个索引都找不到时，snapshotter 会回退到配置的默认 snapshotter（如 overlayfs）（<a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/docs/pull-modes.md#L3-L13">pull-modes.md#L3-L13</a>、<a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/docs/pull-modes.md#L52">pull-modes.md#L52</a>）。这一点对“灰度“很重要：即使索引缺失或推送失败，业务也能启动，只是没有加速。</p>
+<h3 id="64-与-estargz-的关键差异"><a class="header" href="#64-与-estargz-的关键差异">6.4 与 estargz 的关键差异</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>eStargz</th><th>SOCI</th></tr>
+</thead>
+<tbody>
+<tr><td>是否改镜像</td><td>需要把层重新压成 eStargz 并重新 push（digest 变化）</td><td>v1 完全不改；v2 生成新镜像但共享 layer 数据</td></tr>
+<tr><td>额外工件</td><td>无（索引在层内部）</td><td>独立 SOCI index（ztoc 层）</td></tr>
+<tr><td>随机读单位</td><td>文件 / 大文件 chunk（gzip member）</td><td>span（默认 4 MiB，按压缩状态切分）</td></tr>
+<tr><td>index 发现</td><td>看层格式本身</td><td>v1 靠 Referrers API 或显式 digest；v2 靠镜像内 annotations</td></tr>
+<tr><td>兼容性</td><td>仍是合法 tar.gz，普通运行时也能跑</td><td>原镜像普通运行时照常跑；索引只有 SOCI snapshotter 用</td></tr>
+</tbody>
+</table>
+</div>
+<p>SOCI 的 FUSE 实现在 <code>snapshot/snapshot.go</code> 里同样是“先试远程快照、成功则 commit 并返回 <code>ErrAlreadyExists</code>、失败回退“（<a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/snapshot/snapshot.go#L373-L374">snapshot/snapshot.go#L373-L374</a>、<a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/snapshot/snapshot.go#L414-L424">snapshot/snapshot.go#L414-L424</a>）。</p>
+<p>prefetch 在 SOCI 里是<strong>实验特性</strong>：把要预取的文件/span 作为独立 JSON artifact 存进索引，启动时并行预取（<a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/docs/prefetch.md#L3-L7">prefetch.md#L3-L7</a>）。与 eStargz “把文件排到 blob 前部“的思路不同，SOCI 是把预取清单做成可替换的独立文档，这也是它 <code>design-docs</code> 里“工作负载相关的加载顺序优化“的落点。</p>
+<p><strong>Fargate / EKS 集成</strong>：AWS 在 Fargate 上内置了对 SOCI 的支持（受平台版本等条件限制），ECS 文档和 AWS 博客有说明；EKS 上自建节点则按官方 EKS 指南装 SOCI snapshotter。具体支持范围以 <a href="https://aws.amazon.com/blogs/aws/aws-fargate-enables-faster-container-startup-using-seekable-oci/">AWS 公告：AWS Fargate Enables Faster Container Startup using Seekable OCI</a> 和 <a href="https://aws.amazon.com/blogs/containers/under-the-hood-lazy-loading-container-images-with-seekable-oci-and-aws-fargate/">技术博客：Under the hood: Lazy Loading Container Images with Seekable OCI and AWS Fargate</a> 为准。</p>
+<hr>
+<h2 id="7-overlaybd"><a class="header" href="#7-overlaybd">7. OverlayBD</a></h2>
+<p>OverlayBD 是阿里云开源、已捐给 containerd 社区（non-core sub-project）的方案，走的是与前面三家都不同的路线：<strong>把 layer 变成块设备镜像</strong>（<a href="https://github.com/containerd/accelerated-container-image/blob/0806b5ec1b3ce3262b8ab9c9ba499f6bbe8b4ae0/README.md#L31">README.md#L31</a>）。</p>
+<h3 id="71-tar-layer--块设备镜像"><a class="header" href="#71-tar-layer--块设备镜像">7.1 tar layer → 块设备镜像</a></h3>
+<p>OverlayBD 的核心数据结构是“被修改的数据块 + 块索引“：一个 overlaybd blob 是一组块差异，加上指向原始数据的索引；挂载时只把每层的索引加载进内存，读数据时先查索引，再做一次 Range 读取（<a href="https://github.com/containerd/accelerated-container-image/blob/0806b5ec1b3ce3262b8ab9c9ba499f6bbe8b4ae0/README.md#L117-L121">README.md#L117-L121</a>）。</p>
+<p>为了兼容现有 registry，OverlayBD 定义了一个可 seek 的压缩格式 <strong>Zfile</strong>（带校验信息），再把 Zfile 包在一个只含单个 Zfile 的 tar 里当作 OCI layer 推送（<a href="https://github.com/containerd/accelerated-container-image/blob/0806b5ec1b3ce3262b8ab9c9ba499f6bbe8b4ae0/README.md#L123">README.md#L123</a>）。I/O 路径是：</p>
+<pre><code class="language-text">应用 → 普通文件系统(ext4/xfs) → loop 设备(TCM_loopback) → 用户态 overlaybd backstore(TCMU)
+                                                              ↓ 命中本地缓存 或 HTTP Range 回源
+</code></pre>
+<p>（<a href="https://github.com/containerd/accelerated-container-image/blob/0806b5ec1b3ce3262b8ab9c9ba499f6bbe8b4ae0/README.md#L127">README.md#L127</a>）</p>
+<p>镜像转换用 <code>ctr obdconv</code>：把 tar layer 转成 overlaybd 格式，可指定目标文件系统（<code>--fstype</code>）、压缩算法（lz4/zstd）、压缩块大小（4K~64K 的 2 的幂），还支持用数据库记录“OCI layer → overlaybd layer“映射做跨镜像层去重（<a href="https://github.com/containerd/accelerated-container-image/blob/0806b5ec1b3ce3262b8ab9c9ba499f6bbe8b4ae0/docs/IMAGE_CONVERTOR.md#L8-L33">IMAGE_CONVERTOR.md#L8-L33</a>）。转换后的镜像再 <code>ctr i push</code> 推回 registry。</p>
+<blockquote>
+<p><strong>后端说明</strong>：本文固定的这个版本里，OverlayBD 的设备路径是 <strong>TCMU</strong>（通过 configfs 创建 target）而非 ublk；<code>overlaybd-attacher</code> 的文档也是按 TCMU 描述的。如果你看到“ublk 后端“的说法，那属于 overlaybd 主仓的更新内容，<strong>以官方文档为准</strong>，本文不展开。</p>
+</blockquote>
+<h3 id="72-turbooci把转换也省掉"><a class="header" href="#72-turbooci把转换也省掉">7.2 TurboOCI：把“转换“也省掉</a></h3>
+<p>TurboOCIv1 是 OverlayBD 对 SOCI 的回应：不转换原镜像，只生成一个很小的 <strong>meta image</strong>（含 ext4 文件系统元数据），体积通常约为原镜像的 3%，放在 registry 里；运行时从原始未修改的 OCI 镜像按需读数据（<a href="https://github.com/containerd/accelerated-container-image/blob/0806b5ec1b3ce3262b8ab9c9ba499f6bbe8b4ae0/docs/TURBO_OCI.md#L3-L11">TURBO_OCI.md#L3-L11</a>）。它和 overlaybd 格式兼容，同一镜像的不同层可以混用两种格式。</p>
+<p>项目自述里把“块设备 vs FUSE“当成与 SOCI 的核心差异（FUSE 有用户态/内核态切换开销、进程重启后不易恢复），并给出了对比数据；这属于<strong>项目方自述</strong>，参考时注意立场与测试条件（<a href="https://github.com/containerd/accelerated-container-image/blob/0806b5ec1b3ce3262b8ab9c9ba499f6bbe8b4ae0/docs/TURBO_OCI.md#L15">TURBO_OCI.md#L15</a>）。</p>
+<h3 id="73-可写层与-overlayfs"><a class="header" href="#73-可写层与-overlayfs">7.3 可写层与 overlayfs</a></h3>
+<p>OverlayBD 的另一个差异化能力是<strong>块级可写层</strong>（<a href="https://github.com/containerd/accelerated-container-image/blob/0806b5ec1b3ce3262b8ab9c9ba499f6bbe8b4ae0/docs/WRITABLE.md#L6-L27">WRITABLE.md#L6-L27</a>）：</p>
+<ul>
+<li>可写层类型：<code>append-only</code>（追加日志式，适合镜像转换/构建）与 <code>sparse-file</code>（稀疏文件式，适合容器运行时，文档标注仍在完善）；</li>
+<li>挂载模式：<code>dir</code>（snapshotter 直接返回 bind mount，可当 rootfs 用）与 <code>dev</code>（返回可写块设备，由调用方决定何时挂载，也可透传给 VM/virtio-blk）；</li>
+<li>用法：通过 <code>containerd.io/snapshot/overlaybd.writable</code> label 选择模式，或 <code>--snapshotter-label</code> 传参（<a href="https://github.com/containerd/accelerated-container-image/blob/0806b5ec1b3ce3262b8ab9c9ba499f6bbe8b4ae0/docs/WRITABLE.md#L30-L37">WRITABLE.md#L30-L37</a>）。</li>
+</ul>
+<p>与 overlayfs 的组合方式：可以像默认 overlayfs 那样用本地目录做 upperdir，也可以把 OverlayBD 的可写块设备当 upper（<code>rwMode</code> 支持 <code>overlayfs</code>/<code>dir</code>/<code>dev</code>）。由于输出是块设备，OverlayBD 可以自由选择 ext4/xfs 等文件系统（<a href="https://github.com/containerd/accelerated-container-image/blob/0806b5ec1b3ce3262b8ab9c9ba499f6bbe8b4ae0/docs/MULTI_FS_SUPPORT.md#L3-L9">MULTI_FS_SUPPORT.md#L3-L9</a>）。</p>
+<h3 id="74-性能数据与适用边界"><a class="header" href="#74-性能数据与适用边界">7.4 性能数据与适用边界</a></h3>
+<p>官方 PERFORMANCE 文档给的 WordPress 冷启动“服务可用时间“：overlaybd 6.433s vs OCI tar 15.341s，<strong>条件是 WordPress 镜像、开启 prefetch、脚本测量“服务可用“而非进程启动</strong>（<a href="https://github.com/containerd/accelerated-container-image/blob/0806b5ec1b3ce3262b8ab9c9ba499f6bbe8b4ae0/docs/PERFORMANCE.md#L30-L40">PERFORMANCE.md#L30-L40</a>）。TurboOCI 文档里还有一组多镜像对比（同页面有“镜像大小/服务可用时间“表格），引用时必须连带镜像名与测量口径，不要单独摘数字。</p>
+<p>OverlayBD 适合：内核支持 target/TCMU（或对应块设备框架）、需要块级快照/可写层、镜像大且对稳定性要求高（AI/HPC）、已经用 BuildKit（官方 README 称 v0.22 起支持 overlaybd 构建，<a href="https://github.com/containerd/accelerated-container-image/blob/0806b5ec1b3ce3262b8ab9c9ba499f6bbe8b4ae0/README.md#L56">README.md#L56</a>）的场景。不适合：rootless/无特权容器、内核模块不可控的环境，以及“只想要最简单的懒加载“的小团队。</p>
+<hr>
+<h2 id="8-对比矩阵与选型"><a class="header" href="#8-对比矩阵与选型">8. 对比矩阵与选型</a></h2>
+<h3 id="81-矩阵"><a class="header" href="#81-矩阵">8.1 矩阵</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>传统 pull</th><th>stargz / eStargz</th><th>Nydus</th><th>SOCI v2</th><th>OverlayBD / TurboOCI</th></tr>
+</thead>
+<tbody>
+<tr><td>是否改镜像 / 额外工件</td><td>否</td><td>改层格式并重推（digest 变）</td><td>转换出新镜像（bootstrap + blob）</td><td>v1 独立 index；v2 新镜像但共享 layer</td><td>转换出新镜像；TurboOCI 只加 meta image</td></tr>
+<tr><td>随机读单位</td><td>整层</td><td>文件 / 大文件 chunk</td><td>1 MiB chunk</td><td>span（默认 4 MiB）</td><td>压缩块（4K~64K 可配）</td></tr>
+<tr><td>运行时路径</td><td>内核文件系统 + 本地解包</td><td>FUSE + overlayfs</td><td>fusedev/fscache/blockdev → nydus-overlayfs；tarfs 走 EROFS+loop</td><td>每层 FUSE + overlayfs</td><td>TCMU 块设备 → loop → 文件系统</td></tr>
+<tr><td>可写层</td><td>overlayfs upperdir</td><td>overlayfs upperdir</td><td>overlayfs upperdir</td><td>overlayfs upperdir</td><td>overlayfs upperdir 或块级 writable</td></tr>
+<tr><td>registry 要求</td><td>无</td><td>Range</td><td>Range（或 OSS/S3）；P2P 可选</td><td>Range；v1 需 Referrers API</td><td>Range</td></tr>
+<tr><td>rootless / 特权</td><td>友好</td><td>需 <code>/dev/fuse</code> 与相应权限</td><td>fusedev 需 FUSE；tarfs/blockdev 需内核支持</td><td>需 <code>/dev/fuse</code></td><td>需内核 target/configfs，通常需特权</td></tr>
+<tr><td>生态与状态</td><td>基线</td><td>containerd 非核心子项目；BuildKit/nerdctl/Kaniko 支持</td><td>Dragonfly 生态；CNCF 相关项目，云厂商广泛使用</td><td>AWS 生态（ECR/Fargate/EKS）；README 表示希望成为 containerd non-core 项目</td><td>containerd 非核心子项目；阿里云生态；BuildKit 支持</td></tr>
+<tr><td>典型场景</td><td>小镜像、启动不敏感</td><td>大镜像 + 入口文件集中；交付流水线可改镜像</td><td>大规模集群 + P2P；AI/数据镜像；层合并</td><td>不想重推 layer；AWS 托管环境</td><td>大镜像 + 块级快照/可写层；虚拟机/安全容器透传</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="82-什么情况不该用懒加载"><a class="header" href="#82-什么情况不该用懒加载">8.2 什么情况不该用懒加载</a></h3>
+<ul>
+<li><strong>registry 不支持 Range 或被中间层抹掉</strong>：企业代理、对象存储签名 URL、部分自建 registry 都可能让 Range 失效。上线前先用 <code>curl -H "Range: bytes=0-1"</code> 验证。</li>
+<li><strong>镜像本来就小、pull 只要几秒</strong>：懒加载的索引构建、FUSE 挂载、冷读开销会把收益吃掉。</li>
+<li><strong>启动后顺序读全量</strong>：编译、数据扫描、模型加载这类“读整个镜像“的负载，懒加载等于把顺序大 I/O 拆成随机小 I/O，通常更慢。</li>
+<li><strong>节点无法提供 FUSE / EROFS / TCMU</strong>：rootless、gVisor、受限内核、无 <code>/dev/fuse</code> 的环境请直接用默认 snapshotter。</li>
+<li><strong>没有 CI 能力做转换或索引</strong>：stargz/Nydus/OverlayBD 需要改镜像，SOCI v2 也需要额外一步 convert；没有流水线就别硬上。</li>
+<li><strong>强签名/审计</strong>：转换会改变镜像 digest，可能让签名失效（SOCI v2 共享 layer 能缓解但不能消除新 manifest）。签名体系要一起设计。</li>
+<li><strong>缓存命中率极低的场景</strong>：每次都是全新节点、镜像只用一次，懒加载的索引开销和冷读可能不如“镜像预热 + P2P 分发“。</li>
+<li><strong>高密度节点内存敏感</strong>：stargz 默认把元数据放内存，可用 <code>metadata_store = "db"</code> 缓解，但要评估磁盘 IO。</li>
+</ul>
+<hr>
+<h2 id="9-落地与排障"><a class="header" href="#9-落地与排障">9. 落地与排障</a></h2>
+<h3 id="91-containerd-cri-配置骨架"><a class="header" href="#91-containerd-cri-配置骨架">9.1 containerd CRI 配置骨架</a></h3>
+<p>四种方案都是“proxy plugin 注册 + CRI 选 snapshotter“，差异只在 snapshotter 名和附加开关（以 containerd 2.x 的 <code>version = 3</code> 写法为例，字段见 <a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/cri/config.md#L236-L239">docs/cri/config.md#L236-L239</a>）：</p>
+<pre><code class="language-toml">version = 3
+
+# 1) 注册 proxy plugin（以 stargz 为例，soci/nydus/overlaybd 同理，换成各自 socket）
+[proxy_plugins]
+  [proxy_plugins.stargz]
+    type = "snapshot"
+    address = "/run/containerd-stargz-grpc/containerd-stargz-grpc.sock"
+  [proxy_plugins.stargz.exports]
+    root = "/var/lib/containerd-stargz-grpc/"
+
+# 2) CRI 选择 snapshotter，并放行 snapshot annotations
+[plugins."io.containerd.cri.v1.images"]
+  snapshotter = "stargz"          # soci / nydus / overlaybd
+  disable_snapshot_annotations = false   # 默认 true，必须显式关掉
+  # nydus 额外要求：discard_unpacked_layers = false
+</code></pre>
+<p>各家的差异（以官方文档为准）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>方案</th><th>snapshotter 名</th><th>额外要求</th></tr>
+</thead>
+<tbody>
+<tr><td>stargz</td><td><code>stargz</code></td><td>kubelet 加 <code>--image-service-endpoint</code>（v0.19.0+）</td></tr>
+<tr><td>SOCI</td><td><code>soci</code></td><td>v2 需要 <code>soci convert</code> 生成 SOCI-enabled image；v1 需 registry 支持 Referrers API 或显式 <code>--soci-index-digest</code></td></tr>
+<tr><td>Nydus</td><td><code>nydus</code></td><td><code>discard_unpacked_layers = false</code>；DaemonSet + nydusd 配置</td></tr>
+<tr><td>OverlayBD</td><td><code>overlaybd</code></td><td>overlaybd-tcmu/backstore 服务必须运行；认证要单独配置给 overlaybd</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="92-验证命令"><a class="header" href="#92-验证命令">9.2 验证命令</a></h3>
+<pre><code class="language-bash"># containerd 是否识别 snapshotter
+ctr plugin ls | grep -E 'stargz|soci|nydus|overlaybd'
+
+# 是否真的懒加载：跑一个镜像后看挂载
+mount | grep -E 'fuse|erofs'
+# SOCI 典型输出：... type fuse.rawBridge
+# Nydus tarfs 典型输出：... type erofs
+
+# stargz：看每层抓取进度（fetchedPercent 到 100 表示已全量缓存）
+ls /.stargz-snapshotter/ 2&gt;/dev/null &amp;&amp; cat /.stargz-snapshotter/*.json
+
+# 用 nerdctl 指定 snapshotter 拉/跑
+nerdctl --snapshotter=stargz run --rm &lt;image&gt;
+nerdctl --snapshotter=soci    run --rm &lt;image&gt;
+nerdctl --snapshotter=nydus   run --rm &lt;image&gt;
+
+# stargz 转换/优化
+ctr-remote image optimize --oci &lt;src-image&gt; &lt;dst-image&gt;
+ctr-remote image rpull --snapshotter=stargz &lt;image&gt;
+
+# SOCI 建索引（v2 转换）+ 查看
+soci create &lt;image&gt;        # 生成 SOCI index
+soci convert &lt;image&gt; &lt;image&gt;-soci
+soci index list --ref &lt;image&gt;
+
+# OverlayBD 转换与免下载拉取
+ctr obdconv &lt;src-image&gt; &lt;dst-image&gt;
+/opt/overlaybd/snapshotter/ctr rpull &lt;overlaybd-image&gt;
+</code></pre>
+<h3 id="93-常见失败对照表"><a class="header" href="#93-常见失败对照表">9.3 常见失败对照表</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>现象</th><th>常见原因</th><th>排查 / 处理</th></tr>
+</thead>
+<tbody>
+<tr><td>拉取直接失败，日志有 404/416</td><td>registry 不支持 Range，或代理/签名 URL 剥夺了 Range</td><td><code>curl -r 0-1</code> 验证；换 registry 或关闭懒加载</td></tr>
+<tr><td>容器能起但读文件很慢 / 大量重试</td><td>冷读放大；预取未生效</td><td>检查镜像是否优化（stargz 用 <code>ctr-remote image optimize</code>）、prefetch 配置、缓存目录</td></tr>
+<tr><td><code>no such device</code> / <code>fusermount: not found</code></td><td>无 <code>/dev/fuse</code> 或缺少 fuse 包</td><td>安装 fuse、<code>modprobe fuse</code>、检查 rootless 权限</td></tr>
+<tr><td>SOCI 镜像没加速，日志 <code>unable to fetch SOCI artifacts</code></td><td>索引没推、digest 不匹配、referrers 不可用</td><td>重新 <code>soci convert</code>/push；用 <code>--soci-index-digest</code> 显式指定</td></tr>
+<tr><td>snapshotter 没拿到镜像信息</td><td><code>disable_snapshot_annotations = true</code>（CRI 默认）</td><td>设为 <code>false</code> 并重启 containerd</td></tr>
+<tr><td>nydus 读取失败 / 层被 GC</td><td><code>discard_unpacked_layers = true</code></td><td>设为 <code>false</code>（nydus 官方要求）</td></tr>
+<tr><td>EROFS 挂载失败</td><td>内核无 EROFS 模块</td><td><code>modprobe erofs</code>；内核版本要求以发行版文档为准</td></tr>
+<tr><td>OverlayBD 容器起不来</td><td>overlaybd-tcmu 未运行、configfs/target 不可用</td><td><code>systemctl status overlaybd-tcmu</code>；检查 <code>/sys/kernel/config/target</code></td></tr>
+<tr><td>snapshotter 重启后容器 rootfs 不可用</td><td>FUSE 进程随主进程退出</td><td>stargz 开启 fuse manager；或按官方升级/重启流程操作</td></tr>
+<tr><td>私有 registry 鉴权失败</td><td>snapshotter 不共享 containerd 凭据</td><td>按各家文档单独配置（docker config / CRI keychain / kubeconfig）</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="94-观测"><a class="header" href="#94-观测">9.4 观测</a></h3>
+<ul>
+<li><strong>SOCI</strong>：开启 <code>metrics_address</code> 后 <code>curl /metrics</code>，重点关注 <code>operation_duration_remote_registry_get</code>、<code>operation_duration_synchronous_read</code>、<code>operation_duration_init_metadata_store</code>（<a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/docs/debug.md#L74-L80">debug.md</a>）。</li>
+<li><strong>stargz</strong>：<code>/.stargz-snapshotter/*.json</code> + <code>fetchedPercent</code>，以及 snapshotter 日志里的 <code>remote-snapshot-prepared</code>。</li>
+<li><strong>nydus</strong>：nydusd 自身 metrics 可由 nydus-snapshotter 转成 Prometheus（<code>metrics.address</code>），system controller 暴露内部状态（<a href="https://github.com/containerd/nydus-snapshotter/blob/8a458b9b674fc133e3beb1db306db11ad5097a6f/docs/configure_nydus.md#L11-L19">configure_nydus.md</a>）。</li>
+<li><strong>OverlayBD</strong>：snapshotter 有 Prometheus metrics（<a href="https://github.com/containerd/accelerated-container-image/blob/0806b5ec1b3ce3262b8ab9c9ba499f6bbe8b4ae0/docs/PROMETHEUS.md">PROMETHEUS.md</a>）。</li>
+</ul>
+<hr>
+<h2 id="10-参考"><a class="header" href="#10-参考">10. 参考</a></h2>
+<p>按项目分组，均为官方 docs/README（代码引用见正文，已固定到上表 commit）。</p>
+<p><strong>containerd</strong></p>
+<ul>
+<li><a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/snapshotters/remote-snapshotter.md">Remote Snapshotter</a></li>
+<li><a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/content-flow.md">Content Flow</a></li>
+<li><a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/PLUGINS.md">Plugins（proxy plugin 类型）</a></li>
+<li><a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/snapshotters/erofs.md">EROFS Snapshotter</a></li>
+</ul>
+<p><strong>stargz / eStargz</strong></p>
+<ul>
+<li><a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/docs/estargz.md">eStargz 格式规范</a></li>
+<li><a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/docs/overview.md">Snapshotter Overview</a></li>
+<li><a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/docs/INSTALL.md">Install（含 stargz-store）</a></li>
+<li><a href="https://github.com/containerd/stargz-snapshotter/blob/6ee88d95406f1d6242fd6d12ed4de0492d91d8f5/docs/ctr-remote.md">ctr-remote image optimize</a></li>
+<li><a href="https://github.com/google/crfs/blob/71d77da419c90be7b05d12e59945ac7a8c94a543/README.md">CRFS（stargz 前身）</a></li>
+</ul>
+<p><strong>Nydus</strong></p>
+<ul>
+<li><a href="https://github.com/dragonflyoss/nydus/blob/6aa3f8f185cb81e330b64382103d697b47f6c903/docs/nydus-design.md">Nydus 设计</a></li>
+<li><a href="https://github.com/dragonflyoss/nydus/blob/6aa3f8f185cb81e330b64382103d697b47f6c903/docs/nydus-image.md">nydus-image</a></li>
+<li><a href="https://github.com/dragonflyoss/nydus/blob/6aa3f8f185cb81e330b64382103d697b47f6c903/docs/nydusd.md">nydusd</a></li>
+<li><a href="https://github.com/dragonflyoss/nydus/blob/6aa3f8f185cb81e330b64382103d697b47f6c903/docs/nydusify.md">nydusify</a></li>
+<li><a href="https://github.com/dragonflyoss/nydus/blob/6aa3f8f185cb81e330b64382103d697b47f6c903/docs/prefetch.md">Prefetch</a></li>
+<li><a href="https://github.com/containerd/nydus-snapshotter/blob/8a458b9b674fc133e3beb1db306db11ad5097a6f/docs/tarfs.md">nydus-snapshotter tarfs</a></li>
+<li><a href="https://github.com/containerd/nydus-snapshotter/blob/8a458b9b674fc133e3beb1db306db11ad5097a6f/docs/index_detection.md">nydus-snapshotter index detection</a></li>
+<li><a href="https://github.com/containerd/nydus-snapshotter/blob/8a458b9b674fc133e3beb1db306db11ad5097a6f/docs/setup_snapshotter_by_daemonset.md">DaemonSet 部署</a></li>
+</ul>
+<p><strong>SOCI</strong></p>
+<ul>
+<li><a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/docs/index.md">SOCI Index 数据模型</a></li>
+<li><a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/docs/soci-index-manifest-v2.md">Index Manifest v2</a></li>
+<li><a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/docs/pull-modes.md">Pull modes</a></li>
+<li><a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/docs/prefetch.md">Prefetch（实验）</a></li>
+<li><a href="https://github.com/awslabs/soci-snapshotter/blob/8b347fe825312441c5d5b357768727175e352ad5/docs/debug.md">Debug</a></li>
+</ul>
+<p><strong>OverlayBD</strong></p>
+<ul>
+<li><a href="https://github.com/containerd/accelerated-container-image/blob/0806b5ec1b3ce3262b8ab9c9ba499f6bbe8b4ae0/README.md">README（overlaybd 格式与 I/O 路径）</a></li>
+<li><a href="https://github.com/containerd/accelerated-container-image/blob/0806b5ec1b3ce3262b8ab9c9ba499f6bbe8b4ae0/docs/QUICKSTART.md">Quickstart</a></li>
+<li><a href="https://github.com/containerd/accelerated-container-image/blob/0806b5ec1b3ce3262b8ab9c9ba499f6bbe8b4ae0/docs/TURBO_OCI.md">TurboOCIv1</a></li>
+<li><a href="https://github.com/containerd/accelerated-container-image/blob/0806b5ec1b3ce3262b8ab9c9ba499f6bbe8b4ae0/docs/WRITABLE.md">Writable layer</a></li>
+<li><a href="https://github.com/containerd/accelerated-container-image/blob/0806b5ec1b3ce3262b8ab9c9ba499f6bbe8b4ae0/docs/IMAGE_CONVERTOR.md">镜像转换</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../docs/Cloud_Native/Linux_Container/镜像快照器snapshotter.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../virtualization.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../docs/Cloud_Native/Linux_Container/镜像快照器snapshotter.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../virtualization.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../highlight-abc7f01d.js"></script>
+        <script src="../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

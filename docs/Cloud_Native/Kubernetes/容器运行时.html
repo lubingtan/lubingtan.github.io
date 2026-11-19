@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-a4bdd9af.js";
+            window.path_to_searchindex_js = "../../../searchindex-795994c4.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-aca9e1c8.js"></script>
+        <script src="../../../toc-2fda9a29.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -310,6 +310,9 @@
 <li><strong>config</strong>：容器的默认进程配置和 <code>rootfs.diff_ids</code>（每层未压缩 digest）（<a href="https://github.com/opencontainers/image-spec/blob/147f9c13cedb47a0c4d9a11a222961073d585877/config.md#L91">config.md#L91</a>）。</li>
 <li><strong>layer</strong>：文件系统增量（changeset），通常是 tar（可压缩）；<code>.wh.</code> 开头的 whiteout 文件表示“删除下层路径“。</li>
 </ul>
+<blockquote>
+<p>layer 的 tar 格式、diffID 与 blob digest 的区别、whiteout/opaque 文件语义，以及它们如何被 apply 成 OverlayFS 的 upperdir，见 <a href="../Linux_Container/OverlayFS与镜像层.html">OverlayFS 与镜像层</a>；snapshotter 的 Prepare/Commit 协议与 rootfs 挂载细节，见 <a href="../Linux_Container/镜像快照器snapshotter.html">镜像快照器 Snapshotter</a>。</p>
+</blockquote>
 <p>OCI 还定义了可选的 <a href="https://github.com/opencontainers/image-spec/blob/147f9c13cedb47a0c4d9a11a222961073d585877/image-layout.md#L3-L10">image layout</a>：<code>oci-layout</code> + <code>index.json</code> + <code>blobs/&lt;algo&gt;/&lt;hex&gt;</code>，文件系统上的目录结构就是 CAS。</p>
 <p>为什么 containerd 可以直接消费？因为所有内容都用 digest 寻址，天然适配 content-addressable storage（CAS）：拉取时按 digest 校验并落到 content store，解包时按 manifest 顺序叠加成 rootfs（snapshotter）。Docker 镜像格式在 2017 年后已与 OCI 对齐，所以“docker 镜像“和“OCI 镜像“在绝大多数场景下是同一套东西。</p>
 <h3 id="32-runtime-specbundle--configjson--生命周期"><a class="header" href="#32-runtime-specbundle--configjson--生命周期">3.2 runtime-spec：bundle + config.json + 生命周期</a></h3>
@@ -516,7 +519,7 @@
 </thead>
 <tbody>
 <tr><td><strong>content store</strong></td><td>按 digest 存镜像 manifest/config/layer（OCI image 的 CAS）</td></tr>
-<tr><td><strong>snapshotter</strong></td><td>把 layer 叠加成容器 rootfs（overlayfs 等）</td></tr>
+<tr><td><strong>snapshotter</strong></td><td>把 layer 叠加成容器 rootfs（overlayfs 等）；三态快照、mount 参数、GC 详见 <a href="../Linux_Container/镜像快照器snapshotter.html">镜像快照器 Snapshotter</a></td></tr>
 <tr><td><strong>metadata</strong></td><td>bbolt 存容器/镜像/任务的元数据</td></tr>
 <tr><td><strong>namespace</strong></td><td>多租户隔离（k8s.io 命名空间等）</td></tr>
 <tr><td><strong>task service</strong></td><td>容器任务（进程）生命周期</td></tr>
@@ -974,6 +977,9 @@ kubectl get pod &lt;pod&gt; -o jsonpath='{.spec.runtimeClassName}{"\n"}{.spec.ov
 <ul>
 <li><a href="./kubelet原理.html">Kubelet 原理</a></li>
 <li><a href="../Linux_Container/容器知识备忘录.html">容器知识备忘录</a></li>
+<li><a href="../Linux_Container/OverlayFS与镜像层.html">OverlayFS 与镜像层</a>（镜像分层与联合挂载的内核机制）</li>
+<li><a href="../Linux_Container/镜像快照器snapshotter.html">镜像快照器 Snapshotter</a>（containerd 如何把层变成 rootfs）</li>
+<li><a href="../Linux_Container/镜像懒加载.html">镜像懒加载</a>（stargz / Nydus / SOCI / OverlayBD）</li>
 <li><a href="./cni详解.html">CNI 详解</a></li>
 <li><a href="../AI_Infrastructure/agent-sandbox.html">Agent Sandbox</a>（沙箱运行时与 gVisor/Kata 的实践）</li>
 <li><a href="../Virtualization/沙箱与虚拟化技术全景.html">沙箱与虚拟化技术全景：KVM、QEMU、Firecracker、Kata、gVisor</a>（本文 runsc/kata 两种 runtimes 的隔离边界、开销与选型）</li>
@@ -1032,8 +1038,8 @@ kubectl get pod &lt;pod&gt; -o jsonpath='{.spec.runtimeClassName}{"\n"}{.spec.ov
         <!-- Custom JS scripts -->
         <script src="../../../theme/giscus-edff37af.js"></script>
         <script src="../../../theme/goatcounter-6da6732a.js"></script>
-        <script src="../../../theme/mermaid-init-1bb4d447.js"></script>
-        <script src="../../../theme/mermaid-eefea253.min.js"></script>
+        <script src="../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../theme/mermaid-init-7cdebe5d.js"></script>
 
 
 

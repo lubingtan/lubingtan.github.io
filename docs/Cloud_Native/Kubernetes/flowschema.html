@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>flowschema - Bingtan&#x27;s Wiki</title>
+        <title>API Priority and Fairness：FlowSchema 与 PriorityLevelConfiguration - Bingtan&#x27;s Wiki</title>
 
 
         <!-- Custom HTML head -->
@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-a4bdd9af.js";
+            window.path_to_searchindex_js = "../../../searchindex-795994c4.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-aca9e1c8.js"></script>
+        <script src="../../../toc-2fda9a29.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -180,92 +180,343 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h2 id="what-is-flowschema"><a class="header" href="#what-is-flowschema">What is FlowSchema</a></h2>
-<p>FlowSchema一种 resoruce, 它可以配置 kube-apiserver 的流量控制. 比如对于哪种流量需要优先处理, 哪种流量可以拒绝, 哪种流量如果来不及处理就先加到队列中.</p>
-<p>A flowschema spec is like this:</p>
-<pre><code class="language-yaml">apiVersion: flowcontrol.apiserver.k8s.io/v1beta1
+                        <h1 id="api-priority-and-fairnessflowschema-与-prioritylevelconfiguration"><a class="header" href="#api-priority-and-fairnessflowschema-与-prioritylevelconfiguration">API Priority and Fairness：FlowSchema 与 PriorityLevelConfiguration</a></h1>
+<p>API Priority and Fairness（APF）是 kube-apiserver 内部的<strong>流量分类与并发隔离</strong>机制：它把请求按客户端、资源、动词等特征分到不同的 <strong>FlowSchema</strong>，再交给对应的 <strong>PriorityLevelConfiguration</strong>（简称 PL）做并发限额、排队和公平调度。它解决的是 <code>--max-requests-inflight</code> 这类全局阈值“一刀切“的问题——即使 API Server 已经过载，系统组件、leader election、kubelet 上报仍然应该能拿到名额，而某个刷 API 的客户端不应该拖垮所有人。</p>
+<p>本文基于 Kubernetes v1.37.2，API 版本为 <code>flowcontrol.apiserver.k8s.io/v1</code>（1.29 起 GA；更早的 <code>v1beta1/v1beta2/v1beta3</code> 已不再 serve，只保留转换，老 YAML 里的 <code>assuredConcurrencyShares</code> 在 v1 中叫 <code>nominalConcurrencyShares</code>）。代码链接统一固定到 commit <code>c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32</code>。</p>
+<h2 id="1-解决什么问题"><a class="header" href="#1-解决什么问题">1. 解决什么问题</a></h2>
+<p>APF 开启时，API Server 仍然有总并发上限：</p>
+<ul>
+<li><code>--max-requests-inflight</code>（默认 400，非变更请求）</li>
+<li><code>--max-mutating-requests-inflight</code>（默认 200，变更请求）</li>
+</ul>
+<p>两者之和是 <strong>ServerCL</strong>，默认 <strong>600</strong>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/server/config.go#L451-L453">server/config.go#L451-L453</a>）。但单纯的 max-inflight 没有优先级概念，也没有排队：只要总量满了，所有请求一起 429，包括 kubelet 心跳和 controller 的 leader election。</p>
+<p>APF 在这个总容量之内再做两件事：</p>
+<ol>
+<li><strong>分类</strong>：每个请求按 <code>FlowSchema</code> 的规则归类，得到它所属的 <code>PriorityLevelConfiguration</code>；</li>
+<li><strong>隔离 + 排队</strong>：每个 PL 有独立的并发上限；超限的请求进入该 PL 的公平队列（或直接被拒绝），队列之间按 flow 做公平调度，并允许 PL 之间临时借用空闲名额。</li>
+</ol>
+<p>APF 由 <code>--enable-priority-and-fairness</code> 控制，默认开启（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/server/options/feature.go#L35-L60">feature.go#L35-L60</a>）。几个容易忽略的边界：</p>
+<ul>
+<li>APF <strong>对 watch 请求也生效</strong>（大 list/watch 会占用 seats）；</li>
+<li><code>exec</code>、<code>port-forward</code>、日志这类 long-running 请求<strong>不经过</strong> APF（也不受 max-inflight 限制）；</li>
+<li>APF 是<strong>每个 apiserver 实例独立</strong>的限流器，不是集群级全局协调。</li>
+</ul>
+<h2 id="2-请求在-apf-里的完整路径"><a class="header" href="#2-请求在-apf-里的完整路径">2. 请求在 APF 里的完整路径</a></h2>
+<pre class="mermaid">flowchart TD
+    R["请求（已认证）"] --&gt; D["生成 RequestDigest&lt;br/&gt;user/verb/resource/namespace/URL"]
+    D --&gt; M{"按 matchingPrecedence&lt;br/&gt;从小到大匹配 FlowSchema"}
+    M --&gt;|"命中（第一条）"| PL["PriorityLevelConfiguration"]
+    M --&gt;|"全部不命中"| CA["mandatory catch-all&lt;br/&gt;Limited(5) + Reject"]
+    PL --&gt; T{"spec.type"}
+    T --&gt;|"Exempt"| X["立即执行（不限流）"]
+    T --&gt;|"Limited"| W["work estimator 估算 seats&lt;br/&gt;（list/watch 按对象数/大小）"]
+    W --&gt; Q["进入该 PL 的公平队列"]
+    Q --&gt;|"拿到 seat"| X
+    Q --&gt;|"队列满 / 等待超时"| E["429 Too Many Requests"]
+</pre>
+
+<p>对应代码路径：</p>
+<ul>
+<li>过滤器入口：<code>configController.Handle</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/util/flowcontrol/apf_filter.go#L155-L200">apf_filter.go#L155-L200</a>）；</li>
+<li>分类与启动请求：<code>startRequest</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/util/flowcontrol/apf_controller.go#L1022">apf_controller.go#L1022</a>）；</li>
+<li>FlowSchema/规则匹配：<code>matchesFlowSchema</code>、<code>matchesPolicyRule</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/util/flowcontrol/rule.go#L30-L39">rule.go#L30-L39</a>），subject、resource、non-resource 匹配分别在 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/util/flowcontrol/rule.go#L58-L92">rule.go#L58-L92</a>、<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/util/flowcontrol/rule.go#L110-L149">#L110-L149</a>；</li>
+<li>seats 分配：<code>nominalCL = ceil(ServerCL * NCS / sum(NCS))</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/util/flowcontrol/apf_controller.go#L846-L870">apf_controller.go#L846-L870</a>）；</li>
+<li>超限拒绝：<code>http.StatusTooManyRequests</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/server/filters/priority-and-fairness.go#L378-L380">priority-and-fairness.go#L378-L380</a>）。</li>
+</ul>
+<h2 id="3-flowschema给请求分类"><a class="header" href="#3-flowschema给请求分类">3. FlowSchema：给请求分类</a></h2>
+<h3 id="31-对象结构"><a class="header" href="#31-对象结构">3.1 对象结构</a></h3>
+<pre><code class="language-yaml">apiVersion: flowcontrol.apiserver.k8s.io/v1
 kind: FlowSchema
 metadata:
- name: fcp-service
+  name: ci-batch
 spec:
- distinguisherMethod:
-   type: ByNamespace
- matchingPrecedence: 50
- priorityLevelConfiguration:
-   name: system
- rules:
- - nonResourceRules:
-   - nonResourceURLs:
-     - '*'
-     verbs:
-     - '*'
-   resourceRules:
-   - apiGroups:
-     - '*'
-     clusterScope: true
-     namespaces:
-     - '*'
-     resources:
-     - '*'
-     verbs:
-     - '*'
-   subjects:
-   - kind: ServiceAccount
-     serviceAccount:
-       name: '*'
-       namespace: fcp-pp
+  matchingPrecedence: 1500          # 1–10000，越小越先匹配
+  priorityLevelConfiguration:
+    name: ci-batch                  # 必须引用一个存在的 PL
+  distinguisherMethod:
+    type: ByUser                    # ByUser | ByNamespace；不填则所有请求算一个 flow
+  rules:                            # 只要任意一条 rule 命中，就属于这个 FlowSchema
+  - subjects:                       # 至少一个 subject
+    - kind: ServiceAccount
+      serviceAccount:
+        namespace: ci
+        name: runner
+    resourceRules:                  # resourceRules 与 nonResourceRules 至少一个非空
+    - verbs: ["*"]
+      apiGroups: ["*"]
+      resources: ["*"]
+      clusterScope: true            # 匹配不带 namespace 的请求
+      namespaces: ["*"]             # 匹配所有带 namespace 的请求
 </code></pre>
-<h2 id="how-does-flowschema-work"><a class="header" href="#how-does-flowschema-work">How does FlowSchema work?</a></h2>
-<p>FlowSchema 定义了一组 rules, 如果一个 request hit 其中一个 rule, 就可以认为它属于这个 FlowSchema.</p>
-<p>然后这个flowschema对应的流量控制规则定义在 <code>priorityLevelConfiguration</code></p>
-<p>PriorityLevelConfiguration 是另一种 resource, 它长这个样子:</p>
-<pre><code class="language-yaml">kind: PriorityLevelConfiguration
+<p>字段语义（类型定义见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/flowcontrol/v1/types.go#L146-L230">flowcontrol/v1/types.go#L146-L230</a>）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>字段</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td><code>matchingPrecedence</code></td><td>1–10000，数字越小优先级越高；第一条命中的 FlowSchema 生效。不填默认 1000；值 1 只允许给 mandatory 的 <code>exempt</code> FlowSchema。相同值时按名字字典序决出，官方建议避免重复。</td></tr>
+<tr><td><code>priorityLevelConfiguration.name</code></td><td>引用的 PL 名。引用不存在时 FlowSchema 会被忽略，并在 <code>status.conditions</code> 标记 <code>Dangling</code>。</td></tr>
+<tr><td><code>distinguisherMethod</code></td><td><code>ByUser</code>（按用户名分流）、<code>ByNamespace</code>（按对象命名空间分流）或不填（整条 FlowSchema 视为单个 flow）。它只影响<strong>同一 PL 内部</strong>的公平性，不改变 PL 归属。</td></tr>
+<tr><td><code>rules[].subjects</code></td><td><code>User</code> / <code>Group</code> / <code>ServiceAccount</code> 三类；名字支持 <code>*</code>。同时列出 <code>system:authenticated</code> 和 <code>system:unauthenticated</code> 两个 group 等于匹配所有请求。</td></tr>
+<tr><td><code>rules[].resourceRules</code></td><td>按 <code>verbs</code>、<code>apiGroups</code>、<code>resources</code>（可带子资源，如 <code>pods/status</code>）、<code>clusterScope</code>、<code>namespaces</code> 匹配；支持 <code>*</code>。</td></tr>
+<tr><td><code>rules[].nonResourceRules</code></td><td>按 <code>verbs</code> 和 <code>nonResourceURLs</code>（前缀匹配）匹配，例如 <code>/metrics</code>、<code>/healthz</code>。</td></tr>
+</tbody>
+</table>
+</div>
+<p>一个 rule 命中的条件是：<strong>至少一个 subject 命中，且至少一个 resource rule 或 non-resource rule 命中</strong>（两者按请求类型二选一）。<code>rules</code> 为空表示该 FlowSchema 不匹配任何请求，而不是“匹配所有“（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/flowcontrol/v1/types.go#L208-L230">types.go#L208-L230</a>）。</p>
+<h3 id="32-内置-flowschema-与匹配顺序"><a class="header" href="#32-内置-flowschema-与匹配顺序">3.2 内置 FlowSchema 与匹配顺序</a></h3>
+<p>apiserver 会创建一组“建议配置“（suggested）和 4 个“强制配置“（mandatory）。它们的名字和 <code>matchingPrecedence</code> 决定了系统流量的分类顺序（定义见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/apis/flowcontrol/bootstrap/default.go#L282-L440">bootstrap/default.go#L282-L440</a>）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>FlowSchema</th><th>precedence</th><th>指向的 PL</th><th>典型匹配对象</th></tr>
+</thead>
+<tbody>
+<tr><td><code>exempt</code>（mandatory）</td><td>1</td><td><code>exempt</code></td><td><code>system:masters</code></td></tr>
+<tr><td><code>probes</code></td><td>2</td><td><code>exempt</code></td><td>健康检查/探针流量</td></tr>
+<tr><td><code>system-leader-election</code></td><td>100</td><td><code>leader-election</code></td><td>KCM/scheduler 等选主请求</td></tr>
+<tr><td><code>system-node-high</code></td><td>400</td><td><code>node-high</code></td><td>节点高优先级上报</td></tr>
+<tr><td><code>system-nodes</code></td><td>500</td><td><code>system</code></td><td>kubelet/kube-proxy 等节点请求</td></tr>
+<tr><td><code>kube-controller-manager</code></td><td>800</td><td><code>workload-high</code></td><td>KCM</td></tr>
+<tr><td><code>kube-scheduler</code></td><td>800</td><td><code>workload-high</code></td><td>scheduler</td></tr>
+<tr><td><code>kube-system-service-accounts</code></td><td>900</td><td><code>workload-high</code></td><td>kube-system 里的 ServiceAccount</td></tr>
+<tr><td><code>service-accounts</code></td><td>9000</td><td><code>workload-low</code></td><td>其他命名空间的 ServiceAccount</td></tr>
+<tr><td><code>global-default</code></td><td>9900</td><td><code>global-default</code></td><td>其余已认证/未认证请求</td></tr>
+<tr><td><code>catch-all</code>（mandatory）</td><td>10000</td><td><code>catch-all</code></td><td>兜底（5 份额 + Reject）</td></tr>
+</tbody>
+</table>
+</div>
+<p>因此<strong>自定义 FlowSchema 一般把 <code>matchingPrecedence</code> 放在 1000–9000</strong>：既能排在 <code>service-accounts</code>(9000) 之前，又不会抢在 kube-system SA（900）和系统组件前面。如果客户端本身就是 <code>kube-system</code> 的 ServiceAccount，900 那条会先命中，需要更小的 precedence 才能覆盖。</p>
+<h3 id="33-查看与验证"><a class="header" href="#33-查看与验证">3.3 查看与验证</a></h3>
+<pre><code class="language-bash">kubectl get flowschemas
+kubectl get flowschema ci-batch -o yaml     # 看 status.conditions 是否有 Dangling
+kubectl get prioritylevelconfigurations
+</code></pre>
+<p><code>kubectl get flowschemas</code> 的 <code>PRIORITYLEVEL</code> 列就是它指向的 PL；如果显示空或 PL 不存在，说明引用有问题。</p>
+<h2 id="4-prioritylevelconfiguration并发排队与借还"><a class="header" href="#4-prioritylevelconfiguration并发排队与借还">4. PriorityLevelConfiguration：并发、排队与借还</a></h2>
+<h3 id="41-limited份额与-seats"><a class="header" href="#41-limited份额与-seats">4.1 Limited：份额与 seats</a></h3>
+<p>对 <code>type: Limited</code> 的 PL：</p>
+<pre><code class="language-text">NominalCL(i) = ceil( ServerCL * NCS(i) / sum(NCS) )
+</code></pre>
+<p>其中 <code>ServerCL = max-requests-inflight + max-mutating-requests-inflight</code>（每个 apiserver 实例独立计算），<code>NCS</code> 就是 <code>nominalConcurrencyShares</code>。<strong>NCS 是相对值</strong>：给某个 PL 调大，其他 PL 的绝对名额会等比例减少；新增一个 PL 也会稀释所有 PL。</p>
+<p>默认 suggested 配置的份额合计约 <strong>245</strong>（<code>exempt</code> 的 NCS 为 0，不占份额），在 ServerCL=600 时大致是：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>PL</th><th>NCS</th><th>lendable%</th><th>limitResponse</th><th>队列参数（queues/handSize/length）</th><th>约 seats</th></tr>
+</thead>
+<tbody>
+<tr><td><code>system</code></td><td>30</td><td>33</td><td>Queue</td><td>64 / 6 / 50</td><td>74</td></tr>
+<tr><td><code>node-high</code></td><td>40</td><td>25</td><td>Queue</td><td>64 / 6 / 50</td><td>98</td></tr>
+<tr><td><code>leader-election</code></td><td>10</td><td>0</td><td>Queue</td><td>16 / 4 / 50</td><td>25</td></tr>
+<tr><td><code>workload-high</code></td><td>40</td><td>50</td><td>Queue</td><td>128 / 6 / 50</td><td>98</td></tr>
+<tr><td><code>workload-low</code></td><td>100</td><td>90</td><td>Queue</td><td>128 / 6 / 50</td><td>245</td></tr>
+<tr><td><code>global-default</code></td><td>20</td><td>50</td><td>Queue</td><td>128 / 6 / 50</td><td>49</td></tr>
+<tr><td><code>catch-all</code>（mandatory）</td><td>5</td><td>0</td><td>Reject</td><td>—</td><td>13</td></tr>
+</tbody>
+</table>
+</div>
+<p>（seats 向上取整，总和会略大于 600；具体数值随 share 总和与配置变化。默认定义见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/apis/flowcontrol/bootstrap/default.go#L169-L280">bootstrap/default.go#L169-L280</a>。）</p>
+<p><code>nominalConcurrencyShares: 0</code> 有特殊含义：构造一个“jail“，基本不给这个 PL 名额（仅用于把某些请求关起来），不要拿它当普通低优先级。</p>
+<h3 id="42-limitresponse排队还是直接拒绝"><a class="header" href="#42-limitresponse排队还是直接拒绝">4.2 limitResponse：排队还是直接拒绝</a></h3>
+<ul>
+<li><code>type: Queue</code>：超限请求进入公平队列，短暂突发不会立刻 429；</li>
+<li><code>type: Reject</code>：超限立即 429（<code>catch-all</code> 用的就是它，防止兜底流量无限堆积）。</li>
+</ul>
+<p>Queue 的参数（类型定义 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/flowcontrol/v1/types.go#L586-L655">types.go#L586-L655</a>，默认值 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/apis/flowcontrol/v1/defaults.go#L30-L76">defaults.go#L30-L76</a>）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>字段</th><th>默认</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>queues</code></td><td>64</td><td>该 PL 内队列数；队列在<strong>每个 apiserver 实例</strong>上独立存在</td></tr>
+<tr><td><code>handSize</code></td><td>8</td><td>shuffle sharding 的 hand size：每个 flow 只映射到 <code>queues</code> 的一个子集，降低不同 flow 互相碰撞的概率；必须 <code>&lt;= queues</code></td></tr>
+<tr><td><code>queueLengthLimit</code></td><td>50</td><td>每个队列最多排队的请求数，超出即拒绝</td></tr>
+</tbody>
+</table>
+</div>
+<p>校验规则见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/apis/flowcontrol/validation/validation.go#L490-L517">validation.go#L490-L517</a>。</p>
+<h3 id="43-借还lendablepercent-与-borrowinglimitpercent"><a class="header" href="#43-借还lendablepercent-与-borrowinglimitpercent">4.3 借还：lendablePercent 与 borrowingLimitPercent</a></h3>
+<ul>
+<li><code>lendablePercent</code>：该 PL 愿意把多少比例的名额借给其他 PL（<code>LendableCL = round(NominalCL * percent/100)</code>）；</li>
+<li><code>borrowingLimitPercent</code>：该 PL 最多能借到多少（<code>BorrowingCL = round(NominalCL * percent/100)</code>；不填表示不限制）。</li>
+</ul>
+<p>借还只发生在别人<strong>空闲</strong>的 seats 上，不是保证；高峰时仍然只能用自己的 NominalCL。默认配置里 <code>workload-low</code> 的 lendable 是 90%、<code>workload-high</code> 是 50%，就是让低优先级在空闲时把名额让给高优先级用（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/flowcontrol/v1/types.go#L519-L547">types.go#L519-L547</a>）。</p>
+<h3 id="44-exempt"><a class="header" href="#44-exempt">4.4 Exempt</a></h3>
+<p><code>type: Exempt</code> 的 PL 完全不受 APF 限制，请求立即执行。内置的 <code>exempt</code> PL 被 mandatory <code>exempt</code> FlowSchema 用于 <code>system:masters</code>，也被 <code>probes</code> 用于健康检查；你可以新增 FlowSchema 指向它，但<strong>不要把普通业务流量放进 Exempt</strong>——它等于绕过所有保护。</p>
+<h3 id="45-内置配置的维护mandatory-vs-suggested"><a class="header" href="#45-内置配置的维护mandatory-vs-suggested">4.5 内置配置的维护：mandatory vs suggested</a></h3>
+<p>每个 apiserver 维护两类对象（列表见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/apis/flowcontrol/bootstrap/default.go#L36-L80">bootstrap/default.go#L36-L80</a>）：</p>
+<ul>
+<li><strong>mandatory</strong>：<code>exempt</code>/<code>catch-all</code> 两个 PL 及其 FlowSchema，共 4 个对象。它们是 APF 自身不崩的兜底，<strong>用户改 spec 会被 apiserver 改回</strong>；你可以加 FlowSchema 指向 <code>exempt</code>，但不能改 <code>exempt</code> 本身。</li>
+<li><strong>suggested</strong>：<code>system</code>、<code>node-high</code>、<code>leader-election</code>、<code>workload-high</code>、<code>workload-low</code>、<code>global-default</code> 及 9 条 FlowSchema。它们是“建议配置“，<strong>可以改</strong>，但要显式关掉自动更新，否则 apiserver 约每分钟按 bootstrap 默认值把 spec 修订回去。</li>
+</ul>
+<p>控制权由注解 <code>apf.kubernetes.io/autoupdate-spec</code> 决定（常量见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/flowcontrol/v1/types.go#L103">types.go#L103</a>）：</p>
+<ul>
+<li>注解为 <code>"true"</code> → apiserver 控制该对象（会覆盖你的 spec）；</li>
+<li>注解为 <code>"false"</code> → 用户控制该对象（apiserver 保留你的修改）；</li>
+<li>没有注解时看 <code>metadata.generation</code>：为 1 表示 apiserver 控制，否则用户控制（文档：<a href="https://kubernetes.io/docs/concepts/cluster-administration/flow-control/">API Priority and Fairness</a>）。</li>
+</ul>
+<p>apiserver 侧的周期 reconcile、创建缺失对象、按策略修订 spec 的逻辑在 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/registry/flowcontrol/rest/storage_flowcontrol.go#L150-L215">storage_flowcontrol.go#L150-L215</a> 与 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/registry/flowcontrol/ensurer/strategy.go#L34-L50">ensurer/strategy.go#L34-L50</a>、<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/registry/flowcontrol/ensurer/strategy.go#L160-L200">#L160-L200</a>：</p>
+<ul>
+<li>mandatory 对象永远 auto-update（改回去）；</li>
+<li>suggested 对象只在“用户没有接管“时 auto-update；</li>
+<li>被删除的内置对象（无论 mandatory 还是 suggested）都会在下一轮 reconcile 被重新创建；</li>
+<li><strong>没有 <code>autoupdate-spec</code> 注解的自定义对象不会被 ensurer 修改或删除</strong>（所以自定义请走独立对象，不要改内置）。</li>
+</ul>
+<h2 id="5-使用方法"><a class="header" href="#5-使用方法">5. 使用方法</a></h2>
+<h3 id="51-自定义-pl--flowschema推荐"><a class="header" href="#51-自定义-pl--flowschema推荐">5.1 自定义 PL + FlowSchema（推荐）</a></h3>
+<p><strong>Step 1：建 PL</strong>——给 CI 批处理一个独立、低份额、可排队的优先级：</p>
+<pre><code class="language-yaml">apiVersion: flowcontrol.apiserver.k8s.io/v1
+kind: PriorityLevelConfiguration
 metadata:
-  name: system
+  name: ci-batch
 spec:
-  limited:
-    assuredConcurrencyShares: 8000
-    limitResponse:
-      queuing:
-        handSize: 15
-        queueLengthLimit: 100
-        queues: 15
-      type: Queue
   type: Limited
-status: {}
+  limited:
+    nominalConcurrencyShares: 10      # 相对份额；新增会稀释其他 PL
+    lendablePercent: 0                # 空闲名额不借给别人
+    borrowingLimitPercent: 100        # 最多借到与 nominal 同量（可选）
+    limitResponse:
+      type: Queue
+      queuing:
+        queues: 16
+        handSize: 4
+        queueLengthLimit: 50
 </code></pre>
-<p>这个规则对应的并发限制和这个值 <code>assuredConcurrencyShares</code> 有关:</p>
-<p>并发限制 = 总并发量 * assuredConcurrencyShares / 所有的assuredConcurrencyShares之和</p>
-<blockquote>
-<p>其中 总并发量 = max-requests-inflight + max-mutating-requests-inflight</p>
-<p>max-requests-inflight 和 max-mutating-requests-inflight 是 kube-apiserver 参数</p>
-</blockquote>
-<p>举个例子:</p>
-<p>apiserver 的 max-requests-inflight=4000 max-mutating-requests-inflight=2000</p>
-<pre><code>bingtlu@R0016P43QH ~ % k get priorityLevelConfiguration
-NAME              TYPE      ASSUREDCONCURRENCYSHARES   QUEUES   HANDSIZE   QUEUELENGTHLIMIT   AGE
-catch-all         Limited   1                          &lt;none&gt;   &lt;none&gt;     &lt;none&gt;             679d
-exempt            Exempt    &lt;none&gt;                     &lt;none&gt;   &lt;none&gt;     &lt;none&gt;             679d
-federation        Limited   4000                       128      6          50                 679d
-global-default    Limited   2000                       128      6          50                 679d
-leader-election   Limited   1000                       16       4          50                 679d
-system            Limited   8000                       15       15         100                679d
-workload-high     Limited   3000                       128      6          50                 679d
-workload-low      Limited   2500                       128      6          50                 679d
+<p><strong>Step 2：建 FlowSchema</strong>——把特定客户端导入该 PL：</p>
+<pre><code class="language-yaml">apiVersion: flowcontrol.apiserver.k8s.io/v1
+kind: FlowSchema
+metadata:
+  name: ci-batch
+spec:
+  matchingPrecedence: 1500            # 1000–9000 之间较安全
+  priorityLevelConfiguration:
+    name: ci-batch
+  distinguisherMethod:
+    type: ByUser                      # 或 ByNamespace
+  rules:
+  - subjects:
+    - kind: ServiceAccount
+      serviceAccount:
+        namespace: ci
+        name: runner
+    resourceRules:
+    - verbs: ["*"]
+      apiGroups: ["*"]
+      resources: ["*"]
+      clusterScope: true
+      namespaces: ["*"]
 </code></pre>
-<p>system的并发限制 = 6000 * 8000 / (1+4000+2000+1000+8000+3000+2500) = 2341.35</p>
-<p>如果超出了这个并发量怎么办? 加到队列里面等待. 一个 priorityLevelConfiguration 包含多个queue, 根据 <code>distinguisherMethod</code>分流(flows), 不同的 flow 不会冲突 (比如distinguisherMethod 是 ByUser, 那么当某个user发了大量请求, 不会阻塞另一个user的请求)</p>
-<p>还有一种特殊的 priorityLevelConfiguration, 就是 <code>exempt</code>, exempt 就是没有限制, 一般会把最重要的request设置成 exempt, 比如group=system:masters</p>
+<pre><code class="language-bash">kubectl apply -f ci-batch-plc.yaml
+kubectl apply -f ci-batch-fs.yaml
+
+kubectl get prioritylevelconfiguration ci-batch -o yaml
+kubectl get flowschema ci-batch -o yaml     # status.conditions 里不应有 Dangling
+</code></pre>
+<p>先建 PL 再建 FlowSchema；如果 FlowSchema 引用的 PL 不存在，它会被忽略并在 status 标记 <code>Dangling</code>。</p>
+<h3 id="52-常用匹配模板"><a class="header" href="#52-常用匹配模板">5.2 常用匹配模板</a></h3>
+<p><strong>按 Group 匹配一批 ServiceAccount</strong>：</p>
+<pre><code class="language-yaml">    subjects:
+    - kind: Group
+      group:
+        name: system:serviceaccounts:ci
+</code></pre>
+<p><strong>只匹配非资源 URL（例如 /metrics）</strong>：</p>
+<pre><code class="language-yaml">    nonResourceRules:
+    - verbs: ["get"]
+      nonResourceURLs: ["/metrics"]
+</code></pre>
+<p><strong>匹配所有请求</strong>：<code>subjects</code> 同时列 <code>system:authenticated</code> 和 <code>system:unauthenticated</code>，并给 <code>resourceRules</code> 配 <code>verbs/apiGroups/resources: ["*"]</code>、<code>clusterScope: true</code>、<code>namespaces: ["*"]</code>。这种 FlowSchema 的 precedence 一定要小心，通常只在做全局兜底时使用。</p>
+<h3 id="53-调整内置策略"><a class="header" href="#53-调整内置策略">5.3 调整内置策略</a></h3>
+<p>如果想改内置的 suggested PL（例如给 <code>leader-election</code> 更多份额），<strong>先接管对象，再改</strong>：</p>
+<pre><code class="language-bash">kubectl annotate prioritylevelconfiguration leader-election apf.kubernetes.io/autoupdate-spec=false
+kubectl patch prioritylevelconfiguration leader-election --type merge \
+  -p '{"spec":{"limited":{"nominalConcurrencyShares":20}}}'
+</code></pre>
+<p>改完确认：</p>
+<pre><code class="language-bash">kubectl get prioritylevelconfiguration leader-election -o yaml
+</code></pre>
+<p>想恢复默认：把注解改回 <code>"true"</code>（或删除注解并让 generation 语义生效），apiserver 会在下一轮 reconcile 把 spec 修订回 bootstrap 值。注意 <code>exempt</code>/<code>catch-all</code> 是 mandatory，改不动。</p>
+<h3 id="54-观测与排障"><a class="header" href="#54-观测与排障">5.4 观测与排障</a></h3>
+<pre><code class="language-bash"># 当前配置
+kubectl get prioritylevelconfigurations
+kubectl get flowschemas
+
+# APF 内部状态（debug 端点，需 API 权限）
+kubectl get --raw '/debug/api_priority_and_fairness/dump_priority_levels'
+kubectl get --raw '/debug/api_priority_and_fairness/dump_queues'
+kubectl get --raw '/debug/api_priority_and_fairness/dump_requests'
+</code></pre>
+<p>debug 端点实现见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/util/flowcontrol/apf_controller_debug.go#L43-L47">apf_controller_debug.go#L43-L47</a>。</p>
+<p>关键指标（实现见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/util/flowcontrol/metrics/metrics.go#L90-L100">metrics.go#L90-L100</a>、<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/util/flowcontrol/metrics/metrics.go#L203-L262">#L203-L262</a>）：</p>
+<pre><code class="language-promql"># 某个 PL 被拒绝的请求（reason=queue-full 或 time-out）
+sum by (priority_level, reason) (
+  rate(apiserver_flowcontrol_rejected_requests_total[5m])
+)
+
+# 排队深度与等待时间
+apiserver_flowcontrol_current_inqueue_requests{priority_level="ci-batch"}
+histogram_quantile(0.99,
+  rate(apiserver_flowcontrol_request_wait_duration_seconds_bucket{priority_level="ci-batch"}[5m]))
+
+# 该 PL 的实际名额
+apiserver_flowcontrol_nominal_limit_seats{priority_level="ci-batch"}
+</code></pre>
+<p>排查思路：<code>rejected_requests_total{reason="queue-full"}</code> 增长说明队列满（要么调大队列/份额，要么治理客户端）；<code>reason="time-out"</code> 说明等待超时；<code>current_inqueue_requests</code> 持续高但 <code>nominal_limit_seats</code> 没打满，通常是上游（etcd/存储）慢导致请求执行时间变长。</p>
+<h3 id="55-容量规划清单"><a class="header" href="#55-容量规划清单">5.5 容量规划清单</a></h3>
+<ol>
+<li><strong>先量再调</strong>：看 <code>request_wait_duration_seconds</code>、<code>current_inqueue_requests</code>、<code>rejected_requests_total</code>，确认是哪类请求、哪个 PL 出问题；</li>
+<li><strong>份额是相对的</strong>：新增 PL 会稀释所有 PL；调大某个 PL 等于调小其他所有 PL；</li>
+<li><strong>给系统流量留保底</strong>：<code>system</code>、<code>node-high</code>、<code>leader-election</code> 的默认 shares 是按大规模集群经验配的，改之前确认系统请求的 429/wait 没有恶化；</li>
+<li><strong>大 list/watch 会放大 seats</strong>：APF 的 work estimator 会按对象数/大小给 list 请求估算 seats（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/util/flowcontrol/request/list_work_estimator.go#L128-L140">list_work_estimator.go#L128-L140</a>），所以“一个没分页的 LIST“可能比几十个小写请求更占名额；</li>
+<li><strong>APF 是每实例的</strong>：客户端经 LB 分摊到多个 apiserver，每个实例各自限流；容量估算按“每实例 ServerCL“算，不要当成全局总池；</li>
+<li><strong>不要用 Exempt 解决限流</strong>：那只是把问题从“偶尔 429“变成“apiserver 被打穿“。</li>
+</ol>
+<h2 id="6-常见误区"><a class="header" href="#6-常见误区">6. 常见误区</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>误区</th><th>事实</th></tr>
+</thead>
+<tbody>
+<tr><td>“assuredConcurrencyShares / v1beta1 还能用”</td><td>现版本只 serve <code>v1</code>，字段是 <code>nominalConcurrencyShares</code>；老 YAML 要迁移。</td></tr>
+<tr><td>“shares 是绝对并发数”</td><td>是相对份额，实际名额 = <code>ceil(ServerCL * shares / sum(shares))</code>，会随其他 PL 变化。</td></tr>
+<tr><td>“APF 是一个全局限流器”</td><td>每个 apiserver 实例独立限流，实例间不协调。</td></tr>
+<tr><td>“watch/exec 都不受 APF”</td><td>watch 受 APF；只有 exec/port-forward/日志等 long-running 不受。</td></tr>
+<tr><td>“自定义 FlowSchema 的 rules 为空就匹配所有”</td><td>空 rules 匹配零个请求；要匹配所有必须显式写 subject + 规则。</td></tr>
+<tr><td>“precedence 越小越好”</td><td>太小会抢在系统 FlowSchema 前面，把 kubelet/选主流量降级；业务通常用 1000–9000。</td></tr>
+<tr><td>“改 suggested PL 立即生效且保留”</td><td>不设 <code>apf.kubernetes.io/autoupdate-spec=false</code> 会被 apiserver 改回去。</td></tr>
+<tr><td>“删掉内置 FlowSchema 就绕过了”</td><td>会被自动重建；mandatory 还会恢复。</td></tr>
+<tr><td>“429 都是 APF 造成的”</td><td>也可能是 <code>--max-requests-inflight</code> / webhook 超时等其他路径；看 <code>reason</code> 和指标确认。</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="7-延伸阅读"><a class="header" href="#7-延伸阅读">7. 延伸阅读</a></h2>
+<ul>
+<li><a href="https://kubernetes.io/docs/concepts/cluster-administration/flow-control/">Kubernetes 官方文档：API Priority and Fairness</a> —— feature 状态、mandatory/suggested 对象、autoupdate 注解、观测指标。</li>
+<li><a href="https://github.com/kubernetes/enhancements/tree/master/keps/sig-api-machinery/1040-priority-and-fairness">KEP-1040: API Priority and Fairness</a> —— 设计动机、seat 模型与队列算法。</li>
+<li><a href="./控制面高可用方案.html">Kubernetes 控制面高可用方案</a> —— APF 默认份额与 <code>max-requests-inflight</code> 在 HA 容量规划中的位置（§8）。</li>
+<li><a href="./控制面事故处理手册.html">Kubernetes 控制面事故处理手册</a> —— 429/APF 过载的现场定位与止血流程（R8）。</li>
+</ul>
+<h2 id="本-wiki-相关页面"><a class="header" href="#本-wiki-相关页面">本 wiki 相关页面</a></h2>
+<ul>
+<li><a href="./2_kubernetes-api-server.html">Kubernetes API Server</a></li>
+<li><a href="5_client-go list &amp; watch 原理.html">client-go list &amp; watch 原理</a></li>
+<li><a href="./kubelet原理.html">Kubelet 原理</a></li>
+<li><a href="./rbac.html">RBAC</a></li>
+</ul>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../../../docs/Cloud_Native/Kubernetes/cni详解.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../../../docs/Cloud_Native/Kubernetes/2_kubernetes-api-server.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../../../docs/Cloud_Native/Kubernetes/4_kube-scheduler源码分析.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../../../docs/Cloud_Native/Kubernetes/kubelet原理.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -275,11 +526,11 @@ workload-low      Limited   2500                       128      6          50   
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../../../docs/Cloud_Native/Kubernetes/cni详解.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../../../docs/Cloud_Native/Kubernetes/2_kubernetes-api-server.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../../../docs/Cloud_Native/Kubernetes/4_kube-scheduler源码分析.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../../../docs/Cloud_Native/Kubernetes/kubelet原理.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
@@ -310,8 +561,8 @@ workload-low      Limited   2500                       128      6          50   
         <!-- Custom JS scripts -->
         <script src="../../../theme/giscus-edff37af.js"></script>
         <script src="../../../theme/goatcounter-6da6732a.js"></script>
-        <script src="../../../theme/mermaid-init-1bb4d447.js"></script>
-        <script src="../../../theme/mermaid-eefea253.min.js"></script>
+        <script src="../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../theme/mermaid-init-7cdebe5d.js"></script>
 
 
 

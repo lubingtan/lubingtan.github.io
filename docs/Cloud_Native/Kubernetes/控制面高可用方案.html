@@ -1,0 +1,907 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Kubernetes 控制面高可用方案 - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../searchindex-795994c4.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../toc-2fda9a29.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/Kubernetes/控制面高可用方案.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="kubernetes-控制面高可用方案"><a class="header" href="#kubernetes-控制面高可用方案">Kubernetes 控制面高可用方案</a></h1>
+<p>控制面高可用（HA）解决的是“<strong>部分控制面组件挂掉时，集群仍能接受请求并继续收敛</strong>“，它既不是备份，也不是灾备：</p>
+<ul>
+<li><strong>HA</strong>：冗余 + 快速切换，让故障对 API 的可用性影响最小；不保护数据被误删、不会让错误配置回滚。</li>
+<li><strong>备份/灾备</strong>：数据丢了、quorum 永久丢失、集群被删之后怎么恢复；见 <a href="./控制面灾备与恢复.html">控制面灾备与恢复</a>。</li>
+<li><strong>事故处理</strong>：已经挂了，值班的人怎么定位和止血；见 <a href="./控制面事故处理手册.html">控制面事故处理手册</a>。</li>
+</ul>
+<p>本文只讨论设计和拓扑，不写“挂了之后逐步敲什么命令“。文中所有默认值、数字、行为都尽量固定到源码行或官方文档；版本基准如下：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>项目</th><th>版本</th><th>commit</th></tr>
+</thead>
+<tbody>
+<tr><td>Kubernetes</td><td>v1.37.2</td><td><code>c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32</code></td></tr>
+<tr><td>etcd</td><td>v3.7.4（kubeadm 默认 3.7.0）</td><td><code>2e8a5c99e4982c8d4c521be15364ea4c5c68a489</code></td></tr>
+<tr><td>kube-vip</td><td>v1.3.1</td><td><code>6da770eac1eed9409a9feaccda3d782c94424c24</code></td></tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p>引用约定：GitHub 链接一律带 40 位 commit 与行号区间，形如 <code>.../blob/&lt;commit&gt;/&lt;path&gt;#Lx-Ly</code>；文档链接为英文原 URL，正文中文。行号已用本地 checkout 核对。</p>
+</blockquote>
+<hr>
+<h2 id="1-结论速览"><a class="header" href="#1-结论速览">1. 结论速览</a></h2>
+<p>控制面 HA 其实是<strong>三个互相独立的问题</strong>，不能用同一种手段解决：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>问题</th><th>涉及组件</th><th>状态属性</th><th>主要手段</th></tr>
+</thead>
+<tbody>
+<tr><td>A. API 入口的冗余</td><td>kube-apiserver</td><td>无状态（watch cache 只是内存缓存）</td><td>多副本 + VIP/LB + 健康检查</td></tr>
+<tr><td>B. 唯一持久状态的多数派</td><td>etcd</td><td>有状态，Raft 复制</td><td>奇数成员、quorum、跨 AZ 布局、磁盘/网络预算</td></tr>
+<tr><td>C. 单活控制器的高可用</td><td>kube-controller-manager、kube-scheduler、cloud-controller-manager</td><td>无持久状态，但同一时刻只应有一个在 reconcile</td><td>多副本 + Lease 选主（热备）</td></tr>
+</tbody>
+</table>
+</div>
+<p>先记住三条结论：</p>
+<ol>
+<li><strong>kube-apiserver 可以随意多副本、active-active</strong>：它不把集群状态写本地，读写都落到 etcd（见 §2.1）。所以入口层的任务是“把请求送到任意一个活着的 apiserver“。</li>
+<li><strong>etcd 的可用性只看 quorum</strong>：3 成员容忍 1 个故障，5 成员容忍 2 个；<strong>偶数成员不增加容错</strong>（见 §4.1）。</li>
+<li><strong>KCM/scheduler 的切换时间是“秒级到十几秒级“</strong>，不是瞬时：Lease 默认 <code>leaseDuration=15s</code>、<code>renewDeadline=10s</code>、<code>retryPeriod=2s</code>（见 §6）。</li>
+</ol>
+<p>一个常见误解是把“控制面 HA“当成“集群不会坏“。实际上 HA 只降低<strong>组件故障</strong>造成的停机概率；数据误删、证书过期、quorum 永久丢失、跨 AZ 网络分区导致的双主风险，都要靠灾备和事故流程兜底。</p>
+<hr>
+<h2 id="2-组件状态模型哪些东西必须冗余"><a class="header" href="#2-组件状态模型哪些东西必须冗余">2. 组件状态模型：哪些东西必须冗余</a></h2>
+<pre class="mermaid">flowchart LR
+    subgraph CP["控制面节点"]
+        KAS["kube-apiserver&lt;br/&gt;无持久状态"]
+        KCM["kube-controller-manager&lt;br/&gt;Lease 选主"]
+        SCH["kube-scheduler&lt;br/&gt;Lease 选主"]
+        ETCD["etcd 成员&lt;br/&gt;Raft 持久状态"]
+    end
+    KAS --&gt;|"所有读写"| ETCD
+    KCM --&gt;|"watch/list + 写 status"| KAS
+    SCH --&gt;|"watch Pod/Node + 写绑定"| KAS
+    SCH -.-&gt;|"Lease 选主"| KAS
+    KCM -.-&gt;|"Lease 选主"| KAS
+    KUBELET["kubelet"] --&gt;|"watch Pod / 上报 status"| KAS
+</pre>
+
+<h3 id="21-kube-apiserver无状态但不等于没内存"><a class="header" href="#21-kube-apiserver无状态但不等于没内存">2.1 kube-apiserver：无状态，但不等于“没内存“</a></h3>
+<p>apiserver 处理单个请求时，读路径直接访问 etcd：<code>store.Get</code> 里调用 etcd 客户端拿到 KV 再解码（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/storage/etcd3/store.go#L235-L254">store.go L235-L254</a>）；写路径同样编码后写入 etcd（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/storage/etcd3/store.go#L284-L320">store.go L284-L320</a>）。</p>
+<p>它确实持有内存状态，但都是<strong>可重建的缓存/会话</strong>：</p>
+<ul>
+<li>watch cache：注释明确说它是一个“有容量上限的滑动窗口“（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/storage/cacher/watch_cache.go#L78-L81">watch_cache.go L78-L81</a>）。apiserver 重启后缓存清空，会从 etcd 重新 list/watch。</li>
+<li>长连接（watch/exec/port-forward）、admission webhook 连接、aggregated API 的连接：断掉后客户端重连即可，不需要“迁移“。</li>
+</ul>
+<p>因此 apiserver 可以水平扩展，且<strong>任意副本都能服务任意请求</strong>。真正需要关注的是：每个副本都能连到 etcd、证书一致、审计/加密配置一致。</p>
+<h3 id="22-etcd集群对象状态的唯一持久化存储"><a class="header" href="#22-etcd集群对象状态的唯一持久化存储">2.2 etcd：集群对象状态的唯一持久化存储</a></h3>
+<p>Kubernetes 把 API 对象（Pod、Service、Deployment、Secret、CRD……）都存进 etcd；Raft 负责把这些写复制到多数派。etcd 官方 FAQ 对 quorum 的定义是 <code>(n/2)+1</code>，并指出集群只有在能建立成员多数派时才可操作（<a href="https://etcd.io/docs/v3.7/faq/">etcd FAQ</a>）。</p>
+<p>需要区分“持久状态“的边界：</p>
+<ul>
+<li><strong>在 etcd 里的</strong>：所有通过 API 创建/更新的对象、Lease、Event、CRD 定义等。</li>
+<li><strong>不在 etcd 里的</strong>：PKI（CA 私钥、apiserver/etcd 证书）、kubeconfig、static pod manifests、kubelet 本地状态、PV 里的业务数据。这些丢了 etcd 快照也救不回来——这是灾备篇的范围。</li>
+</ul>
+<h3 id="23-kube-controller-manager--kube-scheduler多副本热备--lease-选主"><a class="header" href="#23-kube-controller-manager--kube-scheduler多副本热备--lease-选主">2.3 kube-controller-manager / kube-scheduler：多副本热备 + Lease 选主</a></h3>
+<p>这两个组件可以有多个副本同时运行，但同一时刻<strong>只有一个会真正执行 reconcile/调度</strong>：</p>
+<ul>
+<li>它们都基于 client-go 的 leader election，用 <code>coordination.k8s.io/v1</code> 的 Lease 对象做锁（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/tools/leaderelection/leaderelection.go#L211-L223">leaderelection.go L211-L223</a>、<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/tools/leaderelection/resourcelock/leaselock.go#L27-L56">leaselock.go L27-L56</a>）。</li>
+<li>默认参数在 component-base 中：<code>leaseDuration=15s</code>、<code>renewDeadline=10s</code>、<code>retryPeriod=2s</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/component-base/config/v1alpha1/defaults.go#L37-L44">defaults.go L37-L44</a>）。kube-scheduler 显式写了同样的默认值与 <code>leases</code> 锁（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kube-scheduler/app/options/options.go#L112-L120">options.go L112-L120</a>）。</li>
+<li>KCM 的锁对象名/命名空间是 <code>kube-controller-manager</code> / <code>kube-system</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kube-controller-manager/app/options/options.go#L247-L248">options.go L247-L248</a>）；scheduler 是 <code>kube-scheduler</code> / <code>kube-system</code>（同上 options.go）。</li>
+</ul>
+<p>注意：<strong>多副本不会带来吞吐提升</strong>，第二个副本只是缩短故障切换时间。真正横向扩展的是 apiserver。</p>
+<h3 id="24-kubeadm-下的落地形态static-pod"><a class="header" href="#24-kubeadm-下的落地形态static-pod">2.4 kubeadm 下的落地形态：static pod</a></h3>
+<p>kubeadm 把控制面组件都作为 static pod 交给本机 kubelet 管理：etcd 的 PodSpec 由 kubeadm 生成（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/phases/etcd/local.go#L194-L239">local.go L194-L239</a>），启动参数（listen/peer URL、initial-cluster、snapshot-count 等）在 <code>getEtcdCommand</code> 中拼装（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/phases/etcd/local.go#L242-L285">local.go L242-L285</a>），manifests 落在 kubelet 监听目录。kubelet 的 file source 从磁盘读取 static pod 配置（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/config/file.go#L30-L44">file.go L30-L44</a>）；普通 Pod 则来自 apiserver 的 list/watch（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/config/apiserver.go#L41-L58">apiserver.go L41-L58</a>）。</p>
+<p>这带来一个重要的 HA 性质：<strong>apiserver 挂掉不会让 kubelet 删掉 static pod</strong>，因为 static pod 的期望状态来自本地文件而不是 API。这也是“全部控制面 down 时控制面容器仍在跑“的底层原因之一（详见 §7.2）。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>组件</th><th>是否有持久状态</th><th>多副本语义</th><th>故障时的影响</th></tr>
+</thead>
+<tbody>
+<tr><td>kube-apiserver</td><td>否（只有内存缓存）</td><td>active-active，任意副本可服务</td><td>少一个入口，LB 剔除即可；容量下降</td></tr>
+<tr><td>etcd</td><td><strong>是</strong>（Raft WAL/DB）</td><td>多数派可写，少数派只读/拒绝写</td><td>丢失 quorum 则所有写失败</td></tr>
+<tr><td>kube-controller-manager</td><td>否</td><td>一主多备，Lease 选主</td><td>切换窗口内无 reconcile；不丢已提交对象</td></tr>
+<tr><td>kube-scheduler</td><td>否</td><td>一主多备，Lease 选主</td><td>切换窗口内新 Pod 不调度</td></tr>
+<tr><td>cloud-controller-manager</td><td>否</td><td>一主多备，Lease 选主</td><td>切换窗口内 LB/路由/节点生命周期不更新</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="3-拓扑方案对比"><a class="header" href="#3-拓扑方案对比">3. 拓扑方案对比</a></h2>
+<p>kubeadm 官方只定义了两种自建 HA 拓扑：stacked etcd 与 external etcd（<a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/ha-topology/">kubeadm HA topology</a>）。</p>
+<h3 id="31-stacked-etcd控制面与-etcd-同机"><a class="header" href="#31-stacked-etcd控制面与-etcd-同机">3.1 stacked etcd：控制面与 etcd 同机</a></h3>
+<p><img src="控制面高可用方案.assets/kubeadm-ha-topology-stacked-etcd.svg" alt="Stacked etcd topology"></p>
+<p>stacked 是 kubeadm 的默认形态：每台控制面节点上同时跑 etcd 成员和 apiserver/KCM/scheduler。优点是主机少、复制关系简单；缺点是<strong>故障耦合</strong>——一台机器挂掉，同时损失一个 etcd 成员和一个 apiserver 实例，官方文档明确把这种耦合称为 failed coupling 风险（<a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/ha-topology/">kubeadm HA topology</a>）。</p>
+<pre class="mermaid">flowchart TB
+    C["kubectl / CI / 控制器"] --&gt; VIP["VIP 或 L4 LB&lt;br/&gt;:6443"]
+    VIP --&gt; CP1
+    VIP --&gt; CP2
+    VIP --&gt; CP3
+    subgraph CP1["控制面节点 1（AZ-a）"]
+        A1["kube-apiserver"] --- E1[("etcd 成员 1")]
+        K1["kube-controller-manager&lt;br/&gt;kube-scheduler"]
+    end
+    subgraph CP2["控制面节点 2（AZ-b）"]
+        A2["kube-apiserver"] --- E2[("etcd 成员 2")]
+        K2["kube-controller-manager&lt;br/&gt;kube-scheduler"]
+    end
+    subgraph CP3["控制面节点 3（AZ-c）"]
+        A3["kube-apiserver"] --- E3[("etcd 成员 3")]
+        K3["kube-controller-manager&lt;br/&gt;kube-scheduler"]
+    end
+    E1 &lt;--&gt;|"Raft 2380"| E2
+    E2 &lt;--&gt;|"Raft 2380"| E3
+    E1 &lt;--&gt;|"Raft 2380"| E3
+</pre>
+
+<h3 id="32-external-etcd控制面与-etcd-分离"><a class="header" href="#32-external-etcd控制面与-etcd-分离">3.2 external etcd：控制面与 etcd 分离</a></h3>
+<p><img src="控制面高可用方案.assets/kubeadm-ha-topology-external-etcd.svg" alt="External etcd topology"></p>
+<p>external etcd 把 3 台 etcd 独立出来，控制面节点不再承担存储。官方文档的代价很直接：<strong>需要两倍主机数</strong>（3 台控制面 + 3 台 etcd 是最小 HA 配置）（<a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/ha-topology/">kubeadm HA topology</a>）。收益是故障不再耦合：丢一台控制面只损失一个 apiserver；丢一台 etcd 只损失一个投票成员。</p>
+<p>kubeadm 通过 <code>ClusterConfiguration.etcd.external.endpoints</code> 配置外部 etcd（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/apis/kubeadm/types.go#L317-L336">types.go L317-L336</a>），internal/external 二选一（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/apis/kubeadm/types.go#L276-L285">types.go L276-L285</a>）。此时 apiserver 的 <code>--etcd-servers</code> 指向外部 etcd 的 client URL（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/server/options/etcd.go#L168-L172">etcd.go L168-L172</a>）。</p>
+<h3 id="33-托管控制面"><a class="header" href="#33-托管控制面">3.3 托管控制面</a></h3>
+<p>EKS/GKE/AKS 把控制面（apiserver、etcd、KCM、scheduler）放到云厂商管理的账号/网络里，用户在 SLA 范围内不接触这些机器。几个可验证的边界：</p>
+<ul>
+<li><strong>多可用区</strong>：GKE 的 regional cluster 明确是“同一 region 内多个 zone 各跑一份控制面副本“（<a href="https://cloud.google.com/kubernetes-engine/docs/concepts/regional-clusters">GKE regional clusters</a>）；EKS 的控制面 endpoint 分为 public/private（<a href="https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html">EKS cluster endpoint</a>）；AKS 支持把节点池与系统组件分布在可用区（<a href="https://learn.microsoft.com/en-us/azure/aks/availability-zones">AKS availability zones</a>）。</li>
+<li><strong>SLA 是“控制面 API 可用性“，不是“你的业务可用性“</strong>：EKS 标准 SLA 为 99.95%（<a href="https://aws.amazon.com/eks/sla/">EKS SLA</a>）；GKE 的 regional 控制面为 99.95%、zonal 控制面为 99.5%（<a href="https://cloud.google.com/kubernetes-engine/sla">GKE SLA</a>）；AKS 的 SLA 条款见 <a href="https://azure.microsoft.com/en-us/support/legal/sla/kubernetes-service/">Azure Kubernetes Service SLA</a>。SLA 不覆盖工作负载、节点、CNI、LB 的故障。</li>
+</ul>
+<h3 id="34-hosted-control-plane-与轻量发行版"><a class="header" href="#34-hosted-control-plane-与轻量发行版">3.4 hosted control plane 与轻量发行版</a></h3>
+<ul>
+<li><strong>hosted control plane</strong>：把控制面（至少 apiserver + etcd）作为工作负载跑在另一个管理集群里，租户集群只留 kubelet 和 CNI。它在“控制面与数据面解耦“上等价于 external etcd 的进一步加强版，但多了一层“管理集群自身也要 HA“的依赖。Kamaji 是这类实现的代表；Cluster API 生态里也有对应的 ControlPlane provider（<a href="https://cluster-api.sigs.k8s.io/">Cluster API</a>）。</li>
+<li><strong>轻量发行版</strong>：k3s 默认用 embedded etcd 或 SQLite/kine，k0s 用 etcd 或 kine + 内置 controller。它们把“控制面 HA“打包成单二进制/单进程，适合边缘与资源受限场景，但可调参数、故障域隔离、etcd 可观测性都比 kubeadm 弱。选它们之前先确认：控制面故障时谁负责、etcd 数据放哪、能否跨 AZ。</li>
+</ul>
+<h3 id="35-对比表"><a class="header" href="#35-对比表">3.5 对比表</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>stacked etcd</th><th>external etcd</th><th>托管控制面</th><th>hosted control plane</th></tr>
+</thead>
+<tbody>
+<tr><td>最小主机数（HA）</td><td>3</td><td>6（3 CP + 3 etcd）</td><td>0（厂商负责）</td><td>1 个管理集群 + 3 台 worker</td></tr>
+<tr><td>故障域耦合</td><td>高（CP 与 etcd 同机）</td><td>低</td><td>厂商定义（通常多 AZ）</td><td>中（管理集群是单点风险）</td></tr>
+<tr><td>网络要求</td><td>etcd peer 跨节点低 RTT</td><td>同左，另加 CP→etcd</td><td>厂商内网</td><td>租户→管理集群 API 网络</td></tr>
+<tr><td>升级影响</td><td>每台机器同时重启 etcd+apiserver</td><td>可分开滚动 etcd 与控制面</td><td>厂商窗口/自动</td><td>管理集群与租户解耦</td></tr>
+<tr><td>成本</td><td>最低</td><td>约 2 倍主机</td><td>控制面费用</td><td>中</td></tr>
+<tr><td>适用场景</td><td>中小自建集群、边缘</td><td>大规模、强隔离、已有独立 etcd 团队</td><td>不想运维控制面</td><td>多租户、控制面集中托管</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="36-节点数怎么选"><a class="header" href="#36-节点数怎么选">3.6 节点数怎么选</a></h3>
+<ul>
+<li><strong>至少 3 台控制面</strong>：这是 kubeadm 官方对 HA 的最低要求（<a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/">kubeadm high availability</a>）。</li>
+<li><strong>3 AZ 就选 3 台；2 AZ 时不要放 2 台 etcd</strong>：2 成员 quorum 是 2，挂任意一台就永久失去写能力，容错为 0（见 §4）。</li>
+<li><strong>5 台不是“更 HA“的默认答案</strong>：5 成员容忍 2 个故障，但写延迟随成员数增加，且跨 AZ 的 RTT/带宽成本更高。etcd FAQ 建议一般不超过 7 个成员（<a href="https://etcd.io/docs/v3.7/faq/">etcd FAQ</a>）。</li>
+</ul>
+<hr>
+<h2 id="4-etcd-quorum-与容量"><a class="header" href="#4-etcd-quorum-与容量">4. etcd quorum 与容量</a></h2>
+<h3 id="41-quorum-数学"><a class="header" href="#41-quorum-数学">4.1 quorum 数学</a></h3>
+<p>etcd 的写入需要多数派确认。quorum = <code>(n/2)+1</code>，容错 = <code>n - quorum</code>：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>成员数</th><th>quorum</th><th>可容忍故障</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>1</td><td>0</td><td>无 HA</td></tr>
+<tr><td>2</td><td>2</td><td>0</td><td><strong>没有容错</strong>：挂 1 台即失去 quorum</td></tr>
+<tr><td>3</td><td>2</td><td>1</td><td>最常见的最小 HA</td></tr>
+<tr><td>4</td><td>3</td><td>1</td><td>与 3 成员容错相同，多一台机器</td></tr>
+<tr><td>5</td><td>3</td><td>2</td><td>大规模/多 AZ 常用</td></tr>
+<tr><td>6</td><td>4</td><td>2</td><td>与 5 成员容错相同</td></tr>
+<tr><td>7</td><td>4</td><td>3</td><td>一般不建议超过 7</td></tr>
+</tbody>
+</table>
+</div>
+<p>这张表来自 etcd FAQ 的 failure tolerance 部分（<a href="https://etcd.io/docs/v3.7/faq/">etcd FAQ</a>）：奇数成员与比它大 1 的偶数成员容错相同；跨 AZ 时还要保证“任意一个 AZ 挂掉后仍有多数派“。</p>
+<h3 id="42-成员变更learner-与先删后加"><a class="header" href="#42-成员变更learner-与先删后加">4.2 成员变更：learner 与“先删后加“</a></h3>
+<p>etcd 对成员变更有严格保护，集群会拒绝“变更后剩余存活成员不足 quorum“的请求：</p>
+<ul>
+<li>增加投票成员前检查 <code>nquorum := nmembers/2 + 1</code> 且 <code>nstarted &gt;= nquorum</code>（<a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/server/etcdserver/api/membership/cluster.go#L626-L655">cluster.go L626-L655</a>）。</li>
+<li>删除成员、提升 learner 也有同样的 quorum 检查（<a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/server/etcdserver/api/membership/cluster.go#L659-L685">cluster.go L659-L685</a>、<a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/server/etcdserver/api/membership/cluster.go#L689-L707">cluster.go L689-L707</a>）。</li>
+<li>FAQ 的“先删后加“建议：在 3 成员集群里先增加新成员会把 quorum 从 2 抬到 3，新成员若起不来就永久失去 quorum；正确顺序是先移除坏成员再加新成员（<a href="https://etcd.io/docs/v3.7/faq/">etcd FAQ</a>）。</li>
+</ul>
+<p>kubeadm join 控制面时用的正是 <strong>learner</strong> 路径：先把新成员以 learner 身份加入（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/phases/etcd/local.go#L150-L160">local.go L150-L160</a>），等它追上日志后再 promote（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/phases/etcd/local.go#L176-L180">local.go L176-L180</a>）；<code>AddMemberAsLearner</code> 在 <code>addMember</code> 里根据布尔参数选择 API（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/util/etcd/etcd.go#L432-L440">etcd.go L432-L440</a>）。learner 不投票、只复制日志，因此不会因“加入慢节点“直接抬高 quorum。</p>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>不要为了“恢复 quorum“盲目加成员。etcd 默认 <code>strict-reconfig-check</code> 会拒绝可能导致 quorum 丢失的变更；绕过它（<code>--strict-reconfig-check=false</code>）是拿一致性冒险，正确路径是先恢复/移除坏成员。恢复与重建流程见 <a href="./控制面灾备与恢复.html">控制面灾备与恢复</a>。</p>
+</blockquote>
+<h3 id="43-跨-az-延迟fsync-与选举"><a class="header" href="#43-跨-az-延迟fsync-与选举">4.3 跨 AZ 延迟、fsync 与选举</a></h3>
+<p>etcd 的提交延迟由两件事决定：<strong>成员间网络 RTT + 本地 fdatasync</strong>。官方性能文档给的数量级：同机房 RTT 几百微秒，美国境内 RTT 约 50ms，跨洲可达 400ms；SSD 的 fdatasync 通常 &lt;1ms，机械盘约 10ms（<a href="https://etcd.io/docs/v3.7/op-guide/performance/">etcd performance</a>）。</p>
+<p>默认时序参数：心跳间隔 <code>TickMs=100ms</code>、选举超时 <code>ElectionMs=1000ms</code>（<a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/server/embed/config.go#L530-L535">config.go L530-L535</a>），且校验要求 election timeout 至少是 heartbeat 的 5 倍（<a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/server/embed/config.go#L1003-L1004">config.go L1003-L1004</a>）。</p>
+<p>这带来两个直接结论：</p>
+<ol>
+<li><strong>etcd 的 3 个成员应放在同一 region 的 3 个 AZ</strong>，AZ 间 RTT 通常 &lt;1ms 到几 ms；跨 region 部署需要显式调大 <code>heartbeat-interval</code>/<code>election-timeout</code>，并且每次写都要多付 RTT。</li>
+<li><strong>慢盘会触发换主</strong>：etcd 把“能否按时 fsync Raft 日志“当作 leader 存活性的一部分，盘抖动会让 leader 被误判为失效而触发选举（<a href="https://etcd.io/docs/v3.7/faq/">etcd FAQ</a>）。生产上应给 etcd 独占 SSD，避免和镜像/日志/业务 IO 抢盘。</li>
+</ol>
+<h3 id="44-waldb-大小quota-与压缩"><a class="header" href="#44-waldb-大小quota-与压缩">4.4 WAL/DB 大小、quota 与压缩</a></h3>
+<p>etcd 默认后端 quota 是 <strong>2GiB</strong>，最大建议 8GiB（<a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/server/storage/quota.go#L26-L33">quota.go L26-L33</a>）。写入超过 quota 时，etcd 会激活 <strong>NOSPACE</strong> alarm 并拒绝后续写（<a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/server/etcdserver/api/v3rpc/quota.go#L40-L52">quota.go L40-L52</a>），表现是 apiserver 所有写请求报 <code>mvcc: database space exceeded</code>。</p>
+<p>HA 影响：</p>
+<ul>
+<li><strong>NOSPACE 是集群级故障</strong>，不是单成员故障。任意成员接近 quota，都会影响写路径。</li>
+<li><strong>历史版本必须压缩</strong>：apiserver 自身会按 <code>--etcd-compaction-interval</code> 发起 compaction，默认 5 分钟（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/storage/storagebackend/config.go#L36-L39">config.go L36-L39</a>），0 表示禁用（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/server/options/etcd.go#L192-L194">etcd.go L192-L194</a>）；否则 revision 无限增长。</li>
+<li><strong>compaction 只标记可回收，不归还磁盘</strong>，需要 <code>etcdctl defrag</code> 或 maintenance 接口的 <code>Defragment</code>（<a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/server/etcdserver/api/v3rpc/maintenance.go#L119-L130">maintenance.go L119-L130</a>）。</li>
+<li><strong>defrag 是单成员、会阻塞</strong>：不要在业务高峰对所有成员并发 defrag；逐个做，并观察 <code>etcdctl endpoint status</code> 的 <code>DB SIZE</code>/<code>DB SIZE IN USE</code>（<code>Status</code> 返回 <code>DbSize</code>、<code>DbSizeInUse</code>、<code>Leader</code>、<code>RaftIndex</code> 等，<a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/server/etcdserver/api/v3rpc/maintenance.go#L261-L299">maintenance.go L261-L299</a>）。</li>
+</ul>
+<p>etcd 维护（compaction/defrag/quota/snapshot）的系统性说明见 <a href="https://etcd.io/docs/v3.7/op-guide/maintenance/">etcd maintenance</a>。</p>
+<h3 id="45-容量估算思路"><a class="header" href="#45-容量估算思路">4.5 容量估算思路</a></h3>
+<p>etcd 容量不是看“磁盘多大“，而是看<strong>写入速率、对象数量、revision 增长速度</strong>：</p>
+<ul>
+<li>小集群（&lt;100 节点、少量 CRD）：3 成员，每成员 2–4 vCPU、8GiB 内存、独立 SSD 通常够用；这是经验值，最终要用 <code>etcdctl check perf</code> 或实际负载验证。</li>
+<li>大数据量（Event、大量 CRD、频繁更新）：优先缩短 Event TTL、降低高频对象的写放大，再考虑扩到 5 成员；不要把 etcd 当数据库用。</li>
+<li>磁盘容量按 quota 的 2–3 倍规划，给 WAL、快照、defrag 腾挪空间。</li>
+</ul>
+<p>硬件建议见 <a href="https://etcd.io/docs/v3.7/op-guide/hardware/">etcd hardware</a>。</p>
+<hr>
+<h2 id="5-流量入口请求怎么到达某个活着的-apiserver"><a class="header" href="#5-流量入口请求怎么到达某个活着的-apiserver">5. 流量入口：请求怎么到达某个活着的 apiserver</a></h2>
+<h3 id="51-端口清单"><a class="header" href="#51-端口清单">5.1 端口清单</a></h3>
+<p>kubeadm 集群的默认端口（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/constants/constants.go#L94-L107">constants.go L94-L107</a>、<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/constants/constants.go#L404-L413">constants.go L404-L413</a>）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>端口</th><th>组件</th><th>用途</th></tr>
+</thead>
+<tbody>
+<tr><td>6443</td><td>kube-apiserver</td><td>客户端/组件访问 API（<code>KubeAPIServerPort</code>）</td></tr>
+<tr><td>2379</td><td>etcd</td><td>client 流量（apiserver、etcdctl）</td></tr>
+<tr><td>2380</td><td>etcd</td><td>peer 流量（Raft）</td></tr>
+<tr><td>2381</td><td>etcd</td><td>metrics / 健康检查（kubeadm 配置的 listen-metrics-urls）</td></tr>
+<tr><td>10257</td><td>kube-controller-manager</td><td>自身 HTTPS 端口（healthz/metrics）</td></tr>
+<tr><td>10259</td><td>kube-scheduler</td><td>自身 HTTPS 端口（healthz/metrics）</td></tr>
+<tr><td>10250</td><td>kubelet</td><td>节点 API</td></tr>
+</tbody>
+</table>
+</div>
+<p>注意 <strong>2379/2380 绝不能暴露到公网</strong>；etcd 的 client 端口只对控制面/apiserver 网段开放。</p>
+<h3 id="52-四种入口方式"><a class="header" href="#52-四种入口方式">5.2 四种入口方式</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>方式</th><th>原理</th><th>优点</th><th>风险</th></tr>
+</thead>
+<tbody>
+<tr><td>DNS 轮询/多 A 记录</td><td>客户端解析到多个 apiserver IP</td><td>无额外组件</td><td>客户端会缓存 DNS、失败重试不均衡；client-go 不保证故障转移</td></tr>
+<tr><td>L4 LB（云 LB/HAProxy/LVS）</td><td>TCP 转发到多个 6443</td><td>健康检查成熟、可跨 AZ</td><td>LB 自身要 HA；要区分 <code>/livez</code> 与 <code>/readyz</code></td></tr>
+<tr><td>VIP（kube-vip/keepalived）</td><td>一个虚拟 IP 漂移到某台控制面</td><td>简单、无外部依赖</td><td>L2 模式受广播域限制；漂移时间受选主影响</td></tr>
+<tr><td>in-cluster endpoints</td><td>Pod 通过 <code>kubernetes.default</code> Service 访问</td><td>集群内自动负载均衡</td><td>只覆盖集群内客户端；依赖 kube-proxy/CNI</td></tr>
+</tbody>
+</table>
+</div>
+<p>kubeadm 推荐用 <code>--control-plane-endpoint</code> 指定一个稳定的 VIP/DNS，各组件 kubeconfig 和证书 SAN 都指向它（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/apis/kubeadm/types.go#L99-L111">types.go L99-L111</a>）。这个地址会被写进 apiserver 证书的 SAN（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/util/pkiutil/pki_helpers.go#L415-L425">pki_helpers.go L415-L425</a>），所以<strong>上线后再改 endpoint 通常需要重新签发证书</strong>，属于高成本变更。</p>
+<h3 id="53-健康检查livezreadyzhealthz"><a class="header" href="#53-健康检查livezreadyzhealthz">5.3 健康检查：/livez、/readyz、/healthz</a></h3>
+<p>kube-apiserver 暴露三个健康端点（<a href="https://kubernetes.io/docs/reference/using-api/health-checks/">health checks</a>）：</p>
+<ul>
+<li><code>/livez</code>：是否该重启进程（死锁等不可恢复状态）。注意 etcd 的 health 组也会进入 livez，它不是“纯进程存活“。</li>
+<li><code>/readyz</code>：是否可以服务请求；除 health 组外还包含 <strong>etcd-readiness</strong> 与 watch cache 初始同步等 readyz-only 检查。</li>
+<li><code>/healthz</code>：已废弃（v1.16 起）的兼容端点，包含 healthz 组检查（kube-apiserver 里也含 etcd）。</li>
+</ul>
+<p>etcd 检查的接线在 apiserver 的 etcd options 里：<code>addEtcdHealthEndpoint</code> 用 <code>AddHealthChecks</code> 把 <code>etcd</code> 组注册进 healthz/livez/readyz，再用 <code>AddReadyzChecks</code> 把 <code>etcd-readiness</code> 只注册进 readyz（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/server/options/etcd.go#L421-L436">etcd.go L421-L436</a>、<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/server/healthz.go#L79-L110">healthz.go L79-L110</a>），底层是向 etcd 做带超时的探测（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/storage/storagebackend/factory/etcd3.go#L113-L123">etcd3.go L113-L123</a>）。</p>
+<p>LB 的健康检查建议：</p>
+<ul>
+<li><strong>用 <code>/readyz</code>，但把失败阈值调大</strong>（例如连续失败 3 次才摘除）：etcd 短暂抖动会让所有 apiserver 同时 readyz 失败，阈值太小会把所有后端一起摘掉，等于制造一次全站故障。</li>
+<li><strong>不要只用 TCP 6443 探活</strong>：端口能连上不代表能读写 etcd；但如果只用 <code>/readyz</code> 又可能因共享的 etcd 抖动而误摘。</li>
+<li>滚动升级时配合 apiserver 的 drain/shutdown 延迟：<code>ShutdownDelayDuration</code> 期间 <code>/healthz</code> 仍 200、<code>/readyz</code> 失败（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/server/config.go#L243-L246">config.go L243-L246</a>），让 LB 先把流量摘走再关进程。</li>
+</ul>
+<h3 id="54-vip-实现kube-vip"><a class="header" href="#54-vip-实现kube-vip">5.4 VIP 实现：kube-vip</a></h3>
+<p>kube-vip 支持 ARP（L2）和 BGP（L3）两种发布模式（<a href="https://kube-vip.io/docs/modes/">kube-vip modes</a>）：</p>
+<ul>
+<li><strong>ARP 模式</strong>：VIP 配在 leader 节点的网卡上，周期性发送 gratuitous ARP/NDP 刷新交换机 MAC 表（<a href="https://github.com/kube-vip/kube-vip/blob/6da770eac1eed9409a9feaccda3d782c94424c24/pkg/arp/arp.go#L154-L166">arp.go L154-L166</a>、<a href="https://github.com/kube-vip/kube-vip/blob/6da770eac1eed9409a9feaccda3d782c94424c24/pkg/arp/arp.go#L220">arp.go L220</a>）。官方给的“平均故障切换时间约 3 秒“，且依赖底层交换机是否放行（<a href="https://kube-vip.io/docs/troubleshooting/arp/">kube-vip ARP troubleshooting</a>）。</li>
+<li><strong>BGP 模式</strong>：把 VIP 作为 /32 或 /128 路由通告给上游路由器（<a href="https://github.com/kube-vip/kube-vip/blob/6da770eac1eed9409a9feaccda3d782c94424c24/pkg/manager/worker/bgp.go#L52-L58">bgp.go L52-L58</a>），切换依赖 BGP 收敛，适合跨子网/裸金属。</li>
+</ul>
+<p>kube-vip 的控制面 VIP 本身也是靠选主决定的：它用 Lease 对象竞选，默认 <code>leaseDuration=15s</code>、<code>renewDeadline=10s</code>、<code>retryPeriod=2s</code>（<a href="https://github.com/kube-vip/kube-vip/blob/6da770eac1eed9409a9feaccda3d782c94424c24/pkg/election/election.go#L93-L116">election.go L93-L116</a>、<a href="https://github.com/kube-vip/kube-vip/blob/6da770eac1eed9409a9feaccda3d782c94424c24/pkg/kubevip/config_generator.go#L402-L412">config_generator.go L402-L412</a>），并据此持有 VIP（<a href="https://github.com/kube-vip/kube-vip/blob/6da770eac1eed9409a9feaccda3d782c94424c24/pkg/cluster/clusterLeaderElection.go#L19-L45">clusterLeaderElection.go L19-L45</a>）。</p>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>kube-vip 的控制面选主<strong>依赖同一个 apiserver</strong>。当全部控制面 down 时，Lease 无法续约，VIP 也就不会漂移——这是“控制面全挂时数据面还在跑，但新 apiserver 起不来“的典型鸡生蛋问题。生产上应保证至少有一个与 API 无关的带外恢复通道（串口/IPMI/云控制台），或改用外部 L4 LB。BGP 模式在数据面路径上更独立，但选主仍依赖 API。</p>
+</blockquote>
+<h3 id="55-客户端侧kubeconfig-只有一个-server"><a class="header" href="#55-客户端侧kubeconfig-只有一个-server">5.5 客户端侧：kubeconfig 只有一个 server</a></h3>
+<p>kubeconfig 的 <code>Cluster.Server</code> 是单个 URL 字符串（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/tools/clientcmd/api/v1/types.go#L60-L75">clientcmd types.go L60-L75</a>），<strong>client-go 没有内置的“多 apiserver 轮询/故障转移“</strong>。所以：</p>
+<ul>
+<li>想要故障转移，必须靠 DNS/VIP/LB 提供稳定入口；</li>
+<li>直接把 kubeconfig 指向某一台 apiserver 的 IP，那台挂了客户端就挂；</li>
+<li>集群内组件（kubelet、kube-proxy、CoreDNS）通过 <code>kubernetes.default</code> Service + kube-proxy 访问 apiserver，入口是 Endpoints/服务 VIP，不是某个具体节点。</li>
+</ul>
+<hr>
+<h2 id="6-选主组件的高可用"><a class="header" href="#6-选主组件的高可用">6. 选主组件的高可用</a></h2>
+<h3 id="61-lease-选主循环"><a class="header" href="#61-lease-选主循环">6.1 Lease 选主循环</a></h3>
+<pre class="mermaid">sequenceDiagram
+    participant A as 副本 A（leader）
+    participant B as 副本 B（standby）
+    participant API as kube-apiserver
+    participant ETCD as etcd
+    A-&gt;&gt;API: Update Lease（每 retryPeriod=2s）
+    API-&gt;&gt;ETCD: 持久化 Lease
+    Note over A: renew 连续失败至 renewDeadline=10s → 停止主导
+    B-&gt;&gt;API: Get Lease（每 2s）
+    Note over B: 观察到 Lease 过期（leaseDuration=15s）→ 尝试 Update
+    B-&gt;&gt;API: Update Lease 成功 → OnStartedLeading
+</pre>
+
+<p>关键代码路径（client-go）：</p>
+<ul>
+<li><code>Run</code> 先 <code>acquire</code>，成功后启动 <code>OnStartedLeading</code>，进入 <code>renew</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/tools/leaderelection/leaderelection.go#L211-L223">leaderelection.go L211-L223</a>）。</li>
+<li><code>acquire</code> 用 <code>JitterUntil</code> 按 <code>retryPeriod</code> 轮询 <code>tryAcquireOrRenew</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/tools/leaderelection/leaderelection.go#L250-L276">leaderelection.go L250-L276</a>）。</li>
+<li><code>renew</code> 在 <code>renewDeadline</code> 内持续重试；一旦失败就退出主导（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/tools/leaderelection/leaderelection.go#L279-L314">leaderelection.go L279-L314</a>）。</li>
+<li><code>tryAcquireOrRenew</code> 先走“leader 乐观更新“快路径，再回退到 Get/比较/Update；只有当旧记录为空或已过期时，非 leader 才能抢占（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/tools/leaderelection/leaderelection.go#L441-L490">leaderelection.go L441-L490</a>）。</li>
+</ul>
+<h3 id="62-故障切换时间"><a class="header" href="#62-故障切换时间">6.2 故障切换时间</a></h3>
+<p>按默认参数，可以这样估算一次 leader 故障：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>阶段</th><th>时间</th></tr>
+</thead>
+<tbody>
+<tr><td>leader 进程崩溃/失联，Lease 不再续约</td><td>t=0</td></tr>
+<tr><td>原 leader 的 renew 在 <code>renewDeadline=10s</code> 后放弃，停止主导</td><td>≤10s</td></tr>
+<tr><td>standby 观察到 Lease 过期（<code>leaseDuration=15s</code>）</td><td>≤15s</td></tr>
+<tr><td>standby 按 <code>retryPeriod=2s</code> 抢锁</td><td>0–2s</td></tr>
+<tr><td><strong>合计</strong></td><td><strong>约 15–17 秒</strong>（经验估算，取决于 API 延迟与时钟）</td></tr>
+</tbody>
+</table>
+</div>
+<p>这个数字说明：<strong>不要把“controller-manager 切换“设计进秒级恢复的路径</strong>。对时延敏感的业务应尽量不依赖控制面实时 reconcile；对可用性敏感的系统要接受“十几秒内没有新调度、没有新副本“。</p>
+<h3 id="63-语义与前提"><a class="header" href="#63-语义与前提">6.3 语义与前提</a></h3>
+<ul>
+<li><strong>不是严格单活</strong>：leaderelection 包注释明确说它不保证只有一个客户端在行动（没有 fencing）（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/tools/leaderelection/leaderelection.go#L18-L28">leaderelection.go L18-L28</a>）。实际安全由控制器的乐观并发（resourceVersion）兜底，而不是锁本身。</li>
+<li><strong>容忍时钟速率差，不容忍任意时钟跳变</strong>：算法只用本地时间观察“记录是否变化“，因此对绝对时钟偏差不敏感，但对时钟速率差敏感；注释建议用 <code>leaseDuration/renewDeadline</code> 的比例来配置容忍度（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/tools/leaderelection/leaderelection.go#L26-L44">leaderelection.go L26-L44</a>）。生产上仍应部署 NTP/chrony。</li>
+<li><strong>选主依赖 etcd quorum</strong>：Lease 本身是 etcd 对象；quorum 丢失时，leader 无法续约、standby 无法抢锁，所有单活组件一起停摆。</li>
+<li><strong>选主流量有专门的 APF 保护</strong>：默认 FlowSchema <code>system-leader-election</code> 把 KCM/scheduler 的 Lease 请求路由到 <code>leader-election</code> 优先级（NominalConcurrencyShares=10，<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/apis/flowcontrol/bootstrap/default.go#L294-L306">bootstrap/default.go L294-L306</a>）。这解释了为什么 API 过载时选主通常还能工作。standby 每 2s 发一次 Get，2–3 副本足够，更多副本只增加 API 负载。</li>
+</ul>
+<hr>
+<h2 id="7-失效域分析矩阵"><a class="header" href="#7-失效域分析矩阵">7. 失效域分析矩阵</a></h2>
+<h3 id="71-场景矩阵"><a class="header" href="#71-场景矩阵">7.1 场景矩阵</a></h3>
+<p>假设 3 台控制面、stacked etcd、3 AZ 各 1 台（external etcd 场景另列）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>场景</th><th>etcd 状态</th><th>apiserver</th><th>KCM/scheduler</th><th>数据面</th><th>恢复后</th></tr>
+</thead>
+<tbody>
+<tr><td>1 台控制面 down（stacked）</td><td>剩 2/3，quorum=2，<strong>可写</strong></td><td>剩 2 个入口</td><td>leader 若在故障机，约 15–17s 后切换</td><td>存量 Pod 继续跑；新 Pod 可调度</td><td>故障机恢复后 etcd 自动追日志；无需人工</td></tr>
+<tr><td>2 台控制面 down（stacked，3 成员）</td><td>剩 1/3，<strong>失去 quorum</strong></td><td>仍可能响应，但读/写失败</td><td>无法选主</td><td>存量 Pod 继续跑；无新调度/无 reconcile</td><td>第 2 台恢复即恢复 quorum；不要急着重装</td></tr>
+<tr><td>1 台 external etcd down</td><td>剩 2/3，<strong>可写</strong></td><td>不受影响</td><td>正常</td><td>正常</td><td>恢复后自动追赶</td></tr>
+<tr><td>2 台 external etcd down</td><td>剩 1/3，<strong>失去 quorum</strong></td><td>全部写失败</td><td>停止</td><td>存量 Pod 继续跑</td><td>同 stacked</td></tr>
+<tr><td>1 台控制面 down（external etcd）</td><td>不受影响</td><td>剩 2 个入口</td><td>可能切换</td><td>正常</td><td>正常</td></tr>
+<tr><td>单 AZ 故障（3 AZ 各 1 台）</td><td>剩 2/3，<strong>可写</strong></td><td>剩 2 个入口</td><td>若 leader 在该 AZ 则切换</td><td>该 AZ 的 Pod 受影响；其他 AZ 继续</td><td>云上节点重新拉起后自动恢复</td></tr>
+<tr><td>网络分区：少数派一侧</td><td>无法与多数派通信，<strong>不能写</strong></td><td>请求可能超时/失败</td><td>无法续约，停止主导</td><td>该侧 Pod 继续跑但无法上报状态</td><td>分区恢复后 Raft 自动对齐</td></tr>
+<tr><td>网络分区：多数派一侧</td><td>quorum 仍在，<strong>可写</strong></td><td>正常服务</td><td>重新选主，继续工作</td><td>正常</td><td>分区恢复后少数派追日志</td></tr>
+<tr><td><strong>全部控制面 down</strong></td><td>无 quorum/无成员可达</td><td>全部不可用</td><td>全部停</td><td><strong>存量 Pod 继续跑</strong>（见 §7.2）</td><td>kubelet 重新连上后上报；注意节点状态与 Lease</td></tr>
+</tbody>
+</table>
+</div>
+<p>两个容易忽略的细节：<strong>stacked 拓扑下“1 台机器 down“是双重故障</strong>（apiserver + etcd 成员），但 3 成员还剩 2 仍满足 quorum；只剩 1 台机器时 etcd 先失去 quorum，apiserver 再多也没用。<strong>奇数控制面不等于奇数 etcd</strong>：external etcd 时控制面 3 台、etcd 5 台，各自独立计算 quorum——故障域矩阵要按 etcd 视图看，而不是按节点数看。</p>
+<h3 id="72-全部控制面-down-时数据面到底发生什么"><a class="header" href="#72-全部控制面-down-时数据面到底发生什么">7.2 全部控制面 down 时，数据面到底发生什么</a></h3>
+<p>这是 HA 设计里最常被问的问题。结论是：<strong>数据面进入“冻结“状态，而不是“崩溃“</strong>。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>行为</th><th>是否继续</th><th>原因</th></tr>
+</thead>
+<tbody>
+<tr><td>存量 Pod 的容器进程</td><td>✅ 继续运行</td><td>容器由 runtime/shim 持有；kubelet 不会因为 API 不可达而杀 Pod</td></tr>
+<tr><td>kubelet 维持 Pod 期望状态</td><td>✅ 继续</td><td>kubelet 的 Pod 来源是本地缓存 + static 文件源；API 只是其中一个来源</td></tr>
+<tr><td>static pod（含控制面容器）</td><td>✅ 继续</td><td>期望状态来自 <code>/etc/kubernetes/manifests</code> 文件（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/config/file.go#L30-L44">file.go L30-L44</a>）</td></tr>
+<tr><td>新建/删除 Pod</td><td>❌ 停止</td><td>所有写操作都经过 apiserver → etcd</td></tr>
+<tr><td>Deployment/StatefulSet/CronJob/HPA 收敛</td><td>❌ 停止</td><td>KCM 停止（Lease 无法续约）</td></tr>
+<tr><td>新 Pod 调度</td><td>❌ 停止</td><td>scheduler 停止</td></tr>
+<tr><td>Service/Endpoints 更新</td><td>❌ 停止</td><td>EndpointSlice 控制器在 KCM 中</td></tr>
+<tr><td>已有 Service 的转发</td><td>✅ 通常继续</td><td>kube-proxy 保留最后一次下发的 iptables/IPVS 规则；已有连接可能保持</td></tr>
+<tr><td>DNS 解析</td><td>⚠️ 部分继续</td><td>CoreDNS 进程可继续响应缓存/已加载记录；新的 Service 记录无法更新；未缓存的外部域名仍可 forward</td></tr>
+<tr><td>节点被标记 NotReady</td><td>⚠️ 不会立即发生</td><td>标记 NotReady 的是 KCM 的 node lifecycle controller；控制面全挂时它也没在跑</td></tr>
+<tr><td><code>kubectl exec/port-forward/logs</code>、监控写入</td><td>❌ 停止</td><td>都需要经过 apiserver；本地日志采集可继续</td></tr>
+</tbody>
+</table>
+</div>
+<p>与 kubelet 相关的两个可验证数字：</p>
+<ul>
+<li>kubelet 每 10s 计算并上报节点状态（<code>nodeStatusUpdateFrequency</code> 默认 10s），node lease 默认 40s 过期（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/kubelet/config/v1beta1/types.go#L330-L357">kubelet config types L330-L357</a>）。</li>
+<li>KCM 的 node lifecycle controller 默认 <code>NodeMonitorGracePeriod=50s</code>、<code>PodEvictionTimeout=5m</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/controller/nodelifecycle/config/v1alpha1/defaults.go#L33-L50">nodelifecycle defaults L33-L50</a>）。</li>
+</ul>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>控制面恢复时有一个<strong>恢复期陷阱</strong>：控制面 down 期间所有 Node 的 Lease 都已过期。如果恢复后某些 kubelet 仍连不上 apiserver，node lifecycle controller 会按正常逻辑把节点标 NotReady，并在 <code>PodEvictionTimeout=5m</code> 后驱逐 Pod。恢复时优先确认 kubelet→apiserver 网络已通，再让 KCM 大量处理过期 Lease。</p>
+</blockquote>
+<p>以上“数据面继续“的判断中，容器与 kubelet 行为有源码/文档依据；CoreDNS 缓存、kube-proxy 保留规则属于实现语义推论（通常成立，但取决于具体版本与配置），不应作为 SLA 承诺。</p>
+<hr>
+<h2 id="8-规模化与性能"><a class="header" href="#8-规模化与性能">8. 规模化与性能</a></h2>
+<h3 id="81-apf保护-apiserver-与-etcd-的主机制"><a class="header" href="#81-apf保护-apiserver-与-etcd-的主机制">8.1 APF：保护 apiserver 与 etcd 的主机制</a></h3>
+<p>API Priority and Fairness（APF）把请求按 FlowSchema 分到 PriorityLevel，再做排队/限流。它在 apiserver 内部，是<strong>比 <code>--max-requests-inflight</code> 更细的保护层</strong>（概念见 <a href="https://kubernetes.io/docs/concepts/cluster-administration/flow-control/">API Priority and Fairness</a>）。</p>
+<p>默认的 PriorityLevel 及份额（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/apis/flowcontrol/bootstrap/default.go#L168-L219">bootstrap/default.go L168-L219</a>）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>PriorityLevel</th><th>NominalConcurrencyShares</th><th>用途</th></tr>
+</thead>
+<tbody>
+<tr><td><code>system</code></td><td>30</td><td>系统组件、自维护请求（含 kubelet/kube-proxy）</td></tr>
+<tr><td><code>node-high</code></td><td>40</td><td>节点健康上报（大规模集群 50%–90% 的请求）</td></tr>
+<tr><td><code>leader-election</code></td><td>10</td><td>KCM/scheduler 选主</td></tr>
+<tr><td><code>workload-high</code></td><td>40</td><td>scheduler、内置工作负载控制器</td></tr>
+<tr><td><code>workload-low</code></td><td>100</td><td>普通 ServiceAccount 工作负载</td></tr>
+<tr><td><code>global-default</code></td><td>20</td><td>其余流量</td></tr>
+</tbody>
+</table>
+</div>
+<p>总并发上限 = <code>max-requests-inflight</code> + <code>max-mutating-requests-inflight</code>，默认 <strong>400 + 200 = 600</strong>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/server/config.go#L449-L453">config.go L449-L453</a>；两个 flag 定义见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/server/options/server_run_options.go#L348-L360">server_run_options.go L348-L360</a>）。每个 PL 的并发限额按 <code>ceil(serverCL * shares / shareSum)</code> 分配（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/util/flowcontrol/apf_controller.go#L857-L864">apf_controller.go L857-L864</a>）。</p>
+<p>按默认 shares（总和 240）估算：<code>system</code> ≈ 75、<code>node-high</code> = 100、<code>leader-election</code> = 25、<code>workload-high</code> = 100、<code>workload-low</code> = 250、<code>global-default</code> = 50。这解释了两个现象：</p>
+<ul>
+<li>大规模集群里 kubelet 上报会吃掉大量并发，这是 <code>node-high</code> 份额最大的原因；</li>
+<li>业务请求把 <code>workload-*</code> 打满时，<code>system</code>/<code>leader-election</code> 仍有保底，控制面不至于被业务流量拖死。</li>
+</ul>
+<h3 id="82-etcd-磁盘与网络"><a class="header" href="#82-etcd-磁盘与网络">8.2 etcd 磁盘与网络</a></h3>
+<ul>
+<li>写延迟 ≈ RTT + fdatasync；同 region 多 AZ 部署要把 RTT 控制在个位数 ms。</li>
+<li>监控 <code>wal_fsync_duration_seconds</code> p99 &lt; 10ms、<code>backend_commit_duration_seconds</code> p99 &lt; 25ms 是 FAQ 给出的健康线（<a href="https://etcd.io/docs/v3.7/faq/">etcd FAQ</a>）。</li>
+<li>使用本地 SSD/NVMe；云盘优先选高 IOPS 的 provisioned 盘；不要让 etcd 与镜像仓库、日志盘共享 IO。</li>
+</ul>
+<h3 id="83-watch-cache-与对象规模"><a class="header" href="#83-watch-cache-与对象规模">8.3 watch cache 与对象规模</a></h3>
+<p>watch cache 把 LIST/WATCH 从 etcd 卸载到 apiserver 内存，但它在 apiserver 重启后要重新建立：启动时的全量 LIST 会打 etcd。影响 HA 的几个点：</p>
+<ul>
+<li>大量 CRD、大对象（大 Secret、大 ConfigMap）会显著增加每个 apiserver 的内存占用；多副本时内存成本 × 副本数。</li>
+<li>Event 是高频写入源，控制面故障恢复时大量 Event 可能造成写入尖峰。</li>
+<li><code>--watch-cache-sizes</code> 已基本被动态 sizing 取代（flag 提示“只对 0 有意义“），不要依赖手工调大缓存解决性能问题（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/server/options/etcd.go#L147-L163">etcd.go L147-L163</a>）。</li>
+</ul>
+<h3 id="84-容量估算的思路"><a class="header" href="#84-容量估算的思路">8.4 容量估算的思路</a></h3>
+<p>不要凭“节点数 × 固定 QPS“拍数字，按来源拆：</p>
+<ol>
+<li><strong>kubelet</strong>：每节点每 10s 上报 status + 续 node lease；节点数 × 0.2 QPS 量级（经验值）。</li>
+<li><strong>controllers</strong>：KCM 的 informer 全量 watch，对象越多，list/watch 越重。</li>
+<li><strong>业务客户端与突发</strong>：kubectl/CI/Operator 的 list/watch 频率；故障恢复、滚动发布、大规模调度会放大写入。</li>
+</ol>
+<p>把这些加起来，再留 2–3 倍余量，用压测（如 <code>kubectl create --dry-run</code> 批量请求或 APF 指标）验证，而不是只看 CPU 使用率。</p>
+<hr>
+<h2 id="9-kubeadm-ha-部署要点"><a class="header" href="#9-kubeadm-ha-部署要点">9. kubeadm HA 部署要点</a></h2>
+<h3 id="91-前置条件"><a class="header" href="#91-前置条件">9.1 前置条件</a></h3>
+<ul>
+<li>3 台以上满足 kubeadm 要求的控制面节点，奇数台更利于 etcd quorum（<a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/">kubeadm high availability</a>）。</li>
+<li>一个稳定的入口：VIP（kube-vip）或 L4 LB 的 DNS 名，端口指向 6443。</li>
+<li>所有节点时间同步（chrony/NTP）、主机名唯一、<code>/etc/hosts</code> 或内部 DNS 可解析。</li>
+<li>etcd 数据目录在独立 SSD 上；如果控制面与业务混部，给 apiserver/etcd 留足 CPU/内存。</li>
+</ul>
+<h3 id="92-stacked-ha-的关键命令"><a class="header" href="#92-stacked-ha-的关键命令">9.2 stacked HA 的关键命令</a></h3>
+<p>第一台控制面（注意 <code>--control-plane-endpoint</code> 与 <code>--upload-certs</code>）：</p>
+<pre><code class="language-bash">sudo kubeadm init \
+  --control-plane-endpoint "k8s-api.example.com:6443" \
+  --upload-certs \
+  --pod-network-cidr 10.244.0.0/16
+</code></pre>
+<p><code>--control-plane-endpoint</code> 的 flag 定义见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/cmd/init.go#L235-L240">init.go L235-L240</a>；<code>--upload-certs</code> 把控制面证书加密上传到 <code>kubeadm-certs</code> Secret（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/cmd/init.go#L270-L273">init.go L270-L273</a>）。</p>
+<p>其余控制面节点：</p>
+<pre><code class="language-bash">sudo kubeadm join k8s-api.example.com:6443 \
+  --token &lt;token&gt; \
+  --discovery-token-ca-cert-hash sha256:&lt;hash&gt; \
+  --control-plane \
+  --certificate-key &lt;key&gt;
+</code></pre>
+<p><code>--certificate-key</code> 在 join 侧对应 <code>JoinConfiguration.controlPlane.certificateKey</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/cmd/join.go#L263-L266">join.go L263-L266</a>）。</p>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>官方文档说明：<code>--upload-certs</code> 上传的证书会在 <strong>2 小时后被删除</strong>，需要重新上传时用 <code>kubeadm init phase upload-certs --upload-certs</code>（<a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/">kubeadm high availability</a>）。不要把它当证书备份——真正的 PKI 备份见 <a href="./控制面灾备与恢复.html">控制面灾备与恢复</a>。</p>
+</blockquote>
+<p>worker 节点直接用不带 <code>--control-plane</code> 的 join 命令；它们只需要连到 endpoint，不需要证书 key。</p>
+<h3 id="93-external-etcd-的差异"><a class="header" href="#93-external-etcd-的差异">9.3 external etcd 的差异</a></h3>
+<p>external etcd 需要先准备好独立 etcd 集群（3 或 5 成员），然后在 kubeadm 配置里声明：</p>
+<pre><code class="language-yaml">apiVersion: kubeadm.k8s.io/v1beta4
+kind: ClusterConfiguration
+etcd:
+  external:
+    endpoints:
+      - https://10.0.0.11:2379
+      - https://10.0.0.12:2379
+      - https://10.0.0.13:2379
+    caFile: /etc/kubernetes/pki/etcd/ca.crt
+    certFile: /etc/kubernetes/pki/apiserver-etcd-client.crt
+    keyFile: /etc/kubernetes/pki/apiserver-etcd-client.key
+</code></pre>
+<p>字段定义见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/apis/kubeadm/types.go#L317-L336">types.go L317-L336</a>。注意 external etcd 的备份/恢复、证书、成员管理都在 etcd 团队手里，kubeadm 不再介入。</p>
+<h3 id="94-放置与隔离"><a class="header" href="#94-放置与隔离">9.4 放置与隔离</a></h3>
+<ul>
+<li><strong>控制面跨 3 个 AZ 各 1 台</strong>；不要 3 台都在同一机架/同一电源域。</li>
+<li><strong>etcd 与控制面同机时</strong>，给 etcd 数据目录独立盘；不要和镜像存储、容器日志共用一块慢盘。</li>
+<li>控制面节点加 taint（kubeadm 默认加 <code>node-role.kubernetes.io/control-plane:NoSchedule</code>，<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/util/config/initconfiguration.go#L109-L112">initconfiguration.go L109-L112</a>），避免业务 Pod 抢控制面资源。</li>
+<li>kubeadm 给 etcd static pod 的默认 requests 只有 100m CPU / 100Mi 内存（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/phases/etcd/local.go#L215-L220">local.go L215-L220</a>），生产大集群要按实际调大。</li>
+</ul>
+<h3 id="95-lbvip-配置要点"><a class="header" href="#95-lbvip-配置要点">9.5 LB/VIP 配置要点</a></h3>
+<p>以 HAProxy 为例（TCP 透传，不做 TLS 终止）：</p>
+<pre><code class="language-haproxy">frontend k8s-api
+    bind *:6443
+    mode tcp
+    default_backend k8s-api-backend
+
+backend k8s-api-backend
+    mode tcp
+    option tcp-check
+    balance roundrobin
+    server cp1 10.0.0.11:6443 check check-ssl verify none
+    server cp2 10.0.0.12:6443 check check-ssl verify none
+    server cp3 10.0.0.13:6443 check check-ssl verify none
+</code></pre>
+<ul>
+<li>用 TCP 透传，不要终止 TLS：客户端证书认证、SPDY/WebSocket、HTTP/2 都由 apiserver 处理。</li>
+<li>健康检查优先 <code>/readyz</code>（HTTP 模式）或带 <code>check-ssl</code> 的 TCP 检查，并把 <code>fall</code>/<code>rise</code> 调大，避免共享 etcd 抖动导致全部摘除。</li>
+<li>LB 自身要 HA（双活 + VIP/Anycast），否则它成为新的单点。</li>
+</ul>
+<hr>
+<h2 id="10-升级与变更"><a class="header" href="#10-升级与变更">10. 升级与变更</a></h2>
+<h3 id="101-滚动顺序"><a class="header" href="#101-滚动顺序">10.1 滚动顺序</a></h3>
+<p>kubeadm 官方升级流程（<a href="https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/">kubeadm upgrade</a>）：</p>
+<ol>
+<li><code>kubeadm upgrade plan</code> 检查可升级版本与集群健康。</li>
+<li><strong>第一个控制面节点</strong>：<code>kubeadm upgrade apply v1.37.x</code>。</li>
+<li>其余控制面节点：<code>kubeadm upgrade node</code>，然后重启 kubelet。</li>
+<li>worker 节点：<code>kubeadm upgrade node</code> + 重启 kubelet。</li>
+</ol>
+<p>控制面升级的可用性分析（stacked，3 节点）：</p>
+<ul>
+<li>升级一台时，etcd 剩 2/3（quorum 满足），apiserver 剩 2 个入口；LB 通过健康检查摘掉正在重启的节点。</li>
+<li><strong>绝不能同时升级两台</strong>：那会同时损失 2 个 etcd 成员，quorum 立即丢失，升级脚本自己也会卡在 etcd 健康检查上。</li>
+<li>external etcd 可以把 etcd 滚动升级与控制面滚动升级解耦，风险更低。</li>
+</ul>
+<h3 id="102-版本-skew"><a class="header" href="#102-版本-skew">10.2 版本 skew</a></h3>
+<p>kubeadm 的版本约束（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/constants/constants.go#L483-L490">constants.go L483-L490</a>）：</p>
+<ul>
+<li>控制面组件之间允许的 skew 是 <code>-1</code> minor（<code>MinimumControlPlaneVersion</code>）。</li>
+<li>kubelet 允许落后控制面 <code>-3</code> 个 minor（<code>MinimumKubeletVersion</code>）。</li>
+<li>etcd 版本与 Kubernetes 版本的对应关系由 <code>SupportedEtcdVersion</code> 表维护，例如 v1.34–v1.36 都对应 etcd 3.7.0（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/constants/constants.go#L511-L514">constants.go L511-L514</a>）；kubeadm 的默认 etcd 版本是 <strong>3.7.0-0</strong>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/constants/constants.go#L327-L330">constants.go L327-L330</a>）。</li>
+</ul>
+<p>完整的 skew 规则见 <a href="https://kubernetes.io/releases/version-skew-policy/">Kubernetes version skew policy</a>。</p>
+<h3 id="103-回滚边界"><a class="header" href="#103-回滚边界">10.3 回滚边界</a></h3>
+<ul>
+<li><strong>kubeadm 不支持 downgrade</strong>。升级失败后的“回滚“实际上是：恢复升级前的 etcd 快照 + 重装旧版本二进制 + 重新加入节点；且 etcd 数据格式一旦升级，旧版本二进制可能无法读，代价远大于谨慎升级。</li>
+<li>升级前必须确认：etcd 快照、PKI、kubeconfig、静态 pod manifests 都已备份，并且恢复流程演练过（见 <a href="./控制面灾备与恢复.html">控制面灾备与恢复</a>）。</li>
+</ul>
+<hr>
+<h2 id="11-托管-kubernetes-的-ha-边界"><a class="header" href="#11-托管-kubernetes-的-ha-边界">11. 托管 Kubernetes 的 HA 边界</a></h2>
+<p>托管控制面的 HA 由厂商负责，但“责任分界“经常被误解：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>事项</th><th>自建</th><th>托管</th></tr>
+</thead>
+<tbody>
+<tr><td>apiserver/etcd 多副本与 quorum</td><td>你负责</td><td>厂商负责（SLA 覆盖）</td></tr>
+<tr><td>控制面节点 SSH / etcd 访问</td><td>可以</td><td><strong>通常不可见/不可登</strong></td></tr>
+<tr><td>apiserver flag / APF 调参</td><td>可以</td><td>受限或不可改</td></tr>
+<tr><td>控制面升级窗口</td><td>你决定</td><td>厂商窗口（部分产品可配维护窗口）</td></tr>
+<tr><td>节点池/工作负载 HA</td><td>你负责</td><td>你负责</td></tr>
+<tr><td>etcd 备份</td><td>你做快照</td><td>厂商做控制面备份，但你<strong>不能</strong>用 etcd 快照恢复业务对象</td></tr>
+<tr><td>业务对象备份/恢复</td><td>自己做</td><td>自己做（Velero 等）</td></tr>
+<tr><td>SLA 赔偿</td><td>无</td><td>按厂商条款</td></tr>
+</tbody>
+</table>
+</div>
+<p>几个可验证的边界：</p>
+<ul>
+<li>EKS 的控制面 endpoint 有 public/private 两种模式，private 模式要求节点在 VPC 内访问（<a href="https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html">EKS cluster endpoint</a>）；控制面本身跨 AZ，但<strong>你的节点池是否跨 AZ 要自己配</strong>。</li>
+<li>GKE regional cluster 的控制面是“同一 region 多 zone 多副本“，zonal cluster 只有一份控制面（<a href="https://cloud.google.com/kubernetes-engine/docs/concepts/regional-clusters">GKE regional clusters</a>），这也是 zonal SLA 99.5% vs regional 99.95% 的原因（<a href="https://cloud.google.com/kubernetes-engine/sla">GKE SLA</a>）。</li>
+<li>AKS 支持把节点池/系统组件分布到可用区（<a href="https://learn.microsoft.com/en-us/azure/aks/availability-zones">AKS availability zones</a>），但控制面 AZ 分布由厂商决定。</li>
+</ul>
+<p>结论：<strong>托管控制面把“控制面机器“的 HA 外包了，但没有外包“数据保护“和“工作负载 HA“</strong>。你仍然需要：跨 AZ 节点池、PodDisruptionBudget、多副本、业务对象备份、多集群 DR（见 <a href="./控制面灾备与恢复.html">控制面灾备与恢复</a>）。</p>
+<hr>
+<h2 id="12-选型决策树与常见误区"><a class="header" href="#12-选型决策树与常见误区">12. 选型决策树与常见误区</a></h2>
+<h3 id="121-决策树"><a class="header" href="#121-决策树">12.1 决策树</a></h3>
+<pre class="mermaid">flowchart TD
+    S["需要 HA 的控制面"] --&gt; Q1{"能接受控制面由厂商运维？"}
+    Q1 --&gt;|"是"| M["托管控制面&lt;br/&gt;EKS/GKE/AKS&lt;br/&gt;选 regional/多 AZ + 节点池跨 AZ"]
+    Q1 --&gt;|"否"| Q2{"是否需要控制面/etcd 强隔离&lt;br/&gt;或已有独立 etcd 团队？"}
+    Q2 --&gt;|"否"| Q3{"主机数 ≤ 5 且无跨 region 需求？"}
+    Q3 --&gt;|"是"| ST["stacked etcd&lt;br/&gt;3 台控制面跨 3 AZ"]
+    Q3 --&gt;|"否"| EX["external etcd&lt;br/&gt;3 台 CP + 3/5 台 etcd"]
+    Q2 --&gt;|"是"| EX
+    M --&gt; Q4{"是否需要多云/多集群灾备？"}
+    EX --&gt; Q4
+    ST --&gt; Q4
+    Q4 --&gt;|"是"| DR["多集群 DR + 对象备份&lt;br/&gt;Velero / 定期恢复演练"]
+    Q4 --&gt;|"否"| DONE["单集群内 HA 即可&lt;br/&gt;仍需 etcd 快照"]
+</pre>
+
+<h3 id="122-常见误区"><a class="header" href="#122-常见误区">12.2 常见误区</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>误区</th><th>为什么错</th><th>正确做法</th></tr>
+</thead>
+<tbody>
+<tr><td>“3 台控制面都在同一 AZ，也算 HA”</td><td>AZ 故障会同时带走全部控制面</td><td>跨 3 AZ，或至少跨机架/电源域</td></tr>
+<tr><td>“2 台 etcd 比 1 台安全”</td><td>2 成员 quorum=2，挂 1 台即失去写能力</td><td>3 或 5 成员；2 台不如单点+备份</td></tr>
+<tr><td>“4 台 etcd 容错更高”</td><td>4 成员 quorum=3，容错仍为 1</td><td>奇数成员</td></tr>
+<tr><td>“LB 探活 6443 端口通就行”</td><td>端口通但 etcd 不可用时 apiserver 不能服务</td><td>用 <code>/readyz</code> + 合理阈值</td></tr>
+<tr><td>“VIP 和 BGP 可以随便混着上”</td><td>同一 VIP 用两种发布方式会路由冲突/L2 环路</td><td>二选一，按数据中心能力选</td></tr>
+<tr><td>“controller-manager 多副本能分摊负载”</td><td>只有 leader 在 reconcile</td><td>多副本只为缩短切换时间</td></tr>
+<tr><td>“stacked 下可以同时升级两台”</td><td>同时损失 2 个 etcd 成员 → quorum 丢失</td><td>串行升级，一台健康后再下一台</td></tr>
+<tr><td>“做了 HA 就不需要备份”</td><td>HA 防组件故障，不防误删/勒索/逻辑损坏</td><td>etcd 快照 + PKI 备份 + 定期恢复演练</td></tr>
+<tr><td>“托管集群不用备份工作负载”</td><td>托管只保控制面可用性，不保你的对象</td><td>Velero/对象存储备份 + 跨 region 副本</td></tr>
+<tr><td>“<code>--control-plane-endpoint</code> 以后还能随便改”</td><td>地址进证书 SAN，改要重签证书</td><td>初始化前定好稳定 DNS/VIP</td></tr>
+<tr><td>“kube-vip 在 API 全挂时还能漂移”</td><td>VIP 选主依赖同一套 apiserver Lease</td><td>带外恢复通道 / 外部 LB</td></tr>
+<tr><td>“忽略 NTP”</td><td>选主容忍速率差但不容忍跳变；日志/证书校验也依赖时间</td><td>全节点 chrony + 监控时钟偏移</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="参考资料"><a class="header" href="#参考资料">参考资料</a></h2>
+<h3 id="官方文档"><a class="header" href="#官方文档">官方文档</a></h3>
+<ul>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/ha-topology/">Options for Highly Available Topology</a></li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/">Creating Highly Available Clusters with kubeadm</a></li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/">kubeadm init</a> / <a href="https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-join/">kubeadm join</a></li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/">Upgrading kubeadm clusters</a></li>
+<li>Kubernetes：<a href="https://kubernetes.io/releases/version-skew-policy/">Version skew policy</a></li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/">kube-apiserver reference</a></li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/reference/using-api/health-checks/">API health endpoints</a></li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/concepts/cluster-administration/flow-control/">API Priority and Fairness</a></li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/concepts/architecture/nodes/">Nodes</a></li>
+<li>etcd：<a href="https://etcd.io/docs/v3.7/faq/">FAQ（quorum / failure tolerance / 磁盘）</a></li>
+<li>etcd：<a href="https://etcd.io/docs/v3.7/op-guide/maintenance/">Maintenance（compaction / defrag / quota）</a></li>
+<li>etcd：<a href="https://etcd.io/docs/v3.7/op-guide/performance/">Understanding performance</a></li>
+<li>etcd：<a href="https://etcd.io/docs/v3.7/op-guide/hardware/">Hardware recommendations</a></li>
+<li>etcd：<a href="https://etcd.io/docs/v3.7/op-guide/clustering/">Clustering guide</a></li>
+<li>kube-vip：<a href="https://kube-vip.io/docs/modes/">Modes</a> / <a href="https://kube-vip.io/docs/about/architecture/">Architecture</a> / <a href="https://kube-vip.io/docs/troubleshooting/arp/">ARP troubleshooting（故障切换时间）</a></li>
+<li>云厂商：<a href="https://aws.amazon.com/eks/sla/">EKS SLA</a> / <a href="https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html">EKS cluster endpoint</a></li>
+<li>云厂商：<a href="https://cloud.google.com/kubernetes-engine/sla">GKE SLA</a> / <a href="https://cloud.google.com/kubernetes-engine/docs/concepts/regional-clusters">GKE regional clusters</a></li>
+<li>云厂商：<a href="https://azure.microsoft.com/en-us/support/legal/sla/kubernetes-service/">AKS SLA</a> / <a href="https://learn.microsoft.com/en-us/azure/aks/availability-zones">AKS availability zones</a></li>
+<li><a href="https://cluster-api.sigs.k8s.io/">Cluster API</a>（hosted control plane 相关实现的基础）</li>
+</ul>
+<h3 id="源码pinned"><a class="header" href="#源码pinned">源码（pinned）</a></h3>
+<ul>
+<li>Kubernetes v1.37.2 选主：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/tools/leaderelection/leaderelection.go">leaderelection.go</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/tools/leaderelection/resourcelock/leaselock.go">leaselock.go</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/component-base/config/v1alpha1/defaults.go">component-base defaults.go</a></li>
+<li>Kubernetes apiserver 存储与健康：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/storage/etcd3/store.go">etcd3/store.go</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/storage/storagebackend/factory/etcd3.go">etcd3 healthcheck</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/server/options/etcd.go">server options etcd.go</a></li>
+<li>Kubernetes APF：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/apis/flowcontrol/bootstrap/default.go">bootstrap defaults</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/util/flowcontrol/apf_controller.go">apf_controller.go</a></li>
+<li>kubeadm：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/constants/constants.go">constants.go</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/phases/etcd/local.go">etcd local.go</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/util/etcd/etcd.go">etcd util</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/cmd/init.go">init.go</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/cmd/join.go">join.go</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/apis/kubeadm/types.go">kubeadm types.go</a></li>
+<li>kubelet 配置来源：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/config/file.go">file.go</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/config/apiserver.go">apiserver.go</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/kubelet/config/v1beta1/types.go">kubelet config types.go</a></li>
+<li>etcd v3.7.4：<a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/server/etcdserver/api/membership/cluster.go">membership/cluster.go</a> / <a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/server/storage/quota.go">storage/quota.go</a> / <a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/server/etcdserver/api/v3rpc/maintenance.go">v3rpc maintenance.go</a> / <a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/server/embed/config.go">embed config.go</a></li>
+<li>kube-vip v1.3.1：<a href="https://github.com/kube-vip/kube-vip/blob/6da770eac1eed9409a9feaccda3d782c94424c24/pkg/cluster/clusterLeaderElection.go">clusterLeaderElection.go</a> / <a href="https://github.com/kube-vip/kube-vip/blob/6da770eac1eed9409a9feaccda3d782c94424c24/pkg/election/election.go">election.go</a> / <a href="https://github.com/kube-vip/kube-vip/blob/6da770eac1eed9409a9feaccda3d782c94424c24/pkg/arp/arp.go">arp.go</a> / <a href="https://github.com/kube-vip/kube-vip/blob/6da770eac1eed9409a9feaccda3d782c94424c24/pkg/manager/worker/bgp.go">bgp.go</a></li>
+</ul>
+<h3 id="事故复盘与延伸阅读"><a class="header" href="#事故复盘与延伸阅读">事故复盘与延伸阅读</a></h3>
+<ul>
+<li>etcd FAQ 中关于 leader 因磁盘延迟被换掉、heartbeat 超时、snapshot 过慢的排障条目：<a href="https://etcd.io/docs/v3.7/faq/">etcd FAQ</a></li>
+<li>kube-vip ARP 故障切换时间与调试：<a href="https://kube-vip.io/docs/troubleshooting/arp/">Troubleshooting ARP</a></li>
+<li>kubeadm 升级与 skew：<a href="https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/">kubeadm upgrade</a> / <a href="https://kubernetes.io/releases/version-skew-policy/">version skew policy</a></li>
+</ul>
+<h2 id="本-wiki-相关页面"><a class="header" href="#本-wiki-相关页面">本 wiki 相关页面</a></h2>
+<ul>
+<li><a href="./控制面灾备与恢复.html">控制面灾备与恢复</a>：etcd 快照、quorum 丢失恢复、集群重建、Velero</li>
+<li><a href="./控制面事故处理手册.html">控制面事故处理手册</a>：症状→层决策树、分场景 runbook、事故流程</li>
+<li><a href="./2_kubernetes-api-server.html">kube-apiserver 笔记</a></li>
+<li><a href="./flowschema.html">APF 与 FlowSchema</a></li>
+<li><a href="5_client-go list &amp; watch 原理.html">client-go list &amp; watch 原理</a></li>
+<li><a href="./kubelet原理.html">kubelet 原理</a></li>
+<li><a href="./容器运行时.html">容器运行时全链路</a></li>
+<li><a href="./rbac.html">RBAC</a></li>
+<li><a href="../Cluster_Lifecycle/cluster-api.html">Cluster API</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../docs/Cloud_Native/Kubernetes/控制面灾备与恢复.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../docs/Cloud_Native/Kubernetes/kueue.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../docs/Cloud_Native/Kubernetes/控制面灾备与恢复.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../docs/Cloud_Native/Kubernetes/kueue.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../highlight-abc7f01d.js"></script>
+        <script src="../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

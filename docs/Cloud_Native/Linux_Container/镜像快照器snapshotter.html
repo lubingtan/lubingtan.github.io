@@ -1,0 +1,756 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>镜像快照器（Snapshotter）：containerd 如何把层变成 rootfs - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../searchindex-795994c4.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../toc-2fda9a29.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/Linux_Container/镜像快照器snapshotter.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="镜像快照器snapshottercontainerd-如何把层变成-rootfs"><a class="header" href="#镜像快照器snapshottercontainerd-如何把层变成-rootfs">镜像快照器（Snapshotter）：containerd 如何把层变成 rootfs</a></h1>
+<blockquote>
+<p>基线：containerd v2.4.2 (b7a2526)，2026-11。
+代码引用统一固定到 <code>github.com/containerd/containerd@b7a2526</code> 的 40 位 sha（形如 <code>/blob/&lt;40位sha&gt;/&lt;path&gt;#Lx-Ly</code>），行号用本地 checkout 核对过；镜像 ChainID 的定义引 image-spec。文档引用仓库内 <code>docs/</code> 的固定链接。</p>
+</blockquote>
+<p>拉镜像时你看到的是 “layer”，跑容器时你看到的是 “rootfs”。把前者变成后者的那层插件，就是 <strong>snapshotter</strong>。它既不是镜像仓库，也不是存储驱动（storage driver）的简单等价物：它管理的是一棵<strong>文件系统状态树</strong>，每个节点是一次 COW 事务的产物。</p>
+<hr>
+<h2 id="1-一分钟版本"><a class="header" href="#1-一分钟版本">1. 一分钟版本</a></h2>
+<h3 id="11-三个概念"><a class="header" href="#11-三个概念">1.1 三个概念</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>概念</th><th>是什么</th><th>寻址方式</th><th>谁负责</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>layer（层）</strong></td><td>一段 tar（可压缩）形式的文件系统增量，以及 manifest/config 这些 JSON</td><td><code>sha256:&lt;digest&gt;</code>（config 里记未压缩的 diffID）</td><td>content store（CAS）</td></tr>
+<tr><td><strong>snapshot（快照）</strong></td><td>某次挂载之后得到的文件系统状态；可能是可写的准备态、不可变的已提交态、只读视图</td><td>短字符串 key/name（active 用 key，committed 用 name）</td><td>snapshotter</td></tr>
+<tr><td><strong>snapshotter（快照器）</strong></td><td>把多个快照按父子关系叠起来、提供 mount 参数、并管理其生命周期的插件</td><td>gRPC/Go 接口；插件 ID 如 <code>overlayfs</code></td><td>各驱动实现 + metadata 包装层</td></tr>
+</tbody>
+</table>
+</div>
+<p>一句话：<strong>content store 保存“字节“，snapshotter 保存“目录树状态“</strong>。同一个 layer 字节可以被解包成多份快照，也可以从快照反向生成 diff（<code>ctr snapshot diff</code>）。</p>
+<h3 id="12-与其他组件的边界"><a class="header" href="#12-与其他组件的边界">1.2 与其他组件的边界</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>组件</th><th>管什么</th><th>不管什么</th></tr>
+</thead>
+<tbody>
+<tr><td>content store</td><td>manifest/config/layer blob，按 digest 校验与去重</td><td>目录、inode、可写层</td></tr>
+<tr><td>image store</td><td><code>repo:tag</code> → target descriptor、平台、GC 标签</td><td>文件系统</td></tr>
+<tr><td>metadata（bolt）</td><td>容器/镜像/快照的<strong>命名空间、父子关系、标签、租约</strong></td><td>数据本身</td></tr>
+<tr><td><strong>snapshotter</strong></td><td>快照目录/子卷/块设备、mount options、父子链、usage</td><td>镜像名、容器进程</td></tr>
+<tr><td>runtime v2 + shim/runc</td><td>按 snapshotter 给的 mount 参数挂载 rootfs，执行 OCI 进程</td><td>层、快照元数据</td></tr>
+<tr><td>客户端（ctr/CRI/nerdctl）</td><td>决定用哪个 snapshotter、传 labels、在何时 Prepare/Commit/Remove</td><td>COW 细节</td></tr>
+</tbody>
+</table>
+</div>
+<pre class="mermaid">flowchart LR
+    subgraph REG["Registry"]
+        BLOB["manifest / config / layer blobs"]
+    end
+
+    subgraph CD["containerd"]
+        CS[("content store&lt;br/&gt;digest → bytes")]
+        IMG[("image store&lt;br/&gt;name → target")]
+        META[("metadata bolt&lt;br/&gt;namespace / parent / labels")]
+        SN["snapshotter 插件&lt;br/&gt;overlayfs / native / ..."]
+        DIFF["diff service&lt;br/&gt;walking differ"]
+    end
+
+    subgraph RT["runtime 侧"]
+        SH["shim"]
+        RUNC["runc"]
+        P["容器进程"]
+    end
+
+    BLOB --&gt;|"pull，按 digest 校验"| CS
+    CS --&gt;|"按 manifest 顺序取层"| DIFF
+    DIFF --&gt;|"Prepare 返回 mounts，解包 tar"| SN
+    SN --&gt;|"Commit 成 sha256:chainID"| META
+    IMG --&gt;|"gc.ref.snapshot.* 引用顶层快照"| META
+    SN --&gt;|"Mounts(containerKey)"| SH
+    SH --&gt;|"CreateTask.Rootfs"| RUNC
+    RUNC --&gt; P
+</pre>
+
+<h3 id="13-一次-pull--一次-run-里-snapshotter-被调用几次"><a class="header" href="#13-一次-pull--一次-run-里-snapshotter-被调用几次">1.3 一次 pull + 一次 run 里 snapshotter 被调用几次</a></h3>
+<p>以 3 层镜像、<code>overlayfs</code> 为例：</p>
+<pre class="mermaid">sequenceDiagram
+    autonumber
+    participant C as ctr / kubelet
+    participant CD as containerd
+    participant CS as content store
+    participant SN as overlayfs snapshotter
+    participant RT as shim + runc
+
+    C-&gt;&gt;CD: Pull(ref, WithPullUnpack)
+    loop 每个 layer（可并行）
+        CD-&gt;&gt;CS: 下载 manifest/config/layer
+        CD-&gt;&gt;SN: Prepare(key="extract-&lt;uniq&gt; sha256:&lt;chainID&gt;", parent=&lt;前一层&gt;)
+        SN--&gt;&gt;CD: mounts（bind 或 overlay 参数）
+        CD-&gt;&gt;CD: walking differ 把 tar 解到挂载点
+        CD-&gt;&gt;SN: Commit(name="sha256:&lt;chainID&gt;", key)
+    end
+    CD-&gt;&gt;CS: 在 config 内容上写 gc.ref.snapshot.overlayfs=&lt;顶层 chainID&gt;
+
+    C-&gt;&gt;CD: CreateContainer / ctr run
+    CD-&gt;&gt;SN: Prepare(key=&lt;containerID&gt;, parent=sha256:&lt;顶层 chainID&gt;)
+    C-&gt;&gt;CD: StartContainer / NewTask
+    CD-&gt;&gt;SN: Mounts(key=&lt;containerID&gt;)
+    CD-&gt;&gt;RT: CreateTask{Rootfs: mounts}
+    RT--&gt;&gt;CD: 容器退出
+    C-&gt;&gt;CD: RemoveContainer
+    CD-&gt;&gt;SN: Remove(key=&lt;containerID&gt;)
+</pre>
+
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>阶段</th><th>调用</th><th>次数（3 层）</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td>pull</td><td><code>Stat(chainID)</code></td><td>3（可选）</td><td>判断该层是否已解包</td></tr>
+<tr><td>pull</td><td><code>Prepare</code></td><td>3</td><td>每层一个 active key</td></tr>
+<tr><td>pull</td><td><code>Commit</code></td><td>3</td><td>提交为 <code>sha256:&lt;chainID&gt;</code></td></tr>
+<tr><td>pull</td><td><code>Update</code>（content store 标签）</td><td>1</td><td>顶层 chainID 挂到 config 内容上，供 GC 用</td></tr>
+<tr><td>run</td><td><code>Prepare</code></td><td>1</td><td>key=容器 ID，parent=镜像顶层 chainID</td></tr>
+<tr><td>run</td><td><code>Mounts</code></td><td>1</td><td>创建 task 时取 rootfs 挂载参数</td></tr>
+<tr><td>删除</td><td><code>Remove</code></td><td>1</td><td>删除容器时清理容器快照</td></tr>
+</tbody>
+</table>
+</div>
+<p>注意：<strong>解包 tar 本身不是 snapshotter 干的</strong>，是 diff service（walking differ）在 Prepare 返回的挂载点上做的。snapshotter 的职责到“给出可挂载的目录组合“为止。</p>
+<hr>
+<h2 id="2-为什么需要-snapshotter"><a class="header" href="#2-为什么需要-snapshotter">2. 为什么需要 snapshotter</a></h2>
+<p>如果没有 snapshotter 这一层抽象，containerd 就要把“如何在各种文件系统上叠加层“硬编码进镜像解包和容器创建流程。抽象之后它解决五类问题：</p>
+<ol>
+<li><strong>每容器一个可写层</strong>：镜像层是只读共享的，容器写入只能落在自己的可写层；进程退出、容器删除后只丢可写层。</li>
+<li><strong>共享只读层</strong>：同一镜像的 100 个容器共享同一批 lowerdir（或同一批 btrfs 子卷、同一批块设备只读快照），磁盘占用不随容器数线性增长。</li>
+<li><strong>快速删除与 GC</strong>：删除容器只需删除一个 active 快照（overlay 下就是删一个目录），镜像层仍被 image/其他容器引用；GC 按引用关系决定何时真正删除。</li>
+<li><strong>快照/回滚/提交</strong>：<code>Prepare → apply → Commit</code> 是一个事务模型，可把任意中间状态提交为命名快照，也可以 <code>View</code> 出只读视图做 diff。</li>
+<li><strong>文件系统可插拔</strong>：overlayfs、btrfs、devmapper、blockfile、erofs……上层 API 完全一致；Kata/VM 场景甚至需要块设备而不是目录。</li>
+</ol>
+<blockquote>
+<p>类比 Docker：containerd 的 <code>overlayfs</code> snapshotter ≈ Docker/Moby 的 <code>overlay2</code> storage driver；<code>native</code> ≈ <code>vfs</code>。但术语不能互换——snapshotter 还有 <code>View</code>、<code>Commit</code>、<code>Cleanup</code>、远程快照协议等 Docker storage driver 没有的语义（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/snapshotters/README.md#L1-L34">docs/snapshotters/README.md</a>）。</p>
+</blockquote>
+<hr>
+<h2 id="3-核心模型"><a class="header" href="#3-核心模型">3. 核心模型</a></h2>
+<h3 id="31-kind三种快照状态"><a class="header" href="#31-kind三种快照状态">3.1 Kind：三种快照状态</a></h3>
+<p><code>Kind</code> 只有三种有效值（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/snapshotter.go#L69-L78">snapshotter.go#L69-L78</a>）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Kind</th><th>创建方式</th><th>可写</th><th>可作父</th><th>语义与典型用途</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Active</code></td><td><code>Prepare</code></td><td>是</td><td><strong>否</strong></td><td>一次进行中的事务；overlay 下有 <code>upperdir</code> + <code>workdir</code>。解包单层、容器 rootfs 都用它</td></tr>
+<tr><td><code>Committed</code></td><td><code>Commit(name, key)</code></td><td>否</td><td>是</td><td>事务完成后的不可变快照；镜像层快照名为 <code>sha256:&lt;chainID&gt;</code></td></tr>
+<tr><td><code>View</code></td><td><code>View</code></td><td>否</td><td>否</td><td>父快照的只读合并视图，用于 diff 等只读场景；不能 Commit</td></tr>
+</tbody>
+</table>
+</div>
+<p>接口文档把生命周期讲得很直白：active 快照永远不会“变成“ committed，Commit 是新建一个 committed 快照并移除 active key（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/snapshotter.go#L165-L197">snapshotter.go#L165-L197</a>）。</p>
+<h3 id="32-key--name--parent--info--usage"><a class="header" href="#32-key--name--parent--info--usage">3.2 key / name / parent / Info / Usage</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>字段</th><th>含义</th><th>备注</th></tr>
+</thead>
+<tbody>
+<tr><td><code>key</code></td><td><strong>active/view</strong> 快照的标识</td><td>与 committed 的 <code>name</code> 共享同一命名空间，不能重名</td></tr>
+<tr><td><code>name</code></td><td><strong>committed</strong> 快照的标识</td><td>镜像场景下 = <code>sha256:&lt;chainID&gt;</code></td></tr>
+<tr><td><code>parent</code></td><td>父快照的 name</td><td>必须是 committed；空字符串表示“无父/空目录“</td></tr>
+<tr><td><code>Info</code></td><td><code>Kind</code>、<code>Name</code>、<code>Parent</code>、<code>Labels</code>、时间戳</td><td>对 <code>ctr snapshot ls</code> 暴露（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/snapshotter.go#L127-L141">snapshotter.go#L127-L141</a>）</td></tr>
+<tr><td><code>Usage</code></td><td><code>Size</code>、<code>Inodes</code>，<strong>不含父快照</strong></td><td>active 的 usage 常需实时扫描 upperdir（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/snapshotter.go#L143-L160">snapshotter.go#L143-L160</a>）</td></tr>
+</tbody>
+</table>
+</div>
+<p>底层 bolt 存储不会把整条父链存成数组，而是每条快照记录一个 <code>parent</code> 名字，再在读取时向上走链。<code>storage.Snapshot.ParentIDs</code> 的顺序是<strong>从直接父到最底层 base</strong>，注释写得很明确（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/storage/metastore.go#L49-L59">metastore.go#L49-L59</a>）：</p>
+<pre><code class="language-go">// The ParentIDs are ordered from the highest to the
+// lowest base, meaning they should be applied in order from the last index to
+// the first index. The first index should always be considered the active
+// snapshot's immediate parent.
+type Snapshot struct {
+	Kind      snapshots.Kind
+	ID        string
+	ParentIDs []string
+}
+</code></pre>
+<p>这个顺序直接决定了 <code>lowerdir=</code> 的拼法，见 §4.3。</p>
+<p><code>Info</code> 里没有 <code>Children</code> 字段：children 由 metadata 层用 bolt 的 children bucket 反向索引维护，删除父快照时靠它判断“还有没有子“（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/metadata/snapshot.go#L683-L737">snapshot.go#L683-L737</a>）。驱动本身只需要维护 <code>parent</code> 正向指针与 <code>ParentIDs</code> 链。</p>
+<h3 id="33-labels快照的附带语义"><a class="header" href="#33-labels快照的附带语义">3.3 Labels：快照的“附带语义“</a></h3>
+<p><code>containerd.io/snapshot/</code> 前缀的标签会被继承/透传，<code>containerd.io/snapshot.ref</code> 是其中特殊的一个（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/snapshotter.go#L29-L67">snapshotter.go#L29-L67</a>）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Label</th><th>谁写</th><th>作用</th></tr>
+</thead>
+<tbody>
+<tr><td><code>containerd.io/snapshot.ref</code></td><td>unpacker</td><td>本次 Prepare <strong>期望得到的 committed 快照名</strong>（chainID）。远程快照器若已有该快照，返回 <code>ErrAlreadyExists</code>，客户端就跳过下载与解包</td></tr>
+<tr><td><code>containerd.io/snapshot/diff-id</code></td><td>unpacker</td><td>该层的未压缩 diffID</td></tr>
+<tr><td><code>containerd.io/snapshot/parent-chain-id</code></td><td>unpacker</td><td>并行解包时记录真实父，Commit 时用 <code>WithParent</code> rebase</td></tr>
+<tr><td><code>containerd.io/snapshot/uidmapping</code> / <code>gidmapping</code></td><td>CRI/userns</td><td>容器用户命名空间的映射，供 idmapped mount / chown 使用</td></tr>
+<tr><td><code>containerd.io/snapshot/max-size</code></td><td>调用方</td><td>对可写快照的容量提示（blockfile/devmapper 类驱动可执行）</td></tr>
+<tr><td><code>containerd.io/snapshot/cri.image-ref</code> 等</td><td>CRI/nerdctl 的 handler</td><td>把镜像引用、manifest/layer digest 传给远程快照器</td></tr>
+<tr><td><code>containerd.io/gc.root</code></td><td>调用方</td><td>值形如 RFC3339 时间，表示“在此之前别 GC 这个快照“（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/snapshotter.go#L212-L218">snapshotter.go#L212-L218</a>）</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>FilterInheritedLabels</code> 只保留 <code>containerd.io/snapshot.ref</code> 和 <code>containerd.io/snapshot/</code> 前缀（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/snapshotter.go#L406-L421">snapshotter.go#L406-L421</a>）；它保证 OCI descriptor 上的任意 annotation 不会无脑进入快照标签，只有约定的“快照标签“才会被继承。<code>WithParent</code> / <code>WithLabels</code> 则是两个 <code>Opt</code> 构造器（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/snapshotter.go#L390-L429">snapshotter.go#L390-L429</a>）。</p>
+<h3 id="34-snapshotter-接口逐方法"><a class="header" href="#34-snapshotter-接口逐方法">3.4 Snapshotter 接口逐方法</a></h3>
+<p>接口定义在 <a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/snapshotter.go#L281-L377">snapshotter.go#L281-L377</a>：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>方法</th><th>做了什么</th><th>典型调用者</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Stat(ctx, key)</code></td><td>按 key/name 查 <code>Info</code>，用于存在性判断、取父、辨别 Kind</td><td>unpacker、CRI、ctr</td></tr>
+<tr><td><code>Update(ctx, info, fieldpaths...)</code></td><td>只允许改可变属性（标签/时间）；底层把 <code>containerd.io/snapshot/*</code> 过滤后透传</td><td><code>ctr snapshot set-label</code>、CRI 打标</td></tr>
+<tr><td><code>Usage(ctx, key)</code></td><td>该快照自身占用；active 需扫描 upperdir，可能很慢</td><td>kubelet 的 <code>ImageFsInfo</code>、监控</td></tr>
+<tr><td><code>Mounts(ctx, key)</code></td><td>取 active/view 的 mount 参数，可重复调用（恢复挂载）</td><td>创建 task 时（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/client/container.go#L328-L360">container.go#L328-L360</a>）、ctr</td></tr>
+<tr><td><code>Prepare(ctx, key, parent, opts...)</code></td><td>建 active 快照并返回 mounts；同 key 重复调用必须失败</td><td>unpacker、容器创建</td></tr>
+<tr><td><code>View(ctx, key, parent, opts...)</code></td><td>同 Prepare 但只读、不可 Commit</td><td>diff 计算（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/pkg/rootfs/diff.go#L33-L67">diff.go#L33-L67</a>）</td></tr>
+<tr><td><code>Commit(ctx, name, key, opts...)</code></td><td>把 active 提交为 committed；提交后 active key 消失</td><td>unpacker、<code>ctr snapshot commit</code></td></tr>
+<tr><td><code>Remove(ctx, key)</code></td><td>删 active 或 committed；有子快照时会失败</td><td>容器删除、打包清理</td></tr>
+<tr><td><code>Walk(ctx, fn, filters...)</code></td><td>遍历，过滤条件支持 <code>name</code>/<code>parent</code>/<code>kind</code>/<code>labels.*</code></td><td><code>ctr snapshot ls</code>、GC</td></tr>
+<tr><td><code>Close()</code></td><td>释放 bolt 等内部资源</td><td>进程退出</td></tr>
+</tbody>
+</table>
+</div>
+<p>另外还有可选的 <strong><code>Cleaner</code></strong> 接口，只有一个 <code>Cleanup(ctx)</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/snapshotter.go#L379-L388">snapshotter.go#L379-L388</a>）。它把“从元数据里删 key“（快）和“真正释放磁盘“（慢）拆开：支持异步删除的驱动先让 key 立即可复用，延迟到 <code>Cleanup</code> 再删目录/设备。</p>
+<h3 id="35-metadatabolt这一层做了什么"><a class="header" href="#35-metadatabolt这一层做了什么">3.5 metadata（bolt）这一层做了什么</a></h3>
+<p>containerd 进程内并不是直接把用户 key 交给驱动，而是包了一层 <code>core/metadata</code>：</p>
+<ul>
+<li><strong>命名空间隔离</strong>：<code>createKey</code> 把 <code>(namespace, id, key)</code> 编成后端 key：<code>&lt;ns&gt;/&lt;seq&gt;/&lt;key&gt;</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/metadata/snapshot.go#L61-L63">snapshot.go#L61-L63</a>）。</li>
+<li><strong>带租约的存在</strong>：创建快照时在 metadata 里挂 lease，避免并发 GC 把它删掉。</li>
+<li><strong>目标快照短路</strong>：<code>Prepare</code> 若发现 <code>containerd.io/snapshot.ref</code> 指向的 committed 快照已存在，直接返回 <code>ErrAlreadyExists</code>（远程快照协议的关键，<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/metadata/snapshot.go#L297-L420">snapshot.go#L297-L420</a>）。</li>
+<li><strong>后端一致性</strong>：bolt 事务里做 <code>CreateSnapshot</code> / <code>CommitActive</code> / <code>Remove</code>，保证 key 的可见性与目录创建一致（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/storage/bolt.go#L217-L297">bolt.go#L217-L297</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/storage/bolt.go#L298-L344">#L298-L344</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/storage/bolt.go#L350-L433">#L350-L433</a>）。</li>
+</ul>
+<blockquote>
+<p>一个容易误解的点：<strong>快照目录名是数字 ID，不是 key，也不是 chainID</strong>。数字 ID 由 bolt 的 <code>NextSequence()</code> 分配，committed 后沿用同一个 ID（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/storage/bolt.go#L350-L380">bolt.go#L350-L380</a>），所以你在 <code>snapshots/12/fs</code> 里看到的内容对应 <code>ctr snapshot ls</code> 里某条 <code>sha256:...</code>。</p>
+</blockquote>
+<hr>
+<h2 id="4-overlay-驱动实现精读"><a class="header" href="#4-overlay-驱动实现精读">4. overlay 驱动实现精读</a></h2>
+<p><code>overlayfs</code> 是默认快照器（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/defaults/defaults_linux.go#L29-L32">defaults_linux.go#L29-L32</a>），也是理解所有目录型快照器的最佳样本。插件 ID 注册为 <code>overlayfs</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/snapshots/overlay/plugin/plugin.go#L56-L81">plugin.go#L56-L81</a>）。</p>
+<h3 id="41-插件根目录布局"><a class="header" href="#41-插件根目录布局">4.1 插件根目录布局</a></h3>
+<p>插件根目录由 <code>config.Root</code> + 插件 URI 拼成（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/cmd/containerd/server/server.go#L163-L176">server.go#L163-L176</a>），默认 <code>root = /var/lib/containerd</code>、插件 URI = <code>io.containerd.snapshotter.v1.overlayfs</code>：</p>
+<pre><code class="language-text">/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/
+├── metadata.db                      # bolt：快照 key/parent/kind/labels/usage
+└── snapshots/
+    ├── 12/                          # 数字 ID（bolt NextSequence 分配）
+    │   ├── fs/                      # active 时是 upperdir；committed 时是只读层目录
+    │   └── work/                    # 只有 active 才有：overlay 的 workdir
+    └── 13/
+        └── fs/
+</code></pre>
+<p>三个路径的构造函数一目了然（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/snapshots/overlay/overlay.go#L620-L626">overlay.go#L620-L626</a>）：</p>
+<pre><code class="language-go">func (o *snapshotter) upperPath(id string) string {
+	return filepath.Join(o.root, "snapshots", id, "fs")
+}
+func (o *snapshotter) workPath(id string) string {
+	return filepath.Join(o.root, "snapshots", id, "work")
+}
+</code></pre>
+<p>初始化时做四件事（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/snapshots/overlay/overlay.go#L118-L176">overlay.go#L118-L176</a>）：</p>
+<ol>
+<li>检查根目录所在文件系统支持 <code>d_type</code>（xfs 需要 <code>ftype=1</code>），否则 overlay 不能可靠工作；</li>
+<li>打开/创建 <code>metadata.db</code>、<code>snapshots/</code>；</li>
+<li>自动判断是否需要 <code>userxattr</code>（rootless / userns 场景）；</li>
+<li>若内核支持 <code>index</code> 特性，默认加 <code>index=off</code>（避免 index 目录带来兼容问题；mount options 在内核里是 <strong>last-wins</strong>，所以追加在用户配置之后会覆盖配置，代码特意先检查是否已显式配置）。</li>
+</ol>
+<h3 id="42-createsnapshotprepareview-的共同实现"><a class="header" href="#42-createsnapshotprepareview-的共同实现">4.2 createSnapshot：Prepare/View 的共同实现</a></h3>
+<p><code>Prepare</code> 和 <code>View</code> 都进 <code>createSnapshot</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/snapshots/overlay/overlay.go#L268-L274">overlay.go#L268-L274</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/snapshots/overlay/overlay.go#L431-L534">#L431-L534</a>），步骤：</p>
+<ol>
+<li><strong>在一个 bolt 写事务里</strong>先调 <code>prepareDirectory</code>，在 <code>snapshots/</code> 下建临时目录 <code>new-*</code>：
+<ul>
+<li><code>fs/</code> 权限 <code>0755</code>；</li>
+<li>只有 <code>KindActive</code> 才建 <code>work/</code>，权限 <code>0711</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/snapshots/overlay/overlay.go#L536-L553">overlay.go#L536-L553</a>）。</li>
+</ul>
+</li>
+<li><code>storage.CreateSnapshot</code> 写元数据：校验 parent 是 committed、分配 ID、写 parent backlink、组装 <code>ParentIDs</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/storage/bolt.go#L217-L297">bolt.go#L217-L297</a>）。</li>
+<li>处理 userns 的 uid/gid 映射：有映射标签就 chown 成映射后的 root；没有就沿用父快照 upperdir 的属主，保证 overlay 能合并。</li>
+<li>把临时目录 <strong>rename</strong> 成 <code>snapshots/&lt;ID&gt;</code>，然后返回 <code>o.mounts(s, info)</code>。</li>
+</ol>
+<p>为什么先 <code>new-*</code> 再 rename：目录在元数据事务提交前不可见，进程崩在中间也只会留下一个不会被引用的临时目录，<code>Cleanup</code> 会按 ID 集合把它删掉。</p>
+<h3 id="43-mountslowerdir-的顺序是灵魂"><a class="header" href="#43-mountslowerdir-的顺序是灵魂">4.3 mounts()：lowerdir 的顺序是灵魂</a></h3>
+<p><code>mounts()</code> 是整个驱动最值得读的函数（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/snapshots/overlay/overlay.go#L555-L618">overlay.go#L555-L618</a>），按 parent 数量与 Kind 分四种情况：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>条件</th><th>返回</th><th>原因</th></tr>
+</thead>
+<tbody>
+<tr><td><code>len(ParentIDs) == 0</code></td><td><code>bind</code> 挂自己的 <code>fs/</code>（active=<code>rw</code>，view=<code>ro</code>）</td><td>没有 lower 时 overlay 无法工作，直接用 bind</td></tr>
+<tr><td><code>KindActive</code>（有 ≥1 个 parent）</td><td><code>overlay</code>，带 <code>workdir=</code>、<code>upperdir=</code>、<code>lowerdir=</code></td><td>常规容器 rootfs / 解包</td></tr>
+<tr><td><code>KindView</code> 且恰好 1 个 parent</td><td><code>bind</code> 挂父快照的 <code>fs/</code>（<code>ro</code>）</td><td>只有一层时 View 等价于只读 bind，省一次 overlay 挂载</td></tr>
+<tr><td><code>KindView</code> 且 &gt;1 个 parent</td><td><code>overlay</code>，只有 <code>lowerdir=</code>，没有 upper/work</td><td>没有 upperdir 的 overlay 天然是只读合并视图</td></tr>
+</tbody>
+</table>
+</div>
+<p>lowerdir 的构造只有三行，但顺序至关重要：</p>
+<pre><code class="language-go">parentPaths := make([]string, len(s.ParentIDs))
+for i := range s.ParentIDs {
+	parentPaths[i] = o.upperPath(s.ParentIDs[i])
+}
+options = append(options, fmt.Sprintf("lowerdir=%s", strings.Join(parentPaths, ":")))
+</code></pre>
+<p>因为 <code>ParentIDs[0]</code> 是<strong>直接父（最上层）</strong>，最后一个元素是 base（最底层），而 overlayfs 的 lowerdir 里<strong>左边优先级最高</strong>，所以这里不能反转。一个 3 层镜像 + 容器可写层的挂载参数大致是：</p>
+<pre><code class="language-text">lowerdir=/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/5/fs:\
+/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/4/fs:\
+/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/3/fs,\
+upperdir=/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/7/fs,\
+workdir=/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/7/work
+</code></pre>
+<p>5 是直接父（容器 active 快照的 parent，即镜像顶层 chainID），4、3 往下；7 是容器自己的 active 快照。<strong>所有容器共享 3/4/5 这三个目录作为 lower</strong>，只有 7 是各自的。</p>
+<p><code>mounts()</code> 结尾把驱动级 options（<code>userxattr</code>、<code>index=off</code>、<code>mount_options</code>）追加到 overlay 挂载参数里；bind 分支<strong>不带</strong>这些 options（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/snapshots/overlay/overlay.go#L74-L81">overlay.go#L74-L81</a>）。</p>
+<h3 id="44-commit--remove--asynchronousremove--cleanup"><a class="header" href="#44-commit--remove--asynchronousremove--cleanup">4.4 Commit / Remove / AsynchronousRemove / Cleanup</a></h3>
+<p><strong>Commit</strong>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/snapshots/overlay/overlay.go#L300-L318">overlay.go#L300-L318</a>）：扫描 upperdir 得到 <code>Usage</code>，然后 <code>storage.CommitActive</code> 把 active 记录改名成 committed，目录不动、ID 不变。<code>CommitActive</code> 里有两个细节（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/storage/bolt.go#L350-L433">bolt.go#L350-L433</a>）：</p>
+<ul>
+<li><strong>标签是替换而不是继承</strong>（<code>si.Labels = base.Labels</code>）；</li>
+<li>2.4 支持 <strong>Commit 时 rebase 父</strong>：如果 active 创建时没有父，而 commit 时 <code>WithParent</code> 指定了父，允许补上（并行解包场景，<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/unpack/unpacker.go#L550-L567">unpacker.go#L550-L567</a>）。</li>
+</ul>
+<p><strong>Remove</strong>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/snapshots/overlay/overlay.go#L320-L351">overlay.go#L320-L351</a>）：bolt 事务里调 <code>storage.Remove</code>（有子快照会直接失败，<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/storage/bolt.go#L298-L344">bolt.go#L298-L344</a>），事务提交后再删目录：</p>
+<ul>
+<li><code>!asyncRemove</code>：事务内先算出哪些目录该删，提交后 <code>os.RemoveAll</code>；</li>
+<li><code>asyncRemove</code>（2.4 的<strong>默认</strong>，因为插件配置 <code>sync_remove</code> 默认 false 且 <code>!SyncRemove</code> 就开异步，<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/snapshots/overlay/plugin/plugin.go#L40-L49">plugin.go#L40-L49</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/snapshots/overlay/plugin/plugin.go#L76-L81">#L76-L81</a>）：key 立即消失、立即可复用，磁盘留给 <code>Cleanup</code>。</li>
+</ul>
+<p><strong>Cleanup</strong>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/snapshots/overlay/overlay.go#L373-L429">overlay.go#L373-L429</a>）：读 bolt 里的 ID 集合，扫描 <code>snapshots/</code> 目录，凡是目录名不在 <code>IDMap</code> 里的都删。它是幂等的，GC 每轮结束后调用一次。</p>
+<blockquote>
+<p><strong>挂载未卸载时删快照会怎样？</strong> Remove 不会替你卸载。如果 rootfs 仍被 shim/runc 挂载着，<code>RemoveAll</code> 可能失败（EBUSY/ENOTEMPTY），代码只记 warn 并继续（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/snapshots/overlay/overlay.go#L323-L336">overlay.go#L323-L336</a>）；由于元数据已删，下一次 <code>Cleanup</code> 还会尝试删这个目录。正确做法是走容器生命周期（先停 task/删容器再删快照），而不是手动 <code>rm</code>。</p>
+</blockquote>
+<h3 id="45-rootless-与-userxattr"><a class="header" href="#45-rootless-与-userxattr">4.5 rootless 与 userxattr</a></h3>
+<p><code>userxattr</code> 是 overlayfs 在 <strong>用户命名空间里</strong> 用 <code>user.overlay.*</code> 代替 <code>trusted.overlay.*</code> 存放 whiteout/opaque 标记的选项。overlay 快照器启动时自动探测（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/snapshots/overlay/overlayutils/check.go#L114-L170">check.go#L114-L170</a>）：</p>
+<ul>
+<li>进程不在 userns 里（真正的 root）→ 不需要；</li>
+<li>根目录在 tmpfs 上 → 不加（tmpfs 不支持 user xattr）；</li>
+<li>内核 ≥ 5.11 → 直接加；</li>
+<li>老内核 → 实地用 <code>userxattr</code> 试挂一次 overlay 来判断。</li>
+</ul>
+<p>这解释了为什么 rootless 场景会有 <code>userxattr</code> 出现在 <code>mount</code> 输出里，也解释了老内核需要 <code>fuse-overlayfs</code> 或 <code>native</code> 作为替代（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/rootless.md#L55-L67">docs/rootless.md#L55-L67</a>）。whiteout/opaque 的机制本身属于 OverlayFS 内核语义，见 <a href="./OverlayFS与镜像层.html">OverlayFS与镜像层</a>。</p>
+<hr>
+<h2 id="5-端到端生命周期代码级"><a class="header" href="#5-端到端生命周期代码级">5. 端到端生命周期（代码级）</a></h2>
+<h3 id="51-chainid-与层复用"><a class="header" href="#51-chainid-与层复用">5.1 ChainID 与层复用</a></h3>
+<p>镜像 config 里的 <code>rootfs.diff_ids</code> 是每层的<strong>未压缩</strong> digest。ChainID 是把前缀逐层“滚“起来的结果：<code>C₁ = A</code>，<code>C₂ = digest(C₁ + " " + B)</code>，<code>C₃ = digest(C₂ + " " + C)</code>（<a href="https://github.com/opencontainers/image-spec/blob/147f9c13cedb47a0c4d9a11a222961073d585877/identity/chainid.go#L25-L45">image-spec identity/chainid.go#L25-L45</a>）。因此：</p>
+<ul>
+<li>同一组层 → 同一个顶层 chainID → 同一个 committed 快照名 → <strong>天然去重</strong>；</li>
+<li>任何一层不同（哪怕内容相同、压缩方式不同导致 diffID 不同）→ chainID 不同；</li>
+<li>unpacker 会先一次性算出所有层的 chainID，再逐层推进（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/unpack/unpacker.go#L461-L465">unpacker.go#L461-L465</a>）。</li>
+</ul>
+<h3 id="52-拉镜像prepare--apply--commit"><a class="header" href="#52-拉镜像prepare--apply--commit">5.2 拉镜像：Prepare → apply → Commit</a></h3>
+<p>2.4 里 <code>Pull(..., WithPullUnpack)</code> 走的是 <code>core/unpack.Unpacker</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/client/pull.go#L92-L140">pull.go#L92-L140</a>），旧的 <code>image.Unpack</code> + <code>rootfs.ApplyLayerWithOpts</code> 路径也还在（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/client/image.go#L314-L400">image.go#L314-L400</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/pkg/rootfs/apply.go#L91-L180">apply.go#L91-L180</a>），两者调用的 snapshotter API 相同：</p>
+<pre><code class="language-text">key    = "extract-&lt;纳秒&gt;-&lt;随机&gt; &lt;chainID&gt;"      // UnpackKeyFormat
+labels = {snapshot.ref: &lt;chainID&gt;, snapshot/diff-id: &lt;diffID&gt;, ...}
+mounts = sn.Prepare(ctx, key, parent, WithLabels(labels))
+... diff service 在 mounts 上解包 tar，校验 diffID ...
+sn.Commit(ctx, chainID /* 作为 name */, key, opts...)
+</code></pre>
+<p>三个关键点（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/unpack/unpacker.go#L486-L520">unpacker.go#L486-L520</a>）：</p>
+<ol>
+<li><strong>active key 带随机后缀</strong>：并行解包和重试时同一 chainID 可能同时有多个 active key，<code>extract-*</code> 前缀也方便驱动区分“这是解包事务“；</li>
+<li><strong><code>snapshot.ref</code> = chainID</strong>：远程快照器可以据此判断“这个 committed 快照我已经有了“并返回 <code>ErrAlreadyExists</code>，unpacker 再 <code>Stat(chainID)</code> 确认后跳过整层（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/snapshotters/remote-snapshotter.md#L96-L139">remote-snapshotter.md#L96-L139</a>）；</li>
+<li><strong>Commit 之后把 chainID 写到 config 内容上</strong>：<code>containerd.io/gc.ref.snapshot.overlayfs = &lt;顶层 chainID&gt;</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/unpack/unpacker.go#L754-L765">unpacker.go#L754-L765</a>；legacy 路径在 <a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/client/image.go#L385-L397">image.go#L385-L397</a>），这就是快照的 GC 引用根。</li>
+</ol>
+<h3 id="53-创建容器preparekey容器-id-parent镜像-chainid"><a class="header" href="#53-创建容器preparekey容器-id-parent镜像-chainid">5.3 创建容器：Prepare(key=容器 ID, parent=镜像 chainID)</a></h3>
+<p>CRI 创建业务容器时先设 snapshotter，再 <code>WithNewSnapshot(containerID, image)</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/container_create.go#L311-L320">container_create.go#L311-L320</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/opts/container.go#L42-L56">opts/container.go#L42-L56</a>）。客户端实现是（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/client/container_opts.go#L240-L285">container_opts.go#L240-L285</a>）：</p>
+<pre><code class="language-text">diffIDs = image.RootFS()
+parent  = identity.ChainID(diffIDs).String()   // 镜像顶层快照名
+sn.Prepare(ctx, id, parent)                    // id 就是容器 ID
+container.Snapshotter = &lt;name&gt;
+container.SnapshotKey = id
+</code></pre>
+<p>所以 <code>ctr snapshot ls</code> 里看到的 <strong>active 快照 KEY 就是容器 ID</strong>——这也回答了“为什么看不到容器名“：它既不是容器名也不是镜像名，而是 container ID。</p>
+<p>注意：<strong>只读 rootfs 的容器也创建 Active 快照</strong>。CRI 注释明确说 rootfs 总是可写的，交给 runc 去创建 spec 里的挂载点，最后由 <code>spec.Root.Readonly</code> 保证容器内只读（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/container_create.go#L313-L320">container_create.go#L313-L320</a>）。</p>
+<h3 id="54-启动mounts--shim--runc"><a class="header" href="#54-启动mounts--shim--runc">5.4 启动：Mounts → shim → runc</a></h3>
+<p>启动容器（<code>NewTask</code>）时，客户端把快照挂载参数塞进 <code>CreateTaskRequest.Rootfs</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/client/container.go#L328-L360">container.go#L328-L360</a>）：</p>
+<pre><code class="language-go">mounts, err := s.Mounts(ctx, r.SnapshotKey)
+...
+request.Rootfs = append(request.Rootfs, &amp;types.Mount{Type: m.Type, Source: m.Source, Target: m.Target, Options: m.Options})
+</code></pre>
+<p>shim 收到后建好 bundle 的 <code>rootfs/</code> 目录，用 <code>mount.All(mounts, rootfs)</code> 把 snapshotter 给的参数真正挂上，再交给 runc 执行 <code>pivot_root</code> 之类操作（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/cmd/containerd-shim-runc-v2/runc/container.go#L65-L120">cmd/containerd-shim-runc-v2/runc/container.go#L65-L120</a>）。挂载点、shim、runc 的协作见 <a href="../Kubernetes/容器运行时.html">容器运行时</a>。容器退出后，CRI 删除容器时带 <code>WithSnapshotCleanup</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/container_remove.go#L100-L110">container_remove.go#L100-L110</a>），最终落到 <code>sn.Remove(containerID)</code>，只删容器自己的 upperdir。</p>
+<h3 id="55-view-的实际用途"><a class="header" href="#55-view-的实际用途">5.5 View 的实际用途</a></h3>
+<p><code>View</code> 不是“给只读容器用“的（那仍是 Active + <code>spec.Root.Readonly</code>）。仓库里真正在用的是 diff 计算：<code>rootfs.CreateDiff</code> 先对父快照建一个 View 作为 lower，再对 active 快照或 committed 快照建 View 作为 upper，两个只读视图交给 comparer 算差异（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/pkg/rootfs/diff.go#L33-L67">diff.go#L33-L67</a>）。<code>ctr snapshot view</code> 也是同一条路径（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/cmd/ctr/commands/snapshots/snapshots.go#L342-L383">snapshots.go#L342-L383</a>）。</p>
+<h3 id="56-ctr-snapshot-ls-的名字从哪来"><a class="header" href="#56-ctr-snapshot-ls-的名字从哪来">5.6 <code>ctr snapshot ls</code> 的名字从哪来</a></h3>
+<p><code>ctr snapshot list</code> 直接遍历 <code>Info.Name/Parent/Kind</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/cmd/ctr/commands/snapshots/snapshots.go#L72-L100">snapshots.go#L72-L100</a>）。一个典型输出（省略长 digest）：</p>
+<pre><code class="language-text">KEY                                    PARENT              KIND
+extract-123456789-abc sha256:aaaa1111  -                   Active      # 正在/曾经解包
+sha256:aaaa1111                        -                   Committed   # 第 1 层
+sha256:bbbb2222                        sha256:aaaa1111     Committed   # 第 2 层
+my-container-id                        sha256:bbbb2222     Active      # 容器可写层
+</code></pre>
+<ul>
+<li><code>extract-*</code> 是解包事务 key，正常情况下 Commit 后就消失；残留通常意味着上次解包失败；</li>
+<li><code>sha256:*</code> 是 committed 镜像层快照，名字 = chainID；</li>
+<li>容器 ID 是 active 容器快照的 key。</li>
+</ul>
+<hr>
+<h2 id="6-gc-与引用快照什么时候被回收"><a class="header" href="#6-gc-与引用快照什么时候被回收">6. GC 与引用：快照什么时候被回收</a></h2>
+<p>containerd 的 GC 是<strong>引用计数/可达性</strong>模型：image、container、lease、content 的标签构成引用边，不可达的对象被删除。快照相关的引用有：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>引用边</th><th>来源</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td>image → content</td><td>image target 指向的 manifest</td><td>image 是 GC 根；target 内容直接可达</td></tr>
+<tr><td>content → content</td><td>manifest 上的 <code>gc.ref.content.config</code> / <code>gc.ref.content.l.*</code></td><td>让 config 与各层 blob 可达（标签生成见 <a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/images/mediatypes.go#L216-L237">mediatypes.go#L216-L237</a>）</td></tr>
+<tr><td>image → snapshot</td><td>config 内容上的 <code>gc.ref.snapshot.&lt;snapshotter&gt;</code></td><td>值 = 顶层 chainID；镜像存在则顶层快照可达</td></tr>
+<tr><td>snapshot → parent</td><td>快照记录的 <code>parent</code> 字段</td><td>GC 遍历时把父快照加入可达集（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/metadata/gc.go#L848-L870">gc.go#L848-L870</a>）</td></tr>
+<tr><td>container → snapshot</td><td>容器记录的 snapshotter + snapshot key</td><td>容器活着，其 rootfs 快照可达（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/metadata/gc.go#L908-L920">gc.go#L908-L920</a>）</td></tr>
+<tr><td>lease → snapshot</td><td>lease 资源</td><td>拉取时客户端持有 lease；<code>containerd.io/gc.root</code> 可让快照在指定时间前不被回收</td></tr>
+<tr><td>label → snapshot</td><td><code>containerd.io/gc.ref.snapshot.&lt;snapshotter&gt;=&lt;name&gt;</code></td><td>标签解析逻辑在 <a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/metadata/gc.go#L301-L310">gc.go#L301-L310</a></td></tr>
+</tbody>
+</table>
+</div>
+<p>删除镜像/容器的真实时序（以删镜像为例）：</p>
+<ol>
+<li><code>ctr image rm</code> 删除的是 image store 里的 image 记录，<strong>不直接删快照</strong>；</li>
+<li>下一轮 GC：image 记录已不存在 → 它 target 的 manifest 内容不可达被删 → manifest 上的 <code>gc.ref.content.*</code> 标签失效 → config 与各层 blob 依次不可达被删（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/images/mediatypes.go#L216-L237">mediatypes.go#L216-L237</a>）；</li>
+<li>config 内容被删后，其上的 <code>gc.ref.snapshot.&lt;snapshotter&gt;</code> 标签消失 → 对应顶层 committed 快照不可达；容器记录不存在时其 active 快照也不可达；</li>
+<li>metadata 的 GC 从 bolt 里删掉这些快照记录（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/metadata/db.go#L382-L422">db.go#L382-L422</a>）；</li>
+<li>快照器被标记 dirty，随后执行 <code>garbageCollect</code>：把后端 <code>Walk</code> 出来的快照与 metadata 里“还存在的后端 key“集合对比，对不在集合里的快照<strong>自底向上</strong>调用 <code>Remove</code>（先删子再删父，避免 <code>cannot remove snapshot with child</code>），最后调用 <code>Cleaner.Cleanup</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/metadata/snapshot.go#L862-L941">snapshot.go#L862-L941</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/metadata/snapshot.go#L949-L1000">#L949-L1000</a>）。</li>
+</ol>
+<p>所以：</p>
+<ul>
+<li><strong>镜像删了，磁盘不会立刻释放</strong>：要等 GC 轮次 + <code>Cleanup</code>；overlay 默认异步删除还会再拆成“key 消失“和“目录消失“两步。</li>
+<li><strong><code>ctr snapshot rm</code> 常见失败原因</strong>：该快照还有子快照（镜像顶层快照被容器 active 快照引用，必须先删容器）；或者 key 拼错（用户 key 与后端 <code>&lt;ns&gt;/&lt;id&gt;/&lt;key&gt;</code> 不同）。注意还有一种“看起来失败“：删的是正在被容器使用的快照，元数据层会删掉记录，但目录因仍被挂载而删不掉，只留下 warning，磁盘要等挂载消失后的 <code>Cleanup</code> 才释放。</li>
+<li><strong>删除容器不会删镜像层</strong>：容器 active 快照的 parent 是镜像顶层 committed 快照；删容器只调用一次 <code>Remove(containerID)</code>，镜像层仍被 image 的 <code>gc.ref.snapshot</code> 引用。</li>
+</ul>
+<hr>
+<h2 id="7-内置--外置驱动对比"><a class="header" href="#7-内置--外置驱动对比">7. 内置 / 外置驱动对比</a></h2>
+<p>containerd 2.4 代码树里 <code>plugins/snapshots/</code> 下的内置插件有 overlay、native、btrfs、devmapper、blockfile、erofs（以及 Windows/lcow 相关），插件 ID 都注册在 <code>io.containerd.snapshotter.v1</code> 下（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/types.go#L39">plugins/types.go#L39</a>）；分类说明见 <a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/snapshotters/README.md#L1-L34">docs/snapshotters/README.md#L1-L34</a>。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>驱动</th><th>实现 / COW 粒度</th><th>块设备</th><th>rootless</th><th>K8s 常用度</th><th>备注</th></tr>
+</thead>
+<tbody>
+<tr><td><code>overlayfs</code></td><td>目录 + overlayfs，文件级 COW</td><td>否</td><td>可用（内核 ≥5.11 + <code>userxattr</code>，或 fuse-overlayfs）</td><td><strong>默认，绝大多数节点</strong></td><td>分层目录共享、删除快；层数多时 lowerdir 字符串变长</td></tr>
+<tr><td><code>native</code></td><td>每层完整拷贝到独立目录，bind 挂载</td><td>否</td><td>可用</td><td>低（调试/兜底）</td><td>无 COW，磁盘与解包时间随层数线性增长（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/snapshots/native/native.go#L43-L55">native.go#L43-L55</a>）</td></tr>
+<tr><td><code>btrfs</code></td><td>btrfs 子卷快照，文件系统级 COW</td><td>否（但需 btrfs 根）</td><td>通常不可</td><td>中低</td><td>插件根目录必须是 btrfs 挂载点</td></tr>
+<tr><td><code>devmapper</code></td><td>thin-pool 设备快照，块级 COW</td><td>是</td><td>不可</td><td>中（Kata/VM 场景）</td><td>需要预建 thin-pool、<code>dmsetup</code>，配置 <code>pool_name</code>/<code>base_image_size</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/snapshotters/devmapper.md#L1-L45">devmapper.md#L1-L45</a>）</td></tr>
+<tr><td><code>blockfile</code></td><td>每个快照一个裸块文件，从父/空块文件复制</td><td>是</td><td>不可</td><td>低（VM/Kata）</td><td>需要 loopback 或 VM 内挂载（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/snapshotters/blockfile.md#L1-L30">blockfile.md#L1-L30</a>）</td></tr>
+<tr><td><code>erofs</code></td><td>committed 快照存 EROFS blob，active 用 overlay</td><td>否</td><td>有限</td><td>新，逐渐增多</td><td>需 EROFS differ 才能发挥优势；支持 fsverity（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/snapshotters/erofs.md#L1-L45">erofs.md#L1-L45</a>）</td></tr>
+<tr><td><code>fuse-overlayfs</code>（外置）</td><td>FUSE 实现 overlayfs</td><td>否</td><td><strong>可以</strong>（内核 ≥4.18）</td><td>rootless 场景常见</td><td>不在 containerd 主仓库</td></tr>
+<tr><td><code>nydus</code> / <code>overlaybd</code> / <code>stargz</code>（外置）</td><td>懒加载/远程快照</td><td>视实现</td><td>视实现</td><td>特定大规模场景</td><td>均通过 proxy 插件接入，见 <a href="./镜像懒加载.html">镜像懒加载</a></td></tr>
+</tbody>
+</table>
+</div>
+<p>版本变化方面：containerd 2.0 <strong>移除了 aufs</strong>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/containerd-2.0.md#L139-L141">docs/containerd-2.0.md#L139-L141</a>）；在 2.4 这棵代码树里 devmapper/blockfile/erofs 都已是 <code>plugins/snapshots/</code> 下的内置实现。外置快照器通过 gRPC proxy 插件加载，不要求与 containerd 同仓库（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/PLUGINS.md#L74-L125">docs/PLUGINS.md#L74-L125</a>）。</p>
+<hr>
+<h2 id="8-常见误解与排障"><a class="header" href="#8-常见误解与排障">8. 常见误解与排障</a></h2>
+<ol>
+<li><strong>“snapshotter 就是 Docker 的 storage driver”</strong>：概念相似但 API 不同。snapshotter 有 Active/Committed/View 三态、<code>Commit</code> 事务、<code>Cleanup</code> 异步回收、远程快照协议；Docker 的 graphdriver 没有这些语义。名字也不同：containerd 叫 <code>overlayfs</code>，Docker 叫 <code>overlay2</code>。</li>
+<li><strong>“<code>ctr snapshot ls</code> 里应该看到镜像名”</strong>：看不到。committed 的名字是 chainID，容器 active 的 key 是 container ID；镜像名只存在于 image store。</li>
+<li><strong>“failed unpack 后 <code>extract-*</code> 快照会自己消失”</strong>：不会立刻消失。它可以被重新 Prepare 复用，也可能残留到下次 GC；排障时看到一堆 <code>extract-*</code> 先确认是否 pull 失败/中断。</li>
+<li><strong>“<code>ctr snapshot rm</code> 失败是 bug”</strong>：大概率有子快照（<code>cannot remove snapshot with child</code>）。请先删容器（其 active 快照是子），或者按“顶层 → base“顺序删；不要指望删父快照时级联删子。</li>
+<li><strong>“镜像删了磁盘应该立刻降”</strong>：不会。要等 GC 与 <code>Cleanup</code>；overlay 默认还是异步删除。用 <code>ctr snapshot ls</code>、<code>ctr plugins ls</code> 和 <code>du -sh</code> 观察，而不是 <code>df</code> 立刻对账。</li>
+<li><strong>“overlay 的快照目录可以直接 tar 备份”</strong>：快照目录里可能含 whiteout（0/0 字符设备或 <code>trusted.overlay.*</code>/<code>user.overlay.*</code> xattr）与 opaque 目录，普通 tar/cp 不保留这些语义；备份/迁移请走镜像或 <code>ctr snapshot diff</code>。机制见 <a href="./OverlayFS与镜像层.html">OverlayFS与镜像层</a>。</li>
+<li><strong>“rootless 一定能用 overlayfs”</strong>：老内核（&lt;5.11，除 Ubuntu/Debian 补丁）不行，需要 <code>fuse-overlayfs</code> 或 <code>native</code>；<code>userxattr</code> 是自动探测的，不要手动乱加。</li>
+<li><strong>“层数没有上限，随便叠”</strong>：containerd 不限制层数，但 <code>lowerdir=</code> 是单个 mount option，受内核 overlayfs 多 lower 支持与参数长度影响；overlay 插件初始化时会检查根文件系统 <code>d_type</code> 与多 lower 支持（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/snapshots/overlay/overlayutils/check.go#L47-L100">check.go#L47-L100</a>），不支持时插件直接起不来。</li>
+<li><strong>“删容器会把镜像层删掉”</strong>：不会，见 §6。</li>
+</ol>
+<hr>
+<h2 id="9-与-kubelet--cri-的边界"><a class="header" href="#9-与-kubelet--cri-的边界">9. 与 kubelet / CRI 的边界</a></h2>
+<ul>
+<li><strong>CRI API 里没有 snapshotter</strong>。kubelet 只发 <code>PullImage</code>、<code>CreateContainer</code>、<code>RemoveImage</code>、<code>ImageFsInfo</code> 等请求；snapshotter 是 containerd 内部实现细节，在 CRI 配置里选择（2.x 是 <code>plugins."io.containerd.cri.v1.images".snapshotter</code>，默认 <code>overlayfs</code>，<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/cri/config.md#L70-L84">docs/cri/config.md#L70-L84</a>）。</li>
+<li>kubelet 关心的“镜像文件系统“统计由 <code>ImageFsInfo</code> 提供：containerd 按 snapshotter 聚合快照 <code>Usage</code>，并把默认 snapshotter 放第一个（kubelet 只取第一个），供节点磁盘压力驱逐使用（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/images/imagefs_info.go#L27-L82">imagefs_info.go#L27-L82</a>）。</li>
+<li>远程/懒加载快照器需要的镜像信息（引用、manifest/layer digest）由 CRI/nerdctl 通过 <code>pkg/snapshotters</code> 的 handler 以 <code>containerd.io/snapshot/cri.*</code> 标签传给快照器（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/pkg/snapshotters/annotations.go#L29-L45">annotations.go#L29-L45</a>）；CRI 侧可以关掉这个透传（<code>disable_snapshot_annotations</code>）。</li>
+<li><strong>更换 snapshotter 不是热切换</strong>：content store 的 layer 可以复用，但快照必须重建；已有容器绑定在原 snapshotter 上，节点需要 drain/重建。生产上常见做法是“节点级配置 + 重新解包“，而不是原地切换。</li>
+</ul>
+<hr>
+<h2 id="10-动手验证清单"><a class="header" href="#10-动手验证清单">10. 动手验证清单</a></h2>
+<pre><code class="language-bash"># 非默认快照器时，用环境变量选择（SnapshotterFlags 支持 CONTAINERD_SNAPSHOTTER）
+export CONTAINERD_SNAPSHOTTER=overlayfs
+
+# 1) 哪些快照器插件加载成功（TYPE=io.containerd.snapshotter.v1）
+ctr plugins ls | grep snapshotter
+
+# 2) 当前有哪些快照：active(容器/解包)、committed(镜像层)
+ctr snapshot ls
+
+# 3) 看某个已提交层快照的详情与标签
+ctr snapshot info sha256:&lt;chainID&gt;
+
+# 4) 用 View 建一个只读视图再挂载（committed 不能直接 Mounts）
+ctr snapshot view myview sha256:&lt;chainID&gt;
+ctr snapshot mount /tmp/myview myview
+mount | grep /tmp/myview
+umount /tmp/myview &amp;&amp; ctr snapshot rm myview
+
+# 5) 目录布局与归属
+find /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs -maxdepth 3 -type d | head
+ls -l /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/*/fs
+
+# 6) 正在跑容器的 rootfs 是 overlay，且 lowerdir 指向多个 snapshots/&lt;ID&gt;/fs
+mount | grep 'type overlay' | head
+
+# 7) 对比 usage 与目录实际占用
+ctr snapshot usage &lt;key&gt;
+du -sh /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/&lt;ID&gt;/fs
+</code></pre>
+<blockquote>
+<p><code>ctr snapshot mount</code> 实际是 <code>mounts</code> 的别名，会把 mounts 交给 mount manager 激活并打印（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/cmd/ctr/commands/snapshots/snapshots.go#L386-L434">snapshots.go#L386-L434</a>）。committed 快照不能直接 <code>Mounts</code>（接口约定只对 active/view 生效），所以示例先 <code>view</code> 再挂。</p>
+</blockquote>
+<hr>
+<h2 id="11-参考"><a class="header" href="#11-参考">11. 参考</a></h2>
+<p><strong>代码（containerd v2.4.2 @ b7a2526）</strong></p>
+<ul>
+<li>接口与标签：<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/snapshotter.go#L29-L429">core/snapshots/snapshotter.go</a></li>
+<li>bolt 元数据：<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/storage/metastore.go#L49-L59">core/snapshots/storage/metastore.go</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/snapshots/storage/bolt.go#L182-L433">core/snapshots/storage/bolt.go</a></li>
+<li>overlay 驱动：<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/snapshots/overlay/overlay.go#L118-L626">plugins/snapshots/overlay/overlay.go</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/snapshots/overlay/plugin/plugin.go#L40-L81">插件注册</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/snapshots/overlay/overlayutils/check.go#L114-L170">userxattr 探测</a></li>
+<li>unpack 流程：<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/unpack/unpacker.go#L461-L765">core/unpack/unpacker.go</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/client/pull.go#L92-L140">client/pull.go</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/pkg/rootfs/apply.go#L91-L180">pkg/rootfs/apply.go</a></li>
+<li>容器 rootfs：<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/client/container_opts.go#L240-L285">client/container_opts.go</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/client/container.go#L328-L360">client/container.go</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/container_create.go#L311-L320">internal/cri/server/container_create.go</a></li>
+<li>GC：<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/metadata/gc.go#L301-L310">core/metadata/gc.go</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/metadata/snapshot.go#L862-L1000">core/metadata/snapshot.go</a></li>
+<li>ChainID：<a href="https://github.com/opencontainers/image-spec/blob/147f9c13cedb47a0c4d9a11a222961073d585877/identity/chainid.go#L25-L45">image-spec identity/chainid.go</a></li>
+</ul>
+<p><strong>文档</strong></p>
+<ul>
+<li><a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/snapshotters/README.md#L1-L34">Snapshotters</a></li>
+<li><a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/snapshotters/remote-snapshotter.md#L96-L139">Remote Snapshotter</a></li>
+<li><a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/snapshotters/devmapper.md#L1-L45">Devmapper</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/snapshotters/blockfile.md#L1-L30">Blockfile</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/snapshotters/erofs.md#L1-L45">EROFS</a></li>
+<li><a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/containerd-2.0.md#L139-L141">containerd 2.0 变更（aufs 移除）</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/rootless.md#L55-L67">Rootless</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/PLUGINS.md#L74-L125">Plugin 机制</a></li>
+</ul>
+<p><strong>兄弟页面</strong></p>
+<ul>
+<li><a href="./OverlayFS与镜像层.html">OverlayFS 与镜像层</a>：whiteout/opaque、lower/upper 合并的内核机制</li>
+<li><a href="./镜像懒加载.html">镜像懒加载</a>：stargz/nydus/overlaybd 等远程快照器</li>
+<li><a href="./容器知识备忘录.html">容器知识备忘录</a>：UnionFS/CoW 的入门直觉</li>
+<li><a href="../Kubernetes/容器运行时.html">容器运行时全链路</a>：CRI、containerd、shim、runc 的分工</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../docs/Cloud_Native/Linux_Container/容器知识备忘录.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../docs/Cloud_Native/Linux_Container/镜像懒加载.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../docs/Cloud_Native/Linux_Container/容器知识备忘录.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../docs/Cloud_Native/Linux_Container/镜像懒加载.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../highlight-abc7f01d.js"></script>
+        <script src="../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-a4bdd9af.js";
+            window.path_to_searchindex_js = "../../../searchindex-795994c4.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-aca9e1c8.js"></script>
+        <script src="../../../toc-2fda9a29.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -422,6 +422,9 @@ for (;;) {
 </blockquote>
 <hr>
 <h2 id="3-kvm把-cpu-虚拟化能力变成-devkvm"><a class="header" href="#3-kvm把-cpu-虚拟化能力变成-devkvm">3. KVM：把 CPU 虚拟化能力变成 <code>/dev/kvm</code></a></h2>
+<blockquote>
+<p>本节把 KVM 的概念逐层拆开；读完 §3.1–§3.6 后，可以直接跳到 <strong>§3.7 动手实验</strong>，用约 150 行 C 把这些概念亲手跑一遍。</p>
+</blockquote>
 <h3 id="31-它是什么内核子系统--一套-ioctl-abi"><a class="header" href="#31-它是什么内核子系统--一套-ioctl-abi">3.1 它是什么：内核子系统 + 一套 ioctl ABI</a></h3>
 <p>KVM（Kernel-based Virtual Machine）是 Linux 内核里的虚拟化子系统，构建产物是 <code>kvm.ko</code> + 厂商模块 <code>kvm-intel.ko</code>/<code>kvm-amd.ko</code>（<a href="https://github.com/torvalds/linux/blob/c03c1a14507dfaf8b856c2608f9ac216021fc222/arch/x86/kvm/Makefile#L35-L37">arch/x86/kvm/Makefile#L35-L37</a>）。它对外只暴露一个字符设备 <code>/dev/kvm</code>（misc 设备，<a href="https://github.com/torvalds/linux/blob/c03c1a14507dfaf8b856c2608f9ac216021fc222/virt/kvm/kvm_main.c#L5593-L5597">virt/kvm/kvm_main.c#L5593-L5597</a>），所有能力都通过这个 fd 上的 ioctl 协商。</p>
 <p>官方 API 文档开篇就把它定义为“一组发往不同文件描述符的 ioctl“（<a href="https://github.com/torvalds/linux/blob/c03c1a14507dfaf8b856c2608f9ac216021fc222/Documentation/virt/kvm/api.rst#L10-L22">Documentation/virt/kvm/api.rst#L10-L22</a>），并且这个 ABI 自 Linux 2.6.22 起冻结，只允许向后兼容扩展（<a href="https://github.com/torvalds/linux/blob/c03c1a14507dfaf8b856c2608f9ac216021fc222/Documentation/virt/kvm/api.rst#L90-L98">api.rst#L90-L98</a>）。版本号 <code>KVM_API_VERSION</code> 固定为 <code>12</code>（<a href="https://github.com/torvalds/linux/blob/c03c1a14507dfaf8b856c2608f9ac216021fc222/include/uapi/linux/kvm.h#L22">include/uapi/linux/kvm.h#L22</a>），userspace 发现返回的不是 12 就应拒绝运行。</p>
@@ -525,6 +528,268 @@ for (;;) {
 </div>
 <p>表中的 ❌ 不是猜测：KVM 的 ABI 里没有“磁盘““网卡”“固件“这类对象；<code>KVM_CREATE_VM</code> 建出的 VM 明确没有 vCPU、没有内存；guest 内存被定义为 VMM 进程的用户内存。内核里只有 <code>KVM_CREATE_DEVICE</code> 这类创建内核内设备（中断控制器等）的通道；VFIO 直通是 VMM 配合 VFIO 框架完成的，不属于 KVM 的通用设备模型。</p>
 <p><strong>所以选型时不要把 KVM 当作一个产品</strong>：没有 QEMU/Firecracker/Cloud Hypervisor 这些 VMM，KVM 自己连一台能启动的虚拟机都拼不出来。</p>
+<h3 id="37-动手实验用约-150-行-c-亲手跑一个最小-vmm"><a class="header" href="#37-动手实验用约-150-行-c-亲手跑一个最小-vmm">3.7 动手实验：用约 150 行 C 亲手跑一个最小 VMM</a></h3>
+<blockquote>
+<p><strong>实验目标</strong>：把 §3.1–§3.4 从“读代码“变成“亲眼看到“——亲手打开 <code>/dev/kvm</code>、创建 VM 和 vCPU、登记一段 guest 内存，然后看着 guest 的 <code>out</code> / <code>hlt</code> 指令变成 <code>KVM_EXIT_IO</code> / <code>KVM_EXIT_HLT</code>。</p>
+<p>实验 guest 是 5 字节的 16 位实模式程序：<code>mov al,'A'; out 0xe9,al; hlt</code>。VMM 把 <code>out</code> 的数据打印出来，然后看到 <code>hlt</code> 结束。完整代码已作为附件放在页面目录：<a href="沙箱与虚拟化技术全景.assets/tiny-kvm.c">tiny-kvm.c</a>。</p>
+</blockquote>
+<h4 id="step-0环境检查"><a class="header" href="#step-0环境检查">Step 0：环境检查</a></h4>
+<pre><code class="language-bash">ls -l /dev/kvm                          # 存在，且当前用户可读写
+grep -E 'vmx|svm' /proc/cpuinfo | head -1   # CPU 有硬件虚拟化扩展
+dmesg | grep -i kvm | tail -3           # 内核加载了 kvm_intel / kvm_amd
+gcc --version &amp;&amp; ls /usr/include/linux/kvm.h
+</code></pre>
+<p>如果 <code>/dev/kvm</code> 存在但“Permission denied“，把当前用户加入 <code>kvm</code> 组（推荐，重新登录或 <code>newgrp kvm</code> 生效）：</p>
+<pre><code class="language-bash">sudo usermod -aG kvm "$USER"
+# 或一次性 ACL：
+sudo setfacl -m u:"$USER":rw /dev/kvm
+# 或临时放开（重启/设备重插后失效）：
+sudo chmod 666 /dev/kvm
+</code></pre>
+<p><strong>WSL2</strong>：需要 <code>.wslconfig</code> 里开启嵌套虚拟化，然后 <code>wsl --shutdown</code> 重开：</p>
+<pre><code class="language-ini">[wsl2]
+nestedVirtualization=true
+</code></pre>
+<p>本文实测环境就是 WSL2（内核 <code>6.6.87.2-microsoft-standard-WSL2</code>，<code>kvm_amd</code>，<code>dmesg</code> 显示 <code>Nested Virtualization enabled</code>）。注意 <code>/dev/kvm</code> 默认属主是 <code>root:kvm</code>、权限 <code>660</code>，普通用户默认<strong>不在</strong> <code>kvm</code> 组——所以即使设备存在，也常需要上面的加组步骤。</p>
+<p><strong>云主机</strong>：需要宿主开启嵌套虚拟化（Intel <code>kvm_intel.nested=1</code> / AMD <code>nested=1</code>），并且实例类型允许嵌套；否则 <code>/dev/kvm</code> 可能不存在，或 <code>KVM_CREATE_VM</code>/<code>KVM_CREATE_VCPU</code> 失败。</p>
+<h4 id="step-1代码"><a class="header" href="#step-1代码">Step 1：代码</a></h4>
+<pre><code class="language-c">/*
+ * tiny-kvm.c — 用最小代码亲手跑一个 KVM 虚拟机（16 位实模式）
+ *
+ * 学习目标：直接观察 KVM 的三类 fd 与 KVM_RUN/VM exit 模型：
+ *   1) /dev/kvm  --KVM_CREATE_VM--&gt;        VM fd
+ *   2) VM fd     --KVM_SET_USER_MEMORY_REGION--&gt; 一段 gpa 指向本进程的用户内存
+ *   3) VM fd     --KVM_CREATE_VCPU--&gt;      vCPU fd
+ *   4) vCPU fd   --KVM_RUN--&gt;             进入 guest；返回即一次 VM exit
+ *
+ * guest 代码（放在 gpa 0，16 位实模式）：
+ *   B0 41        mov al, 0x41        ; 'A'
+ *   E6 E9        out 0xe9, al        ; 0xe9 是未分配的调试端口 -&gt; KVM_EXIT_IO
+ *   F4           hlt                 ; -&gt; KVM_EXIT_HLT
+ *
+ * 编译: gcc -O2 -Wall -Wextra -o tiny-kvm tiny-kvm.c
+ * 运行: ./tiny-kvm   (需要 /dev/kvm 且当前用户可读写)
+ */
+#define _GNU_SOURCE
+#include &lt;errno.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;linux/kvm.h&gt;
+#include &lt;stdint.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;sys/ioctl.h&gt;
+#include &lt;sys/mman.h&gt;
+#include &lt;unistd.h&gt;
+
+#define RAM_SIZE   0x1000ULL          /* 1 页 guest 物理内存 */
+#define TSS_ADDR   0xfffbd000ULL      /* Intel VMX 需要的 TSS 区域（不映射也不访问） */
+
+static void die(const char *what)
+{
+    fprintf(stderr, "%s: %s\n", what, strerror(errno));
+    exit(1);
+}
+
+int main(void)
+{
+    int kvm = open("/dev/kvm", O_RDWR | O_CLOEXEC);
+    if (kvm &lt; 0) {
+        fprintf(stderr, "open /dev/kvm: %s\n", strerror(errno));
+        fprintf(stderr, "提示: 确认内核加载了 kvm 模块、/dev/kvm 存在，且当前用户在 kvm 组（或对该设备有 rw 权限）。\n");
+        return 1;
+    }
+
+    int api = ioctl(kvm, KVM_GET_API_VERSION, 0);
+    if (api &lt; 0)
+        die("KVM_GET_API_VERSION");
+    if (api != KVM_API_VERSION) {
+        fprintf(stderr, "unexpected KVM API version %d (expected %d)\n", api, KVM_API_VERSION);
+        return 1;
+    }
+    printf("KVM API version: %d\n", api);
+
+    int vm = ioctl(kvm, KVM_CREATE_VM, 0);
+    if (vm &lt; 0)
+        die("KVM_CREATE_VM");
+
+    /* Intel VMX 上必须在创建 vCPU 前设置 TSS 地址；AMD 上可忽略失败。 */
+    if (ioctl(vm, KVM_SET_TSS_ADDR, TSS_ADDR) &lt; 0)
+        fprintf(stderr, "warning: KVM_SET_TSS_ADDR: %s\n", strerror(errno));
+
+    uint8_t *ram = mmap(NULL, RAM_SIZE, PROT_READ | PROT_WRITE,
+                        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (ram == MAP_FAILED)
+        die("mmap(guest RAM)");
+
+    struct kvm_userspace_memory_region region = {
+        .slot            = 0,
+        .flags           = 0,
+        .guest_phys_addr = 0,
+        .memory_size     = RAM_SIZE,
+        .userspace_addr  = (uint64_t)(uintptr_t)ram,
+    };
+    if (ioctl(vm, KVM_SET_USER_MEMORY_REGION, &amp;region) &lt; 0)
+        die("KVM_SET_USER_MEMORY_REGION");
+
+    /* guest 代码：mov al,'A'; out 0xe9,al; hlt */
+    static const uint8_t guest_code[] = { 0xB0, 0x41, 0xE6, 0xE9, 0xF4 };
+    memcpy(ram, guest_code, sizeof(guest_code));
+    printf("guest RAM: hva=%p size=0x%llx, code at gpa 0\n", (void *)ram,
+           (unsigned long long)RAM_SIZE);
+
+    int vcpu = ioctl(vm, KVM_CREATE_VCPU, 0);
+    if (vcpu &lt; 0)
+        die("KVM_CREATE_VCPU");
+
+    int run_size = ioctl(kvm, KVM_GET_VCPU_MMAP_SIZE, 0);
+    if (run_size &lt; 0)
+        die("KVM_GET_VCPU_MMAP_SIZE");
+    struct kvm_run *run = mmap(NULL, run_size, PROT_READ | PROT_WRITE,
+                               MAP_SHARED, vcpu, 0);
+    if (run == MAP_FAILED)
+        die("mmap(kvm_run)");
+    printf("vCPU 0 created; kvm_run mmap size = %d bytes\n", run_size);
+
+    /* 把 vCPU 置为 16 位实模式：CS.base=0, RIP=0, CR0.PE=0, EFER=0 */
+    struct kvm_sregs sregs;
+    if (ioctl(vcpu, KVM_GET_SREGS, &amp;sregs) &lt; 0)
+        die("KVM_GET_SREGS");
+    struct kvm_segment flat = {
+        .selector = 0, .base = 0, .limit = 0xffff,
+        .type = 3, .s = 1, .dpl = 0, .present = 1,
+        .db = 0, .l = 0, .g = 0,
+    };
+    sregs.cs = flat;
+    sregs.cs.type = 11;               /* code: execute/read/accessed */
+    sregs.ds = sregs.es = sregs.fs = sregs.gs = sregs.ss = flat;
+    sregs.cr0 = 0x60000010;           /* PE=0（实模式）; CD/NW 按复位值 */
+    sregs.cr3 = 0;
+    sregs.cr4 = 0;
+    sregs.efer = 0;
+    if (ioctl(vcpu, KVM_SET_SREGS, &amp;sregs) &lt; 0)
+        die("KVM_SET_SREGS");
+
+    struct kvm_regs regs = { .rip = 0, .rflags = 0x2 };
+    if (ioctl(vcpu, KVM_SET_REGS, &amp;regs) &lt; 0)
+        die("KVM_SET_REGS");
+
+    for (int exits = 0; exits &lt; 8; exits++) {
+        if (ioctl(vcpu, KVM_RUN, 0) &lt; 0)
+            die("KVM_RUN");
+
+        printf("KVM_RUN -&gt; exit_reason=%u", run-&gt;exit_reason);
+        switch (run-&gt;exit_reason) {
+        case KVM_EXIT_IO: {
+            uint8_t *data = (uint8_t *)run + run-&gt;io.data_offset;
+            printf(" (KVM_EXIT_IO) port=0x%x dir=%s size=%u data=0x%02x",
+                   run-&gt;io.port,
+                   run-&gt;io.direction == KVM_EXIT_IO_OUT ? "OUT" : "IN",
+                   run-&gt;io.size, *data);
+            if (*data &gt;= 0x20 &amp;&amp; *data &lt; 0x7f)
+                printf(" '%c'", *data);
+            printf("\n");
+            break;
+        }
+        case KVM_EXIT_HLT:
+            printf(" (KVM_EXIT_HLT) guest 执行了 hlt\n");
+            goto done;
+        case KVM_EXIT_SHUTDOWN:
+            printf(" (KVM_EXIT_SHUTDOWN) guest triple fault（通常是 vCPU 状态没设对）\n");
+            goto done;
+        default:
+            printf(" (unhandled exit)\n");
+            goto done;
+        }
+    }
+
+done:
+    munmap(run, run_size);
+    close(vcpu);
+    munmap(ram, RAM_SIZE);
+    close(vm);
+    close(kvm);
+    printf("done.\n");
+    return 0;
+}
+</code></pre>
+<h4 id="step-2编译运行"><a class="header" href="#step-2编译运行">Step 2：编译运行</a></h4>
+<pre><code class="language-bash">gcc -O2 -Wall -Wextra -o tiny-kvm tiny-kvm.c
+./tiny-kvm
+</code></pre>
+<p><strong>实测输出</strong>（WSL2 + <code>kvm_amd</code>；<code>hva</code> 每次运行不同）：</p>
+<pre><code class="language-text">KVM API version: 12
+guest RAM: hva=0x788e9d641000 size=0x1000, code at gpa 0
+vCPU 0 created; kvm_run mmap size = 12288 bytes
+KVM_RUN -&gt; exit_reason=2 (KVM_EXIT_IO) port=0xe9 dir=OUT size=1 data=0x41 'A'
+KVM_RUN -&gt; exit_reason=5 (KVM_EXIT_HLT) guest 执行了 hlt
+done.
+</code></pre>
+<p>两个关键点：</p>
+<ul>
+<li><code>KVM_EXIT_IO</code> 的 <code>data</code> 就是 guest 执行 <code>out 0xe9, al</code> 时 AL 里的值 <code>0x41</code>（<code>'A'</code>）——<strong>设备 I/O 在 KVM 里就是一次 VM exit，由 userspace VMM 应答</strong>；</li>
+<li><code>KVM_EXIT_HLT</code> 对应 guest 的 <code>hlt</code>——VMM 看到它就可以结束这个 vCPU 的循环。</li>
+</ul>
+<h4 id="step-3用-strace-看真实-ioctl"><a class="header" href="#step-3用-strace-看真实-ioctl">Step 3：用 <code>strace</code> 看真实 ioctl</a></h4>
+<pre><code class="language-bash">strace -f -e trace=ioctl ./tiny-kvm 2&gt;&amp;1 | grep KVM_
+</code></pre>
+<p>实测输出摘录（fd 3 = <code>/dev/kvm</code>，fd 4 = VM，fd 5 = vCPU）：</p>
+<pre><code class="language-text">ioctl(3, KVM_GET_API_VERSION, 0)        = 12
+ioctl(3, KVM_CREATE_VM, 0)              = 4
+ioctl(4, KVM_SET_TSS_ADDR, 0xfffbd000)  = 0
+ioctl(4, KVM_SET_USER_MEMORY_REGION, {slot=0, flags=0, guest_phys_addr=0, memory_size=4096, userspace_addr=0x...}) = 0
+ioctl(4, KVM_CREATE_VCPU, 0)            = 5
+ioctl(3, KVM_GET_VCPU_MMAP_SIZE, 0)     = 12288
+ioctl(5, KVM_GET_SREGS, {...})          = 0
+ioctl(5, KVM_SET_SREGS, {cs={base=0, limit=65535, selector=0, type=11, ...}}) = 0
+ioctl(5, KVM_SET_REGS, {..., rip=0, rflags=0x2}) = 0
+ioctl(5, KVM_RUN, 0)                    = 0
+ioctl(5, KVM_RUN, 0)                    = 0
+</code></pre>
+<p>对照 §3.2 的对象模型和 §3.4 的 <code>KVM_RUN</code>：<strong>KVM 的“虚拟机“就是一堆 fd 上的 ioctl</strong>。<code>KVM_GET_VCPU_MMAP_SIZE</code> 返回的 12288 字节正好是 3 页（<code>kvm_run</code> + PIO data + coalesced MMIO ring），与 §3.4 的说法一致。</p>
+<h4 id="step-4逐行对照概念"><a class="header" href="#step-4逐行对照概念">Step 4：逐行对照概念</a></h4>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>实验里的动作</th><th>对应概念</th><th>章节</th></tr>
+</thead>
+<tbody>
+<tr><td><code>open("/dev/kvm")</code> + <code>KVM_GET_API_VERSION</code></td><td>system ioctl；API version = 12</td><td>§3.1</td></tr>
+<tr><td><code>KVM_CREATE_VM</code> → VM fd</td><td>VM fd 是匿名 inode；新 VM 无 vCPU、无内存</td><td>§3.2</td></tr>
+<tr><td><code>mmap</code> guest RAM + <code>KVM_SET_USER_MEMORY_REGION</code></td><td>memslot：gpa 指向 VMM 进程的用户内存</td><td>§3.3</td></tr>
+<tr><td><code>KVM_CREATE_VCPU</code> + <code>mmap(kvm_run)</code></td><td>vCPU fd；<code>kvm_run</code> 是共享参数块</td><td>§3.2 / §3.4</td></tr>
+<tr><td><code>KVM_SET_SREGS</code> 把 CR0.PE 清 0、EFER 清 0</td><td>16 位实模式；对应 VMX non-root 执行</td><td>§3.5</td></tr>
+<tr><td><code>KVM_RUN</code> 循环</td><td>进 guest 的唯一入口；返回 = 一次 VM exit</td><td>§3.4</td></tr>
+<tr><td><code>KVM_EXIT_IO</code> / <code>KVM_EXIT_HLT</code></td><td>exit_reason + <code>run-&gt;io</code> 参数；VMM 应答</td><td>§3.4</td></tr>
+<tr><td><code>KVM_SET_TSS_ADDR</code></td><td>Intel VMX 在创建 vCPU 前需要的 TSS 区域</td><td>§3.5</td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="step-5三个扩展实验"><a class="header" href="#step-5三个扩展实验">Step 5：三个扩展实验</a></h4>
+<ol>
+<li><strong>触发 <code>KVM_EXIT_MMIO</code></strong>：把 guest 代码换成 <code>C6 06 00 20 42 F4</code>（<code>mov byte ptr [0x2000], 0x42; hlt</code>），但只登记了 <code>gpa 0..0xfff</code>。访问未登记的 gpa 会触发 <code>KVM_EXIT_MMIO</code>（实测 <code>exit_reason=6</code>），在 <code>switch</code> 里读 <code>run-&gt;mmio.phys_addr</code> / <code>is_write</code> / <code>data</code>——这正是设备模型（网卡/磁盘寄存器）的入口。</li>
+<li><strong>触发 <code>KVM_EXIT_IO</code> 的 IN 方向</strong>：guest 换成 <code>E4 E9</code>（<code>in al, 0xe9</code>），KVM 返回 <code>KVM_EXIT_IO</code> 且 <code>direction=IN</code>；VMM 需要把要返回的数据写进 <code>(uint8_t *)run + run-&gt;io.data_offset</code>，再 <code>KVM_RUN</code>。</li>
+<li><strong>多 vCPU</strong>：再 <code>KVM_CREATE_VCPU</code> 一次（index=1），每个 vCPU 一个宿主线程、各有一个 <code>kvm_run</code>；观察两个 vCPU 的 exit 如何交错。这就是 QEMU/Firecracker 里 “one vCPU thread per guest CPU” 的最小版本。</li>
+</ol>
+<h4 id="step-6故障排查"><a class="header" href="#step-6故障排查">Step 6：故障排查</a></h4>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>现象</th><th>原因</th><th>处理</th></tr>
+</thead>
+<tbody>
+<tr><td><code>open /dev/kvm: No such file or directory</code></td><td>设备不存在</td><td>WSL2 开 <code>nestedVirtualization</code>；确认模块加载；云主机需支持嵌套</td></tr>
+<tr><td><code>open /dev/kvm: Permission denied</code></td><td>当前用户无权限</td><td><code>usermod -aG kvm</code> / <code>setfacl</code> / 临时 <code>chmod 666</code></td></tr>
+<tr><td><code>KVM_CREATE_VCPU: Invalid argument</code></td><td>Intel 未设 TSS，或 sregs/regs 非法</td><td>确认已调 <code>KVM_SET_TSS_ADDR</code>；检查 CR0/EFER/段描述符</td></tr>
+<tr><td><code>KVM_RUN</code> 后 <code>KVM_EXIT_SHUTDOWN</code></td><td>guest triple fault（状态没设对）</td><td>检查实模式段寄存器、代码字节、<code>rip</code></td></tr>
+<tr><td><code>KVM_RUN: Invalid argument</code></td><td>vCPU 状态未初始化</td><td>先 <code>KVM_SET_SREGS</code> / <code>KVM_SET_REGS</code></td></tr>
+<tr><td>程序一直不退出</td><td>guest 死循环</td><td>给 exit 次数上限（示例里是 8 次）</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p><strong>安全提醒</strong>：这个最小 VMM 只是教学示例，没有任何设备模型、固件和沙箱；guest 代码是直接以硬件速度执行的机器码。不要用它运行不受信任的 guest。生产环境请使用 QEMU / Firecracker / Cloud Hypervisor 等经过审计的 VMM。</p>
+</blockquote>
 <hr>
 <h2 id="4-qemu完整的机器模拟器--vmm"><a class="header" href="#4-qemu完整的机器模拟器--vmm">4. QEMU：完整的机器模拟器 / VMM</a></h2>
 <h3 id="41-定位两种模式只有一个才是-vmm"><a class="header" href="#41-定位两种模式只有一个才是-vmm">4.1 定位：两种模式，只有一个才是 VMM</a></h3>
@@ -1245,8 +1510,8 @@ for (;;) {
         <!-- Custom JS scripts -->
         <script src="../../../theme/giscus-edff37af.js"></script>
         <script src="../../../theme/goatcounter-6da6732a.js"></script>
-        <script src="../../../theme/mermaid-init-1bb4d447.js"></script>
-        <script src="../../../theme/mermaid-eefea253.min.js"></script>
+        <script src="../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../theme/mermaid-init-7cdebe5d.js"></script>
 
 
 
