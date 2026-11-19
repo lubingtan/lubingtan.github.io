@@ -50,7 +50,7 @@
 
 ### Virtualization
 
-- [沙箱与虚拟化技术全景：KVM、QEMU、Firecracker、Kata、gVisor](./Cloud_Native/Virtualization/沙箱与虚拟化技术全景.md) — 三种隔离边界（共享内核/用户态内核/硬件虚拟化）、KVM→VMM→运行时分层、五技术对比矩阵与选型决策树
+- [沙箱与虚拟化技术全景：KVM、QEMU、Firecracker、Kata、gVisor](./Cloud_Native/Virtualization/沙箱与虚拟化技术全景.md) — 三种隔离边界（共享内核/用户态内核/硬件虚拟化）、KVM→VMM→运行时分层、五技术对比矩阵、选型决策树，以及可运行的 KVM 最小 VMM 实验
 
 ## Machine Learning
 

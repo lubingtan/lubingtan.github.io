@@ -1,5 +1,9 @@
 # Operation Log
 
+## [2026-11-19] update | KVM 部分新增可运行实验（最小 VMM）
+
+用户希望 KVM 部分有一个能动手跑的实验。新增 §3.7：①环境检查（`/dev/kvm`、CPU 虚拟化扩展、kvm 组权限、WSL2 `nestedVirtualization=true`、云主机嵌套虚拟化）；②约 150 行 C 的最小 VMM（`KVM_CREATE_VM` → `mmap` guest RAM → `KVM_SET_USER_MEMORY_REGION` → `KVM_CREATE_VCPU` → 16 位实模式 guest 执行 `mov al,'A'; out 0xe9,al; hlt` → VMM 打印 `KVM_EXIT_IO`/`KVM_EXIT_HLT`）；③实测输出与 `strace` ioctl 对照（fd 3=/dev/kvm、4=VM、5=vCPU；API version=12；`KVM_GET_VCPU_MMAP_SIZE`=12288）；④逐行概念映射表；⑤三个扩展实验（`KVM_EXIT_MMIO`、IN 方向 IO、多 vCPU）；⑥故障排查与安全提醒。代码作为页面附件 `沙箱与虚拟化技术全景.assets/tiny-kvm.c`。实测环境 WSL2（6.6.87.2-microsoft-standard-WSL2 + kvm_amd，Docker 容器挂载 `/dev/kvm` 运行）：`gcc -O2 -Wall -Wextra` 无告警，两次 `KVM_RUN` 分别得到 `exit_reason=2`（`KVM_EXIT_IO`，port=0xe9，data=0x41）与 `exit_reason=5`（`KVM_EXIT_HLT`）；MMIO 变体实测 `exit_reason=6`。页面 247 条固定链接校验通过，`make build` 通过。
+
 ## [2026-11-19] ingest | 容器存储三连：OverlayFS/镜像层、Snapshotter、镜像懒加载
 
 用户要求理清 OverlayFS、镜像层、snapshotter、懒加载等概念，并要求"把相关代码或文档拉下来仔细查看、文中带链接作证据"。做法：在 `.repos/upstream/` 定点/浅克隆 9 个上游仓库——containerd v2.4.2 `b7a2526`、image-spec v1.1.1 `147f9c1`、linux 7.3 `c03c1a1`（sparse-checkout 补出 `fs/overlayfs`、`Documentation/filesystems`）、stargz-snapshotter `6ee88d9`、soci-snapshotter `8b347fe`、nydus `6aa3f8f`、nydus-snapshotter `8a458b9`、accelerated-container-image（OverlayBD）`0806b5e`、crfs `71d77da`；并把 `torvalds/linux` 与 5 个懒加载仓库补进 `.repos/validate_links.py`、`.repos/verify-links.py` 的 repo 映射。3 个 teammate 并行产出代码级页面、Lead 统一审校与集成。新建 3 页：
