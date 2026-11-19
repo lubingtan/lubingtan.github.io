@@ -33,7 +33,10 @@
   - [rbac](./docs/Cloud_Native/Kubernetes/rbac.md)
   - [容器运行时全链路：OCI、CRI、containerd、shim 与 RuntimeClass](./docs/Cloud_Native/Kubernetes/容器运行时.md)
 - [Linux Container]()
+  - [OverlayFS 与镜像层：从联合挂载到 OCI 分层](./docs/Cloud_Native/Linux_Container/OverlayFS与镜像层.md)
   - [一份容器知识备忘录](./docs/Cloud_Native/Linux_Container/容器知识备忘录.md)
+  - [镜像快照器（Snapshotter）：containerd 如何把层变成 rootfs](./docs/Cloud_Native/Linux_Container/镜像快照器snapshotter.md)
+  - [镜像懒加载：stargz、Nydus、SOCI 与 OverlayBD](./docs/Cloud_Native/Linux_Container/镜像懒加载.md)
 - [Virtualization]()
   - [沙箱与虚拟化技术全景：KVM、QEMU、Firecracker、Kata、gVisor](./docs/Cloud_Native/Virtualization/沙箱与虚拟化技术全景.md)
 

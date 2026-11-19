@@ -44,6 +44,9 @@
 ### Linux Container
 
 - [容器知识备忘录](./Cloud_Native/Linux_Container/容器知识备忘录.md) — Linux Namespace、Cgroups、UnionFS 等容器核心技术总结
+- [OverlayFS 与镜像层：从联合挂载到 OCI 分层](./Cloud_Native/Linux_Container/OverlayFS与镜像层.md) — overlayfs 四要素/copy-up/whiteout 内核语义、OCI layer 的 tar changeset 与 diffID、containerd content store 与 unpack 全链路
+- [镜像快照器（Snapshotter）：containerd 如何把层变成 rootfs](./Cloud_Native/Linux_Container/镜像快照器snapshotter.md) — Active/Committed/View 三态、overlay 驱动 lowerdir 组装、chainID 与 GC、内置驱动对比
+- [镜像懒加载：stargz、Nydus、SOCI 与 OverlayBD](./Cloud_Native/Linux_Container/镜像懒加载.md) — remote snapshotter 协议、eStargz TOC/footer、RAFS、SOCI index、OverlayBD 块设备，以及选型与排障
 
 ### Virtualization
 
