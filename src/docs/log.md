@@ -1,5 +1,48 @@
 # Operation Log
 
+## [2026-11-19] update | 重写 flowschema.md：APF 机制 + 自定义使用方法
+
+原 `flowschema.md`（113 行）停留在早期版本：示例用已不再 serve 的 `flowcontrol.apiserver.k8s.io/v1beta1`，并发字段还是旧的 `assuredConcurrencyShares`，只讲了公式和一段旧集群的 `kubectl get priorityLevelConfiguration` 输出，缺少 FlowSchema 规则/匹配优先级、内置策略维护、自定义方法和观测手段。本次按 v1.37.2 / `flowcontrol.apiserver.k8s.io/v1` 重写为 367 行的机制 + 使用指南：
+
+- **机制**：max-inflight 的局限与 APF 定位；请求生命周期（RequestDigest → 按 precedence 匹配 FlowSchema → PL → seat 估算 → 公平队列/借还 → 429）；FlowSchema 字段语义（matchingPrecedence 1–10000、distinguisherMethod、subjects、resourceRules/nonResourceRules、空 rules 不匹配任何请求、引用不存在的 PL 会 `Dangling`）；内置 FlowSchema 的 precedence 全表（exempt=1、probes=2、system-leader-election=100 … global-default=9900、catch-all=10000）；PL 的 `NominalCL = ceil(ServerCL * NCS / sum(NCS))`、默认份额表（system 30 / node-high 40 / leader-election 10 / workload-high 40 / workload-low 100 / global-default 20 / catch-all 5，合计约 245）、Queue 参数与校验、lendablePercent/borrowingLimitPercent、Exempt；mandatory vs suggested 与 `apf.kubernetes.io/autoupdate-spec` 的接管规则（mandatory 会被改回、suggested 需显式注解、删除会被重建、自定义对象不受 ensurer 影响）。
+- **使用方法**：自建 PL + FlowSchema 的完整 YAML（CI 批处理示例）、按 Group/非资源 URL 的匹配模板、调内置 PL 的 `annotate` + `patch` 步骤与恢复方法、debug 端点（`/debug/api_priority_and_fairness/dump_*`）、PromQL（rejected/wait/inqueue/nominal_limit_seats）、容量规划清单，以及 9 条常见误区（shares 是相对值、APF 每实例独立、watch 受限、precedence 不能乱设等）。
+- **修正**：明确 1.37 只 serve v1（v1beta1/2/3 仅保留转换），`assuredConcurrencyShares` → `nominalConcurrencyShares`；默认值、内置对象名/份额/precedence、autoupdate 行为全部以本地 v1.37.2 checkout 的源码为准（types/defaults/validation/bootstrap/ensurer/filter/metrics 共 26 条 pinned 链接）。新增 H1 标题，`SUMMARY.md` 中的条目从 `flowschema` 变为「API Priority and Fairness：FlowSchema 与 PriorityLevelConfiguration」。
+
+**验证**：`verify-links.py` 26 条 pinned 链接全部 verified、`bad=0`；28 个外部 URL 逐条 curl 全部 2xx；5 条相对链接 0 缺失；headless Chromium 渲染页面：1 个 mermaid 图 `data-processed`、无 syntax error / Uncaught；`make build` 通过。index.md 描述同步更新。
+
+## [2026-11-19] update | mermaid 升级 11.6.0 → 12.3.0（对齐 GitHub 当前大版本）
+
+把 vendored 的 `theme/mermaid.min.js` 从 11.6.0 升级到 npm 最新 **12.3.0**（与 GitHub Viewscreen 现在运行的 12.3.0 同版本），文件取自 jsDelivr `mermaid@12.3.0/dist/mermaid.min.js`（esbuild 单文件，末尾 `globalThis.mermaid = ...`，与 `book.toml` 中"先 `mermaid.min.js` 后 `mermaid-init.js`"的加载顺序兼容；sha256 `336df803d87a38b70a01e736e666c8f7601d2ce42f5e47c8fafe5d721074b9a3`）。`theme/mermaid-init.js` 无需修改：`initialize({startOnLoad:false, theme})` 与 `run({nodes})` 在 12 仍可用，暗/亮主题切换逻辑继续生效。
+
+行为变化：
+
+- 12.x 默认 `layout: "elk"`（11.x 是 dagre），所有 flowchart/graph 的布局会变化（更紧凑、个别边标签位置不同）；若要保留升级前的布局，可在 init 里加 `flowchart: {layout:'dagre'}`。
+- 12.x 上游已内置 `redux` / `redux-dark` / `redux-color` / `redux-dark-color` 主题（即 GitHub 使用的那套自定义主题），本次仍使用 `dark` / `default`，后续可切换到 GitHub 风格。
+- 体积 2.67MB → **5.54MB**（gzip 772KB → 1.59MB，12 内置 ELK 等），首屏 JS 明显变重。
+
+验证（headless Chromium chromium-1243）：
+
+- `src/docs` 下全部 **17 个含 mermaid 的页面、54 个图**（flowchart 31 / sequence 13 / state 5 / graph 5）逐页渲染：`data-processed` 数量与源码块数一致，无 `Uncaught`、无 "Syntax error in text"；
+- 暗色（navy）/亮色（light）截图正常；暗→亮点击切换后 SVG 就地重渲染（填充从 `#1f2020` 切到 `#ECECFF`），无整页 reload；
+- 渲染耗时（headless，页面脚本开始到全部 SVG 出现）：控制面高可用页（4 个流程图）约 1.4s，沙箱与虚拟化页（10 个图）约 3.0s；
+- `make build` 通过。
+
+## [2026-11-19] update | 修复 mermaid 图在暗色主题下文字/节点色不匹配
+
+现象：mdBook 切到暗色主题（navy/coal/ayu）后，mermaid 图仍按浅色主题渲染（浅色节点 + 深色文字），与页面主题冲突、可读性差。根因：`book.toml` 的 `additional-js` 顺序把 `theme/mermaid-init.js` 排在 `theme/mermaid.min.js` **之前**——init 立即调用 `mermaid.initialize` 时全局 `mermaid` 尚未定义（headless Chromium 中实测 `Uncaught ReferenceError: mermaid is not defined`），随后 mermaid 以默认 `theme: 'default'` 自动渲染，完全忽略 mdBook 的主题 class。修复：① `book.toml` 调整为先加载 `theme/mermaid.min.js`、后加载 `theme/mermaid-init.js`；② 重写 `theme/mermaid-init.js`：按 `<html>` 的主题 class 选择 mermaid `dark`/`default`，`startOnLoad: false` 后显式 `mermaid.run()`；缓存每张图的原始源码（innerHTML），用 `MutationObserver` 监听 html class 变化就地重渲染（覆盖主题菜单、mdBook 0.5 的 Auto 主题、系统 `prefers-color-scheme` 切换），不再像旧脚本那样整页 reload，也不再依赖固定的主题按钮 ID。验证：headless Chromium（Playwright chromium-1243）分别以 navy/light 加载页面并截图——暗色下节点填充 `#1f2020`、label `#ccc/#F9FFFE`；亮色下 `#ECECFF`/`#333`；在暗色下点击 Light 后 SVG 就地重渲染为亮色（`fill:#ECECFF`，无残留 `#1f2020`），全程无 JS 错误；`make build` 通过（脚本注入顺序 mermaid.min.js → mermaid-init.js）。
+
+## [2026-11-19] update | Kubernetes 控制面 HA / 灾备 / 事故处理三篇（重写原 HA stub）
+
+用户要求把 K8s 控制面的高可用方案、备灾（灾备）与事故处理讲清楚，并要求"把相关代码或文档拉下来仔细查看、文中带相关代码/文档链接作为参考/证据"。做法：在 `.repos/upstream/` 定点克隆 5 个上游仓库——kubernetes v1.37.2 `c50e539`（sparse-checkout 扩到 `staging/src/k8s.io/apiserver`、`client-go`、`cmd/kubeadm`、`pkg/{controller,registry,controlplane}` 等）、etcd v3.7.4 `2e8a5c9`、Velero v1.18.4 `4ee1e79`、Cluster API v1.14.4 `4356c15`、kube-vip v1.3.1 `6da770e`；把 etcd/velero/cluster-api/kube-vip 补进 `.repos/verify-links.py` 的 repo 映射。3 个 teammate 并行研究写作，Lead 统一审校、交叉引用、SUMMARY 与构建；原 16 行 `kubernetes_ha.md`（只贴两张 kubeadm 拓扑图）重写并更名为 `控制面高可用方案.md`，`kubernetes_ha.assets` 两图随迁。产出：
+
+- **控制面高可用方案.md**（698 行，90 个去重源码链接）：把 HA 拆成三个独立问题——kube-apiserver 无状态 active-active（请求读写直达 etcd、watch cache 只是可重建缓存）、etcd 有状态 quorum（`(n/2)+1`、3/5/7 容忍度、偶数成员无收益、learner 加入/提升与 strict-reconfig-check、跨 AZ RTT 与 fsync、2GiB quota/NOSPACE）、KCM/scheduler/cloud-controller-manager 的 Lease 选主（默认 15s/10s/2s、切换 15–17s、无 fencing、依赖 quorum、APF `leader-election` 保底）；stacked/external/托管/hosted 四类拓扑对比与选型决策树；入口层（6443/2379/2380、kube-vip ARP/BGP、L4 LB、`/livez` `/readyz` 的真实语义、kubeconfig 单 server）；失效域矩阵与"全部控制面 down 时数据面冻结而非崩溃"的代码级解释；kubeadm stacked join 顺序、external etcd 配置、滚动升级与 version skew、12 条常见误区。
+- **控制面灾备与恢复.md**（689 行，51 个去重源码链接）：备份/HA/DR 的区别与 RPO/RTO；11 类保护对象（etcd、PKI、sa.key、加密配置+KMS、kubeconfig、manifests/kubeadm-config、对象、RBAC、PV、外部依赖、IaC）；从 RPO 倒推的快照频率/保留/加密/3-2-1、离线校验三件套与 PKI"离线状态包"；`etcdctl snapshot save` → `etcdutl snapshot restore` 原理（单 endpoint、bbolt 快照 + SHA256、restore 清空成员信息、`--bump-revision --mark-compacted`）与 stacked etcd 多成员完整恢复命令；quorum 丢失两条路径（快照 restore vs `--force-new-cluster`）对比与官方"strongly discouraged"风险；全集群重建（保留 PKI、kubeadm init、Cluster API `clusterctl move` 且明确"不是 backup/restore"）；Velero 架构/流程/PV 两条路/限制及与 etcd 快照对比表；多集群 DR 模式与 RTO/RPO 矩阵；演练验证清单与 14 条误区。
+- **控制面事故处理手册.md**（767 行，84 个去重源码链接）：P0–P3 分级与"先止血后根因、保留现场、变更冻结、先算数据风险"原则；`/livez` `/readyz` `/healthz` 的真实组成（`etcd` 组经 `AddHealthChecks` 进入三个端点、`etcd-readiness` 只进 readyz）、指标清单（apiserver / 延迟分解 / APF / 证书 / webhook / etcd / 选主 / 节点）与 10 条 PromQL、日志位置；症状→层 mermaid 决策树；R1–R13 runbook（全超时、CrashLoop、etcd 无 leader、NOSPACE、quorum 丢失、证书过期含 CA、webhook/聚合 API、APF 429、选主震荡、节点 NotReady/磁盘满、误删/误操作、升级失败、**apiserver 请求延迟升高**），每个含确认/止血/恢复/验证；事故流程、`cluster-info dump` 取证、时间线/复盘/沟通模板、预防表与一页速查表。R13 用 `request_duration_seconds` 与不含 webhook/APF 排队的 `request_sli_duration_seconds` 做延迟分解，再按"请求形态 / APF 排队 / admission webhook / etcd 与存储 / apiserver 资源 / 聚合层与网络"六层定位。
+
+**Lead 审校修正**：① 健康检查语义——`/livez` 并非"纯进程存活"：etcd 的 `etcd` health 组经 `AddHealthChecks` 同时注册进 healthz/livez/readyz，只有 `etcd-readiness` 是 readyz-only，两页的表格与说明已按源码更正并补 `healthz.go#L79-L110` 证据；② 修正 `cluster-api.md` 一个原本 404 的 CAPI 开发指南链接（改用 `developer/providers/overview`）；③ 统一三页"参考资料 + 本 wiki 相关页面"结构，并把 etcd 版本口径（kubeadm 1.37 默认 3.7.0、证据 checkout 3.7.4）写进页首版本表。
+
+**证据与校验**：三页共 2154 行；去重后 pinned-SHA 代码链接 217 个（全部 40 位 SHA + `#Lx-Ly` 行号），官方文档/博客/SLA 等外部链接 71 个；`verify-links.py` 三页分别 93/63/120 条 pinned 链接全部 verified、`bad=0`；267 个去重外部 URL 逐条 curl 全部 2xx；相对链接 106 条 0 缺失；`make build` 通过（3 个 HTML 页面、8 个 mermaid 块、2 张 SVG 正确渲染）。交叉引用：`2_kubernetes-api-server.md`、`5_client-go list & watch 原理.md`、`flowschema.md`、`kubelet原理.md`、`cluster-api.md` 增加延伸阅读；`index.md` 三条索引；`SUMMARY.md` 由 `make gen-summary` 重新生成。研究简报与版本矩阵留在 `.repos/CONTROL_PLANE_RESEARCH_BRIEF.md`（gitignored），并新增 `raw/RESEARCH-k8s-control-plane.md` 作为可入库的来源清单与事实基线。
+
 ## [2026-11-19] update | KVM 部分新增可运行实验（最小 VMM）
 
 用户希望 KVM 部分有一个能动手跑的实验。新增 §3.7：①环境检查（`/dev/kvm`、CPU 虚拟化扩展、kvm 组权限、WSL2 `nestedVirtualization=true`、云主机嵌套虚拟化）；②约 150 行 C 的最小 VMM（`KVM_CREATE_VM` → `mmap` guest RAM → `KVM_SET_USER_MEMORY_REGION` → `KVM_CREATE_VCPU` → 16 位实模式 guest 执行 `mov al,'A'; out 0xe9,al; hlt` → VMM 打印 `KVM_EXIT_IO`/`KVM_EXIT_HLT`）；③实测输出与 `strace` ioctl 对照（fd 3=/dev/kvm、4=VM、5=vCPU；API version=12；`KVM_GET_VCPU_MMAP_SIZE`=12288）；④逐行概念映射表；⑤三个扩展实验（`KVM_EXIT_MMIO`、IN 方向 IO、多 vCPU）；⑥故障排查与安全提醒。代码作为页面附件 `沙箱与虚拟化技术全景.assets/tiny-kvm.c`。实测环境 WSL2（6.6.87.2-microsoft-standard-WSL2 + kvm_amd，Docker 容器挂载 `/dev/kvm` 运行）：`gcc -O2 -Wall -Wextra` 无告警，两次 `KVM_RUN` 分别得到 `exit_reason=2`（`KVM_EXIT_IO`，port=0xe9，data=0x41）与 `exit_reason=5`（`KVM_EXIT_HLT`）；MMIO 变体实测 `exit_reason=6`。页面 247 条固定链接校验通过，`make build` 通过。

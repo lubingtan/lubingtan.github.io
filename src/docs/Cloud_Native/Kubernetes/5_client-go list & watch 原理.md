@@ -263,3 +263,8 @@ sharedProcessor添加了一个processorListener结构，processorListener包含�
 
 4. 在run方法中，接受nextCh，并调用handler
 
+## 延伸阅读
+
+- [Kubernetes 控制面高可用方案](./控制面高可用方案.md) —— client-go 的 Lease 选主（`leaderelection` 包）如何实现 KCM/scheduler/kube-vip 的热备切换；多 apiserver 入口为什么必须靠 VIP/LB，而不是 client-go 自己做故障转移。
+- [Kubernetes 控制面事故处理手册](./控制面事故处理手册.md) —— watch/list 重连风暴、informer 全量 list 对 apiserver 与 etcd 的冲击，以及 APF 429 的处置（R8）。
+

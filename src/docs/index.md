@@ -15,11 +15,13 @@
 - [client-go list & watch 原理](./Cloud_Native/Kubernetes/5_client-go%20list%20&%20watch%20原理.md) — client-go 中 List-Watch 机制的实现原理
 - [Service 相关](./Cloud_Native/Kubernetes/6_service相关.md) — Kubernetes Service 的概念、类型及其实现原理
 - [CNI 详解](./Cloud_Native/Kubernetes/cni详解.md) — 容器网络接口的实现：IP 分配、network namespace、veth pair、bridge
-- [FlowSchema](./Cloud_Native/Kubernetes/flowschema.md) — kube-apiserver 的流量控制与 API 优先级机制
+- [API Priority and Fairness：FlowSchema 与 PriorityLevelConfiguration](./Cloud_Native/Kubernetes/flowschema.md) — APF 的请求分类与并发隔离：FlowSchema 规则与匹配优先级、PriorityLevelConfiguration 的份额/队列/借还、内置 mandatory 与 suggested 策略、自定义与调参方法
 - [PLEG](./Cloud_Native/Kubernetes/k8s之pleg.md) — Pod Lifecycle Event Generator 的原理与僵尸进程排查
 - [Kubelet 原理](./Cloud_Native/Kubernetes/kubelet原理.md) — kubelet 创建 Pod 的完整流程：syncLoop、PLEG、容器运行时
 - [容器运行时全链路：OCI、CRI、containerd、shim 与 RuntimeClass](./Cloud_Native/Kubernetes/容器运行时.md) — 从 kubelet 到容器进程：五个概念的边界、代码级调用链、shim 生命周期与 RuntimeClass handler 解析
-- [Kubernetes 高可用](./Cloud_Native/Kubernetes/kubernetes_ha.md) — stacked etcd 与 external etcd 两种 HA 拓扑方案
+- [Kubernetes 控制面高可用方案](./Cloud_Native/Kubernetes/控制面高可用方案.md) — 控制面三个独立的 HA 问题（apiserver 无状态多副本 / etcd quorum / 选主组件）、stacked/external/托管拓扑对比、VIP/LB 入口与健康检查、Lease 选主与 15–17s 切换、失效域矩阵（含全控制面 down 时的数据面行为）、APF 与滚动升级
+- [Kubernetes 控制面灾备与恢复](./Cloud_Native/Kubernetes/控制面灾备与恢复.md) — RPO/RTO 与 11 类保护对象、etcd 快照/多成员 restore、quorum 丢失双路径（restore vs --force-new-cluster）、全集群重建与 Cluster API pivot、Velero 边界、多集群 DR 与恢复演练
+- [Kubernetes 控制面事故处理手册](./Cloud_Native/Kubernetes/控制面事故处理手册.md) — 事故分级与处理原则、SLO/指标/告警基线、症状→层决策树、13 个分场景 runbook（etcd/证书/webhook/APF/选主/磁盘/误删/升级/apiserver 延迟升高）、事故流程与复盘
 - [RBAC](./Cloud_Native/Kubernetes/rbac.md) — 基于角色的访问控制：用户创建、证书签名请求、权限绑定
 - [Kueue](./Cloud_Native/Kubernetes/kueue.md) — Kubernetes 原生作业队列管理器：配额管理、公平共享、抢占与多集群调度
 
