@@ -1,5 +1,9 @@
 # Operation Log
 
+## [2026-11-19] query | VMM 是什么 — 在沙箱与虚拟化页补 §0.3
+
+用户问"VMM 是什么"。原页面只有零散定义（§0.1 定位表、§10.1 名词表、§3/§4 正文）。新增 §0.3「VMM 是什么：一台虚拟机的"用户态操作系统"」：①VMM 的四项职责（管 vCPU / 管内存 / 造虚拟平台 / 管生命周期）及每项的代码落点；②`KVM_CREATE_VM → mmap → KVM_SET_USER_MEMORY_REGION → KVM_CREATE_VCPU → KVM_RUN 循环` 伪代码；③VMM vs Hypervisor / Accelerator / Runtime / KVM 的边界表；④"KVM 提供原语、VMM 组装机器、runtime 包装容器"的一句话总结。§10.1 名词表加「见 §0.3」交叉引用。链接校验：页面 247/247 bad=0，`make build` 通过。
+
 ## [2026-11-19] ingest | 沙箱与虚拟化技术全景：KVM / QEMU / Firecracker / Kata / gVisor
 
 用户要求理清 gVisor、Kata、Firecracker、QEMU、KVM 等沙箱/虚拟化概念，并要求文档带代码/文档链接作证据。做法：按稳定 tag 浅克隆 5 个上游仓库到 `.repos/upstream/`（linux v7.3 `c03c1a1`、qemu v11.1.3 `005c61c`、firecracker v1.18.0 `eaf83bb`、kata v4.4.0 `f9cbda4`、gvisor release-20261116.0 `89cacad`），5 个 teammate 并行产出代码级证据笔记（`.repos/research-isolation-2026-11/*.md`，共 1318 行、638 条固定 sha 链接）。新建本页：①五名词分层定位表 + 全景图；②历史线与"沙箱/虚拟化/运行时"三词澄清；③三种隔离边界（共享内核/用户态内核/硬件虚拟化）；④KVM 的 fd 对象模型、memslot、KVM_RUN/VM exit、VMX/EPT；⑤QEMU 的 TCG vs KVM、启动链、qdev/virtio/固件与"为什么重"；⑥Firecracker 的 microVM、REST API 启动、设备模型（纠正"无 PCI/ACPI"）、jailer 与 seccomp 分工、快照；⑦Kata 的 VM-per-Pod 调用链、Go/Rust 双 runtime、多 VMM、guest 资产、CoCo；⑧gVisor 的 Sentry、三 platform（systrap 默认）、gofer/LISAFS、netstack、host seccomp 白名单；⑨对比矩阵、组合关系、选型决策树与 RuntimeClass 接线；⑩15 条常见误解；⑪名词速查与参考。所有 235 条 GitHub 固定链接用脚本校验（文件存在、行号在范围内、commit 与本地 checkout 一致）。交叉引用：容器运行时.md、agent-sandbox.md、agent-substrate.md、容器知识备忘录.md 增加链接；index.md / SUMMARY.md 同步。
