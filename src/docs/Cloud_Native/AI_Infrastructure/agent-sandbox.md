@@ -144,6 +144,8 @@ Agent Sandbox 实现了**纵深防御**，多层防护组合保障安全：
 | **Kata Containers** | 硬件虚拟化 | 每个 Pod 运行在轻量 VM 内（Firecracker/QEMU/Hyper-V） |
 | **runc** | 容器级 | 仅 Linux namespace + cgroup，隔离最弱 |
 
+> 三种隔离边界（共享内核 / 用户态内核 / 硬件虚拟化）的代码级原理、启动与内存开销、以及 gVisor vs Kata 的选型，见 [沙箱与虚拟化技术全景](../Virtualization/沙箱与虚拟化技术全景.md)。
+
 Pod 级安全上下文：`runAsNonRoot`, `allowPrivilegeEscalation: false`, `capabilities.drop: ["ALL"]`, `seccompProfile: RuntimeDefault`
 
 ### 2. ServiceAccount 隔离

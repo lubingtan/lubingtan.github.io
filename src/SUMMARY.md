@@ -34,6 +34,8 @@
   - [容器运行时全链路：OCI、CRI、containerd、shim 与 RuntimeClass](./docs/Cloud_Native/Kubernetes/容器运行时.md)
 - [Linux Container]()
   - [一份容器知识备忘录](./docs/Cloud_Native/Linux_Container/容器知识备忘录.md)
+- [Virtualization]()
+  - [沙箱与虚拟化技术全景：KVM、QEMU、Firecracker、Kata、gVisor](./docs/Cloud_Native/Virtualization/沙箱与虚拟化技术全景.md)
 
 # Distributed Systems
 

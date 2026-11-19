@@ -45,6 +45,10 @@
 
 - [容器知识备忘录](./Cloud_Native/Linux_Container/容器知识备忘录.md) — Linux Namespace、Cgroups、UnionFS 等容器核心技术总结
 
+### Virtualization
+
+- [沙箱与虚拟化技术全景：KVM、QEMU、Firecracker、Kata、gVisor](./Cloud_Native/Virtualization/沙箱与虚拟化技术全景.md) — 三种隔离边界（共享内核/用户态内核/硬件虚拟化）、KVM→VMM→运行时分层、五技术对比矩阵与选型决策树
+
 ## Machine Learning
 
 ### High Performance Computing
