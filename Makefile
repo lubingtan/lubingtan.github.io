@@ -20,7 +20,9 @@ gen-summary:
 	python3 ../tools/gen-summary.py  > ./SUMMARY.md
 
 build: mdbook mermaid gen-summary
+	rm -f ./book/latest_updates.html
 	$(LOCAL_BIN)/mdbook build -d ./book
 
 serve: mdbook mermaid gen-summary
+	rm -f ./book/latest_updates.html
 	$(LOCAL_BIN)/mdbook serve -d ./book

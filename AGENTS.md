@@ -84,6 +84,15 @@ The wiki is published as an mdBook static site:
 - `make serve` — serves the book locally for preview
 - `make gen-summary` — regenerates `src/SUMMARY.md` from `src/docs/` directory structure
 
+The "Latest updates" page is generated at build time by `tools/blog-preprocessor.py` (it is not a file under `src/docs/`). Its switch lives in `book.toml`:
+
+```toml
+[preprocessor.blog]
+latest-updates = false   # set to true to show the page again
+```
+
+Default is `true`. With `false`, no `latest_updates.html` is generated and the ToC has no such entry; the page itself is never edited, only toggled.
+
 CI (`.github/workflows/gh-pages.yml`) builds and deploys to GitHub Pages on push to main.
 
 **Important**: `index.md` and `log.md` are meta-files excluded from the mdBook ToC. Do not manually edit `src/SUMMARY.md` — it is auto-generated.

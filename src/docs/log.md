@@ -1,5 +1,15 @@
 # Operation Log
 
+## [2026-11-19] update | “Latest updates” 页面增加开关并默认关闭
+
+按要求先下线首页的 “Latest updates” 页面，并留下一个可逆开关：
+
+- `tools/blog-preprocessor.py` 读取 `[preprocessor.blog]` 下的 `latest-updates`（默认 `true`）；为 `false` 时不再注入该章节，构建日志会打印一行跳过提示。
+- `book.toml` 现为 `latest-updates = false`：不生成 `latest_updates.html`，ToC 中也没有该条目。需要时改成 `true` 重新构建即可，页面内容仍是构建期从 `src/docs/` 的 git 创建日期实时汇总的，无需维护正文。
+- `Makefile` 的 `build`/`serve` 在构建前删除旧的 `book/latest_updates.html`，避免关掉开关后本地仍残留可直接访问的旧页面。
+
+**验证**：`false` 时 `make build` 通过，`book/latest_updates.html` 不存在、`toc.html` 无 “Latest updates”、`print.html`/搜索索引中无该页；临时改回 `true` 构建 → 页面与 ToC 条目恢复；再改回 `false` 重建 → 页面消失。下线后 Graph View 自动前移到 ToC 首位，站点首页（`index.html`，即 SUMMARY 第一项）不受影响。
+
 ## [2026-11-19] update | 重写 flowschema.md：APF 机制 + 自定义使用方法
 
 原 `flowschema.md`（113 行）停留在早期版本：示例用已不再 serve 的 `flowcontrol.apiserver.k8s.io/v1beta1`，并发字段还是旧的 `assuredConcurrencyShares`，只讲了公式和一段旧集群的 `kubectl get priorityLevelConfiguration` 输出，缺少 FlowSchema 规则/匹配优先级、内置策略维护、自定义方法和观测手段。本次按 v1.37.2 / `flowcontrol.apiserver.k8s.io/v1` 重写为 367 行的机制 + 使用指南：

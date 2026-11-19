@@ -15,6 +15,27 @@ def set_default_cotent(chapter : dict) -> None:
 
 META_FILES = {'index.md', 'log.md'}
 
+
+def latest_updates_enabled(context: dict) -> bool:
+    """Return whether the 'Latest updates' chapter should be injected.
+
+    Controlled by `latest-updates` under `[preprocessor.blog]` in book.toml
+    (mdBook passes every key of that table through to the preprocessor in
+    `context['config']`). Defaults to True, so the page stays on unless it is
+    explicitly switched off.
+    """
+    try:
+        value = (context.get('config', {})
+                        .get('preprocessor', {})
+                        .get('blog', {})
+                        .get('latest-updates', True))
+    except AttributeError:
+        return True
+    if isinstance(value, str):
+        return value.strip().lower() not in ('false', '0', 'no', 'off')
+    return bool(value)
+
+
 def _read_title(filepath: str) -> str | None:
     """Read the first H1 heading (# ) from a file, outside code fences."""
     try:
@@ -91,30 +112,35 @@ if __name__ == '__main__':
     for item in book['items']:
         if 'Chapter' in item:
             set_default_cotent(item['Chapter'])
-    # and now, we can just modify the content of the first chapter
-    files_group_by_date = md_files_with_date('src/docs/')
-    lines = []
-    # show the pages with the 10 most recent creation dates, newest first
-    for date in sorted(files_group_by_date.keys(), reverse=True)[:10]:
-        lines.append(f"## {date}\n")
-        for file in sorted(files_group_by_date[date]):
-            relative_path = os.path.relpath(file, 'src/')
-            relative_path = relative_path.replace(' ', '%20')
-            name = _read_title(file) or os.path.splitext(os.path.basename(file))[0]
-            lines.append(f"> #### [{name}](./{relative_path})")
-        lines.append("")  # add an empty line after each date group
-    # with open('bin/debug_files.md', 'w', encoding='utf-8') as f:
-    #     f.write("\n".join(all_files))
-    book['items'].insert(0, {
-        "Chapter": {
-            "name": "Latest updates",
-            "content": "\n".join(lines),
-            "sub_items": [],
-            "path": "latest_updates.md",
-            "source_path": None,
-            "parent_names": []
-        }
-    })
+    if latest_updates_enabled(context):
+        # gather the pages with the 10 most recent creation dates, newest first
+        files_group_by_date = md_files_with_date('src/docs/')
+        lines = []
+        for date in sorted(files_group_by_date.keys(), reverse=True)[:10]:
+            lines.append(f"## {date}\n")
+            for file in sorted(files_group_by_date[date]):
+                relative_path = os.path.relpath(file, 'src/')
+                relative_path = relative_path.replace(' ', '%20')
+                name = _read_title(file) or os.path.splitext(os.path.basename(file))[0]
+                lines.append(f"> #### [{name}](./{relative_path})")
+            lines.append("")  # add an empty line after each date group
+        # with open('bin/debug_files.md', 'w', encoding='utf-8') as f:
+        #     f.write("\n".join(all_files))
+        book['items'].insert(0, {
+            "Chapter": {
+                "name": "Latest updates",
+                "content": "\n".join(lines),
+                "sub_items": [],
+                "path": "latest_updates.md",
+                "source_path": None,
+                "parent_names": []
+            }
+        })
+    else:
+        # switched off via book.toml; leave the book untouched so the chapter
+        # is not generated at all (mdBook writes one .html per chapter).
+        sys.stderr.write('[blog-preprocessor] latest-updates is off, skipping chapter\n')
+    os.makedirs('bin', exist_ok=True)
     with open('bin/debug.json', 'w', encoding='utf-8') as f:
         json.dump(book, f, indent=4, ensure_ascii=False)
     # book['items'][0]['Chapter']['content'] = '# Haha'
