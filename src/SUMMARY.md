@@ -33,6 +33,7 @@
   - [k8s scheduler 源码分析](./docs/Cloud_Native/Kubernetes/4_kube-scheduler源码分析.md)
   - [k8s之pleg](./docs/Cloud_Native/Kubernetes/k8s之pleg.md)
   - [rbac](./docs/Cloud_Native/Kubernetes/rbac.md)
+  - [大规模多集群 Kubernetes 版本升级：规划、执行与故障处理](./docs/Cloud_Native/Kubernetes/大规模多集群版本升级.md)
   - [容器运行时全链路：OCI、CRI、containerd、shim 与 RuntimeClass](./docs/Cloud_Native/Kubernetes/容器运行时.md)
 - [Linux Container]()
   - [OverlayFS 与镜像层：从联合挂载到 OCI 分层](./docs/Cloud_Native/Linux_Container/OverlayFS与镜像层.md)

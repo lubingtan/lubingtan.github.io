@@ -22,6 +22,7 @@
 - [Kubernetes 控制面高可用方案](./Cloud_Native/Kubernetes/控制面高可用方案.md) — 控制面三个独立的 HA 问题（apiserver 无状态多副本 / etcd quorum / 选主组件）、stacked/external/托管拓扑对比、VIP/LB 入口与健康检查、Lease 选主与 15–17s 切换、失效域矩阵（含全控制面 down 时的数据面行为）、APF 与滚动升级
 - [Kubernetes 控制面灾备与恢复](./Cloud_Native/Kubernetes/控制面灾备与恢复.md) — RPO/RTO 与 11 类保护对象、etcd 快照/多成员 restore、quorum 丢失双路径（restore vs --force-new-cluster）、全集群重建与 Cluster API pivot、Velero 边界、多集群 DR 与恢复演练
 - [Kubernetes 控制面事故处理手册](./Cloud_Native/Kubernetes/控制面事故处理手册.md) — 事故分级与处理原则、SLO/指标/告警基线、症状→层决策树、13 个分场景 runbook（etcd/证书/webhook/APF/选主/磁盘/误删/升级/apiserver 延迟升高）、事故流程与复盘
+- [大规模多集群 K8s 版本升级](./Cloud_Native/Kubernetes/大规模多集群版本升级.md) — 多集群升级规划：支持窗口/版本 skew/API 生命周期、依赖兼容矩阵、波次与门禁、kubeadm/CAPI/托管集群执行顺序、常见故障处理与回滚边界
 - [RBAC](./Cloud_Native/Kubernetes/rbac.md) — 基于角色的访问控制：用户创建、证书签名请求、权限绑定
 - [Kueue](./Cloud_Native/Kubernetes/kueue.md) — Kubernetes 原生作业队列管理器：配额管理、公平共享、抢占与多集群调度
 

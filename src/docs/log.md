@@ -1,5 +1,17 @@
 # Operation Log
 
+## [2026-11-20] query | 大规模多集群 Kubernetes 版本升级规划与故障处理
+
+用户问"如何规划大规模多集群 K8s 版本升级、升级中会出什么问题以及怎么处理"。按 query 流程把答案沉淀为页面 `src/docs/Cloud_Native/Kubernetes/大规模多集群版本升级.md`（380 行）：
+
+- **约束**：K8s 每年 3 个 minor、维护最近 3 个 minor、约 1 年 patch 支持（用 1.37/1.36/1.35 的 EOL 日期举例）；组件 skew 表（HA apiserver ±1、kubelet -3、kube-proxy、KCM/scheduler/CCM、kubectl ±1，并链到 kubeadm `MinimumControlPlaneVersion`/`MinimumKubeletVersion` 源码）；beta API 9 个月/3 个 minor 的废弃策略与 1.32 移除 flowcontrol v1beta3 的实例；kubeadm/CAPI/EKS 都禁止跳 minor。
+- **规划七步法**：舰队盘点（含 `apiserver_requested_deprecated_apis` 指标与审计日志）→ 选目标版本 → 依赖兼容矩阵（CNI/CSI/Ingress/Operator/运行时/OS/云厂商/CAPI）→ 风险分级与 Wave 0–3/soak/并发限制 → 回滚预案（控制面无 downgrade、etcd 快照、节点重装、EKS/GKE 回滚能力）→ 容量与 SLO → 变更管理。
+- **执行**：单集群 pre-flight → 控制面（第一台 apply、其余 drain+node、stacked etcd 的在途请求卡顿缓解、addons 等最后一台 CP）→ worker 分批 → 验收；托管集群差异表（EKS 节点≤控制面/upgrade insights/回滚、GKE release channels/两步升级 soak 6h–7d/rollout sequencing、AKS node surge/60 天宽限期/API breaking change 停升级）；Cluster API KCP maxSurge 滚动升级（链到 CAPI docs 与 update.go）。
+- **故障处理**：13 行"现象/原因/处置/预防"矩阵（废弃 API、控制面卡住、etcd 升级、PDB/drain、容量、CNI/CSI、cgroup v2、证书、托管强制升级、回滚不可行、舰队漂移等），并对 kubeadm 失败恢复（幂等重跑/`--force`/`/etc/kubernetes/tmp` 备份）、etcd 硬边界、PDB 1 小时上限、skew 违规、托管平台行为、回滚边界做了展开。
+- **验收/监控**：apiserver/etcd/节点/Pending/PDB 指标与每集群验收清单；浓缩版 pre/during/post checklist。
+
+**证据**：11 条 pinned GitHub 链接（kubeadm constants/policy、apiserver 废弃 API 指标、CAPI docs/update.go）全部 verified、bad=0；20 个外部 URL（kubernetes.io releases/version-skew/kubeadm/deprecation、EKS/GKE/AKS 文档）逐条 curl 2xx；9 条相对链接有效；`make build` 通过。与已有页面交叉引用：控制面高可用方案（§10 升级）、控制面灾备与恢复、事故处理手册（R6/R10/R12）、Cluster API、flowschema。index.md/SUMMARY.md 同步。
+
 ## [2026-11-19] update | “Latest updates” 页面增加开关并默认关闭
 
 按要求先下线首页的 “Latest updates” 页面，并留下一个可逆开关：
