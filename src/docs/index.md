@@ -40,9 +40,15 @@
 
 - [Cluster API](./Cloud_Native/Cluster_Lifecycle/cluster-api.md) — 声明式集群生命周期管理：provider 契约、资源层级、集群创建流程、自定义 provider 示例
 
-### CICD
+### Platform Engineering
 
-- [DevOps 理念与实践](./Cloud_Native/CICD/devops-thinking.md) — CI/CD pipeline 设计原则：Pipeline as Code、可复用性、性能与可靠性指标、开发环境可复现
+- [DevOps 理念与实践：从 CI/CD 到平台工程](./Cloud_Native/Platform_Engineering/devops-thinking.md) — 基础篇：Three Ways、Pipeline as Code、可复用构建块、一次构建多次部署、效率/可靠性指标、可复现环境与平台工程演进
+- [Agent 时代的 DevOps：从交付流水线到交付系统](./Cloud_Native/Platform_Engineering/agent-era-devops.md) — AI 作为放大器、验证税与瓶颈迁移、人机双模平台、五面一核架构、成熟度模型与四层度量
+- [平台工程：把工程能力变成可复用的产品](./Cloud_Native/Platform_Engineering/platform-as-a-product.md) — 平台即产品、TVP、能力契约、黄金路径、AI 能力平台化、Agent-ready 接口与反模式
+- [CI/CD 与自动化质量保障](./Cloud_Native/Platform_Engineering/ci-cd-quality-gates.md) — 一次构建多次部署、供应链证据链、测试分层、LLM eval、风险分级门禁、发布回滚与 agentic CI
+- [环境即服务：云原生资源自助交付与治理](./Cloud_Native/Platform_Engineering/environment-as-a-service.md) — 环境分类、隔离模型、自助交付流水线、环境契约、TTL 回收、配额成本、容量与故障模式
+- [可观测性与稳定性：从监控到可运营系统](./Cloud_Native/Platform_Engineering/observability-and-sre.md) — OTel 信号模型、GenAI/agent 可观测性、SLO 错误预算、性能容量、事故管理、权限审计与恢复
+- [平台落地：协作、规范与效果评估](./Cloud_Native/Platform_Engineering/platform-adoption.md) — 团队拓扑、责任边界、规范生命周期、工具选型、AI 治理、DORA/DX 度量与四阶段路线图
 
 ### Linux Container
 

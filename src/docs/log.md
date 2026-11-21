@@ -1,5 +1,30 @@
 # Operation Log
 
+## [2026-11-21] update | DevOps 理念与实践迁入 Platform_Engineering 并补全基础篇
+
+将 `Cloud_Native/CICD/devops-thinking.md` 移至 `Cloud_Native/Platform_Engineering/devops-thinking.md`（CICD 目录随之移除），并按“基础篇”定位补全：
+
+- 新增 DevOps 目标（DORA 5、Three Ways）与“平台指标 ≠ 交付指标”的区分；
+- CI/CD 部分补充“一次构建多次部署”“小批量与主干开发”，并给 Prow/Tekton 的反例加上“作者观点/早期设计”限定；
+- 开发环境部分补充 devcontainer、环境即代码、K8s 隔离级别与环境即服务桥接；
+- 新增“从 CI/CD 到平台工程”演进表、“Agent 时代的补充”、常见反模式与阅读地图；
+- 更新参考（DORA、Accelerate、The DevOps Handbook、Tekton/Prow、CNCF Platforms White Paper）。
+
+同步更新 5 个专题页的反向链接、`index.md` 分类与 `SUMMARY.md`；页面标题改为《DevOps 理念与实践：从 CI/CD 到平台工程》。
+
+## [2026-11-21] ingest | Agent 时代的 DevOps 与软件交付（平台工程专题）
+
+Web research + synthesis，新建 `Cloud_Native/Platform_Engineering/` 下 6 页，并把来源台账写入 `raw/RESEARCH-agent-era-devops.md`：
+
+- **总览** `agent-era-devops.md`：以 DORA 2025 的“AI 是放大器”为主线，提出“代码供给边际成本趋零 vs 信任边际成本不降”的核心矛盾；三个变化（生产者/平台接口/控制点）、不变原则、五面一核架构、L0–L4 成熟度、8 个新工程问题、四层度量与 5 个专题的阅读地图。
+- **平台工程** `platform-as-a-product.md`：平台边界、通用 + AI 能力地图、8 条设计原则、复用四级阶梯、能力契约、黄金路径解剖、Agent-ready 双模接口与安全边界、团队拓扑与 90 天路线。
+- **CI/CD 与质量** `ci-cd-quality-gates.md`：参考流水线、可复现构建、制品与 SBOM/SLSA/Sigstore 证据链、测试分层与 flaky 治理、LLM eval（离线/在线/红队）、风险分级门禁、GitOps/金丝雀/回滚、agentic CI 与 CI 攻击面。
+- **环境即服务** `environment-as-a-service.md`：环境分类、namespace/vcluster/cluster/account 隔离矩阵、自助交付流水线、Environment 契约示例、数据策略、TTL/空闲回收、配额与成本、容量调度、故障模式与度量。
+- **可观测性与稳定性** `observability-and-sre.md`：OTel 信号与资源属性、GenAI/agent 语义约定、SLO 与多窗口燃烧率、性能与容量模型、事故管理与 AI SRE 边界、韧性/混沌/容灾、权限审计与恢复。
+- **平台落地** `platform-adoption.md`：四类角色协作与 RACI、规范生命周期、策略例外、工具评估矩阵、AI 工具的数据/成本/安全治理、DORA + DX Core 4/SPACE + 平台指标、四阶段路线图与阻力应对。
+
+来源：DORA 2025、CNCF Platforms White Paper v1.1、GitHub Agentic Workflows GA（2026-10-28）、OpenTelemetry GenAI semconv、SLSA/Sigstore、vCluster/Crossplane/Karpenter/OpenCost 等；厂商遥测仅作方向性证据并已在 raw 台账中标注等级。同步更新 `index.md`、`SUMMARY.md`，并在 `devops-thinking.md` 增加延伸阅读反向链接。
+
 ## [2026-11-20] query | 大规模多集群 Kubernetes 版本升级规划与故障处理
 
 用户问"如何规划大规模多集群 K8s 版本升级、升级中会出什么问题以及怎么处理"。按 query 流程把答案沉淀为页面 `src/docs/Cloud_Native/Kubernetes/大规模多集群版本升级.md`（380 行）：
