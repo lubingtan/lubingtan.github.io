@@ -1,0 +1,443 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Agent 时代的 DevOps：从交付流水线到交付系统 - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../searchindex-e25fbdcb.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../toc-77a989e0.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/Platform_Engineering/agent-era-devops.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="agent-时代的-devops从交付流水线到交付系统"><a class="header" href="#agent-时代的-devops从交付流水线到交付系统">Agent 时代的 DevOps：从交付流水线到交付系统</a></h1>
+<blockquote>
+<p><strong>一句话</strong>：Agent 没有改变 DevOps 的目标——快速、安全、可持续地把价值交付给用户；它改变的是<strong>生产者、平台接口和瓶颈位置</strong>。当代码供给的边际成本趋近于零，<strong>信任</strong>成为新的稀缺资源。</p>
+</blockquote>
+<h2 id="1-问题当写代码变便宜"><a class="header" href="#1-问题当写代码变便宜">1. 问题：当写代码变便宜</a></h2>
+<p>AI coding agent 带来的第一波冲击是“产能”：需求到初稿的路径被大幅缩短，样板代码、测试草稿、迁移脚本可以批量生成。但 DORA 2025 的结论给这种乐观加了一个限定词——<strong>AI 是放大器（amplifier）</strong>：</p>
+<ul>
+<li>90% 的技术从业者在工作中使用 AI，80% 以上自评生产力提升；</li>
+<li>但 30% 的开发者对 AI 生成的代码信任度很低（little to no trust）；</li>
+<li>更高的 AI 采用率同时关联<strong>交付吞吐上升</strong>与<strong>交付不稳定性上升</strong>。</li>
+</ul>
+<p>原因并不神秘：AI 加速的是“创造”，而软件交付的大部分成本在“验证、集成、运行”。DORA 把这种现象称为<strong>验证税（verification tax）</strong>——写代码省下的时间，被审查、调试、对齐和返工重新花掉。代码生成越快，PR 越大、审查队列越长、变更与事故的关联越难追溯。</p>
+<p>因此，Agent 时代 DevOps 的核心矛盾可以概括为：</p>
+<blockquote>
+<p><strong>代码供给的边际成本正在趋零，而信任的边际成本没有同步下降。</strong></p>
+</blockquote>
+<p>平台要做的，不是“再买一个 AI 工具”，而是把<strong>信任的生产工业化</strong>：用可执行的黄金路径、可验证的证据链、可回收的环境、可观测的运行态，把 agent 的产出稳定地转化为可交付的软件。</p>
+<h2 id="2-三个粗略分期"><a class="header" href="#2-三个粗略分期">2. 三个粗略分期</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>阶段</th><th>核心命题</th><th>主要瓶颈</th><th>平台形态</th></tr>
+</thead>
+<tbody>
+<tr><td>DevOps 1.0</td><td>打破 Dev/Ops 墙，自动化构建与发布</td><td>手工操作、环境不一致</td><td>CI/CD 流水线、IaC</td></tr>
+<tr><td>DevOps 2.0</td><td>降低认知负荷，自助获取能力</td><td>工具碎片化、重复造轮子</td><td>内部开发者平台、黄金路径</td></tr>
+<tr><td>DevOps 3.0（Agent 时代）</td><td>人机共同生产，规模化生产信任</td><td>验证、审查、集成、治理</td><td>Agent-ready 交付系统</td></tr>
+</tbody>
+</table>
+</div>
+<p>这不是行业标准分期，而是一个便于讨论的框架。三者的关系是叠加而非替代：没有 1.0 的自动化、2.0 的自助化，3.0 的 agent 只会更快地制造技术债。</p>
+<h2 id="3-三个变化"><a class="header" href="#3-三个变化">3. 三个变化</a></h2>
+<h3 id="31-生产者从人写代码到人机编队"><a class="header" href="#31-生产者从人写代码到人机编队">3.1 生产者：从“人写代码”到“人机编队”</a></h3>
+<p>过去，交付系统的输入是人的时间；现在，输入是“人的判断 + agent 的算力”。这会带来四个连锁反应：</p>
+<ul>
+<li><strong>PR 供给增加、单 PR 体积增大</strong>：审查者从“写代码的人”变成“审计 agent 的人”，认知负荷向评审端转移；</li>
+<li><strong>小批量原则更重要</strong>：DORA 建议把 AI 生成的大变更拆成可审查、可测试的小单元，否则个体效率会被集成瓶颈吞掉；</li>
+<li><strong>测试可信度成为硬约束</strong>：当实现成本下降，测试是唯一能规模化验证意图的手段；</li>
+<li><strong>“谁会写”让位于“谁会审、谁会定边界”</strong>：团队需要明确哪些路径必须人工复核（认证、支付、数据删除、基础设施），哪些可以自动放行。</li>
+</ul>
+<p><strong>判断</strong>：短期内最值得投资的不是“让 agent 写更多”，而是“让 agent 的产出更容易被验证”——作者侧自检、变更分级、证据包、自动回滚。</p>
+<h3 id="32-平台接口从给人用的-ui到人机双模"><a class="header" href="#32-平台接口从给人用的-ui到人机双模">3.2 平台接口：从“给人用的 UI”到“人机双模”</a></h3>
+<p>CNCF Platforms White Paper v1.1 已经把平台用户定义为“人类或 agentic users”。这是一个容易被低估的转向：</p>
+<ul>
+<li>人类需要门户、CLI、IDE 插件、文档和示例；</li>
+<li>Agent 需要 <strong>API/OpenAPI、MCP、稳定的 CLI、JSON Schema、结构化错误、dry-run、幂等语义、短时身份、审计事件</strong>；</li>
+<li>两者共享同一套能力与策略，但消费方式不同。平台不应该为 agent 单独造一套“影子系统”，而应该把现有能力<strong>契约化</strong>。</li>
+</ul>
+<p>一个 agent-ready 的平台能力，至少要能回答五个问题：</p>
+<ol>
+<li>我是谁？能操作哪些资源？（身份与授权）</li>
+<li>这个操作会改变什么？能不能先 dry-run？（可预演）</li>
+<li>失败了怎么重试？会不会重复创建？（幂等与错误语义）</li>
+<li>做完之后凭什么相信它是对的？（证据与验证）</li>
+<li>这次操作花了多少钱、留下了什么审计记录？（成本与追溯）</li>
+</ol>
+<h3 id="33-控制点从末端门禁到内生护栏"><a class="header" href="#33-控制点从末端门禁到内生护栏">3.3 控制点：从“末端门禁”到“内生护栏”</a></h3>
+<p>传统交付在流水线末端设“质量门禁 + 人工审批”；Agent 时代更有效的做法是把控制前移、嵌入：</p>
+<ul>
+<li><strong>策略即代码</strong>：OPA/Kyverno 把“什么能做、什么不能做”变成可测试的代码；</li>
+<li><strong>默认只读、最小权限</strong>：agent 的默认权限应低于人类，危险操作需要显式提权与审批；</li>
+<li><strong>沙箱与出口控制</strong>：agent 在隔离容器/微 VM 中执行，网络出口按白名单放行；</li>
+<li><strong>证据链</strong>：测试报告、SBOM、签名、provenance、eval 结果、审批记录共同构成“可发布”的依据；</li>
+<li><strong>自动回滚</strong>：发布不是终点，可回滚才是。</li>
+</ul>
+<p>GitHub Agentic Workflows 是一个有代表性的实现：用自然语言 Markdown 定义工作流，编译成标准 Actions YAML；agent 默认只读权限，运行在沙箱容器中并受 Agent Workflow Firewall 限制，输出经过 safe outputs 校验，另有 threat detection job 扫描变更。它说明“agent 作为 CI 执行者”已经从演示走向工程化，但前提是<strong>权限、隔离与验证</strong>三件事做到位。</p>
+<h3 id="34-四条理念重构"><a class="header" href="#34-四条理念重构">3.4 四条理念重构</a></h3>
+<ul>
+<li><strong>系统观</strong>：优化端到端流动，而不是单点产能。代码生成快了，瓶颈会转移到评审、集成、环境与发布；局部加速可能让全局更慢。</li>
+<li><strong>证据观</strong>：信任来自可验证的证据，而不是审批层级。门禁的产物应该是一组可追溯的证据，而不是一个签字。</li>
+<li><strong>契约观</strong>：平台与用户（人类或 agent）之间是契约关系：接口、SLO、配额、错误语义、弃用策略。契约让复用从“复制粘贴”升级为“可组合”。</li>
+<li><strong>经济观</strong>：token、GPU、环境时长、审查时间都要进入单位成本。AI 的产出不是免费产能，省下的写代码时间可能被验证税吃掉。</li>
+</ul>
+<h2 id="4-不变的原则"><a class="header" href="#4-不变的原则">4. 不变的原则</a></h2>
+<p>Agent 时代最容易犯的错误，是把“新工具”当成“新范式”，丢掉 DevOps 几十年积累的基本盘：</p>
+<ul>
+<li><strong>小批量、频繁集成</strong>：变更越小，验证越便宜，回滚越容易；</li>
+<li><strong>主干开发 + 短生命周期分支</strong>：减少合并地狱与长期分叉；</li>
+<li><strong>自动化测试是基础设施</strong>：没有可信测试，AI 只会加速不确定性；</li>
+<li><strong>可观测性是发布的一部分</strong>：看不到的运行态等于不可运营；</li>
+<li><strong>你构建，你运行（you build it, you run it）</strong>：所有权清晰，反馈闭环才成立；</li>
+<li><strong>平台即产品</strong>：平台的成功由用户的使用与结果定义，而不是由功能清单定义；</li>
+<li><strong>降低认知负荷</strong>：平台的价值是让用户少做选择，而不是多做选择。</li>
+</ul>
+<h2 id="5-参考架构五面一核"><a class="header" href="#5-参考架构五面一核">5. 参考架构：五面一核</a></h2>
+<pre class="mermaid">flowchart TB
+    subgraph Users["用户与入口"]
+        H["开发者 / 测试 / SRE"]
+        A["Coding Agent / AI 应用"]
+    end
+    subgraph Planes["平台能力面"]
+        DX["体验面&lt;br/&gt;Portal · CLI · IDE · Chat"]
+        DEL["交付面&lt;br/&gt;CI/CD · 制品 · 发布"]
+        ENV["环境面&lt;br/&gt;IaC · 自助环境 · 配额"]
+        OBS["运行面&lt;br/&gt;Metrics · Logs · Traces · SLO"]
+        GOV["治理面&lt;br/&gt;IAM · 策略 · 审计 · 供应链"]
+    end
+    H --&gt; DX
+    A --&gt; DX
+    DX --&gt; DEL
+    DEL --&gt; ENV
+    DEL --&gt; OBS
+    GOV -.-&gt; DX
+    GOV -.-&gt; DEL
+    GOV -.-&gt; ENV
+    GOV -.-&gt; OBS
+</pre>
+
+<p><strong>一核</strong>是“能力目录 + 黄金路径 + 度量”：所有能力有 owner、有契约、有 SLO、有成本、有使用数据；黄金路径把能力串成端到端可走通的路；度量决定下一步投资。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>面</th><th>回答的问题</th><th>关键能力</th><th>详见</th></tr>
+</thead>
+<tbody>
+<tr><td>体验面</td><td>用户如何发现、申请、使用能力？</td><td>门户、CLI、IDE、文档、模板、MCP</td><td><a href="./platform-as-a-product.html">平台工程</a></td></tr>
+<tr><td>交付面</td><td>变更如何被构建、验证、发布、回滚？</td><td>CI、测试、制品、签名、GitOps、渐进发布</td><td><a href="./ci-cd-quality-gates.html">CI/CD 与质量保障</a></td></tr>
+<tr><td>环境面</td><td>环境如何按需获得、隔离、回收？</td><td>IaC、环境即服务、配额、成本</td><td><a href="./environment-as-a-service.html">环境即服务</a></td></tr>
+<tr><td>运行面</td><td>系统是否健康？坏了如何发现与恢复？</td><td>可观测性、SLO、事故管理、容灾</td><td><a href="./observability-and-sre.html">可观测性与稳定性</a></td></tr>
+<tr><td>治理面</td><td>谁能在什么条件下做什么？</td><td>身份、RBAC、策略、审计、供应链安全</td><td><a href="./observability-and-sre.html">可观测性与稳定性</a> / <a href="./platform-adoption.html">平台落地</a></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="6-成熟度模型"><a class="header" href="#6-成熟度模型">6. 成熟度模型</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>等级</th><th>特征</th><th>接口</th><th>黄金路径</th><th>治理</th><th>度量</th></tr>
+</thead>
+<tbody>
+<tr><td>L0 手工</td><td>工单、脚本、口头约定</td><td>无</td><td>无</td><td>事后检查</td><td>无</td></tr>
+<tr><td>L1 标准化</td><td>统一 CI 模板、命名与基线</td><td>CLI/文档</td><td>有文档，靠人执行</td><td>规则文档化</td><td>局部指标</td></tr>
+<tr><td>L2 自助化</td><td>门户/API 申请，自动交付</td><td>Portal + API</td><td>模板化，可一键创建</td><td>策略即代码</td><td>采用率、交付时长</td></tr>
+<tr><td>L3 产品化</td><td>平台即产品，有 PM 与路线图</td><td>多入口一致体验</td><td>端到端、可观测、可回滚</td><td>默认安全、例外有期限</td><td>DORA + DevEx + 成本</td></tr>
+<tr><td>L4 Agent-ready</td><td>人机双模，证据驱动</td><td>API/MCP 优先</td><td>可被 agent 发现、执行、验证</td><td>最小权限 + 审计 + 自动回滚</td><td>按团队画像分层度量</td></tr>
+</tbody>
+</table>
+</div>
+<p>大多数团队卡在 L1→L2：工具已经统一，但申请与交付仍靠人。L2 的关键不是“做一个门户”，而是把<strong>申请、审批、交付、回收</strong>做成一条可观测的自动化链路。</p>
+<h2 id="7-八个新的工程问题"><a class="header" href="#7-八个新的工程问题">7. 八个新的工程问题</a></h2>
+<ol>
+<li><strong>Agent 身份与最小权限</strong>：agent 不能共用人类的长期凭证；应使用短时 token、服务身份（如 SPIFFE）、按任务授予 scope，并记录“代表谁执行”。</li>
+<li><strong>代码来源与变更归因</strong>：AI 生成的提交需要可识别的标记（commit trailer、PR label、作者身份），否则事故复盘时无法区分“人写的”与“agent 写的”。</li>
+<li><strong>CI 作为攻击面</strong>：不可信 PR 的 workflow、<code>pull_request_target</code>、缓存投毒、依赖混淆、提示注入（issue/PR 正文里的恶意指令）都需要专门防护。</li>
+<li><strong>非确定性产物的可复现性</strong>：LLM 应用的“产物”包括 prompt、模型版本、工具配置、检索索引与评测集；这些必须像代码一样版本化。</li>
+<li><strong>评审容量与风险路由</strong>：评审是新的瓶颈。需要按风险分级路由、作者侧 AI 自检、堆叠 PR、审查预算，而不是单纯要求“更快审”。</li>
+<li><strong>环境风暴与资源回收</strong>：每个 agent run 都可能申请环境；没有 TTL、配额与回收器，成本会指数级上升。</li>
+<li><strong>单位经济性</strong>：token、GPU、构建分钟、环境时长都要进入单位成本模型（每次变更/每个租户/每个请求），否则无法判断 AI 是否真的更便宜。</li>
+<li><strong>观测对象扩展</strong>：除了服务指标，还要观测 agent run、tool call、eval 结果、guardrail 事件与 token 成本。</li>
+</ol>
+<h2 id="8-度量四层仪表盘"><a class="header" href="#8-度量四层仪表盘">8. 度量：四层仪表盘</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>层</th><th>指标</th><th>用途</th><th>常见陷阱</th></tr>
+</thead>
+<tbody>
+<tr><td>交付</td><td>DORA 5：部署频率、变更前置时间、返工率、变更失败率、失败恢复时间</td><td>判断“快而稳”是否改善</td><td>只追求部署频率，忽视失败率</td></tr>
+<tr><td>开发者体验</td><td>DX Core 4（Speed / Effectiveness / Quality / Impact）、SPACE、DevEx 调研</td><td>判断摩擦在哪里</td><td>用满意度替代客观流动数据</td></tr>
+<tr><td>平台</td><td>采用率/留存、首次成功时间、申请到交付时延、支持工单下降、自助解决率、单位成本</td><td>判断平台是否被真正使用</td><td>用页面访问量、能力数量充数</td></tr>
+<tr><td>AI</td><td>建议采纳率、返工率、审查时长、eval 通过率、agent 变更的事故归因、每次变更成本</td><td>判断 AI 投入是否转化为交付结果</td><td>用 LOC/PR 数衡量生产力</td></tr>
+</tbody>
+</table>
+</div>
+<p>DORA 2025 还给出一个重要的方法论提醒：<strong>按团队画像分层</strong>。它把团队分为 7 类（从“基础薄弱”到“和谐高绩效”），同一套 AI 策略在不同画像上会产生相反效果。把全员平均指标当作改进依据，往往会掩盖真正的约束。</p>
+<h2 id="9-阅读地图"><a class="header" href="#9-阅读地图">9. 阅读地图</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>如果你关心……</th><th>从这里开始</th></tr>
+</thead>
+<tbody>
+<tr><td>如何设计平台、把工程能力沉淀为可复用服务</td><td><a href="./platform-as-a-product.html">平台工程：把工程能力变成可复用的产品</a></td></tr>
+<tr><td>如何建设 CI/CD、测试、制品、发布与回滚</td><td><a href="./ci-cd-quality-gates.html">CI/CD 与自动化质量保障</a></td></tr>
+<tr><td>如何做环境自助、隔离、回收与成本治理</td><td><a href="./environment-as-a-service.html">环境即服务</a></td></tr>
+<tr><td>如何做可观测性、SLO、故障排查、权限审计与容灾</td><td><a href="./observability-and-sre.html">可观测性与稳定性</a></td></tr>
+<tr><td>如何推动研发/测试/基础设施协作与规范落地</td><td><a href="./platform-adoption.html">平台落地：协作、规范与效果评估</a></td></tr>
+<tr><td>传统 CI/CD 设计原则（Pipeline as Code、效率与可靠性指标）</td><td><a href="./devops-thinking.html">DevOps 理念与实践</a></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="10-如果只做三件事"><a class="header" href="#10-如果只做三件事">10. 如果只做三件事</a></h2>
+<ol>
+<li><strong>把一条黄金路径做到端到端可走通</strong>：从创建仓库到生产发布、观测、回滚，全部有模板、有证据、有 owner。</li>
+<li><strong>把环境的创建与回收做成自助服务</strong>：TTL、空闲回收、配额、成本可见，先解决“等环境”和“僵尸资源”。</li>
+<li><strong>把 agent 的默认权限降为只读，并为每次变更建立证据链</strong>：身份、沙箱、审计、签名、SBOM、eval 报告、回滚记录。</li>
+</ol>
+<p>这三件事的共同点是：它们都在<strong>降低信任的边际成本</strong>，而不是增加代码产量。</p>
+<h2 id="11-参考"><a class="header" href="#11-参考">11. 参考</a></h2>
+<ul>
+<li><a href="https://dora.dev/research/2025/dora-report/">DORA 2025: State of AI-assisted Software Development</a></li>
+<li><a href="https://dora.dev/insights/balancing-ai-tensions/">DORA: Balancing AI tensions</a></li>
+<li><a href="https://cloudnativeplatforms.com/whitepapers/platforms/">CNCF Platforms White Paper v1.1</a></li>
+<li><a href="https://github.blog/changelog/2026-10-28-github-agentic-workflows-generally-available/">GitHub Agentic Workflows (GA)</a></li>
+<li><a href="https://opentelemetry.io/docs/specs/semconv/gen-ai/">OpenTelemetry GenAI Semantic Conventions</a></li>
+<li><a href="https://slsa.dev/">SLSA</a> / <a href="https://www.sigstore.dev/">Sigstore</a></li>
+<li><a href="https://teamtopologies.com/">Team Topologies</a></li>
+<li><a href="https://getdx.com/research/measuring-developer-productivity-with-the-dx-core-4/">DX Core 4</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../platform_engineering.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../docs/Cloud_Native/Platform_Engineering/ci-cd-quality-gates.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../platform_engineering.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../docs/Cloud_Native/Platform_Engineering/ci-cd-quality-gates.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../highlight-abc7f01d.js"></script>
+        <script src="../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>
