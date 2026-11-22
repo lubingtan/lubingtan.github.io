@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>cni详解 - Bingtan&#x27;s Wiki</title>
+        <title>CNI 详解：从 kubelet 到 veth、bridge 与 overlay - Bingtan&#x27;s Wiki</title>
 
 
         <!-- Custom HTML head -->
@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-c6338aee.js";
+            window.path_to_searchindex_js = "../../../searchindex-c4cdfd1b.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-70ef310c.js"></script>
+        <script src="../../../toc-ee3a948c.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -180,95 +180,524 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h2 id="cni-的作用"><a class="header" href="#cni-的作用">CNI 的作用:</a></h2>
-<p>参考: <a href="https://hansedong.github.io/2019/03/19/14/">K8S CNI之：利用ipvlan+host-local+ptp打通容器与宿主机的平行网络 | 国南之境 (hansedong.github.io)</a></p>
-<ul>
-<li>
-<p>给Pod分配IP</p>
-</li>
-<li>
-<p>创建 network namespace, veth pair 以及 bridge</p>
-<ul>
-<li>veth 一端放进容器的 net namespace</li>
-<li>另一端放在 host</li>
-<li>host网卡以及 veth 设备加入 bridge , 这样容器才能与 host 通信</li>
-</ul>
-</li>
-<li>
-<p>设置 route 规则</p>
-<ul>
-<li>指向本节点的 pod ip, gateway 设置成当前节点( iface 为对应的 veth)</li>
-</ul>
-</li>
-</ul>
-<p>另外如果要跨节点通信,</p>
-<ul>
-<li>在节点上手动设置 route 规则 (<code>ip route add</code>)
-<ul>
-<li>指向其他节点上的 Pod CIDR, gateway 设置成对应的节点 IP, 或者设置成交换机的 IP</li>
-</ul>
-</li>
-</ul>
-<p>查看network namespace</p>
-<pre><code class="language-bash"># ip netns list
-cni-26105ccb-b905-e5b7-09e2-159a9f58ab64 (id: 1)
-</code></pre>
-<p>查看 veth</p>
-<pre><code class="language-bash"># ip link show type veth
-4: vethbdd29507@if4: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP mode DEFAULT group default 
-    link/ether 06:a5:48:56:05:94 brd ff:ff:ff:ff:ff:ff link-netns cni-0d153976-a5a0-b8b8-9bb8-2d6938f2ed3d
-31: eth0@if32: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP mode DEFAULT group default 
-    link/ether 02:42:ac:12:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
-</code></pre>
-<p>查看 路由规则</p>
-<pre><code class="language-bash"># ip route
-Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
-0.0.0.0         172.18.0.1      0.0.0.0         UG    0      0        0 eth0
-10.244.0.0      172.18.0.4      255.255.255.0   UG    0      0        0 eth0
-10.244.1.2      0.0.0.0         255.255.255.255 UH    0      0        0 vethbdd29507
-10.244.2.0      172.18.0.3      255.255.255.0   UG    0      0        0 eth0
-172.18.0.0      0.0.0.0         255.255.0.0     U     0      0        0 eth0
-# 或者
-# route -n
-Kernel IP routing table
-Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
-0.0.0.0         172.18.0.1      0.0.0.0         UG    0      0        0 eth0
-10.244.0.0      172.18.0.4      255.255.255.0   UG    0      0        0 eth0
-10.244.1.2      0.0.0.0         255.255.255.255 UH    0      0        0 vethbdd29507
-10.244.2.0      172.18.0.3      255.255.255.0   UG    0      0        0 eth0
-172.18.0.0      0.0.0.0         255.255.0.0     U     0      0        0 eth0
-</code></pre>
-<h2 id="kind-是怎么做的"><a class="header" href="#kind-是怎么做的">Kind 是怎么做的?</a></h2>
-<p>每个节点部署了一个 kindnetd</p>
-<pre><code class="language-bash"># kubectl -n kube-system  get ds kindnet
-NAME      DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
-kindnet   3         3         3       3            3           &lt;none&gt;          4h57m
-</code></pre>
-<p>kindnet 的作用:</p>
-<ul>
-<li>
-<p>动态配置每个节点的 cni 里的 CIDR</p>
-</li>
-<li>
-<p>自动配置节点上的 route 规则, 这样才能跨节点通信</p>
-</li>
-<li>
-<p>自动配置iptabels 规则, 给所有目标是<strong>集群之外</strong>的流量, 做 MASQUERADE (即把源 IP 自动改成当前的IP)</p>
+                        <h1 id="cni-详解从-kubelet-到-vethbridge-与-overlay"><a class="header" href="#cni-详解从-kubelet-到-vethbridge-与-overlay">CNI 详解：从 kubelet 到 veth、bridge 与 overlay</a></h1>
+<p>Pod 网络是 Kubernetes 里最容易被“一句话带过“的部分：“CNI 给 Pod 分配 IP、插 veth、连 bridge”。这句话不算错，但它掩盖了真正重要的细节：<strong>netns 是谁创建的、CNI 在哪个命名空间执行、IPAM 的状态存在哪、跨节点路由是谁装的、MTU 为什么少 50 字节、NetworkPolicy 到底在哪一层生效</strong>。</p>
+<p>本文按“谁调用 → 调用什么 → 插件做什么 → 包怎么走“的顺序拆开。完整链路（Service/DNS/LB）见 <a href="./k8s-network-path.html">Kubernetes 网络全链路</a>；Service 规则的生成见 <a href="./6_service相关.html">Service、kube-proxy 与 LoadBalancer</a>；跨集群见 <a href="./multicluster-networking.html">多集群网络互联</a>。</p>
+<p><strong>版本基线</strong>：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>项目</th><th>版本</th><th>commit</th></tr>
+</thead>
+<tbody>
+<tr><td>Kubernetes</td><td>v1.37.2</td><td><code>c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32</code></td></tr>
+<tr><td>containerd</td><td>v2.4.2</td><td><code>b7a25261e029d68978bbf290df0a62fc819b3c51</code></td></tr>
+<tr><td>CNI spec</td><td>1.1.0</td><td><code>42e11794c073c4a7f3db324a33d266bdd0344e58</code></td></tr>
+<tr><td>CNI plugins</td><td>v1.9.x</td><td><code>0581b4290fe24a283a78195b1f3ec81a9bc26786</code></td></tr>
+</tbody>
+</table>
+</div>
 <blockquote>
-<p>为什么要改掉源 IP ? 假设这样的场景, 内网机器要访问外网, 外网服务器接受到请求后, 返回响应时要给哪个IP发送呢? 直接发给内网IP是无法访问的, 所以需要做 SNAT, 源IP设置成外网可见的网关(Gateway)</p>
+<p>引用约定：源码链接带 40 位 commit 与行号区间；外部项目（flannel/Calico/Cilium）以官方文档链接为主，不伪造行号。行号已用本地 checkout 核对。</p>
 </blockquote>
-</li>
+<hr>
+<h2 id="1-cni-的边界它只管把容器接进网络"><a class="header" href="#1-cni-的边界它只管把容器接进网络">1. CNI 的边界：它只管“把容器接进网络“</a></h2>
+<p>CNI（Container Network Interface）是一个<strong>运行时与网络插件之间的契约</strong>，不是 Kubernetes 的一部分，也不是一个具体网络实现。它的职责边界很窄：</p>
+<ul>
+<li><strong>CNI 负责</strong>：为一个已经存在的 network namespace 配置接口、地址、路由、防火墙/NAT 规则；在删除时清理；把结果（接口、IP、路由、DNS）返回给运行时。</li>
+<li><strong>CNI 不负责</strong>：创建/销毁 netns（运行时做）、调度 Pod（kubelet/scheduler 做）、分配 Node 的 PodCIDR（kube-controller-manager 做）、Service VIP 的 DNAT（kube-proxy 或 eBPF 做）、跨集群互联（Submariner/ClusterMesh 等做）。</li>
+</ul>
+<p>这个边界解释了很多“为什么 CNI 不帮我做 X“的疑问。例如：</p>
+<ul>
+<li><strong>CNI 不创建 netns</strong>。containerd 在 <code>RunPodSandbox</code> 里创建 netns，再以 <code>CNI_NETNS</code> 传给插件；插件只往里“塞“接口。</li>
+<li><strong>CNI 不保证跨节点路由</strong>。它可以让插件自己装（Calico BGP、kindnet 静态路由），也可以只做 overlay 封装；K8s 核心不装路由。</li>
+<li><strong>CNI 不实现 NetworkPolicy</strong>。API 只定义语义，执行靠插件（Calico Felix、Cilium eBPF、kube-router ipset 等）。</li>
+<li><strong>CNI 不参与 Service</strong>。ClusterIP 的 DNAT 是 kube-proxy/CNI 的“另一个能力“（很多 CNI 附带 kube-proxy 替代），不在 CNI 规范里。</li>
+</ul>
+<hr>
+<h2 id="2-一次-pod-创建谁在什么时候调用-cni"><a class="header" href="#2-一次-pod-创建谁在什么时候调用-cni">2. 一次 Pod 创建：谁在什么时候调用 CNI</a></h2>
+<pre class="mermaid">sequenceDiagram
+    participant K as kubelet
+    participant C as containerd CRI
+    participant G as go-cni / libcni
+    participant P as CNI 插件二进制
+    participant N as 内核
+    K-&gt;&gt;C: RunPodSandbox(PodSandboxConfig)
+    C-&gt;&gt;N: unshare(CLONE_NEWNET) + bind mount&lt;br/&gt;/var/run/netns/cni-xxx
+    C-&gt;&gt;G: Setup(id, netns, opts...)
+    G-&gt;&gt;P: exec loopback (CNI_COMMAND=ADD, CNI_IFNAME=lo)
+    P-&gt;&gt;N: 拉起 lo
+    G-&gt;&gt;P: exec bridge (ADD, CNI_IFNAME=eth0)
+    P-&gt;&gt;N: 建 veth、连 bridge、IPAM、路由、NAT
+    G-&gt;&gt;P: exec portmap / bandwidth (ADD)
+    P--&gt;&gt;G: result JSON (interfaces/ips/routes/dns)
+    G--&gt;&gt;C: Result
+    C-&gt;&gt;C: 从 result 取 eth0 的 IP 写入 sandbox
+    C-&gt;&gt;N: 以该 netns 启动 pause 容器
+    C--&gt;&gt;K: PodSandboxStatus（含 podIP）
+</pre>
+
+<h3 id="21-kubelet只装配-cri-参数"><a class="header" href="#21-kubelet只装配-cri-参数">2.1 kubelet：只装配 CRI 参数</a></h3>
+<p>kubelet 不直接调用 CNI，也不操作 netns（dockershim 在 1.24 已移除）。它把 Pod 翻译成 <code>PodSandboxConfig</code>，然后调用 CRI 的 <code>RunPodSandbox</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kuberuntime/kuberuntime_sandbox.go#L71-L76">kuberuntime_sandbox.go L71-L76</a>）。装配的内容包括：</p>
+<ul>
+<li><strong>所有 Pod annotations</strong> 原样放进 <code>Annotations</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kuberuntime/labels.go#L92-L94">labels.go L92-L94</a>），这是带宽、自定义 CNI 注解的数据源；</li>
+<li><strong>DNSConfig</strong> 来自 <code>GetPodDNS()</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kubelet_network.go#L53-L57">kubelet_network.go L53-L57</a>）；</li>
+<li><strong>PortMappings</strong> 来自每个容器的 <code>ports</code>（hostPort/containerPort/protocol/hostIP，<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/container/helpers.go#L449-L485">helpers.go L449-L485</a>）；</li>
+<li><strong>NetworkNamespaceMode</strong>：<code>hostNetwork: true</code> → <code>NODE</code>，否则 <code>POD</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kuberuntime/util/util.go#L81-L88">util.go L81-L88</a>）。</li>
+</ul>
+<p>kubelet 的“网络就绪“判断也只信 CRI 的 <code>NetworkReady</code> condition：运行时没起来/CNI 配置加载失败时，非 hostNetwork Pod 会直接返回 <code>network is not ready</code> 并打 <code>NetworkNotReady</code> 事件（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kubelet.go#L2137-L2140">kubelet.go L2137-L2140</a>）。</p>
+<h3 id="22-containerd创建-netns启动-pause再调-cni"><a class="header" href="#22-containerd创建-netns启动-pause再调-cni">2.2 containerd：创建 netns、启动 pause、再调 CNI</a></h3>
+<p><strong>修正一个常见误解</strong>：netns 不是 CNI 创建的，是 containerd 在 <code>RunPodSandbox</code> 里创建的。</p>
+<ul>
+<li>非 hostNetwork 时，<code>netns.NewNetNS("/var/run/netns")</code> 创建 netns，并把路径写进 sandbox metadata（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/sandbox_run.go#L196-L218">sandbox_run.go L196-L218</a>）。</li>
+<li>创建方式：在一个锁定 OS thread 的 goroutine 里 <code>unshare(CLONE_NEWNET)</code>，再把<strong>当前线程的</strong> <code>/proc/&lt;pid&gt;/task/&lt;tid&gt;/ns/net</code> bind mount 到 <code>/var/run/netns/cni-&lt;uuid&gt;</code>，这样即使线程退出，netns 仍然存在（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/pkg/netns/netns_linux.go#L108-L137">netns_linux.go L108-L137</a>）。</li>
+<li>然后 <code>setupPodNetwork</code> 调 go-cni 的 <code>Setup</code>/<code>SetupSerially</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/sandbox_run.go#L455-L527">sandbox_run.go L455-L527</a>）。</li>
+<li>从结果里找 <code>eth0</code> 的 IP 写回 sandbox；找不到就报 <code>failed to find network info for sandbox</code>。</li>
+<li>最后用这个 netns 启动 pause 容器；后续业务容器加入同一个 netns。</li>
+</ul>
+<p><strong>hostNetwork</strong> 在 containerd 侧是 <code>NamespaceOptions.Network == NamespaceMode_NODE</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/helpers.go#L428-L444">helpers.go L428-L444</a>）；为 NODE 时整段 netns + CNI 都跳过。</p>
+<h3 id="23-翻译层kubelet-的字段如何变成-cni-参数"><a class="header" href="#23-翻译层kubelet-的字段如何变成-cni-参数">2.3 翻译层：kubelet 的字段如何变成 CNI 参数</a></h3>
+<p><code>cniNamespaceOpts</code> 是“K8s 语义 → CNI 能力“的关键（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/sandbox_run.go#L530-L561">sandbox_run.go L530-L561</a>）：</p>
+<pre><code class="language-go">opts := []cni.NamespaceOpts{
+    cni.WithLabels(toCNILabels(id, config)),
+    cni.WithCapability(annotations.PodAnnotations, config.Annotations),
+}
+if len(portMappings) &gt; 0 { opts = append(opts, cni.WithCapabilityPortMap(portMappings)) }
+if bandWidth != nil   { opts = append(opts, cni.WithCapabilityBandWidth(*bandWidth)) }
+if dns != nil         { opts = append(opts, cni.WithCapabilityDNS(*dns)) }
+if cgroup != ""       { opts = append(opts, cni.WithCapabilityCgroupPath(cgroup)) }
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>K8s 来源</th><th>CNI 形式</th><th>谁消费</th></tr>
+</thead>
+<tbody>
+<tr><td>Pod 元数据</td><td><code>CNI_ARGS</code>：<code>K8S_POD_NAMESPACE/NAME/UID/INFRA_CONTAINER_ID</code> + <code>IgnoreUnknown=1</code></td><td>大多数插件用于日志/策略</td></tr>
+<tr><td>全部 annotations</td><td>capability <code>io.kubernetes.cri.pod-annotations</code></td><td>自定义插件（不是 CNI well-known）</td></tr>
+<tr><td><code>hostPort</code></td><td><code>runtimeConfig.portMappings</code></td><td>portmap / Cilium 等</td></tr>
+<tr><td>带宽 annotations</td><td><code>runtimeConfig.bandwidth</code>（<code>kubernetes.io/ingress-bandwidth</code>/<code>egress-bandwidth</code>）</td><td>bandwidth</td></tr>
+<tr><td>CRI DNSConfig</td><td><code>runtimeConfig.dns</code></td><td>插件写 resolv.conf 的兜底</td></tr>
+<tr><td>CgroupParent</td><td>capability <code>cgroupPath</code></td><td>需要 cgroup 关联的插件</td></tr>
+</tbody>
+</table>
+</div>
+<p>注意：containerd <strong>不提供 <code>ipRanges</code></strong> 能力；它会把 <code>config.Annotations</code> 整体塞进去，所以插件只有声明了同名 capability 才能收到。</p>
+<h3 id="24-配置发现与热加载"><a class="header" href="#24-配置发现与热加载">2.4 配置发现与热加载</a></h3>
+<p>默认路径：</p>
+<ul>
+<li>配置目录 <code>/etc/cni/net.d</code>（<code>cni_conf_dir</code>）；</li>
+<li>二进制目录 <code>/opt/cni/bin</code>（<code>cni_bin_dir</code>）；</li>
+<li>最多加载 <code>cni_max_conf_num=1</code> 个配置。</li>
+</ul>
+<p>加载规则（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/vendor/github.com/containerd/go-cni/opts.go#L212-L266">go-cni opts.go L212-L266</a>）：</p>
+<ol>
+<li>只认 <code>.conf</code>、<code>.conflist</code>、<code>.json</code>；</li>
+<li><strong>字典序排序后取前 N 个</strong>，不是“第一个失败再试第二个“；first file wins；</li>
+<li>第一个网络用 <code>eth0</code>，后续 <code>eth1</code>、<code>eth2</code>；</li>
+<li><code>.conf</code> 被当成单插件 conflist；<code>plugins</code> 为空报错；</li>
+<li>目录为空 → <code>ErrCNINotInitialized</code>，表现为 <code>NetworkPluginNotReady</code>。</li>
+</ol>
+<p>热加载由 <code>cniNetConfSyncer</code> 用 fsnotify 监听目录，但它<strong>忽略 CHMOD 和 CREATE</strong>，只在 WRITE/RENAME/REMOVE 时重新 <code>Load()</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/cni_conf_syncer.go#L91-L120">cni_conf_syncer.go L91-L120</a>）。所以 <code>touch</code> 配置文件通常不会触发重载，要用覆盖写或 <code>mv</code> 原子替换。</p>
+<p><code>cni-conf-template</code> 是另一条路：containerd 用 kubelet 通过 <code>UpdateRuntimeConfig</code> 下发的 PodCIDR 渲染模板，适用于“每个节点用同一份模板、CIDR 由 K8s 注入“的部署。</p>
+<h3 id="25-teardown先停容器再-del"><a class="header" href="#25-teardown先停容器再-del">2.5 teardown：先停容器，再 DEL</a></h3>
+<p>停止 sandbox 的顺序（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/sandbox_stop.go#L60-L131">sandbox_stop.go L60-L131</a>）：</p>
+<pre><code class="language-text">停业务容器 → 停 pause sandbox → NRI 通知 → CNI DEL（逆序）
+→ 删除 netns
+</code></pre>
+<p>CNI DEL 必须容忍 netns 已经不存在（pause 已停、netns 被判定关闭时 containerd 会把 <code>NetNSPath</code> 置空再 DEL），这也是规范要求“DEL 可以重复执行“的原因。<code>teardownPodNetwork</code> 只是重新算一遍 <code>cniNamespaceOpts</code> 然后 <code>Remove</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/sandbox_stop.go#L154-L178">sandbox_stop.go L154-L178</a>）。</p>
+<hr>
+<h2 id="3-cni-规范六个动词与三个-json"><a class="header" href="#3-cni-规范六个动词与三个-json">3. CNI 规范：六个动词与三个 JSON</a></h2>
+<h3 id="31-动词与顺序"><a class="header" href="#31-动词与顺序">3.1 动词与顺序</a></h3>
+<p>当前规范版本是 <strong>1.1.0</strong>（<a href="https://github.com/containernetworking/cni/blob/42e11794c073c4a7f3db324a33d266bdd0344e58/SPEC.md#L48-L48">SPEC.md L48</a>）。实际有 6 个动词（规范正文有一处写“5 operations“的编辑瑕疵，不要据此认为 STATUS 不存在）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>动词</th><th>用途</th><th>备注</th></tr>
+</thead>
+<tbody>
+<tr><td><code>ADD</code></td><td>把容器加入网络/追加配置</td><td>链式按 <code>plugins</code> 顺序执行</td></tr>
+<tr><td><code>DEL</code></td><td>移除</td><td><strong>逆序</strong>执行；必须容忍 netns 已消失</td></tr>
+<tr><td><code>CHECK</code></td><td>按 <code>prevResult</code> 核对</td><td>需要首次 ADD 的最终结果</td></tr>
+<tr><td><code>GC</code></td><td>按“仍有效的 attachment“清理其余资源</td><td>1.1.0 新增；不能替代 DEL</td></tr>
+<tr><td><code>STATUS</code></td><td>插件探活</td><td>1.1.0 新增；只对 <code>cniVersion &gt;= 1.1.0</code></td></tr>
+<tr><td><code>VERSION</code></td><td>查询支持的规范版本</td><td>兼容性协商</td></tr>
+</tbody>
+</table>
+</div>
+<p>链式语义（<a href="https://github.com/containernetworking/cni/blob/42e11794c073c4a7f3db324a33d266bdd0344e58/SPEC.md#L405-L470">SPEC.md L405-L470</a>）：ADD 顺序执行，DEL 逆序；CHECK 顺序执行且必须带首次 ADD 的<strong>最终</strong> <code>prevResult</code>；GC 要求运行时列出所有有效 attachment（<code>cni.dev/valid-attachments</code>），插件删除不在列表中的资源，且<strong>必须继续执行并汇总错误</strong>，不能因为一个失败就中止。</p>
+<h3 id="32-调用协议环境变量--stdinstdout"><a class="header" href="#32-调用协议环境变量--stdinstdout">3.2 调用协议：环境变量 + stdin/stdout</a></h3>
+<p>参数全部走环境变量（<a href="https://github.com/containernetworking/cni/blob/42e11794c073c4a7f3db324a33d266bdd0344e58/SPEC.md#L225-L231">SPEC.md L225-L231</a>）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>变量</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>CNI_COMMAND</code></td><td>ADD/DEL/CHECK/GC/STATUS/VERSION</td></tr>
+<tr><td><code>CNI_CONTAINERID</code></td><td>运行时分派的容器 ID</td></tr>
+<tr><td><code>CNI_NETNS</code></td><td>netns 路径（如 <code>/var/run/netns/cni-xxx</code>）</td></tr>
+<tr><td><code>CNI_IFNAME</code></td><td>容器内接口名（如 <code>eth0</code>）</td></tr>
+<tr><td><code>CNI_ARGS</code></td><td><code>K=V;K=V</code> 形式的额外参数</td></tr>
+<tr><td><code>CNI_PATH</code></td><td>插件二进制搜索路径</td></tr>
+</tbody>
+</table>
+</div>
+<p>配置 JSON 从 <strong>stdin</strong> 读，结果 JSON 从 <strong>stdout</strong> 写，日志写 stderr；插件在 runtime 的网络命名空间（通常是 host netns）里执行。运行时会在请求配置里填入 <code>cniVersion</code>、<code>name</code>、<code>runtimeConfig</code>、<code>prevResult</code>，并<strong>删除</strong> <code>capabilities</code>。</p>
+<h3 id="33-结果与错误"><a class="header" href="#33-结果与错误">3.3 结果与错误</a></h3>
+<p>ADD 成功的结果包含（<a href="https://github.com/containernetworking/cni/blob/42e11794c073c4a7f3db324a33d266bdd0344e58/SPEC.md#L573-L601">SPEC.md L573-L601</a>）：</p>
+<pre><code class="language-json">{
+  "cniVersion": "1.1.0",
+  "interfaces": [
+    {"name": "cni0", "mac": "..."},
+    {"name": "veth1234", "mac": "..."},
+    {"name": "eth0", "mac": "...", "sandbox": "/var/run/netns/cni-xxx"}
+  ],
+  "ips": [{"address": "10.244.1.5/24", "gateway": "10.244.1.1", "interface": 2}],
+  "routes": [{"dst": "0.0.0.0/0", "gw": "10.244.1.1"}],
+  "dns": {"nameservers": ["10.96.0.10"]}
+}
+</code></pre>
+<p>被委托的 IPAM 插件返回“缩写版“：<strong>没有 interfaces，ips 里也没有 interface 索引</strong>（<a href="https://github.com/containernetworking/cni/blob/42e11794c073c4a7f3db324a33d266bdd0344e58/SPEC.md#L602-L605">SPEC.md L602-L605</a>）。</p>
+<p>错误码（<a href="https://github.com/containernetworking/cni/blob/42e11794c073c4a7f3db324a33d266bdd0344e58/pkg/types/types.go#L240-L255">types.go L240-L255</a>）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>code</th><th>含义</th><th>运行时怎么处理</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>版本不兼容</td><td>放弃该插件</td></tr>
+<tr><td>2</td><td>配置含不支持的字段</td><td>配置错误</td></tr>
+<tr><td>3</td><td>容器不存在</td><td>DEL 可直接成功</td></tr>
+<tr><td>4</td><td>环境变量非法</td><td>实现错误</td></tr>
+<tr><td>7</td><td>网络配置非法</td><td>配置错误</td></tr>
+<tr><td>11</td><td>稍后重试</td><td>重试</td></tr>
+<tr><td>50/51</td><td>插件不可用（51 表示既有容器连通性可能受影响）</td><td>标记 NetworkReady=False</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="34-capabilities为什么-hostport-不是所有插件都能处理"><a class="header" href="#34-capabilities为什么-hostport-不是所有插件都能处理">3.4 capabilities：为什么 hostPort 不是所有插件都能处理</a></h3>
+<p><code>runtimeConfig</code> 的推导规则是：<strong>运行时提供的能力参数 ∩ 插件声明 <code>"capabilities": {...true}</code></strong> 才会注入（<a href="https://github.com/containernetworking/cni/blob/42e11794c073c4a7f3db324a33d266bdd0344e58/libcni/api.go#L191-L212">libcni api.go L191-L212</a>）。</p>
+<p>常见 well-known capability：<code>portMappings</code>、<code>ipRanges</code>、<code>bandwidth</code>、<code>dns</code>、<code>ips</code>、<code>mac</code>、<code>infinibandGUID</code>、<code>deviceID</code>、<code>aliases</code>。所以：</p>
+<ul>
+<li>一个只做 L2、没声明 <code>portMappings</code> 的插件，<strong>收不到 hostPort</strong>，hostPort 自然不工作；</li>
+<li>声明了 <code>portMappings</code> 但实现有 bug，hostPort 也会静默失效；</li>
+<li>containerd 还传 <code>io.kubernetes.cri.pod-annotations</code>、<code>cgroupPath</code> 这类非标准 capability，插件要自己声明同名键。</li>
+</ul>
+<h3 id="35-一个现实containerd-的-cri-路径不调用-checkgc"><a class="header" href="#35-一个现实containerd-的-cri-路径不调用-checkgc">3.5 一个现实：containerd 的 CRI 路径不调用 CHECK/GC</a></h3>
+<p>规范定义了 CHECK/GC，但 containerd 2.4 的 CRI 生产代码只调用 <code>Setup</code>/<code>Remove</code>/<code>Status</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/sandbox_run.go#L501-L503">sandbox_run.go L501-L503</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/sandbox_stop.go#L171-L171">sandbox_stop.go L171</a>）。这意味着：</p>
+<ul>
+<li>不要指望 CHECK 帮你发现“veth 被删了/路由被改了“；</li>
+<li>不要指望 GC 清理孤儿 IP/veth，<strong>DEL 的重试与幂等</strong>才是实际保障；</li>
+<li>自己写 CNI 时，DEL 必须能处理“netns 不存在、资源已删“的情况。</li>
+</ul>
+<hr>
+<h2 id="4-一条典型-bridge-链每个插件到底做了什么"><a class="header" href="#4-一条典型-bridge-链每个插件到底做了什么">4. 一条典型 bridge 链：每个插件到底做了什么</a></h2>
+<p>大多数自建/实验集群的 conflist 长这样：</p>
+<pre><code class="language-json">{
+  "cniVersion": "1.1.0",
+  "name": "mynet",
+  "plugins": [
+    {"type": "bridge", "bridge": "cni0", "isGateway": true, "isDefaultGateway": true,
+     "ipMasq": true, "mtu": 1500,
+     "ipam": {"type": "host-local",
+              "ranges": [[{"subnet": "10.244.1.0/24"}]],
+              "routes": [{"dst": "0.0.0.0/0"}]}},
+    {"type": "portmap", "capabilities": {"portMappings": true}},
+    {"type": "bandwidth", "capabilities": {"bandwidth": true}}
+  ]
+}
+</code></pre>
+<p>执行顺序是 <code>loopback</code>（containerd 额外插入）→ <code>bridge</code>（含 IPAM）→ <code>portmap</code> → <code>bandwidth</code>。DEL 反过来。</p>
+<h3 id="41-loopback"><a class="header" href="#41-loopback">4.1 loopback</a></h3>
+<p>containerd 会合成一个 <code>cniVersion 0.3.1</code>、<code>name=cni-loopback</code>、<code>type=loopback</code> 的配置，在 <code>lo</code> 上执行 ADD（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/vendor/github.com/containerd/go-cni/opts.go#L97-L115">go-cni opts.go L97-L115</a>）。插件只做两件事：把 <code>lo</code> 拉起、校验地址是 <code>127.0.0.0/8</code>/<code>::1/128</code>。<code>use_internal_loopback=true</code> 时 containerd 自己 <code>LinkSetUp(lo)</code>，不调插件。</p>
+<h3 id="42-bridge创建网桥veth地址和默认路由"><a class="header" href="#42-bridge创建网桥veth地址和默认路由">4.2 bridge：创建网桥、veth、地址和默认路由</a></h3>
+<p><code>cmdAdd</code> 的主流程（<a href="https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/plugins/main/bridge/bridge.go#L559-L605">bridge.go L559-L605</a>）：</p>
+<ol>
+<li><code>isDefaultGateway</code> 隐含 <code>isGateway</code>；<code>hairpinMode</code> 与 <code>promiscMode</code> 互斥。</li>
+<li><code>ensureBridge</code>：<code>LinkAdd</code>（EEXIST 容忍）、可选 promisc、<code>LinkSetUp</code>，并把 <code>net/ipv6/conf/&lt;br&gt;/accept_ra</code> 设为 0（“we want to own the routes”）。</li>
+<li><code>setupVeth</code>：<strong>在容器 netns 内</strong>创建 veth pair，host 端移入 host netns；host 端 <code>LinkSetMaster(br)</code>、<code>LinkSetHairpin</code>、<code>LinkSetIsolated</code>，可选 VLAN 过滤（<a href="https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/plugins/main/bridge/bridge.go#L428-L512">bridge.go L428-L512</a>）。</li>
+<li>有 IPAM 时 <code>ipam.ExecAdd</code> 拿结果，失败自动 <code>ExecDel</code> 回滚。</li>
+<li><code>calcGateways</code>：<code>isGateway</code> 且 IPAM 未给 gateway 时用“子网首地址+1“；<code>isDefaultGateway</code> 且没有默认路由时追加 <code>0.0.0.0/0</code>/<code>::/0</code>。</li>
+<li>在容器 netns 内设 <code>accept_dad</code>/<code>arp_notify</code>，然后 <code>ipam.ConfigureIface(eth0, result)</code> 加地址、装路由。</li>
+<li><code>isGateway</code> 时把 gateway IP 加到 <code>cni0</code> 上，并 <code>enableIPForward</code>（IPv4 写 <code>net.ipv4.ip_forward=1</code>，IPv6 写 <code>net.ipv6.conf.all.forwarding=1</code>）。</li>
+<li><code>ipMasq: true</code> 时按 Pod IP 建 NAT 链（见 §9）。</li>
+<li>等待 host veth <code>OperState=Up</code>，并<strong>重新读取 bridge MAC</strong>——第一个 veth 加入或设置 IP 后 <code>cni0</code> 的 MAC 会变，插件必须重新读，否则返回的 result 里 MAC 是旧的（<a href="https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/plugins/main/bridge/bridge.go#L745-L775">bridge.go L745-L775</a>）。</li>
+</ol>
+<p><strong>为什么 Pod 的默认路由能工作</strong>：<code>ConfigureIface</code> 对每条没有 <code>GW</code> 的路由，用 IPConfig 的 <code>gateway</code> 作为下一跳；而 gateway IP 被配在 <code>cni0</code> 上，所以 <code>cni0</code> 会以自己的 MAC 应答 ARP，Pod 才能把帧发给网关。反过来，如果 <code>isGateway=false</code>，<code>cni0</code> 没有这个 IP，Pod 的下一跳不可达——表现为“有 IP、能 ping 自己、出不去“。</p>
+<h3 id="43-host-localip-分配的状态在磁盘上"><a class="header" href="#43-host-localip-分配的状态在磁盘上">4.3 host-local：IP 分配的状态在磁盘上</a></h3>
+<p>host-local 的配置在 <code>backend/allocator/config.go</code>：<code>ranges</code>（外层=分配几个 IP，内层=每个 IP 的候选子网池）、<code>subnet/rangeStart/rangeEnd/gateway</code>、<code>routes</code>、<code>dataDir</code>、<code>resolvConf</code>。分配状态：</p>
+<ul>
+<li>目录 <code>/var/lib/cni/networks/&lt;network&gt;/</code>（<code>dataDir</code> 可覆盖）；</li>
+<li><strong>一个 IP 一个文件</strong>，文件内容 <code>containerID\r\nifname</code>，用 <code>O_EXCL</code> 原子占位；另有 <code>last_reserved_ip.&lt;rangeID&gt;</code> 记录游标，整个目录用 flock 串行化（<a href="https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/plugins/ipam/host-local/backend/disk/backend.go#L37-L90">disk/backend.go L37-L90</a>）；</li>
+<li>从 <code>last_reserved_ip+1</code> 开始 round-robin，避免崩溃循环的 Pod 反复拿同一个 IP（<a href="https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/plugins/ipam/host-local/backend/allocator/allocator.go#L139-L178">allocator.go L139-L178</a>）；</li>
+<li>同一 <code>(containerID, ifname)</code> 重复分配会被拒绝；IP 耗尽返回 <code>no IP addresses available in range set</code>；</li>
+<li>gateway 默认 <code>subnet+1</code>；<code>cmdAdd</code> 只返回 <code>ips</code> 和 <code>routes</code>，<strong>自己不装路由</strong>（默认路由要么配置里有 <code>0.0.0.0/0</code>，要么由 bridge 的 <code>isDefaultGateway</code> 补）；</li>
+<li><code>cmdDel</code> 按所有 ranges 逐个 release，容忍重复删除；<code>cmdGC</code> 用 <code>cni.dev/valid-attachments</code> 清理不在列表中的预留。</li>
+</ul>
+<p>排障含义：<strong>“Pod 拿不到 IP“先看 <code>/var/lib/cni/networks/&lt;net&gt;/</code> 的文件数</strong>。如果文件数远大于当前 Pod 数，说明 DEL 失败导致泄漏；删掉对应的孤儿文件（确认 containerID 已不存在）或换一个更大的 range。</p>
+<h3 id="44-portmaphostport-的-dnat"><a class="header" href="#44-portmaphostport-的-dnat">4.4 portmap：hostPort 的 DNAT</a></h3>
+<p>hostPort 不是 CNI 规范的核心，而是 portmap 插件通过 <code>portMappings</code> capability 实现的。iptables 结构（<a href="https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/plugins/meta/portmap/portmap_iptables.go#L29-L49">portmap_iptables.go L29-L49</a>）：</p>
+<pre><code class="language-text">PREROUTING/OUTPUT -m addrtype --dst-type LOCAL -j CNI-HOSTPORT-DNAT
+CNI-HOSTPORT-DNAT: -m multiport --destination-ports 8080 -j CNI-DN-&lt;hash&gt;
+CNI-DN-&lt;hash&gt;: -p tcp --dport 8080 -j DNAT --to-destination 10.244.1.5:80
+</code></pre>
+<p>hairpin（源地址属于 Pod 网段）和 localhost（<code>-s 127.0.0.1</code>）会先跳 <code>CNI-HOSTPORT-SETMARK</code> 打 mark，再由 <code>CNI-HOSTPORT-MASQ</code> 对带 mark 的包做 MASQUERADE。ADD/DEL 都会 flush 对应 UDP conntrack，避免旧 NAT 状态把新 Pod 黑洞。</p>
+<p>两个重要缺陷：</p>
+<ol>
+<li><strong>portmap 不预留 hostPort</strong>：同一 hostPort 上最后一个写入者获胜；</li>
+<li><strong>它会抢走宿主原本监听该端口的服务</strong>（比如宿主自己的 nginx 监听 80，Pod 也声明 hostPort 80，DNAT 规则会让宿主流量被劫持）。</li>
+</ol>
+<p>所以生产上 hostPort 要慎用；能用 Service/Ingress 就不要用 hostPort。</p>
+<h3 id="45-bandwidth--tuning"><a class="header" href="#45-bandwidth--tuning">4.5 bandwidth / tuning</a></h3>
+<ul>
+<li><strong>bandwidth</strong>：<code>ingressRate/Burst</code> 在 host veth 上建 TBF root qdisc（限制进容器的流量）；<code>egressRate/Burst</code> 在 host veth 上建 ingress qdisc + u32 filter，把流量 mirred 重定向到 <code>bw-&lt;hash&gt;</code> IFB，再在 IFB 上建 TBF。注意它会把 IFB 加进结果 <code>interfaces</code>，所以 <code>prevResult</code> 比预期多一个接口。</li>
+<li><strong>tuning</strong>：只改 sysctl（和可选 <code>mac</code>）。<code>/etc/cni/tuning/allowlist.conf</code> 存在时会做白名单校验，拒绝非 <code>net.*</code> 或不在白名单的 key；支持 CHECK，但不支持 GC/STATUS。</li>
+</ul>
+<h3 id="46-其他拓扑ptpipvlanmacvlan"><a class="header" href="#46-其他拓扑ptpipvlanmacvlan">4.6 其他拓扑：ptp、ipvlan、macvlan</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>插件</th><th>结构</th><th>特点</th><th>典型使用者</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>bridge</strong></td><td>veth + Linux bridge</td><td>简单、同节点 L2 互通；网关在 bridge 上</td><td>flannel host-gw? 不，flannel 用 bridge；Calico 不用</td></tr>
+<tr><td><strong>ptp</strong></td><td>veth pair，无 bridge</td><td>host 端加 <code>/32</code> 主机路由，容器内强制所有流量经网关 ARP；kindnet 用它</td><td>kind、部分轻量 CNI</td></tr>
+<tr><td><strong>ipvlan</strong></td><td>父接口上创建 ipvlan 子接口</td><td>共享父接口 L2，不建 veth/bridge；<code>l2/l3/l3s</code> 模式</td><td>高性能/underlay 场景</td></tr>
+<tr><td><strong>macvlan</strong></td><td>每个 Pod 独立 MAC 的子接口</td><td>需要父接口支持混杂/多 MAC；MTU 不能超过父接口</td><td>传统网络/裸金属</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>ptp</strong> 的精髓在注释里写得很清楚：veth 不支持 <code>IFF_POINTOPOINT</code>，所以先给容器配 <code>/24</code>，删掉自动产生的直连路由，再加 <code>gw/32 dev eth0</code> 和 <code>subnet via gw</code>，<strong>强制所有流量经网关 ARP</strong>（<a href="https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/plugins/main/ptp/ptp.go#L54-L80">ptp.go L54-L80</a>）。host 侧需要 forwarding。</p>
+<p><strong>ipvlan/macvlan</strong> 不创建 veth，也不建 bridge；它们直接在父接口上派生接口。优点是路径短、性能好；缺点是对父接口/交换机配置有要求（混杂模式、MAC 数量、VLAN），且很多 overlay/NetworkPolicy 方案不兼容。</p>
+<h3 id="47-kindnetkind-集群里到底跑了什么"><a class="header" href="#47-kindnetkind-集群里到底跑了什么">4.7 kindnet：kind 集群里到底跑了什么</a></h3>
+<p>kind 的默认 CNI 是 <strong>kindnetd</strong>（DaemonSet，<code>kube-system/kindnet</code>），它不是“什么都没有“，而是一个很薄的实现：</p>
+<ul>
+<li>用 <strong>ptp + host-local + portmap</strong> 的 conflist（<code>cniVersion 0.3.1</code>），<code>ipMasq: false</code>，<code>dataDir=/run/cni-ipam-state</code>；</li>
+<li>按 Node 的 <code>PodCIDRs</code> 渲染 <code>ranges</code> 和默认路由，MTU 取 <code>eth0</code> 的 MTU；</li>
+<li>跨节点由 kindnetd <strong>写静态路由</strong>（watch Node，取 Peer <code>InternalIP</code> 与 <code>PodCIDRs</code>）；</li>
+<li>NAT 由一个 ipMasqAgent 负责：对 cluster subnet 之外的流量 MASQUERADE；</li>
+<li>可选启用基于 eBPF 的 <code>kube-network-policies</code> 做 NetworkPolicy。</li>
+</ul>
+<p>所以 kind 集群里 Pod 出口源 IP 是节点 IP，<code>kubectl exec</code> 看到的对端地址也是节点地址；“kind 没有 NetworkPolicy“已经是过去式，能力随 kind 版本变化。源码见 <a href="https://github.com/kubernetes-sigs/kind/tree/main/images/kindnetd">kindnetd</a>（main 分支，不固定行号）。</p>
+<hr>
+<h2 id="5-节点路由与-podcidr"><a class="header" href="#5-节点路由与-podcidr">5. 节点路由与 PodCIDR</a></h2>
+<h3 id="51-podcidr-从哪来"><a class="header" href="#51-podcidr-从哪来">5.1 PodCIDR 从哪来</a></h3>
+<p>kube-controller-manager 的 NodeIPAM 控制器：</p>
+<ul>
+<li>开启 <code>--allocate-node-cidrs</code>（默认 false）并提供 <code>--cluster-cidr</code>；</li>
+<li><code>--node-cidr-mask-size</code> 决定每节点块大小（IPv4 默认 24、IPv6 默认 64）；</li>
+<li>每个 clusterCIDR 一个位图 <code>CidrSet</code>，<code>AllocateNext</code> 线性探测空闲块，耗尽报 <code>ErrCIDRRangeNoCIDRsRemaining</code>；</li>
+<li>节点已有 <code>PodCIDRs</code> 时只 <code>Occupy</code>，不重新分配；分配后写回 <code>Node.spec.podCIDRs</code>，失败重试后可能泄漏。</li>
+</ul>
+<p>PodCIDR 只是“地址池声明“，<strong>K8s 核心不装跨节点路由</strong>（云厂商的 <code>--configure-cloud-routes</code> 例外，由 cloud provider 写 VPC 路由表）。路由由 CNI 决定：</p>
+<ul>
+<li><strong>静态路由</strong>：<code>ip route add &lt;peerPodCIDR&gt; via &lt;peerInternalIP&gt;</code>，适合小集群/实验；</li>
+<li><strong>BGP</strong>：Calico/kube-router 每个节点宣告本节点 PodCIDR，节点间 full mesh 或 Route Reflector；</li>
+<li><strong>overlay</strong>：VXLAN/IPIP/Geneve 封装，节点只需 IP 可达；</li>
+<li><strong>云路由</strong>：cloud provider 把 PodCIDR 写进 VPC 路由表。</li>
+</ul>
+<h3 id="52-相关-sysctl"><a class="header" href="#52-相关-sysctl">5.2 相关 sysctl</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>sysctl</th><th>作用</th><th>谁设置</th></tr>
+</thead>
+<tbody>
+<tr><td><code>net.ipv4.ip_forward=1</code></td><td>节点转发 Pod 流量</td><td>bridge/ptp 的网关模式由 CNI 设置；kubeadm 只做 preflight 检查</td></tr>
+<tr><td><code>net.ipv6.conf.all.forwarding=1</code></td><td>IPv6 转发</td><td>同上</td></tr>
+<tr><td><code>net.bridge.bridge-nf-call-iptables=1</code></td><td>让 iptables/conntrack 看到桥接流量</td><td><strong>不由 K8s 代码设置</strong>；由节点准备/发行版/网络插件负责</td></tr>
+<tr><td><code>net.ipv4.conf.*.rp_filter</code></td><td>反向路径校验</td><td>发行版默认；overlay/多路径常改 2 或 0</td></tr>
+<tr><td><code>net.ipv4.conf.*.proxy_arp</code></td><td>代答 ARP</td><td>参考 bridge/ptp 链不设置；L3 underlay 设计中按需开启</td></tr>
+<tr><td><code>net.ipv4.conf.all.route_localnet=1</code></td><td>允许 127/8 跨路由边界</td><td>kube-proxy（localhost NodePort）</td></tr>
+<tr><td><code>net.ipv6.conf.&lt;if&gt;.accept_ra=0</code></td><td>防止 RA 覆盖 CNI 装的路由</td><td>bridge 插件</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>bridge-nf-call-iptables</code> 值得单独强调：<strong>它是同节点 Pod→Service 回包能被 conntrack 还原的前提</strong>（见 <a href="./k8s-network-path.html">网络全链路 §4.3</a>）。关掉它，跨节点访问可能正常，同节点 Service 访问反而坏掉。</p>
+<hr>
+<h2 id="6-overlay-vs-underlaymtu-是怎么少掉的"><a class="header" href="#6-overlay-vs-underlaymtu-是怎么少掉的">6. Overlay vs Underlay：MTU 是怎么少掉的</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>方案</th><th>封装</th><th>每包开销（IPv4）</th><th>1500 underlay 下 Pod MTU</th><th>代表</th></tr>
+</thead>
+<tbody>
+<tr><td>VXLAN</td><td>外层 IP + UDP + VXLAN + 内层以太</td><td>50</td><td>1450</td><td>flannel、Calico VXLAN</td></tr>
+<tr><td>IPIP</td><td>外层 IP</td><td>20</td><td>1480</td><td>Calico IPIP</td></tr>
+<tr><td>Geneve</td><td>外层 IP + UDP + Geneve + TLV</td><td>≥50</td><td>按实现（常 1450 以下）</td><td>OVN-Kubernetes</td></tr>
+<tr><td>WireGuard</td><td>外层 IP + UDP + WG</td><td>60</td><td>1440</td><td>flannel/Calico WireGuard</td></tr>
+<tr><td>BGP/纯路由</td><td>无</td><td>0</td><td>1500</td><td>Calico、kube-router</td></tr>
+<tr><td>eBPF</td><td>原生或 tunnel</td><td>0 或 50</td><td>1500 或 1450</td><td>Cilium</td></tr>
+</tbody>
+</table>
+</div>
+<p>算术：</p>
+<ul>
+<li><strong>VXLAN 50</strong> = 14（内层以太）+ 20（外层 IPv4）+ 8（UDP）+ 8（VXLAN）；IPv6 外层换成 40，所以 70。</li>
+<li><strong>WireGuard 60</strong> = 20（IP）+ 8（UDP）+ 32（WG 头/计数器/tag）；IPv6 为 80。</li>
+<li><strong>IPIP 20</strong> = 外层 IP。</li>
+<li><strong>1400</strong> 通常来自 underlay 本身只有 1450（如 OpenStack VXLAN），再减 50。</li>
+<li><strong>AKS 等云环境</strong> 的路径 MTU 可能是 1400，再叠 WireGuard 就是 1340。</li>
+</ul>
+<p>MTU 必须“端到端取最小“：Pod veth、<code>cni0</code>、隧道设备、underlay 网卡要一致或递减。配大了而 ICMP Fragmentation Needed 又被防火墙丢弃，典型现象是 <code>curl</code> 小请求正常、大响应卡死（PMTU 黑洞）。验证方法：</p>
+<pre><code class="language-bash"># 从 Pod 里逐步逼近，-M do 禁止分片
+ping -M do -s 1400 &lt;peerPodIP&gt;
+ping -M do -s 1450 &lt;peerPodIP&gt;
+# 看隧道接口的 MTU
+ip -d link show vxlan.calico   # 期望 1450
+ip -d link show flannel.1      # 期望 1450
+</code></pre>
+<hr>
+<h2 id="7-ipam地址从哪来状态在哪"><a class="header" href="#7-ipam地址从哪来状态在哪">7. IPAM：地址从哪来、状态在哪</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>方案</th><th>状态存储</th><th>特点</th></tr>
+</thead>
+<tbody>
+<tr><td>host-local</td><td><code>/var/lib/cni/networks/&lt;net&gt;/</code> 文件</td><td>简单、无依赖；每节点地址池静态配置或模板注入</td></tr>
+<tr><td>whereabouts</td><td>CRD + etcd（K8s API）</td><td>支持跨节点地址池、动态分配、多网卡；适合大规模/Multus</td></tr>
+<tr><td>Calico IPAM</td><td>Calico datastore（etcd/CRD）</td><td>按 IPPool/节点块分配，支持 affinity、跨 subnet</td></tr>
+<tr><td>云厂商 CNI</td><td>云 API（ENI/IP 分配）</td><td>地址是云网卡/IP，受云配额限制</td></tr>
+</tbody>
+</table>
+</div>
+<p>host-local 的“一个 IP 一个文件“设计有一个重要副作用：<strong>状态在本地磁盘，节点重装/磁盘丢失会丢分配记录</strong>。恢复时如果 Pod 还在，可能出现“IP 已被占用但文件没了“的冲突；这时需要 <code>cni</code> 的 DEL/GC 或手动清理。whereabouts/Calico 把状态放在 API 里，跨节点可见，但引入了对 apiserver/etcd 的依赖。</p>
+<p>IP 耗尽是最常见的 CNI 故障：<code>no IP addresses available in range set</code>。先看 PodCIDR 是否太小（每节点 <code>/24</code> 只有 254 个）、是否有 DEL 泄漏、是否有大量 Completed Job Pod 还占着 IP（Completed Pod 不会自动释放，直到被删除）。</p>
+<hr>
+<h2 id="8-pod-出口-nat"><a class="header" href="#8-pod-出口-nat">8. Pod 出口 NAT</a></h2>
+<p>Pod → 集群外的 SNAT <strong>不是 kube-proxy 做的</strong>（kube-proxy 只做 Service 流量的 SNAT）：</p>
+<ul>
+<li><strong>bridge 的 <code>ipMasq: true</code></strong>：每个 Pod IP 建一条独立链，链内先 <code>-d &lt;podCIDR&gt; -j ACCEPT</code>（同网段不 NAT），再 <code>! -d 224.0.0.0/4 -j MASQUERADE</code>，最后在 <code>POSTROUTING</code> 用 <code>-s &lt;podIP&gt; -j &lt;chain&gt;</code> 命中（<a href="https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/pkg/ip/ipmasq_iptables_linux.go#L29-L95">ipmasq_iptables_linux.go L29-L95</a>）。注意这条 MASQUERADE <strong>没有 <code>--random-fully</code></strong>。</li>
+<li><strong>Calico</strong>：由 IPPool 的 <code>natOutgoing</code> 决定是否 SNAT，Felix 写规则。</li>
+<li><strong>kindnet</strong>：ipMasqAgent 周期同步 <code>-s &lt;podSubnet&gt; ! -d &lt;podSubnet&gt; -j MASQUERADE</code>。</li>
+<li><strong>云厂商</strong>：通常由云 NAT 网关/节点 SNAT 完成。</li>
+</ul>
+<p><code>--random-fully</code> 的作用是随机化源端口，降低大规模 egress 的端口冲突/conntrack 插入失败。kube-proxy 对 Service SNAT 默认开启，CNI 的 ipMasq 链通常不开；大规模 egress 需要单独评估 <code>nf_conntrack_max</code>。</p>
+<p>Egress gateway（Calico EgressGateway、Cilium Egress Gateway）把特定 Namespace/Pod 的出口导到专用节点再 SNAT 成固定 IP。代价：外部看到的是节点 IP；基于 Pod CIDR 的 <code>ipBlock</code>/审计/限流失配；回程必须回到同一台 egress 节点。</p>
+<p>IPv6 默认<strong>不做 NAT66</strong>；Pod 的全局 IPv6 直接路由，或由 NPTv6/显式 NAT 处理。</p>
+<hr>
+<h2 id="9-networkpolicy-的数据面"><a class="header" href="#9-networkpolicy-的数据面">9. NetworkPolicy 的数据面</a></h2>
+<p>NetworkPolicy 的 API 只定义语义，<strong>执行完全靠 CNI</strong>。K8s 文档明确：没有支持的插件时，创建 NetworkPolicy 对象“没有效果“；未隔离的 Pod 默认全通；策略是加法式的。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>实现</th><th>数据面</th><th>特点</th></tr>
+</thead>
+<tbody>
+<tr><td>kube-router</td><td>iptables + ipset + conntrack</td><td>每个 Pod 专属链，默认 DROP，白名单用 ipset</td></tr>
+<tr><td>Calico</td><td>Felix 编译 iptables/nftables（也可 eBPF dataplane）</td><td>支持全局/命名空间策略、selector、DNS 策略</td></tr>
+<tr><td>Cilium</td><td>eBPF（TC/XDP/socket）</td><td>基于 identity 而非纯 IP；L7 策略</td></tr>
+<tr><td>kindnet</td><td><code>kube-network-policies</code> eBPF</td><td>kind 的可选能力</td></tr>
+</tbody>
+</table>
+</div>
+<p>三个容易踩的点：</p>
+<ol>
+<li><strong>默认 deny egress 会连 DNS 一起断</strong>。必须显式放行 53/udp、53/tcp；NodeLocal DNSCache 模式下还要放行 <code>169.254.20.10</code>。</li>
+<li><strong>策略对 hostNetwork Pod 行为未定义</strong>，多数实现把它当节点流量。</li>
+<li><strong>策略变更对已建立连接是否生效由实现决定</strong>；不要假设改完策略旧连接立刻断。</li>
+</ol>
+<p>另外，NAT 发生在 NetworkPolicy 之前还是之后<strong>没有规范定义</strong>，不同插件/云厂商行为不同。任何“按源 Pod IP 放行“的策略，在 egress gateway/NAT 路径上都可能失效。</p>
+<hr>
+<h2 id="10-cni-生态对比"><a class="header" href="#10-cni-生态对比">10. CNI 生态对比</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>方案</th><th>数据面</th><th>跨节点</th><th>NetworkPolicy</th><th>特点/边界</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>flannel</strong></td><td>VXLAN / host-gw / WireGuard</td><td>封装或静态路由</td><td>否（需配合其他）</td><td>简单、成熟；功能少</td></tr>
+<tr><td><strong>Calico</strong></td><td>BGP / IPIP / VXLAN / eBPF</td><td>路由或封装</td><td>是（Felix）</td><td>功能全、运维复杂；BGP 需要网络配合</td></tr>
+<tr><td><strong>Cilium</strong></td><td>eBPF</td><td>native/tunnel，ClusterMesh</td><td>是（eBPF/L7）</td><td>高性能、可替代 kube-proxy；内核/版本要求高</td></tr>
+<tr><td><strong>Antrea</strong></td><td>OVS</td><td>Geneve/VXLAN</td><td>是</td><td>基于 OVS，Windows 支持好</td></tr>
+<tr><td><strong>kube-router</strong></td><td>BGP + IPVS</td><td>纯路由</td><td>是（ipset）</td><td>轻量、一体化；IPVS 弃用后需重新评估</td></tr>
+<tr><td><strong>kindnet</strong></td><td>ptp + 静态路由</td><td>静态路由</td><td>可选（eBPF）</td><td>仅适合 kind/实验</td></tr>
+<tr><td><strong>Multus</strong></td><td>多 CNI 编排</td><td>取决于底层</td><td>取决于底层</td><td>多网卡/多网络；不是数据面本身</td></tr>
+</tbody>
+</table>
+</div>
+<p>选型的核心问题不是“哪个功能多“，而是：<strong>你需要 underlay 路由还是 overlay？需要 NetworkPolicy 吗？需要 eBPF/kube-proxy 替代吗？能接受 BGP/内核版本/运维复杂度吗？</strong> 多集群场景还要看 ClusterMesh/Submariner 的兼容性，见 <a href="./multicluster-networking.html">多集群网络互联</a>。</p>
+<hr>
+<h2 id="11-故障模式与排查"><a class="header" href="#11-故障模式与排查">11. 故障模式与排查</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>现象</th><th>根因</th><th>看哪里</th></tr>
+</thead>
+<tbody>
+<tr><td>Pod 一直 <code>ContainerCreating</code>，事件 <code>NetworkNotReady</code></td><td>containerd 的 <code>NetworkReady=False</code>：<code>/etc/cni/net.d</code> 为空、JSON 非法、<code>type</code> 二进制不存在</td><td><code>crictl info</code> 的 conditions；<code>ls /opt/cni/bin</code>；<code>jq . /etc/cni/net.d/*</code></td></tr>
+<tr><td><code>failed to setup network for sandbox</code></td><td>CNI ADD 失败，插件 stderr 在 containerd 日志里</td><td><code>journalctl -u containerd</code>；<code>crictl inspectp</code></td></tr>
+<tr><td><code>no IP addresses available in range set</code></td><td>host-local 地址池耗尽/泄漏</td><td><code>/var/lib/cni/networks/&lt;net&gt;/</code> 文件数 vs Pod 数</td></tr>
+<tr><td>Pod 有 IP 但出不了网</td><td>网关没配到 <code>cni0</code>、<code>ip_forward=0</code>、<code>bridge-nf-call-iptables=0</code>、MTU 过大</td><td><code>ip -d link show cni0</code>；sysctl；<code>nsenter</code> 看路由</td></tr>
+<tr><td>删除 Pod 后残留 veth/iptables</td><td>DEL 失败（netns 已消失、插件 panic、配置变更）</td><td><code>ip link show type veth</code>、<code>ip netns list</code>、<code>iptables -t nat -L CNI-HOSTPORT-DNAT</code></td></tr>
+<tr><td>改了 CNI 配置不生效</td><td>syncer 忽略 CHMOD/CREATE</td><td>用覆盖写/<code>mv</code> 原子替换；看 containerd 日志</td></tr>
+<tr><td>跨节点不通、同节点通</td><td>路由缺失/隧道未起/防火墙/rp_filter</td><td><code>ip route</code>；<code>tcpdump</code> 隧道口；<code>ip xfrm</code>/WireGuard 状态</td></tr>
+</tbody>
+</table>
+</div>
+<p>常用命令：</p>
+<pre><code class="language-bash"># 运行时视角
+crictl info -o json | jq '.status.conditions'
+crictl pods --name &lt;pod&gt;; crictl ps -a | grep &lt;pod&gt;
+SB=$(crictl pods -q --name &lt;pod&gt;)
+crictl inspectp -o json "$SB" | jq '.status.network,.info.pid'
+
+# 进入 Pod netns
+PID=$(crictl inspectp -o json "$SB" | jq -r .info.pid)
+nsenter -t "$PID" -n ip -br addr
+nsenter -t "$PID" -n ip route
+nsenter -t "$PID" -n cat /etc/resolv.conf
+
+# 节点侧
+ip -d link show cni0
+ip link show type veth | head
+ip netns list; ls -l /var/run/netns/
+sysctl net.ipv4.ip_forward net.bridge.bridge-nf-call-iptables
+conntrack -L | grep &lt;podIP&gt; | head
+journalctl -u containerd --since '10 min ago' | grep -i -E 'cni|sandbox'
+</code></pre>
+<p>日志位置：容器 stdout 在 <code>/var/log/pods/&lt;namespace&gt;_&lt;pod&gt;_&lt;uid&gt;/&lt;container&gt;/0.log</code>，<code>/var/log/containers/*.log</code> 是兼容旧工具的 symlink。<strong>CNI 插件的 stderr 被 go-cni 接到 containerd 的 stderr</strong>，所以“CNI 插件日志“实际在 containerd 的 journal 里。</p>
+<hr>
+<h2 id="12-参考"><a class="header" href="#12-参考">12. 参考</a></h2>
+<p><strong>规范与官方文档</strong></p>
+<ul>
+<li><a href="https://www.cni.dev/docs/spec/">CNI Specification 1.1.0</a></li>
+<li><a href="https://www.cni.dev/docs/spec-upgrades/">CNI 规范升级历史</a></li>
+<li><a href="https://www.cni.dev/docs/conventions/">CNI conventions（capabilities 等）</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/">Kubernetes Network Plugins</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/cluster-administration/networking/">Cluster Networking</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">Network Policies</a></li>
+</ul>
+<p><strong>源码（固定到本文基线）</strong></p>
+<ul>
+<li>containerd netns 创建 —— <a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/pkg/netns/netns_linux.go#L108-L137">netns_linux.go L108-L137</a></li>
+<li>containerd CNI setup/teardown —— <a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/sandbox_run.go#L455-L561">sandbox_run.go L455-L561</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/sandbox_stop.go#L154-L178">sandbox_stop.go L154-L178</a></li>
+<li>CNI 配置加载 —— <a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/vendor/github.com/containerd/go-cni/opts.go#L212-L266">go-cni opts.go L212-L266</a></li>
+<li>bridge 插件 —— <a href="https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/plugins/main/bridge/bridge.go">bridge.go</a></li>
+<li>host-local —— <a href="https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/plugins/ipam/host-local/backend/allocator/allocator.go#L139-L178">allocator.go L139-L178</a>、<a href="https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/plugins/ipam/host-local/backend/disk/backend.go#L37-L90">disk/backend.go L37-L90</a></li>
+<li>portmap —— <a href="https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/plugins/meta/portmap/portmap_iptables.go#L29-L49">portmap_iptables.go L29-L49</a></li>
+<li>ptp —— <a href="https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/plugins/main/ptp/ptp.go#L54-L80">ptp.go L54-L80</a></li>
+<li>CNI 规范 —— <a href="https://github.com/containernetworking/cni/blob/42e11794c073c4a7f3db324a33d266bdd0344e58/SPEC.md">SPEC.md</a></li>
+<li>NodeIPAM —— <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/controller/nodeipam/ipam/cidr_allocator.go#L73-L77">cidr_allocator.go L73-L77</a></li>
+</ul>
+<p><strong>本 wiki 的配套页面</strong></p>
+<ul>
+<li><a href="./k8s-network-path.html">Kubernetes 网络全链路</a>：Service/DNS/LB 与分层排障</li>
+<li><a href="./6_service相关.html">Service、kube-proxy 与 LoadBalancer</a>：规则生成与 LB 实现</li>
+<li><a href="./multicluster-networking.html">多集群网络互联</a>：跨集群发现与访问</li>
 </ul>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../../../docs/Cloud_Native/Kubernetes/client-go-list-watch.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../../../docs/Cloud_Native/Kubernetes/flowschema.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../../../docs/Cloud_Native/Kubernetes/4_kube-scheduler源码分析.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../../../docs/Cloud_Native/Kubernetes/kubelet原理.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -278,11 +707,11 @@ kindnet   3         3         3       3            3           &lt;none&gt;     
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../../../docs/Cloud_Native/Kubernetes/client-go-list-watch.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../../../docs/Cloud_Native/Kubernetes/flowschema.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../../../docs/Cloud_Native/Kubernetes/4_kube-scheduler源码分析.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../../../docs/Cloud_Native/Kubernetes/kubelet原理.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

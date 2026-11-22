@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>What is Kubernetes Service - Bingtan&#x27;s Wiki</title>
+        <title>Service、kube-proxy 与 LoadBalancer：从 VIP 到后端 Pod - Bingtan&#x27;s Wiki</title>
 
 
         <!-- Custom HTML head -->
@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-c6338aee.js";
+            window.path_to_searchindex_js = "../../../searchindex-c4cdfd1b.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-70ef310c.js"></script>
+        <script src="../../../toc-ee3a948c.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -180,86 +180,542 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="what-is-kubernetes-service"><a class="header" href="#what-is-kubernetes-service">What is Kubernetes Service</a></h1>
-<p>将运行在一组 <a href="https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/">Pods</a> 上的应用程序公开为网络服务的抽象方法。</p>
-<p>使用 Kubernetes，你无需修改应用程序即可使用不熟悉的服务发现机制。 Kubernetes 为 Pods 提供自己的 IP 地址，并为一组 Pod 提供相同的 DNS 名， 并且可以在它们之间进行负载均衡。</p>
-<p>在</p>
-<h1 id="why-use-service"><a class="header" href="#why-use-service">Why Use Service</a></h1>
-<h1 id="how-service-works"><a class="header" href="#how-service-works">How Service Works</a></h1>
-<h2 id="创建了一个service之后会发生什么"><a class="header" href="#创建了一个service之后会发生什么">创建了一个Service之后会发生什么</a></h2>
+                        <h1 id="servicekube-proxy-与-loadbalancer从-vip-到后端-pod"><a class="header" href="#servicekube-proxy-与-loadbalancer从-vip-到后端-pod">Service、kube-proxy 与 LoadBalancer：从 VIP 到后端 Pod</a></h1>
+<p>Service 是 Kubernetes 里最“看起来简单、实现最绕“的对象：<code>kubectl expose</code> 一行就能得到一个 ClusterIP，但真正把它变成可达服务的是 <strong>EndpointSlice 控制器 + kube-proxy（或 eBPF）+ conntrack + CNI</strong> 的协作。本文按“API 语义 → 端点计算 → 规则下发 → 数据包转发 → 外部暴露“展开，重点放在<strong>规则长什么样、为什么这么设计、出错时看哪里</strong>。</p>
+<p>完整链路（Pod/DNS/排障）见 <a href="./k8s-network-path.html">Kubernetes 网络全链路</a>；CNI/IPAM/overlay 见 <a href="./cni详解.html">CNI 详解</a>；跨集群 Service 见 <a href="./multicluster-networking.html">多集群网络互联</a>。</p>
+<p><strong>版本基线</strong>：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>项目</th><th>版本</th><th>commit</th></tr>
+</thead>
+<tbody>
+<tr><td>Kubernetes</td><td>v1.37.2</td><td><code>c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32</code></td></tr>
+<tr><td>MetalLB</td><td>main</td><td><code>0db4a44c098f71b6c18e2be34e73e67d8a39c20b</code></td></tr>
+<tr><td>Gateway API</td><td>main</td><td><code>d04e7458ee15351ca54a201c4b1c43412f917b91</code></td></tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p>引用约定：源码链接带 40 位 commit 与行号区间，行号已用本地 checkout 核对。1.37 里 iptables 模式的链名与 1.2x 时代有变化（<code>KUBE-XLB-*</code> 已不存在），本文以 1.37 代码为准。</p>
+</blockquote>
+<hr>
+<h2 id="1-service-的-api-语义"><a class="header" href="#1-service-的-api-语义">1. Service 的 API 语义</a></h2>
+<h3 id="11-四种类型层层叠加不是四选一的平行实现"><a class="header" href="#11-四种类型层层叠加不是四选一的平行实现">1.1 四种类型：层层叠加，不是四选一的平行实现</a></h3>
+<p><code>ServiceType</code> 的注释写得很清楚（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/core/v1/types.go#L6330-L6345">types.go L6330-L6345</a>）：</p>
+<ul>
+<li><code>ClusterIP</code>：分配一个集群内虚拟 IP，按 selector/手工 EndpointSlice 找后端；</li>
+<li><code>NodePort</code>：<strong>builds on ClusterIP</strong>，在每个节点上再开一个端口；</li>
+<li><code>LoadBalancer</code>：<strong>builds on NodePort</strong>，再向云/实现申请一个外部 LB；</li>
+<li><code>ExternalName</code>：CNAME 到外部域名，不分配 VIP。</li>
+</ul>
+<p>所以“LoadBalancer 类型“实际上同时拥有 ClusterIP 和 NodePort，外部 LB 只是最外面的一层。理解这一点，才能解释为什么 LB 的流量最终仍走 §4 的 DNAT。</p>
+<h3 id="12-关键字段与默认值"><a class="header" href="#12-关键字段与默认值">1.2 关键字段与默认值</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>字段</th><th>默认</th><th>语义/坑</th></tr>
+</thead>
+<tbody>
+<tr><td><code>spec.type</code></td><td><code>ClusterIP</code></td><td>四种类型见上</td></tr>
+<tr><td><code>spec.selector</code></td><td>空</td><td>为空表示“外部进程自己维护 EndpointSlice“，控制器不碰</td></tr>
+<tr><td><code>spec.ports[].port</code></td><td>必填</td><td>Service 暴露的端口</td></tr>
+<tr><td><code>spec.ports[].targetPort</code></td><td><strong>等于 port</strong></td><td>字符串形式引用 Pod 的命名端口；headless 下忽略</td></tr>
+<tr><td><code>spec.ports[].protocol</code></td><td><code>TCP</code></td><td>UDP/SCTP 也可</td></tr>
+<tr><td><code>spec.ports[].nodePort</code></td><td>自动分配</td><td>30000–32767；<code>allocateLoadBalancerNodePorts=false</code> 可不分配</td></tr>
+<tr><td><code>spec.clusterIP</code></td><td>自动分配</td><td><code>None</code> = headless，不分配 VIP</td></tr>
+<tr><td><code>spec.sessionAffinity</code></td><td><code>None</code></td><td><code>ClientIP</code> 时默认 3 小时（10800s）</td></tr>
+<tr><td><code>spec.externalTrafficPolicy</code></td><td><code>Cluster</code></td><td>仅外部可访问类型；<code>Local</code> 保源 IP、只用本地端点</td></tr>
+<tr><td><code>spec.internalTrafficPolicy</code></td><td><code>Cluster</code></td><td><code>Local</code> 只用同节点端点</td></tr>
+<tr><td><code>spec.trafficDistribution</code></td><td>空</td><td>1.37 支持 <code>PreferSameZone</code>/<code>PreferSameNode</code>/<code>PreferClose</code>（后者 deprecated）</td></tr>
+<tr><td><code>spec.publishNotReadyAddresses</code></td><td><code>false</code></td><td>true 时未 ready 的 Pod 也进 DNS/端点</td></tr>
+<tr><td><code>spec.ipFamilyPolicy</code></td><td><code>SingleStack</code></td><td><code>PreferDualStack</code>/<code>RequireDualStack</code></td></tr>
+<tr><td><code>spec.loadBalancerClass</code></td><td>空</td><td>设置后默认云实现忽略该 Service；不可改</td></tr>
+<tr><td><code>spec.allocateLoadBalancerNodePorts</code></td><td><code>true</code></td><td>LB 是否同时分配 NodePort</td></tr>
+<tr><td><code>spec.loadBalancerIP</code></td><td>空</td><td>已 deprecated，语义因实现而异</td></tr>
+</tbody>
+</table>
+</div>
+<p>默认值落点在 <code>SetDefaults_Service</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/apis/core/v1/defaults.go#L106-L160">defaults.go L106-L160</a>）：</p>
+<ul>
+<li><code>sessionAffinity</code> 空 → <code>None</code>；<code>None</code> 会清空 <code>sessionAffinityConfig</code>；<code>ClientIP</code> 未给超时 → <code>10800s</code>；</li>
+<li><code>type</code> 空 → <code>ClusterIP</code>；</li>
+<li><code>protocol</code> 空 → <code>TCP</code>；<code>targetPort</code> 为 0/空 → <code>port</code>；</li>
+<li>外部可访问 Service 的 ETP 空 → <code>Cluster</code>；</li>
+<li><code>internalTrafficPolicy</code> 空 → <code>Cluster</code>；</li>
+<li>LB 的 <code>allocateLoadBalancerNodePorts</code> 空 → <code>true</code>；</li>
+<li>已有 <code>status.loadBalancer.ingress[].ip</code> 但没 <code>ipMode</code> → 补 <code>VIP</code>。</li>
+</ul>
+<h3 id="13-headlessexternalname无-selector"><a class="header" href="#13-headlessexternalname无-selector">1.3 headless、ExternalName、无 selector</a></h3>
+<p><strong>headless</strong>（<code>clusterIP: None</code>）：不分配 VIP，kube-proxy <strong>直接跳过</strong>（<code>ShouldSkipService</code> 在 <code>!IsServiceIPSet</code> 或 <code>Type==ExternalName</code> 时返回 true，<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/util/utils.go#L56-L70">utils.go L56-L70</a>）。DNS 直接返回每个 ready Pod 的 IP，客户端自己做负载均衡。因此：</p>
+<ul>
+<li>没有 DNAT，没有 conntrack，没有 sessionAffinity；</li>
+<li><code>externalTrafficPolicy</code>/<code>internalTrafficPolicy</code> 对 headless 无意义；</li>
+<li>StatefulSet 的稳定网络标识依赖 headless + <code>publishNotReadyAddresses</code>。</li>
+</ul>
+<p><strong>ExternalName</strong>：只生成 CNAME，不分配 VIP，也不进 kube-proxy。客户端解析到外部域名后直接连，集群网络不参与。</p>
+<p><strong>无 selector</strong>：Service 仍然有 ClusterIP，但 EndpointSlice 由用户/Operator 手工维护（或由 <code>EndpointSliceMirroring</code> 从旧 <code>Endpoints</code> 镜像）。kube-proxy 不区分来源，只消费 EndpointSlice。注意：<strong>如果既有 selector 又手工写 EndpointSlice，两个控制器会互相覆盖</strong>；手工切片要避开 <code>endpointslice-controller.k8s.io</code> 这个 managed-by。</p>
+<h3 id="14-会话保持"><a class="header" href="#14-会话保持">1.4 会话保持</a></h3>
+<p><code>sessionAffinity: ClientIP</code> 在 iptables 模式下用 <code>recent</code> 模块实现：每个端点一条 <code>-m recent --rcheck --seconds &lt;timeout&gt; --reap</code>，命中就跳该端点的 SEP 链，未命中再走概率分发（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/iptables/proxier.go#L1430-L1474">proxier.go L1430-L1474</a>）。IPVS 模式用 <code>FlagPersistent</code> + timeout。注意：</p>
+<ul>
+<li>它按<strong>客户端 IP</strong>粘，不按 cookie/header；</li>
+<li>NAT 后面大量客户端共享一个源 IP 时，会全部粘到同一个后端；</li>
+<li>超时默认 3 小时，太长会导致“缩容后旧客户端一直打到已删除 Pod“。</li>
+</ul>
+<hr>
+<h2 id="2-从-service-到-endpointslice"><a class="header" href="#2-从-service-到-endpointslice">2. 从 Service 到 EndpointSlice</a></h2>
+<h3 id="21-两个控制器一个已死"><a class="header" href="#21-两个控制器一个已死">2.1 两个控制器，一个已死</a></h3>
+<ul>
+<li><strong>EndpointSlice 控制器</strong>：<code>pkg/controller/endpointslice</code>，<code>ControllerName = "endpointslice-controller.k8s.io"</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/controller/endpointslice/endpointslice_controller.go#L76-L78">endpointslice_controller.go L76-L78</a>），核心 reconcile 在 staging 的 <code>Reconcile()</code>。</li>
+<li><strong>Endpoints 控制器</strong>：仍在跑，用于生成旧 <code>Endpoints</code> 对象；<code>Endpoints</code> API 在 <strong>1.33 已 deprecated</strong>，新实现应只用 EndpointSlice。</li>
+<li><strong>EndpointSliceMirroring 控制器</strong>：把<strong>手工维护的 <code>Endpoints</code></strong> 镜像成 EndpointSlice，可用 <code>endpointslice.kubernetes.io/skip-mirror: "true"</code> 关闭。这是“老 Operator 只写 Endpoints“仍能被 kube-proxy 看到的桥梁。</li>
+</ul>
+<h3 id="22-endpointslice-的结构"><a class="header" href="#22-endpointslice-的结构">2.2 EndpointSlice 的结构</a></h3>
+<p><code>discovery.k8s.io/v1</code>：</p>
+<pre><code class="language-yaml">addressType: IPv4
+endpoints:
+- addresses: ["10.244.1.5"]
+  conditions: {ready: true, serving: true, terminating: false}
+  hostname: web-0
+  nodeName: node-1
+  zone: us-east-1a
+  targetRef: {kind: Pod, name: web-0, namespace: default}
+ports:
+- name: http
+  port: 8080
+  protocol: TCP
+</code></pre>
+<p>关键点：</p>
+<ul>
+<li><code>addressType</code> 只处理 IPv4/IPv6；FQDN 已 deprecated；</li>
+<li>每个 endpoint 的 <code>addresses</code> 控制器恒为 1 个（语义上最多 100）；</li>
+<li><code>conditions.ready/serving/terminating</code> 三者独立；</li>
+<li><code>nodeName</code>/<code>zone</code> 来自 Pod 调度结果和节点拓扑标签；</li>
+<li><code>hints.forZones</code>/<code>forNodes</code> 用于拓扑感知路由。</li>
+</ul>
+<h3 id="23-readiness-的精确语义"><a class="header" href="#23-readiness-的精确语义">2.3 readiness 的精确语义</a></h3>
+<pre><code class="language-go">serving := endpointutil.IsPodReady(pod)
+terminating := pod.DeletionTimestamp != nil
+ready := service.Spec.PublishNotReadyAddresses || (serving &amp;&amp; !terminating)
+</code></pre>
+<p>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/endpointslice/utils.go#L38-L50">utils.go L38-L50</a>）</p>
+<ul>
+<li><code>serving</code> ← Pod 的 Ready condition；</li>
+<li><code>terminating</code> ← 有 deletionTimestamp；</li>
+<li><code>ready</code> ← serving 且未 terminating，或被 <code>publishNotReadyAddresses</code> 强制为 true。</li>
+</ul>
+<p>kube-proxy 消费时会 <code>CategorizeEndpoints</code>：优先 ready；若 ready 为空，回退到 <strong>serving + terminating</strong>（优雅下线期间仍可接流量）；<code>internalTrafficPolicy/externalTrafficPolicy=Local</code> 时再筛本地端点（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/topology.go#L48-L152">topology.go L48-L152</a>）。</p>
+<p>这也解释了两个常见现象：</p>
+<ul>
+<li><strong>Pod 已经 Terminating，Service 还有流量</strong>：正常，terminating 端点仍可能被选中；</li>
+<li><strong>新 Pod 刚 Running 但没接流量</strong>：Ready condition 还没 True，端点不在 ready 集合里。</li>
+</ul>
+<h3 id="24-100-个端点片"><a class="header" href="#24-100-个端点片">2.4 100 个端点/片</a></h3>
+<p>默认 <code>MaxEndpointsPerSlice=100</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/controller/endpointslice/config/v1alpha1/defaults.go#L38-L39">defaults.go L38-L39</a>），<code>--max-endpoints-per-slice</code> 合法范围 1–1000。超过就切成多个切片，kube-proxy 把所有切片合并成 <code>ServicePortName → EndpointsMap</code>。<strong>大 Service 的切片数量会影响 kube-proxy 的同步成本</strong>，但不是主要瓶颈（主要成本在 iptables 规则数）。</p>
+<h3 id="25-拓扑感知路由"><a class="header" href="#25-拓扑感知路由">2.5 拓扑感知路由</a></h3>
+<p>两条路径：</p>
 <ol>
-<li>客户端访问kube-apiserver，创建一个service资源，apiserver将service保存在etcd</li>
-<li>service controller watch到这个被创建的service，</li>
+<li><strong>注解</strong> <code>service.kubernetes.io/topology-mode: Auto</code> → EndpointSlice 控制器用 topologyCache 写 <code>hints.forZones</code>；</li>
+<li><strong>字段</strong> <code>spec.trafficDistribution</code> → <code>trafficdist.ReconcileHints()</code>，注解存在时不看字段。</li>
 </ol>
-<h3 id="service-controller"><a class="header" href="#service-controller">Service Controller</a></h3>
-<h3 id="endpoints-controller原理todo"><a class="header" href="#endpoints-controller原理todo">Endpoints Controller原理（TODO）</a></h3>
-<h4 id="pod-挂了一个sidecar时kube-dns还会生效吗"><a class="header" href="#pod-挂了一个sidecar时kube-dns还会生效吗">pod 挂了一个sidecar时，kube dns还会生效吗</a></h4>
-<p>pod 的 status.conditions字段，里面如果是conditon是not ready的，service对应的endpoints只会把pod ip更新到 NotReadyAddress 字段
-然而1.14版的kube-dns只会根据endpoints的 Address 字段注册域名ip</p>
-<p>endpoints_controller.go中的endpoint更新逻辑：</p>
-<pre><code class="language-go">func addEndpointSubset(subsets []v1.EndpointSubset, pod *v1.Pod, epa v1.EndpointAddress,
-	epp *v1.EndpointPort, tolerateUnreadyEndpoints bool) ([]v1.EndpointSubset, int, int) {
-	var readyEps int = 0
-	var notReadyEps int = 0
-	ports := []v1.EndpointPort{}
-	if epp != nil {
-		ports = append(ports, *epp)
-	}
-	if tolerateUnreadyEndpoints || podutil.IsPodReady(pod) {
-		subsets = append(subsets, v1.EndpointSubset{
-			Addresses: []v1.EndpointAddress{epa},
-			Ports:     ports,
-		})
-		readyEps++
-	} else if shouldPodBeInEndpoints(pod) {
-		glog.V(5).Infof("Pod is out of service: %s/%s", pod.Namespace, pod.Name)
-		subsets = append(subsets, v1.EndpointSubset{
-			NotReadyAddresses: []v1.EndpointAddress{epa},
-			Ports:             ports,
-		})
-		notReadyEps++
-	}
-	return subsets, readyEps, notReadyEps
+<p>kube-proxy 侧 <code>topologyModeFromHints()</code> 会检查：如果某节点缺 zone 标签、或任一端点缺 hint，就<strong>整体放弃拓扑偏好</strong>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/topology.go#L156-L221">topology.go L156-L221</a>）。所以“配了 topology 但不生效“先看 kube-proxy V(2) 日志里的 <code>Ignoring same-zone topology hints</code>，通常是节点缺 <code>topology.kubernetes.io/zone</code> 标签。</p>
+<p>1.37 的 <code>trafficDistribution</code> 取值（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/core/v1/types.go#L6133-L6153">types.go L6133-L6153</a>）：</p>
+<ul>
+<li><code>PreferSameZone</code>（正式值）</li>
+<li><code>PreferSameNode</code>（1.37 新增）</li>
+<li><code>PreferClose</code>（<code>PreferSameZone</code> 的旧名，deprecated）</li>
+</ul>
+<hr>
+<h2 id="3-kube-proxy-架构watch-到规则"><a class="header" href="#3-kube-proxy-架构watch-到规则">3. kube-proxy 架构：watch 到规则</a></h2>
+<h3 id="31-一个进程三块缓存一次-sync"><a class="header" href="#31-一个进程三块缓存一次-sync">3.1 一个进程，三块缓存，一次 sync</a></h3>
+<pre class="mermaid">flowchart LR
+    API["apiserver&lt;br/&gt;Service/EndpointSlice/Node"] --&gt; INF["Informer"]
+    INF --&gt; SCT["ServiceChangeTracker&lt;br/&gt;按 NamespacedName 累积 diff"]
+    INF --&gt; ECT["EndpointSliceChangeTracker&lt;br/&gt;合并切片"]
+    SCT --&gt; SYNC["syncProxyRules()"]
+    ECT --&gt; SYNC
+    NODE["Node 拓扑/本地探测"] --&gt; SYNC
+    SYNC --&gt; IPT["iptables / IPVS / nftables"]
+    SYNC --&gt; HC["healthCheckNodePort HTTP server"]
+</pre>
+
+<p><code>Provider</code> 接口统一了三种实现（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/types.go#L29-L43">types.go L29-L43</a>）：<code>EndpointSliceHandler + ServiceHandler + NodeTopologyHandler + ServiceCIDRHandler + Sync() + SyncLoop()</code>。所有实现共享同一套骨架：</p>
+<ul>
+<li><code>ServiceChangeTracker</code>：按 <code>NamespacedName</code> 累积 previous/current 的 <code>ServicePortMap</code> diff；</li>
+<li><code>EndpointSliceChangeTracker</code>：把若干切片合并成 <code>ServicePortName → EndpointsMap</code>，处理 terminating/replacement IP 冲突（同一 IP 同时出现 terminating 和 replacement 时优先保留非 terminating）；</li>
+<li><code>syncProxyRules()</code>：一次把 diff 写成规则，失败则标记 <code>needFullSync</code>，下次全量重来。</li>
+</ul>
+<h3 id="32-同步周期"><a class="header" href="#32-同步周期">3.2 同步周期</a></h3>
+<p>默认值（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/apis/config/v1alpha1/defaults.go#L62-L78">defaults.go L62-L78</a>）：</p>
+<ul>
+<li><code>syncPeriod=30s</code>：定期全量对账；</li>
+<li><code>minSyncPeriod=1s</code>：两次 sync 的最小间隔，防止抖动；</li>
+<li><code>configSyncPeriod=15m</code>：配置文件热重载检查。</li>
+</ul>
+<p>所以“改了 Service，1 秒内生效“是正常预期；如果几十秒还没生效，先看 kube-proxy 是否卡住，而不是怀疑 apiserver。</p>
+<h3 id="33-大集群模式"><a class="header" href="#33-大集群模式">3.3 大集群模式</a></h3>
+<p>端点总数超过 <strong>1000</strong> 时进入 large cluster mode（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/iptables/proxier.go#L86-L88">proxier.go L86-L88</a>）：减少全量清理/<code>iptables-save</code> 的频率，优先保证 sync 延迟。代价是<strong>陈旧链可能保留更久</strong>，排障时会看到一些不再被引用的 <code>KUBE-SVC-*</code> 链。</p>
+<h3 id="34-关键指标"><a class="header" href="#34-关键指标">3.4 关键指标</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>指标</th><th>含义</th><th>异常</th></tr>
+</thead>
+<tbody>
+<tr><td><code>kubeproxy_sync_proxy_rules_last_timestamp_seconds</code></td><td>最近一次成功 sync</td><td>不推进 = proxier 卡死/权限/内核问题</td></tr>
+<tr><td><code>kubeproxy_sync_proxy_rules_duration_seconds</code></td><td>sync 耗时</td><td>持续升高 = 规则太多/大集群</td></tr>
+<tr><td><code>kubeproxy_network_programming_duration_seconds</code></td><td>变更到规则生效的端到端延迟</td><td>官方 SLO 指标</td></tr>
+<tr><td><code>kubeproxy_sync_proxy_rules_no_local_endpoints_total</code></td><td>ETP/ITP=Local 但无本地端点</td><td>持续增长 = 会丢流量</td></tr>
+<tr><td><code>kubeproxy_sync_proxy_rules_endpoint_changes_pending</code></td><td>待处理端点变更</td><td>长期 &gt;0 = informer/sync 卡住</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="4-iptables-模式链的布局"><a class="header" href="#4-iptables-模式链的布局">4. iptables 模式：链的布局</a></h2>
+<h3 id="41-顶层链"><a class="header" href="#41-顶层链">4.1 顶层链</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>链</th><th>作用</th></tr>
+</thead>
+<tbody>
+<tr><td><code>KUBE-SERVICES</code></td><td>总入口：匹配 ClusterIP/externalIP/LB IP，跳 SVC/EXT/FW</td></tr>
+<tr><td><code>KUBE-EXTERNAL-SERVICES</code></td><td>外部可访问但无可用外部端点时 REJECT/DROP</td></tr>
+<tr><td><code>KUBE-NODEPORTS</code></td><td>NodePort 匹配 + <code>healthCheckNodePort</code> ACCEPT</td></tr>
+<tr><td><code>KUBE-POSTROUTING</code></td><td>按 fwmark 做 SNAT（<code>MASQUERADE --random-fully</code>）</td></tr>
+<tr><td><code>KUBE-MARK-MASQ</code></td><td><code>MARK --or-mark &lt;bit&gt;</code>，被 SVC/EXT/SEP 复用</td></tr>
+<tr><td><code>KUBE-FORWARD</code></td><td>转发链（kube-proxy 自用）</td></tr>
+<tr><td><code>KUBE-PROXY-FIREWALL</code></td><td>kube-proxy 自己的防火墙链（LB source ranges 兜底 DROP）</td></tr>
+<tr><td><code>KUBE-FIREWALL</code></td><td>kubelet 的链的副本，仅 anti-martian 规则</td></tr>
+<tr><td><code>KUBE-PROXY-CANARY</code></td><td>规则重载监控探针</td></tr>
+</tbody>
+</table>
+</div>
+<p>注意：<strong>1.37 已没有 <code>KUBE-MARK-DROP</code> 和 <code>KUBE-XLB-*</code></strong>。无端点/无本地端点改为在 filter 表直接 <code>REJECT</code>/<code>DROP</code>；外部目的地链叫 <code>KUBE-EXT-*</code>，本地端点链叫 <code>KUBE-SVL-*</code>。</p>
+<h3 id="42-挂载点"><a class="header" href="#42-挂载点">4.2 挂载点</a></h3>
+<p><code>iptablesJumpChains</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/iptables/proxier.go#L364-L377">proxier.go L364-L377</a>）：</p>
+<pre><code class="language-text">filter INPUT/FORWARD   -&gt; KUBE-EXTERNAL-SERVICES（ctstate NEW）
+filter INPUT           -&gt; KUBE-NODEPORTS
+filter FORWARD/OUTPUT  -&gt; KUBE-SERVICES（ctstate NEW）
+filter FORWARD         -&gt; KUBE-FORWARD
+filter INPUT/OUTPUT/FORWARD -&gt; KUBE-PROXY-FIREWALL（ctstate NEW）
+nat    PREROUTING/OUTPUT -&gt; KUBE-SERVICES
+nat    POSTROUTING     -&gt; KUBE-POSTROUTING
+filter INPUT/OUTPUT    -&gt; KUBE-FIREWALL（kubelet 链副本）
+</code></pre>
+<p>这些 jump 规则只在 <strong>full sync</strong> 时 <code>EnsureRule(Prepend)</code>，partial sync 跳过（省掉每次 20 次 iptables 调用）。所以如果 <code>PREROUTING</code> 被人手动清空，kube-proxy 不会立刻补，直到下一次 full sync 或检测到表被 flush。</p>
+<h3 id="43-每个-serviceport-的规则骨架"><a class="header" href="#43-每个-serviceport-的规则骨架">4.3 每个 ServicePort 的规则骨架</a></h3>
+<p>以 <code>ClusterIP</code> + 2 个端点为例：</p>
+<pre><code class="language-text">KUBE-SERVICES
+  -d &lt;clusterIP&gt; --dport &lt;port&gt; -j KUBE-SVC-XXXX
+
+KUBE-SVC-XXXX                 # 分发链
+  -m statistic --mode random --probability 0.5000000000 -j KUBE-SEP-AAAA
+  -j KUBE-SEP-BBBB
+
+KUBE-SEP-AAAA                 # 端点链
+  -s &lt;epIP&gt; -j KUBE-MARK-MASQ
+  -m recent --name KUBE-SEP-AAAA --set        # 仅 sessionAffinity=ClientIP
+  -p tcp -j DNAT --to-destination &lt;epIP&gt;:&lt;targetPort&gt;
+</code></pre>
+<p>概率分发是“第 i 条命中概率 <code>1/(n-i)</code>，最后一条必中“，所以每个端点精确 <code>1/n</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/iptables/proxier.go#L1430-L1474">proxier.go L1430-L1474</a>）。</p>
+<h3 id="44-外部目的地链kube-ext-与-kube-svl"><a class="header" href="#44-外部目的地链kube-ext-与-kube-svl">4.4 外部目的地链：KUBE-EXT 与 KUBE-SVL</a></h3>
+<p><code>externalTrafficPolicy</code> 不是“一个开关“，而是换了一套链：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>场景</th><th>链</th><th>行为</th></tr>
+</thead>
+<tbody>
+<tr><td>ETP=Cluster（NodePort/LB）</td><td><code>KUBE-EXT-XXXX</code> → <code>KUBE-SVC-XXXX</code></td><td><code>KUBE-EXT</code> 整条是 <code>-j KUBE-MARK-MASQ</code>，跨节点时 SNAT</td></tr>
+<tr><td>ETP=Local（NodePort/LB）</td><td><code>KUBE-EXT-XXXX</code> → <code>KUBE-SVL-XXXX</code></td><td>只对 <code>src-type LOCAL</code> 打 mark；pod 来源短路到 Cluster 链；其余走 <code>KUBE-SVL</code>（本地端点）</td></tr>
+<tr><td><code>loadBalancerSourceRanges</code></td><td><code>KUBE-FW-XXXX</code></td><td>按源 CIDR 放行，链尾落空由 <code>KUBE-PROXY-FIREWALL</code> DROP</td></tr>
+<tr><td>无端点</td><td>filter 表</td><td>ClusterIP 路径 REJECT；ETP=Local 外部路径 DROP</td></tr>
+</tbody>
+</table>
+</div>
+<p>源码见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/iptables/proxier.go#L1091-L1200">proxier.go L1091-L1200</a>。</p>
+<h3 id="45-healthchecknodeport-的服务端"><a class="header" href="#45-healthchecknodeport-的服务端">4.5 healthCheckNodePort 的服务端</a></h3>
+<p>kube-proxy 自己起一个 HTTP server 监听 HC 端口：</p>
+<ul>
+<li><code>/healthz</code> 返回本地 ready 端点数量：<code>count != 0 &amp;&amp; kubeProxyHealthy</code> → 200，否则 503；</li>
+<li>附带 <code>X-Load-Balancing-Endpoint-Weight</code> 头和 JSON <code>localEndpoints</code>。</li>
+</ul>
+<p>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/healthcheck/service_health.go#L241-L272">service_health.go L241-L272</a>）</p>
+<p>这就是 ETP=Local 的闭环：<strong>LB 通过 HC 端口判断节点是否有资格接流量</strong>，没有本地端点的节点被摘掉。注意 HC 端口在 <code>KUBE-NODEPORTS</code> 里是<strong>无条件 ACCEPT</strong> 的，即使本节点没有端点；这是为了让 LB 能拿到 503 而不是超时。</p>
+<hr>
+<h2 id="5-ipvs-模式o1-查找与它的代价"><a class="header" href="#5-ipvs-模式o1-查找与它的代价">5. IPVS 模式：O(1) 查找与它的代价</a></h2>
+<h3 id="51-结构"><a class="header" href="#51-结构">5.1 结构</a></h3>
+<p>IPVS 把每个 ServicePort 变成一个内核 VirtualServer：</p>
+<pre><code class="language-go">serv := &amp;utilipvs.VirtualServer{
+    Address:   svcInfo.ClusterIP(),
+    Port:      uint16(svcInfo.Port()),
+    Protocol:  string(svcInfo.Protocol()),
+    Scheduler: proxier.ipvsScheduler,   // 默认 rr
 }
 </code></pre>
-<p>kube-dns 中的注册ip的逻辑：</p>
-<pre><code class="language-go">func (kd *KubeDNS) generateRecordsForHeadlessService(e *v1.Endpoints, svc *v1.Service) error {
-	subCache := treecache.NewTreeCache()
-	glog.V(4).Infof("Endpoints Annotations: %v", e.Annotations)
-	for idx := range e.Subsets {
-		for subIdx := range e.Subsets[idx].Addresses {
-			address := &amp;e.Subsets[idx].Addresses[subIdx]
-			endpointIP := address.IP
-			recordValue, endpointName := util.GetSkyMsg(endpointIP, 0)
-			if hostLabel, exists := getHostname(address); exists {
-				endpointName = hostLabel
-			}
-			subCache.SetEntry(endpointName, recordValue, kd.fqdn(svc, endpointName))
-			for portIdx := range e.Subsets[idx].Ports {
-				endpointPort := &amp;e.Subsets[idx].Ports[portIdx]
-				if endpointPort.Name != "" &amp;&amp; endpointPort.Protocol != "" {
-					srvValue := kd.generateSRVRecordValue(svc, int(endpointPort.Port), endpointName)
-					glog.V(2).Infof("Added SRV record %+v", srvValue)
-
-					l := []string{"_" + strings.ToLower(string(endpointPort.Protocol)), "_" + endpointPort.Name}
-					subCache.SetEntry(endpointName, srvValue, kd.fqdn(svc, append(l, endpointName)...), l...)
-				}
-			}
-
-			// Generate PTR records only for Named Headless service.
-			if _, has := getHostname(address); has {
-				reverseRecord, _ := util.GetSkyMsg(kd.fqdn(svc, endpointName), 0)
-				kd.reverseRecordMap[endpointIP] = reverseRecord
-			}
-		}
-	}
-	subCachePath := append(kd.domainPath, serviceSubdomain, svc.Namespace)
-	kd.cacheLock.Lock()
-	defer kd.cacheLock.Unlock()
-	kd.cache.SetSubCache(svc.Name, subCache, subCachePath...)
-	return nil
-}
+<p>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/ipvs/proxier.go#L829-L846">proxier.go L829-L846</a>）</p>
+<ul>
+<li><code>sessionAffinity=ClientIP</code> → <code>FlagPersistent</code> + <code>Timeout</code>；</li>
+<li>调度器 <code>mh</code> → <code>FlagSourceHash</code>；</li>
+<li>默认调度器 <code>rr</code>，dummy 设备 <code>kube-ipvs0</code>。</li>
+</ul>
+<p><strong>为什么需要 dummy 接口</strong>：IPVS 只处理“目的地址是本机地址“的流量，而 ClusterIP 不属于任何真实网卡，必须把每个 ClusterIP 绑到 <code>kube-ipvs0</code> 上（<code>syncService(..., bindAddr=true, ...)</code>）。副作用是这些 IP 会响 ARP，需要 <code>arp_ignore=1</code>/<code>arp_announce=2</code>（StrictARP），否则会抢真实网卡的 ARP。</p>
+<h3 id="52-仍然依赖-iptablesipset"><a class="header" href="#52-仍然依赖-iptablesipset">5.2 仍然依赖 iptables/ipset</a></h3>
+<p>IPVS 只做 L4 负载均衡，<strong>SNAT/filter 仍然靠 iptables + ipset</strong>。README 列出的 ipset：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>set</th><th>用途</th></tr>
+</thead>
+<tbody>
+<tr><td><code>KUBE-CLUSTER-IP</code></td><td><code>masquerade-all</code> 或 clusterCIDR 指定的 SNAT</td></tr>
+<tr><td><code>KUBE-LOOP-BACK</code></td><td>hairpin</td></tr>
+<tr><td><code>KUBE-EXTERNAL-IP</code></td><td>externalIPs 的 SNAT</td></tr>
+<tr><td><code>KUBE-LOAD-BALANCER</code></td><td>LB VIP 的 SNAT</td></tr>
+<tr><td><code>KUBE-LOAD-BALANCER-LOCAL</code></td><td>ETP=Local 的 LB</td></tr>
+<tr><td><code>KUBE-LOAD-BALANCER-FW</code></td><td><code>loadBalancerSourceRanges</code> 过滤</td></tr>
+<tr><td><code>KUBE-NODE-PORT-*</code></td><td>NodePort 的 SNAT/放行</td></tr>
+</tbody>
+</table>
+</div>
+<p>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/ipvs/README.md#L44-L60">README.md L44-L60</a>）</p>
+<h3 id="53-sysctl-与已知问题"><a class="header" href="#53-sysctl-与已知问题">5.3 sysctl 与已知问题</a></h3>
+<ul>
+<li><code>net/ipv4/vs/conntrack=1</code>；</li>
+<li><code>conn_reuse_mode</code>：内核 &lt;4.1 不支持；≥4.19 保持原样；中间版本强制置 0。置 0 会导致端口复用时连接被打散——这是历史上“IPVS 长连接抖动“的根因；</li>
+<li><code>expire_nodest_conn=1</code>、<code>expire_quiescent_template=1</code>；</li>
+<li><code>arp_ignore=1</code>/<code>arp_announce=2</code>（StrictARP）。</li>
+</ul>
+<h3 id="54-弃用"><a class="header" href="#54-弃用">5.4 弃用</a></h3>
+<p>1.37 启动时会打：</p>
+<pre><code class="language-text">The ipvs proxier has been deprecated and will be disabled by default in
+Kubernetes 1.40 and removed in Kubernetes 1.43. Migrate to the 'nftables'
+proxier instead.
 </code></pre>
+<p>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kube-proxy/app/server_linux.go#L190-L194">server_linux.go L190-L194</a>）</p>
+<p>所以：<strong>新集群不要选 IPVS</strong>；存量集群规划迁移到 nftables 或 eBPF。迁移时注意 IPVS 的 <code>kube-ipvs0</code> 地址、ipset、sysctl 都要清理，不能只是改 <code>--mode</code>。</p>
+<hr>
+<h2 id="6-nftables-模式map-与-set-的世界"><a class="header" href="#6-nftables-模式map-与-set-的世界">6. nftables 模式：map 与 set 的世界</a></h2>
+<h3 id="61-状态"><a class="header" href="#61-状态">6.1 状态</a></h3>
+<p><code>NFTablesProxyMode</code>：1.29 Alpha → 1.31 Beta（默认开）→ <strong>1.33 GA，LockToDefault</strong>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/features/kube_features.go#L1882-L1886">kube_features.go L1882-L1886</a>）。但 <strong>kube-proxy 默认模式仍是 iptables</strong>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kube-proxy/app/server_linux.go#L49-L52">server_linux.go L49-L52</a>），要用得显式 <code>--mode=nftables</code>。</p>
+<h3 id="62-结构"><a class="header" href="#62-结构">6.2 结构</a></h3>
+<p>整张表叫 <code>kube-proxy</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/nftables/proxier.go#L61-L107">proxier.go L61-L107</a>）：</p>
+<ul>
+<li>base chain：<code>filter-prerouting-pre-dnat</code>、<code>filter-output-pre-dnat</code>（DNAT 优先级 -10，用于 source-range 过滤）、<code>filter-input/forward/output</code>、<code>nat-prerouting</code>、<code>nat-output</code>、<code>nat-postrouting</code>；</li>
+<li>dispatch：<code>services</code>、<code>service-ips</code> map、<code>service-nodeports</code> map、<code>nodeport-ips</code> set、<code>cluster-ips</code> set；</li>
+<li>无端点：<code>no-endpoint-services</code>/<code>no-endpoint-nodeports</code> map + <code>service-endpoints-check</code>/<code>nodeport-endpoints-check</code> + <code>reject-chain</code>；</li>
+<li>hairpin：<code>hairpin-connections</code> set，键是 <code>ip saddr . ip daddr . proto . dport</code>，配合 <code>ct status dnat</code> 精确判断，不再依赖“源==端点 IP“的近似（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/nftables/proxier.go#L532-L545">L532-L545</a>）。</li>
+</ul>
+<p>与 iptables 的核心差异：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>iptables</th><th>nftables</th></tr>
+</thead>
+<tbody>
+<tr><td>数据结构</td><td>每服务一条链，每端点一条链</td><td>单表 + verdict map/set</td></tr>
+<tr><td>规则数增长</td><td>随 Service/Endpoint 线性</td><td>基本不随 Service 增长</td></tr>
+<tr><td>hairpin 判断</td><td><code>-s &lt;epIP&gt;</code> 近似</td><td>conntrack 状态精确</td></tr>
+<tr><td>未分配 ClusterIP</td><td>无专门处理</td><td><code>cluster-ips-check</code> 拒绝</td></tr>
+<tr><td>可读性</td><td><code>iptables-save</code> 直观</td><td><code>nft list ruleset</code> 需要熟悉 map</td></tr>
+</tbody>
+</table>
+</div>
+<p>nftables 的 <code>masquerade fully-random</code> 与 iptables 的 <code>--random-fully</code> 等价。</p>
+<hr>
+<h2 id="7-conntrackdnatsnat-的状态机"><a class="header" href="#7-conntrackdnatsnat-的状态机">7. conntrack：DNAT/SNAT 的状态机</a></h2>
+<h3 id="71-一条连接的两段五元组"><a class="header" href="#71-一条连接的两段五元组">7.1 一条连接的两段五元组</a></h3>
+<p>DNAT 只对首包生效，后续包和回包都靠 conntrack：</p>
+<pre><code class="language-text">客户端看到：  PodA:34567  -&gt;  10.96.0.10:80      （original）
+后端看到：    PodA:34567  -&gt;  10.244.2.6:8080   （DNAT 后）
+回包（后端）：10.244.2.6:8080 -&gt; PodA:34567
+回包（客户端）：10.96.0.10:80   -&gt; PodA:34567     （反向 DNAT）
+</code></pre>
+<p><code>conntrack -L</code> 会同时显示 original 和 reply 两段。NAT 只发生在<strong>做 DNAT 的那台节点</strong>；跨节点时，回包必须回到这台节点才能被还原。</p>
+<h3 id="72-hairpin-与-snat"><a class="header" href="#72-hairpin-与-snat">7.2 hairpin 与 SNAT</a></h3>
+<ul>
+<li><strong>hairpin</strong>：源 == 端点 IP 时，SEP 链打 mark，POSTROUTING MASQUERADE 成节点 IP，避免端点收到 <code>src == 自己</code> 的包。</li>
+<li><strong>外部来源 + ETP=Cluster</strong>：<code>KUBE-EXT</code> 打 mark，POSTROUTING SNAT 成节点 IP，保证回程经过本节点。</li>
+<li><strong>集群内来源 + ETP=Local</strong>：不打 mark，保源 IP，但只选本地端点。</li>
+</ul>
+<p><code>--random-fully</code> 让 MASQUERADE 随机选源端口，降低端口冲突。代价是 conntrack 表更大、排查时源端口不可预测。</p>
+<h3 id="73-陈旧-conntrack-与-udp"><a class="header" href="#73-陈旧-conntrack-与-udp">7.3 陈旧 conntrack 与 UDP</a></h3>
+<p>iptables 规则变化<strong>不会清理已建立连接</strong>。kube-proxy 有一个专门的 <code>CleanStaleEntries</code>：</p>
+<ul>
+<li>只针对 <strong>UDP</strong> Service（TCP 有连接状态，影响相对可控）；</li>
+<li>建立 <code>serviceIP:port/nodePort → 当前 serving 端点集合</code> 的映射；</li>
+<li>删除那些 DNAT 到非 serving 端点的 conntrack 条目。</li>
+</ul>
+<p>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/conntrack/cleanup.go#L41-L130">cleanup.go L41-L130</a>）</p>
+<p>为什么只做 UDP：单向 UDP 流（如 statsd）每个包都会刷新 conntrack 超时，不清理就会<strong>永久</strong>打到已删除的 Pod IP。经典的 DNS 竞态也是这个机制：CoreDNS 滚动更新时，客户端查询被 DNAT 到旧 Pod，旧 Pod 回包前端点被删，回包在 conntrack 里找不到映射被丢弃，客户端等 5s 超时重试。NodeLocal DNSCache 通过“本机 + force_tcp“绕开这个问题。</p>
+<h3 id="74-相关-sysctl"><a class="header" href="#74-相关-sysctl">7.4 相关 sysctl</a></h3>
+<p>kube-proxy 会按配置设置（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/apis/config/types.go#L88-L115">types.go L88-L115</a>）：</p>
+<ul>
+<li><code>nf_conntrack_max</code>（按核数计算，有最小值）；</li>
+<li><code>nf_conntrack_tcp_timeout_established</code>、<code>tcp_timeout_close_wait</code>；</li>
+<li><code>nf_conntrack_udp_timeout</code>、<code>udp_timeout_stream</code>；</li>
+<li><code>nf_conntrack_tcp_be_liberal</code>（避免 INVALID 包被丢导致 RST）。</li>
+</ul>
+<p>大规模 NAT/长连接场景要单独评估：<code>nf_conntrack: table full, dropping packet</code> 会表现为随机丢包/超时，而不是明确的错误。</p>
+<hr>
+<h2 id="8-流量策略etpitp拓扑双栈"><a class="header" href="#8-流量策略etpitp拓扑双栈">8. 流量策略：ETP、ITP、拓扑、双栈</a></h2>
+<h3 id="81-etplocal-的四件事"><a class="header" href="#81-etplocal-的四件事">8.1 ETP=Local 的四件事</a></h3>
+<ol>
+<li><strong>不 SNAT</strong>，源 IP 保留；</li>
+<li><strong>只选本节点端点</strong>；</li>
+<li>无本地端点时 filter 表 <strong>DROP</strong>（超时，不是拒绝）；</li>
+<li>必须配 <code>healthCheckNodePort</code>，kube-proxy 用 200/503 告诉 LB 本节点是否有资格。</li>
+</ol>
+<p>还有一个容易忽略的语义：<strong>从集群内部访问 ExternalIP/LB IP 时总是 Cluster 语义</strong>，不会保留源 IP（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/core/v1/types.go#L6391-L6404">types.go L6391-L6404</a>）。在 Pod 里 <code>curl</code> LB VIP 看到节点 IP 是正常的，不代表外部客户端也这样。</p>
+<h3 id="82-itplocal"><a class="header" href="#82-itplocal">8.2 ITP=Local</a></h3>
+<p><code>internalTrafficPolicy: Local</code> 影响 ClusterIP 路径：kube-proxy 只选同节点端点，无本地端点则 DROP。它适合“拓扑本地性优先、宁可失败也不跨节点“的场景（如本地缓存、边缘）。注意它与 ETP 独立：可以 ETP=Cluster + ITP=Local。</p>
+<h3 id="83-双栈"><a class="header" href="#83-双栈">8.3 双栈</a></h3>
+<ul>
+<li><code>ipFamilies</code> 最多两个，顺序即 primary；</li>
+<li><code>ipFamilyPolicy</code>：<code>SingleStack</code>/<code>PreferDualStack</code>/<code>RequireDualStack</code>；</li>
+<li>kube-proxy 为 v4/v6 各起一个独立 proxier，由 metaproxier 分发；每个 proxier 只处理自己族的 ClusterIP；</li>
+<li>Service 的 <code>clusterIPs</code> 可能有两个，DNS 返回 A 和 AAAA；</li>
+<li>双栈集群要确保 CNI、节点路由、LB、CoreDNS 都支持。</li>
+</ul>
+<hr>
+<h2 id="9-loadbalancer从云-lb-到-metallb"><a class="header" href="#9-loadbalancer从云-lb-到-metallb">9. LoadBalancer：从云 LB 到 MetalLB</a></h2>
+<h3 id="91-云厂商-service-controller"><a class="header" href="#91-云厂商-service-controller">9.1 云厂商 Service Controller</a></h3>
+<p><code>syncLoadBalancerIfNeeded</code> 的主逻辑（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/cloud-provider/controllers/service/controller.go#L364-L458">controller.go L364-L458</a>）：</p>
+<ul>
+<li>不需要 LB 或需要 cleanup → 删；</li>
+<li>否则 <code>ensureLoadBalancer</code>，先过滤节点（排除 <code>node.kubernetes.io/exclude-from-external-load-balancers</code>），再调云实现；</li>
+<li>结果写 <code>status.loadBalancer.ingress[]</code>（IP/Hostname/IPMode）；</li>
+<li><code>loadBalancerClass != nil</code> 时默认实现完全放手（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/cloud-provider/controllers/service/controller.go#L862-L865">controller.go L862-L865</a>）。</li>
+</ul>
+<p><code>status.loadBalancer.ingress[].ipMode</code>：</p>
+<ul>
+<li><code>VIP</code>：流量到达节点时目的地址仍是 VIP，kube-proxy 需要装规则；</li>
+<li><code>Proxy</code>：流量到达节点时目的地址已被换成 nodeIP/podIP，kube-proxy <strong>不应</strong>再为该 IP 装 VIP 规则。</li>
+</ul>
+<h3 id="92-metallb"><a class="header" href="#92-metallb">9.2 MetalLB</a></h3>
+<p><strong>controller</strong>（Deployment）只做 IP 分配 + 写 status：<code>convergeBalancer()</code> 校验已有 IP、处理 pool 变更、分配、写 <code>status.loadBalancer.ingress</code> 并回写 <code>metallb.io/ip-allocated-from-pool</code>（<a href="https://github.com/metallb/metallb/blob/0db4a44c098f71b6c18e2be34e73e67d8a39c20b/controller/service.go#L120-L222">service.go L120-L222</a>）。</p>
+<p><strong>speaker</strong>（DaemonSet）做数据面宣告：</p>
+<ul>
+<li><strong>L2</strong>：<code>ShouldAnnounce</code> 先排除无 active endpoint、无匹配 advertisement、无候选节点；ETP=Local 时只保留有本地端点的节点；然后用 <code>sortL2Candidates</code>（偏好权重 + <code>sha256(node+"#"+ip)</code>）选唯一 owner（<a href="https://github.com/metallb/metallb/blob/0db4a44c098f71b6c18e2be34e73e67d8a39c20b/speaker/layer2_controller.go#L88-L134">layer2_controller.go L88-L134</a>）。数据面用 ARP/NDP 应答 + 免费 ARP 重播。</li>
+<li><strong>BGP</strong>：多个节点可同时宣告同一 <code>/32</code>，上游 ECMP；ETP=Local 时只宣告有本地健康端点的节点（<a href="https://github.com/metallb/metallb/blob/0db4a44c098f71b6c18e2be34e73e67d8a39c20b/speaker/bgp_controller.go#L155-L198">bgp_controller.go L155-L198</a>）。</li>
+</ul>
+<p>CRD：</p>
+<ul>
+<li><code>IPAddressPool</code>：<code>addresses</code>、<code>autoAssign</code>、<code>avoidBuggyIPs</code>、<code>serviceAllocation</code>（priority/namespaces/selectors）；</li>
+<li><code>L2Advertisement</code>：<code>ipAddressPools</code>、<code>nodeSelectors</code>、<code>interfaces</code>、<code>preferredNodeSelectors</code>；</li>
+<li><code>BGPAdvertisement</code>：<code>aggregationLength</code>、<code>localPref</code>、<code>communities</code>、<code>peers</code>、<code>nodeSelectors</code>。</li>
+</ul>
+<p>L2 是 <strong>per-VIP active-passive</strong>（单节点带宽上限、秒级切换）；BGP 是 <strong>多活</strong>（ECMP、需要网络配合）。选型先看有没有 BGP。</p>
+<h3 id="93-kube-vip-与-dsr"><a class="header" href="#93-kube-vip-与-dsr">9.3 kube-vip 与 DSR</a></h3>
+<p>kube-vip 同时做 APIServer VIP 和 Service LB，支持 ARP/BGP 与 <strong>DSR（Direct Server Return）</strong>。DSR 的核心是回程绕过 LB：入向包被送到后端节点，节点把 VIP 配在 lo/网卡上（或打 mark），回包源 IP 直接用 VIP 回客户端。它保留了源 IP、避免了 LB 回程瓶颈，但要求后端能接受“目的地址不是本机“的包（loopback VIP/<code>route_localnet</code>/IPVS tunnel 或 direct routing）。</p>
+<hr>
+<h2 id="10-ingress-与-gateway-api"><a class="header" href="#10-ingress-与-gateway-api">10. Ingress 与 Gateway API</a></h2>
+<h3 id="101-ingress-的数据通路"><a class="header" href="#101-ingress-的数据通路">10.1 Ingress 的数据通路</a></h3>
+<pre><code class="language-text">外部 LB (L4) → Ingress Controller Pod（NodePort/LB/hostPort）
+  → 按 Host/Path 匹配 → 后端 Service → Pod
+</code></pre>
+<ul>
+<li>Ingress <strong>不实现转发</strong>，只是配置对象；数据面在 controller（nginx/envoy/traefik…）；</li>
+<li>TLS 通常在 controller 终止，<code>spec.tls[]</code> 只支持 443 端口，多 host 靠 SNI 复用（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/networking/v1/types.go#L305-L315">types.go L305-L315</a>）；</li>
+<li><code>pathType</code>：<code>Exact</code>/<code>Prefix</code>/<code>ImplementationSpecific</code>；</li>
+<li><code>ingressClassName</code> 是新字段，<code>kubernetes.io/ingress.class</code> 注解仍被兼容但已 deprecated；</li>
+<li><strong>Ingress API 已冻结</strong>：官方明确不再加新特性，新项目应使用 Gateway API。</li>
+</ul>
+<h3 id="102-gateway-api-的角色分离"><a class="header" href="#102-gateway-api-的角色分离">10.2 Gateway API 的角色分离</a></h3>
+<ul>
+<li><code>GatewayClass</code>：谁实现（<code>controllerName</code> + <code>parametersRef</code>）；</li>
+<li><code>Gateway</code>：监听器（name/hostname/port/protocol/tls/allowedRoutes）、地址、允许的路由；</li>
+<li><code>HTTPRoute</code>/<code>GRPCRoute</code>/<code>TLSRoute</code>/<code>TCPRoute</code>/<code>UDPRoute</code>：匹配/过滤/backendRefs；</li>
+<li><code>allowedRoutes</code>：<code>All</code>/<code>Same</code>/<code>Selector</code>/<code>None</code> + <code>kinds</code>，这是 Ingress 完全不具备的跨 namespace 授权模型（<a href="https://github.com/kubernetes-sigs/gateway-api/blob/d04e7458ee15351ca54a201c4b1c43412f917b91/apis/v1/gateway_types.go#L947-L1000">gateway_types.go L947-L1000</a>）；</li>
+<li><code>status.addresses</code> 是实际绑定地址，<code>spec.addresses</code> 只是请求（<a href="https://github.com/kubernetes-sigs/gateway-api/blob/d04e7458ee15351ca54a201c4b1c43412f917b91/apis/v1/gateway_types.go#L1098-L1150">gateway_types.go L1098-L1150</a>）。</li>
+</ul>
+<p>多集群场景对应的是 <strong>GEP-1748 “Gateway API Interaction with Multi-Cluster Services”</strong>，状态 Experimental，且明确说 MCS API 未 GA 之前无法毕业（<a href="https://github.com/kubernetes-sigs/gateway-api/blob/d04e7458ee15351ca54a201c4b1c43412f917b91/geps/gep-1748/index.md#L1-L20">gep-1748 L1-L20</a>）。注意不要把 <strong>KEP-1645</strong>（MCS API 的 KEP）误写成 Gateway API 的多集群 GEP。</p>
+<h3 id="103-ingress-vs-gateway-api"><a class="header" href="#103-ingress-vs-gateway-api">10.3 Ingress vs Gateway API</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>Ingress</th><th>Gateway API</th></tr>
+</thead>
+<tbody>
+<tr><td>角色</td><td>单一对象</td><td>GatewayClass/Gateway/Route 分层</td></tr>
+<tr><td>跨 namespace</td><td>靠注解/controller 自定义</td><td><code>allowedRoutes</code> 原生</td></tr>
+<tr><td>协议</td><td>HTTP/HTTPS</td><td>HTTP/GRPC/TLS/TCP/UDP</td></tr>
+<tr><td>扩展</td><td>注解（实现相关）</td><td>filters/policies（标准 + 实现扩展）</td></tr>
+<tr><td>状态</td><td>冻结</td><td>演进中</td></tr>
+<tr><td>多集群</td><td>不支持</td><td>GEP-1748 Experimental</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="11-观测与排障"><a class="header" href="#11-观测与排障">11. 观测与排障</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>命令</th><th>看什么</th></tr>
+</thead>
+<tbody>
+<tr><td><code>kubectl get svc,endpointslice -o wide</code></td><td><code>EXTERNAL-IP</code> 是 pending 还是有值；切片端点/端口</td></tr>
+<tr><td><code>iptables-save -t nat</code></td><td><code>KUBE-SVC/SVL/EXT/FW/SEP</code> 链、<code>statistic --probability</code>、<code>recent</code></td></tr>
+<tr><td><code>ipvsadm -Ln</code></td><td>virtual server、real server、scheduler、ActiveConn</td></tr>
+<tr><td><code>nft list ruleset</code></td><td><code>table ip kube-proxy</code>、<code>service-ips</code> map、<code>hairpin-connections</code> set</td></tr>
+<tr><td><code>conntrack -L</code></td><td>双向五元组、<code>[UNREPLIED]</code>、<code>ASSURED</code></td></tr>
+<tr><td><code>kubectl get svc -o yaml</code></td><td><code>status.loadBalancer.ingress[].ip/ipMode</code>、<code>healthCheckNodePort</code></td></tr>
+<tr><td><code>kubectl -n kube-system logs -l k8s-app=kube-proxy</code></td><td><code>Sync failed</code>、<code>Ignoring same-zone topology hints</code></td></tr>
+<tr><td><code>kubectl get events --field-selector reason=IPVSDeprecation</code></td><td>IPVS 弃用告警</td></tr>
+</tbody>
+</table>
+</div>
+<p>常见故障：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>现象</th><th>根因</th><th>定位</th></tr>
+</thead>
+<tbody>
+<tr><td><code>EXTERNAL-IP: &lt;pending&gt;</code></td><td>云 LB 未创建/无可用 IP/controller 未运行</td><td>云 CCM 日志、MetalLB controller</td></tr>
+<tr><td>NodePort 本地通、外部不通</td><td>安全组/防火墙、LB 健康检查、ETP=Local 无本地端点</td><td><code>curl nodeIP:nodePort</code>、<code>ss -lntp</code>、HC 200/503</td></tr>
+<tr><td>源 IP 变成节点 IP</td><td>ETP=Cluster 的 SNAT</td><td>改 ETP=Local（并配 HC）或 LB 保留源 IP</td></tr>
+<tr><td>只有部分客户端能连</td><td>sessionAffinity + NAT 共享源 IP；conntrack 不均衡</td><td><code>conntrack -L</code>、拆 sessionAffinity</td></tr>
+<tr><td>缩容后间歇 502</td><td>terminating 端点仍在接流量</td><td>检查 <code>publishNotReadyAddresses</code>、优雅下线时间</td></tr>
+<tr><td>改了 Service 端口不生效</td><td>targetPort 没变/端点未更新/旧 conntrack</td><td>EndpointSlice、<code>conntrack -D</code>（谨慎）</td></tr>
+<tr><td><code>no local endpoints</code> 指标增长</td><td>ETP/ITP=Local 但端点不在本节点</td><td>副本分布、拓扑约束</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="12-参考"><a class="header" href="#12-参考">12. 参考</a></h2>
+<p><strong>官方文档</strong></p>
+<ul>
+<li><a href="https://kubernetes.io/docs/concepts/services-networking/service/">Service</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/">EndpointSlice</a></li>
+<li><a href="https://kubernetes.io/docs/reference/networking/virtual-ips/">Virtual IPs and Service Proxies</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/services-networking/topology-aware-routing/">Topology Aware Routing</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/services-networking/ingress/">Ingress</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/services-networking/gateway/">Gateway API</a></li>
+<li><a href="https://kubernetes.io/docs/tasks/debug/debug-application/debug-service/">Debug Services</a></li>
+<li><a href="https://metallb.io/concepts/layer2/">MetalLB L2</a> / <a href="https://metallb.io/concepts/bgp/">MetalLB BGP</a></li>
+</ul>
+<p><strong>源码（固定到本文基线）</strong></p>
+<ul>
+<li>Service 类型与 ETP/ITP/trafficDistribution —— <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/core/v1/types.go#L6061-L6153">types.go L6061-L6153</a></li>
+<li>Service 默认值 —— <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/apis/core/v1/defaults.go#L106-L160">defaults.go L106-L160</a></li>
+<li>EndpointSlice 转换 —— <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/endpointslice/utils.go#L38-L72">utils.go L38-L72</a></li>
+<li>kube-proxy 接口与 tracker —— <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/types.go#L29-L43">types.go L29-L43</a></li>
+<li>iptables 链与规则 —— <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/iptables/proxier.go">proxier.go</a></li>
+<li>IPVS —— <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/ipvs/proxier.go">proxier.go</a>、<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/ipvs/README.md">README.md</a></li>
+<li>nftables —— <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/nftables/proxier.go">proxier.go</a></li>
+<li>conntrack 清理 —— <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/conntrack/cleanup.go#L41-L130">cleanup.go L41-L130</a></li>
+<li>healthCheckNodePort —— <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/healthcheck/service_health.go#L241-L272">service_health.go L241-L272</a></li>
+<li>MetalLB —— <a href="https://github.com/metallb/metallb/blob/0db4a44c098f71b6c18e2be34e73e67d8a39c20b/controller/service.go">controller/service.go</a>、<a href="https://github.com/metallb/metallb/blob/0db4a44c098f71b6c18e2be34e73e67d8a39c20b/speaker/layer2_controller.go">speaker/layer2_controller.go</a>、<a href="https://github.com/metallb/metallb/blob/0db4a44c098f71b6c18e2be34e73e67d8a39c20b/speaker/bgp_controller.go">speaker/bgp_controller.go</a></li>
+<li>Gateway API —— <a href="https://github.com/kubernetes-sigs/gateway-api/blob/d04e7458ee15351ca54a201c4b1c43412f917b91/apis/v1/gateway_types.go">gateway_types.go</a>、<a href="https://github.com/kubernetes-sigs/gateway-api/blob/d04e7458ee15351ca54a201c4b1c43412f917b91/geps/gep-1748/index.md">GEP-1748</a></li>
+</ul>
+<p><strong>本 wiki 的配套页面</strong></p>
+<ul>
+<li><a href="./k8s-network-path.html">Kubernetes 网络全链路</a>：Pod/DNS/LB 的完整路径与分层排障</li>
+<li><a href="./cni详解.html">CNI 详解</a>：netns、veth、bridge、IPAM、overlay</li>
+<li><a href="./multicluster-networking.html">多集群网络互联</a>：MCS、Submariner、ClusterMesh</li>
+</ul>
 
                     </main>
 
