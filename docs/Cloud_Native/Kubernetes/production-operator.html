@@ -1,0 +1,2264 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>生产级 Kubernetes Operator：从 CRD 到状态收敛与升级 - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../searchindex-c6338aee.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../toc-70ef310c.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/Kubernetes/production-operator.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="生产级-kubernetes-operator从-crd-到状态收敛与升级"><a class="header" href="#生产级-kubernetes-operator从-crd-到状态收敛与升级">生产级 Kubernetes Operator：从 CRD 到状态收敛与升级</a></h1>
+<blockquote>
+<p><strong>一句话</strong>：Operator 不是“用 Go 写个 controller”，而是<strong>把一个领域 API 连同它的生命周期、失败语义和升级路径一起交给 Kubernetes</strong>。CRD 决定 API 契约，API Server 决定请求语义，List/Watch 与 Informer 决定事件模型，Reconcile 决定系统能否收敛，Finalizer/OwnerReference 决定资源能否干净地消失，升级策略决定这套契约能活多久。</p>
+</blockquote>
+<p>本文按“一个 CR 从被创建到被删除、一个 Operator 从 v1 升到 v2”的完整链路组织，覆盖：</p>
+<ol>
+<li>Operator 的职责边界与成熟度</li>
+<li>CRD：schema、版本、子资源、转换</li>
+<li>API Server 如何服务一个 CR 请求</li>
+<li>List/Watch：<code>resourceVersion</code>、watch cache、<code>410 Gone</code></li>
+<li>Informer/Workqueue：从事件到 Reconcile</li>
+<li>API 设计：spec/status、conditions、校验、版本</li>
+<li>状态收敛：Reconcile 的正确形状</li>
+<li>幂等：为什么重试是常态</li>
+<li>清理：OwnerReference、Finalizer、级联删除</li>
+<li>并发：吞吐、顺序与一致性</li>
+<li>升级：CRD、控制器、Operand、OLM</li>
+<li>可观测性与测试</li>
+<li>生产检查清单</li>
+</ol>
+<blockquote>
+<p><strong>证据约定</strong>：源码链接固定到 2026-11 拉取的 commit，格式为 <code>https://github.com/&lt;org&gt;/&lt;repo&gt;/blob/&lt;40位sha&gt;/&lt;path&gt;#Lx-Ly</code>，行号与本地 checkout 一致；官方文档直接引用 URL。版本基线见下表。</p>
+</blockquote>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>项目</th><th>版本</th><th>Commit</th><th>本地 checkout</th></tr>
+</thead>
+<tbody>
+<tr><td>Kubernetes</td><td>v1.37.2</td><td><code>c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32</code></td><td><code>.repos/upstream/kubernetes</code></td></tr>
+<tr><td>controller-runtime</td><td>v0.25.2</td><td><code>5d8467b3065818a3b382d8f6941147a801fd1969</code></td><td><code>.repos/upstream/controller-runtime</code></td></tr>
+<tr><td>sample-controller</td><td>main @ 2026-11</td><td><code>7204184eb240515173848d28f2e1f3788104a4d1</code></td><td><code>.repos/upstream/sample-controller</code></td></tr>
+<tr><td>Cluster API</td><td>v1.14.4</td><td><code>4356c154f4a76b8939748ef7ebc2d0793ffe47e8</code></td><td><code>.repos/upstream/cluster-api</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="0-全景一次-cr-的完整生命周期"><a class="header" href="#0-全景一次-cr-的完整生命周期">0. 全景：一次 CR 的完整生命周期</a></h2>
+<pre class="mermaid">flowchart LR
+  U[用户/上层系统] --&gt;|create/update| API[kube-apiserver]
+  API --&gt;|校验/准入/转换| ETCD[(etcd)]
+  API --&gt;|list/watch| INF[Informer cache]
+  INF --&gt;|enqueue key| WQ[Workqueue]
+  WQ --&gt;|reconcile| C[Controller]
+  C --&gt;|observe children/external| API
+  C --&gt;|create/update/delete| API
+  C --&gt;|status/conditions| API
+  C --&gt;|finalizer/ownerRef| API
+  API --&gt;|GC/删除| ETCD
+</pre>
+
+<p>这条链路上有四个独立的“一致性边界”：</p>
+<ol>
+<li><strong>API 边界</strong>：CRD schema、admission、conversion 决定“什么能写进去”。</li>
+<li><strong>事件边界</strong>：watch cache、informer、workqueue 决定“控制器看到什么、什么时候看到”。</li>
+<li><strong>收敛边界</strong>：Reconcile 决定“看到之后做什么、失败了怎么办”。</li>
+<li><strong>生命周期边界</strong>：finalizer/ownerReference 决定“删除时谁负责清理、清理不干净怎么办”。</li>
+</ol>
+<p>生产级 Operator 的难点通常不在第 3 步写业务逻辑，而在 1、2、4 的语义没有被想清楚。</p>
+<h2 id="1-operator-的职责边界"><a class="header" href="#1-operator-的职责边界">1. Operator 的职责边界</a></h2>
+<h3 id="11-定义"><a class="header" href="#11-定义">1.1 定义</a></h3>
+<p>Kubernetes 官方对 Operator 的定义是：把<strong>领域知识</strong>编码进自定义控制器，用 <a href="https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/">Custom Resource</a> 描述期望状态，由控制器持续把实际状态收敛到期望状态。官方文档把这种模式称为 <a href="https://kubernetes.io/docs/concepts/extend-kubernetes/operator/">Operator pattern</a>。</p>
+<p>一个生产级 Operator 通常由四部分组成：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>部分</th><th>作用</th><th>典型实现</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>CRD</strong></td><td>定义 API 的 group/version/kind、schema、子资源</td><td><code>apiextensions.k8s.io/v1</code> YAML 或 Kubebuilder 生成</td></tr>
+<tr><td><strong>Controller</strong></td><td>监听 CR 与 owned 资源，执行 Reconcile</td><td>controller-runtime、client-go</td></tr>
+<tr><td><strong>Webhook</strong>（可选）</td><td>默认值、复杂校验、版本转换</td><td>controller-runtime webhook、cert-manager</td></tr>
+<tr><td><strong>打包/交付</strong>（可选）</td><td>安装、升级图、RBAC、CRD 生命周期</td><td>OLM/CSV、Helm、Kustomize</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="12-控制循环是-level-based不是-edge-based"><a class="header" href="#12-控制循环是-level-based不是-edge-based">1.2 控制循环是 level-based，不是 edge-based</a></h3>
+<p>Kubernetes API 约定明确要求：系统行为应是 <strong>level-based</strong>，而不是 edge-based；即使中间状态变化被漏掉，也要能从当前状态直接收敛到最新 spec。见 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">API conventions: Spec and Status</a>。</p>
+<p>controller-runtime 的 <code>Reconcile</code> 文档也强调：Reconcile 不是由单个事件的内容驱动，而是由<strong>当前集群状态</strong>驱动；请求里只有 namespace/name，没有“发生了什么事件”。见 <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/reconcile/reconcile.go#L60-L105">reconcile.go</a>。</p>
+<p>这带来两个直接推论：</p>
+<ul>
+<li><strong>不要写 <code>if event.Type == Update</code> 的业务分支</strong>。事件只负责把 key 放进队列，Reconcile 每次都重新观察。</li>
+<li><strong>不要依赖“事件一定会到达”</strong>。Informer 可能 resync、可能 relist、可能丢事件；正确性必须来自“读当前状态再决策”。</li>
+</ul>
+<h3 id="13-operatorhelmolmaggregated-api-的边界"><a class="header" href="#13-operatorhelmolmaggregated-api-的边界">1.3 Operator、Helm、OLM、Aggregated API 的边界</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>方案</th><th>它解决什么</th><th>不解决什么</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Helm/Kustomize</strong></td><td>安装时渲染 YAML、一次性 apply</td><td>不持续 reconcile；漂移不会自动修复；不处理外部资源生命周期</td></tr>
+<tr><td><strong>Operator（CRD + controller）</strong></td><td>持续收敛、外部资源编排、状态上报、清理</td><td>不负责自己的安装/升级图（通常交给 OLM/Helm）</td></tr>
+<tr><td><strong>OLM</strong></td><td>Operator 的安装、升级图、RBAC、CRD 所有权、依赖解析</td><td>不实现你的领域逻辑</td></tr>
+<tr><td><strong>Aggregated API Server</strong></td><td>自定义存储、protobuf、strategic merge、额外子资源</td><td>需要自己实现 API server，运维成本高</td></tr>
+</tbody>
+</table>
+</div>
+<p>官方对 CRD 与 Aggregated API 的取舍有一张很实用的对比表：CRD 更简单、无需额外服务，但不支持 custom storage、protobuf、strategic-merge-patch、额外子资源；Aggregated API 更灵活但需要自己运行 API server。见 <a href="https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#comparing-ease-of-use">Custom resources: Comparing ease of use</a>。</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Operator 的最佳实践是<strong>一个 Operator 管理一类应用</strong>、<strong>一个 CRD 一个 controller</strong>；不要让一个 controller 同时 reconcile 多个 Kind。Kubebuilder 和 Operator SDK 都明确建议如此，原因是复杂度、错误隔离、并发与可维护性。见 <a href="https://book.kubebuilder.io/reference/good-practices">Kubebuilder Good practices</a> 和 <a href="https://sdk.operatorframework.io/docs/best-practices/best-practices/">Operator SDK Best practices</a>。</p>
+</blockquote>
+<h3 id="14-先厘清术语operatoroperandcr-与-managed-resources"><a class="header" href="#14-先厘清术语operatoroperandcr-与-managed-resources">1.4 先厘清术语：Operator、Operand、CR 与 Managed Resources</a></h3>
+<p>Operator 文档里最容易混淆的是 <strong>Operator</strong> 和 <strong>Operand</strong>。Operator SDK 的定义是：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>术语</th><th>含义</th><th>例子（以 PostgreSQL Operator 为例）</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Operator</strong></td><td>安装到集群里的自定义控制器，负责把期望状态变成实际状态</td><td><code>postgres-operator</code> 的 Deployment/controller 进程</td></tr>
+<tr><td><strong>Operand</strong></td><td>Operator 所管理的<strong>业务工作负载/服务</strong>，也就是“被运维的对象”</td><td>一个 PostgreSQL 集群：StatefulSet、Pods、PVC、Service、备份 Job、数据库用户</td></tr>
+<tr><td><strong>Custom Resource (CR)</strong></td><td>CRD 的一个实例，用户用它描述 Operand 的期望状态</td><td><code>kind: PostgresCluster</code> 的 YAML</td></tr>
+<tr><td><strong>Managed Resources</strong></td><td>Operator 为了构成 Operand 而创建/管理的 Kubernetes 对象或外部资源</td><td>StatefulSet、Service、Secret、PVC、云数据库实例、DNS 记录</td></tr>
+<tr><td><strong>CRD</strong></td><td>定义 CR 的 API schema</td><td><code>postgresclusters.example.com</code></td></tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p>一句话：<strong>Operator 是“运维机器人”，Operand 是“被运维的业务系统”，CR 是“用户给机器人的工单”，Managed Resources 是“机器人实际去创建/修改的东西”。</strong></p>
+</blockquote>
+<p>所以 L2 里的“能管理旧版本 Operand”指的是：<strong>新版本的 Operator 仍然能接管、升级或迁移由旧版本 Operator 创建的那个 PostgreSQL 集群</strong>，而不是“升级 Operator 自己的 Deployment”。Operand 的版本（如 PostgreSQL 15 → 16）和 Operator 的版本（如 v1.2 → v1.3）是两条独立的版本线。</p>
+<h3 id="15-成熟度五个能力等级的具体含义"><a class="header" href="#15-成熟度五个能力等级的具体含义">1.5 成熟度：五个能力等级的具体含义</a></h3>
+<p>Operator SDK（Software Development Kit，Operator 开发工具包）用 <a href="https://sdk.operatorframework.io/docs/overview/operator-capabilities/">Operator Capability Levels</a> 把 Operator 对 Operand 的生命周期管理能力分为五级。它不是“代码质量评分”，而是<strong>用户能期待 Operator 替他们做多少事</strong>：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>级别</th><th>一句话</th><th>核心问题</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>L1 Basic Install</strong></td><td>能装、能配、能报就绪</td><td>用户只写一个 CR，能不能把 Operand 跑起来？</td></tr>
+<tr><td><strong>L2 Seamless Upgrades</strong></td><td>能升级、能兼容旧版本</td><td>升级 Operator/Operand 会不会中断、会不会管不了旧对象？</td></tr>
+<tr><td><strong>L3 Full Lifecycle</strong></td><td>能备份恢复、故障切换、成员变更</td><td>有状态 Operand 的日常运维能不能交给 Operator？</td></tr>
+<tr><td><strong>L4 Deep Insights</strong></td><td>能监控、告警、解释状态</td><td>出问题时，on-call 能不能不看代码就定位？</td></tr>
+<tr><td><strong>L5 Auto Pilot</strong></td><td>能自动扩缩、自愈、调优</td><td>能不能在无人值守下安全地自我修复和优化？</td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="l1-basic-install能装能配能报就绪"><a class="header" href="#l1-basic-install能装能配能报就绪">L1 Basic Install：能装、能配、能报就绪</a></h4>
+<p><strong>目标</strong>：用户通过一个 CR 就能完成 Operand 的安装和基本配置，Operator 等待 Managed Resources 健康，并把结果写回 status。</p>
+<p>具体包括：</p>
+<ul>
+<li>Operator 能创建 Operand 所需的一组资源（Deployment/StatefulSet、Service、ConfigMap、Secret、PVC、RBAC 等），或配置集群外资源；</li>
+<li>所有“安装必需”的配置尽量都能在 CR 的 <code>spec</code> 里表达，而不是要求用户手工改配置文件；</li>
+<li>Operator 等待 Managed Resources 达到健康状态，而不是“创建完就返回成功”；</li>
+<li><code>status</code> 能表达“是否就绪、卡在哪一步”，通常用 <code>Ready</code>/<code>Available</code> 等 condition + <code>observedGeneration</code>；</li>
+<li>CR 的配置变更能被 reconcile 到 Operand；能非中断的变更不应重启整个 Operand；</li>
+<li>Operator 本身可以通过 kubectl/Helm/OLM 等方式安装，镜像/版本可覆盖，字段有文档。</li>
+</ul>
+<p><strong>典型例子</strong>：数据库 Operator 创建 StatefulSet、Service、Secret、PVC，初始化数据库 schema，最后把 <code>Ready=True</code> 写回 CR。</p>
+<p><strong>验收问题</strong>：</p>
+<ol>
+<li>用户是否只需要一个 CR 就能装出可用的 Operand？</li>
+<li><code>status</code> 能否区分“创建中/就绪/失败”，并给出可读原因？</li>
+<li>修改 CR 的一个配置字段，Operand 是否会收敛，而不是要求重建？</li>
+</ol>
+<blockquote>
+<p>L1 能替代一部分 Helm，但<strong>不等于生产级</strong>：它没有回答“升级怎么办、删除怎么办、失败了怎么办”。</p>
+</blockquote>
+<h4 id="l2-seamless-upgrades能升级能兼容旧版本"><a class="header" href="#l2-seamless-upgrades能升级能兼容旧版本">L2 Seamless Upgrades：能升级、能兼容旧版本</a></h4>
+<p><strong>目标</strong>：Operator 和 Operand 都能平滑升级；新 Operator 能管理旧 Operator 创建的 Operand，升级过程可观测、可回滚或有明确边界。</p>
+<p>具体包括：</p>
+<ul>
+<li><strong>Operand 升级</strong>：升级 Operator 时自动把 Operand 升级到新版本，或者允许用户通过 CR 选择 Operand 版本；</li>
+<li><strong>旧 Operand 兼容</strong>：新 Operator 能识别并接管旧版本 Operand 创建的 Managed Resources，而不是“换个 Operator 就不认识旧对象”；</li>
+<li><strong>版本矩阵</strong>：明确 Operator 版本与 Operand 版本、Kubernetes 版本、CRD 版本的兼容关系；</li>
+<li><strong>升级策略</strong>：滚动升级、<code>maxUnavailable</code>/<code>maxSurge</code>、PDB、就绪探针、升级前检查（pre-flight）、失败暂停；</li>
+<li><strong>状态表达</strong>：升级中写 <code>Progressing=True</code>，失败写 <code>Ready=False</code> + 明确 reason；无法管理某个 Operand 版本时，在 status 里明确告知，而不是静默失败；</li>
+<li><strong>回滚边界</strong>：至少能回滚 Operator 镜像；Operand 数据/CRD 的回滚要有明确说明（见第 11 节）。</li>
+</ul>
+<p><strong>典型例子</strong>：PostgreSQL Operator 从 v1.2 升到 v1.3，自动把 PostgreSQL 15 滚动升级到 16；升级前检查复制状态/磁盘空间，升级中逐个重启实例，保留主从切换能力。</p>
+<p><strong>验收问题</strong>：</p>
+<ol>
+<li>旧 CR + 新 Operator，能不能正常接管并收敛？</li>
+<li>新 CR + 旧 Operator（兼容窗口内），旧 Operator 会不会破坏新字段？</li>
+<li>升级过程中业务是否中断？中断时 status 是否说清楚？</li>
+<li>升级失败是否能停在安全状态，而不是继续滚动？</li>
+</ol>
+<blockquote>
+<p><strong>L2 是大多数生产 Operator 的底线</strong>。很多“生产事故”不是 L1 功能不够，而是 L2 的升级路径没设计。</p>
+</blockquote>
+<h4 id="l3-full-lifecycle备份恢复故障切换成员变更"><a class="header" href="#l3-full-lifecycle备份恢复故障切换成员变更">L3 Full Lifecycle：备份恢复、故障切换、成员变更</a></h4>
+<p><strong>目标</strong>：把有状态 Operand 的日常运维也交给 Operator，而不仅是“装和升级”。</p>
+<p>具体包括：</p>
+<ul>
+<li><strong>备份/恢复</strong>：Operator 能触发应用一致的备份（flush/锁表/快照），并能从备份恢复出一个可被重新纳管的 Operand；</li>
+<li><strong>故障切换/回切</strong>：主库故障时能选主、切流、恢复旧主；能处理脑裂/quorum；</li>
+<li><strong>成员变更</strong>：增加/删除副本、重新加入集群、重建失败成员；</li>
+<li><strong>应用感知扩缩容</strong>：不是简单改 replicas，而是按 Operand 的语义做 rebalance、数据迁移、只读副本扩展；</li>
+<li><strong>复杂重配置</strong>：参数变更、存储扩容、网络变更等需要多步、可回滚的流程；</li>
+<li><strong>Operand 自身的韧性</strong>：liveness/readiness、多副本、滚动策略、PDB、CPU/内存 requests/limits。</li>
+</ul>
+<p><strong>典型例子</strong>：数据库 Operator 提供 <code>backup</code>/<code>restore</code> CR 或 annotation；主库故障时自动 failover；增加只读副本时先做基础备份再追日志；缩容前先迁走数据。</p>
+<p><strong>验收问题</strong>：</p>
+<ol>
+<li>备份是否应用一致？恢复后能否重新被 Operator 管理？</li>
+<li>杀掉主实例，能否自动选主且不丢数据（在 RPO 内）？</li>
+<li>扩容/缩容/重配置是否按正确顺序执行，失败能否续跑？</li>
+<li>Operand 是否有 PDB、探针、资源请求，避免“Operator 自己把 Operand 运维挂”？</li>
+</ol>
+<blockquote>
+<p>L3 是<strong>有状态服务的门槛</strong>。无状态 Operator 可以停在 L2；数据库、消息队列、存储类 Operator 通常需要 L3。</p>
+</blockquote>
+<h4 id="l4-deep-insights能监控告警解释状态"><a class="header" href="#l4-deep-insights能监控告警解释状态">L4 Deep Insights：能监控、告警、解释状态</a></h4>
+<p><strong>目标</strong>：让 on-call 和用户能通过指标、事件、conditions、日志理解 Operand 的健康和性能，而不需要读 Operator 源码。</p>
+<p>具体包括：</p>
+<ul>
+<li><strong>Operator 自身指标</strong>：reconcile 成功率/延迟、队列深度、错误分类、leader election；</li>
+<li><strong>Operand 指标</strong>：连接数、QPS、延迟、复制延迟、磁盘使用、缓存命中率等；按 RED/USE 等方法选择；</li>
+<li><strong>告警与仪表盘</strong>：Operator 随 CR 创建 PrometheusRule/GrafanaDashboard（或由上层平台统一注入），告警有 runbook/SOP；</li>
+<li><strong>事件</strong>：对用户可见的状态变化发 Event（升级开始、备份完成、failover 发生、无法自愈的原因），而不是每个 reconcile 都发；</li>
+<li><strong>conditions/status</strong>：能解释“当前处于什么阶段、为什么没 ready、下一步是什么”；</li>
+<li><strong>日志/追踪</strong>：结构化日志带 <code>reconcileID</code>、对象、generation；关键路径可追踪。</li>
+</ul>
+<p><strong>典型例子</strong>：数据库 Operator 暴露复制延迟、连接数、慢查询指标；主库切换时发 Event；<code>Ready=False</code> 的 message 直接告诉用户“等待新 Pod ready，当前 2/3”；告警 “replication lag &gt; 30s” 链到 runbook。</p>
+<p><strong>验收问题</strong>：</p>
+<ol>
+<li>on-call 能否只看 dashboard/status 就知道 Operand 是否健康？</li>
+<li>告警是否对应症状而非每个可能原因？是否有 runbook？</li>
+<li>失败时 status 是否能说明“卡在哪一步、为什么”？</li>
+<li>指标是否按 CR/namespace 维度可聚合，能定位到具体实例？</li>
+</ol>
+<blockquote>
+<p>L4 是“可运营”的分水岭。没有 L4，Operator 只是一个自动化脚本；出了事仍然只能看代码和日志。</p>
+</blockquote>
+<h4 id="l5-auto-pilot自动扩缩自愈调优"><a class="header" href="#l5-auto-pilot自动扩缩自愈调优">L5 Auto Pilot：自动扩缩、自愈、调优</a></h4>
+<p><strong>目标</strong>：在无人值守下，根据 Operand 的真实指标自动调整、修复、优化，并在无法处理时升级给人类。</p>
+<p>具体包括：</p>
+<ul>
+<li><strong>自动扩缩</strong>：按 Operand 指标（QPS、连接数、队列长度）而不是只看 CPU 扩缩；缩容前做数据迁移/排空；</li>
+<li><strong>自愈</strong>：根据指标/告警/日志识别不健康状态，执行重启、failover、重建副本、恢复备份等；有次数/速率限制，避免“修复动作”把系统打得更坏；</li>
+<li><strong>自动调优</strong>：根据负载模式调整参数、副本数、存储/节点放置；</li>
+<li><strong>异常检测</strong>：学习正常性能基线，发现偏离；无法自动修复时产生高优先级告警；</li>
+<li><strong>安全护栏</strong>：破坏性动作需要审批/窗口/干跑；所有自动动作可审计、可回滚；有人工暂停开关。</li>
+</ul>
+<p><strong>典型例子</strong>：数据库 Operator 根据读 QPS 自动加只读副本；检测到慢查询+磁盘延迟后把数据文件迁到更高性能的 StorageClass；发现主库频繁重启且无法自愈时，停止自动动作并告警。</p>
+<p><strong>验收问题</strong>：</p>
+<ol>
+<li>自动扩缩/自愈是否有上限、冷却时间、熔断？会不会抖动？</li>
+<li>破坏性动作是否可审计、可暂停、可回滚？</li>
+<li>无法自愈时，是否明确升级为人工告警，而不是无限重试？</li>
+<li>是否做过混沌测试/故障注入，验证自动动作不会扩大故障？</li>
+</ol>
+<blockquote>
+<p>L5 不是“必须”：大多数 Operator 停在 L2/L3 + L4 就是合理的生产形态。L5 适合平台化、规模化、领域知识非常成熟的场景；没有护栏的 L5 比 L2 更危险。</p>
+</blockquote>
+<p><strong>一句话总结</strong>：L1 解决“能不能用”，L2 解决“能不能升级”，L3 解决“有状态运维”，L4 解决“能不能运营”，L5 解决“能不能少人值守”。生产级通常至少是 <strong>L2 + L4</strong>；有状态服务再加 <strong>L3</strong>；L5 取决于领域和护栏成熟度。</p>
+<h2 id="2-crd把-api-契约交给-api-server"><a class="header" href="#2-crd把-api-契约交给-api-server">2. CRD：把 API 契约交给 API Server</a></h2>
+<h3 id="21-一个-crd-由什么组成"><a class="header" href="#21-一个-crd-由什么组成">2.1 一个 CRD 由什么组成</a></h3>
+<p><code>CustomResourceDefinitionSpec</code> 的核心字段：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>字段</th><th>含义</th><th>生产注意</th></tr>
+</thead>
+<tbody>
+<tr><td><code>group</code></td><td>API group，如 <code>example.com</code></td><td>用自有域名，避免与内置 group 冲突</td></tr>
+<tr><td><code>names</code></td><td>plural/singular/kind/shortNames/categories</td><td>plural 必须与 CRD 名 <code>&lt;plural&gt;.&lt;group&gt;</code> 一致</td></tr>
+<tr><td><code>scope</code></td><td><code>Namespaced</code> 或 <code>Cluster</code></td><td>默认 Namespaced；集群级资源慎用</td></tr>
+<tr><td><code>versions</code></td><td>每个版本的 <code>served</code>/<code>storage</code>/schema/subresources</td><td><strong>有且仅有一个 <code>storage: true</code></strong></td></tr>
+<tr><td><code>conversion</code></td><td><code>None</code> 或 <code>Webhook</code></td><td>schema 有差异时不能用 <code>None</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>类型定义见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1/types.go#L41-L73">types.go: CustomResourceDefinitionSpec</a>；版本字段见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1/types.go#L170-L210">types.go: CustomResourceDefinitionVersion</a>。</p>
+<p>一个最小但接近生产形态的 CRD：</p>
+<pre><code class="language-yaml">apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: widgets.example.com
+spec:
+  group: example.com
+  scope: Namespaced
+  names:
+    plural: widgets
+    singular: widget
+    kind: Widget
+    shortNames: [wd]
+    categories: [example]
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Ready
+          type: string
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required: [image]
+              properties:
+                image:
+                  type: string
+                  minLength: 1
+                replicas:
+                  type: integer
+                  minimum: 0
+                  maximum: 100
+                  default: 1
+                strategy:
+                  type: string
+                  enum: [RollingUpdate, Recreate]
+                  default: RollingUpdate
+            status:
+              type: object
+              properties:
+                observedGeneration:
+                  type: integer
+                  format: int64
+                conditions:
+                  type: array
+                  x-kubernetes-list-type: map
+                  x-kubernetes-list-map-keys: [type]
+                  items:
+                    type: object
+                    required: [type, status, reason, message, lastTransitionTime]
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                        enum: ["True", "False", "Unknown"]
+                      reason:
+                        type: string
+                        minLength: 1
+                      message:
+                        type: string
+                      observedGeneration:
+                        type: integer
+                        format: int64
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+</code></pre>
+<h3 id="22-structural-schemapruning-与-defaulting"><a class="header" href="#22-structural-schemapruning-与-defaulting">2.2 Structural schema、pruning 与 defaulting</a></h3>
+<p><code>apiextensions.k8s.io/v1</code> <strong>强制要求 structural schema</strong>：每个 object/array 节点必须有非空 <code>type</code>（除非使用 <code>x-kubernetes-int-or-string</code> 或 <code>x-kubernetes-preserve-unknown-fields</code>），并且 <code>allOf/anyOf/oneOf/not</code> 里不能定义类型、默认值等关键结构。规则见 <a href="https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#specifying-a-structural-schema">Specifying a structural schema</a>。</p>
+<p>这带来几个实际后果：</p>
+<ul>
+<li><strong>未在 schema 中声明的字段会被 pruning</strong>。写进 etcd 前就被裁掉，控制器永远看不到。字段改名不是“旧字段还在”，而是“旧字段被静默删除”。</li>
+<li><strong><code>preserveUnknownFields: true</code> 已废弃</strong>，不要用它绕过 schema；它会让默认值、pruning、OpenAPI、conversion 等能力失效。</li>
+<li><strong>默认值只对 optional 字段有意义</strong>，并且 default 必须能通过 schema 校验、非叶子默认值必须能被 pruning 处理。见 <a href="https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#defaulting">Defaulting</a>。</li>
+</ul>
+<p>默认值的应用时机很关键：</p>
+<ol>
+<li>请求进入 API Server 时，按<strong>请求版本</strong>的 default 填充；</li>
+<li>从 etcd 读取时，按<strong>存储版本</strong>的 default 填充；</li>
+<li>mutating admission webhook 打 patch 后，按 webhook 对象版本的 default 填充。</li>
+</ol>
+<p>但“读时默认”<strong>不会自动写回 etcd</strong>；只有后续 update 才会持久化。这意味着：</p>
+<ul>
+<li>新增 default 后，旧对象在 read 时看起来有新值，但 etcd 里可能没有；</li>
+<li>如果控制器依赖“字段一定存在”，read 时是安全的；如果依赖“etcd 里一定存在”，则不成立；</li>
+<li>对需要区分“用户没写”和“用户写了零值”的字段，用 pointer + <code>omitempty</code>，不要靠 default 猜。</li>
+</ul>
+<h3 id="23-校验openapicelratcheting"><a class="header" href="#23-校验openapicelratcheting">2.3 校验：OpenAPI、CEL、ratcheting</a></h3>
+<p>CRD 的校验分三层：</p>
+<ol>
+<li><strong>OpenAPI v3 schema</strong>：类型、必填、枚举、范围、长度、pattern、list/map 语义。</li>
+<li><strong>CEL <code>x-kubernetes-validations</code></strong>：跨字段、条件、不可变等声明式规则；编译期做类型检查，运行期有 cost budget。</li>
+<li><strong>Admission webhook</strong>：需要外部状态、复杂业务规则或跨对象检查时使用。</li>
+</ol>
+<p>Admission webhook 的生产边界：</p>
+<ul>
+<li>能用 CRD schema/CEL 表达的，优先不用 webhook；webhook 是额外的可用性、延迟和证书负担。</li>
+<li><code>failurePolicy: Fail</code> 会把 webhook 故障放大成“所有相关写请求失败”；<code>Ignore</code> 则可能放过非法对象。按风险选择，并监控失败率。</li>
+<li>设置 <code>timeoutSeconds</code>（默认 10s 太长）、<code>namespaceSelector</code>/<code>objectSelector</code> 限制范围；webhook 自身要有多副本、PDB、证书轮换。</li>
+<li>不要让 webhook 依赖“它正在校验的 CR”的 cache/控制器；否则启动顺序或故障会形成循环依赖。</li>
+</ul>
+<p>见 <a href="https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/">Admission webhooks</a>。</p>
+<p>CEL 规则是<strong>对象内</strong>的，不支持跨对象或状态查询。官方明确说 “All validation rules are scoped to the current object: no cross-object or stateful validation rules are supported.” 见 <a href="https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#validation-rules">Validation rules</a>。</p>
+<p>一个常见的不可变字段写法：</p>
+<pre><code class="language-yaml">x-kubernetes-validations:
+  - rule: "self == oldSelf"
+    message: "spec.storageClass is immutable"
+</code></pre>
+<p>CEL 的 cost 估算按最坏情况计算；对可迭代字段（list/map/string）必须设置 <code>maxItems</code>/<code>maxProperties</code>/<code>maxLength</code>，否则规则可能因为“潜在成本超过预算”而被拒绝。见 <a href="https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#validation-rules">Validation rules 的 cost 部分</a>。</p>
+<p><strong>Validation ratcheting</strong> 是升级时的重要机制：如果你新增校验，API Server 允许“更新前就已经非法、且本次更新没有触碰该部分”的对象继续通过；它不允许把合法对象改成非法。注意，<code>required</code>、<code>properties</code> 名称、<code>x-kubernetes-list-type</code> 等结构变化不在 ratcheting 范围内。见 <a href="https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#validation-ratcheting">Validation ratcheting</a>。</p>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>不要指望“加一条 required 校验”能安全地推广到存量对象。ratcheting 对 <code>required</code> 不生效；存量对象只要被更新就可能失败。正确做法是新版本 + 默认值/迁移，或者在 controller 中先补齐字段。</p>
+</blockquote>
+<h3 id="24-子资源statusscale-与-generation"><a class="header" href="#24-子资源statusscale-与-generation">2.4 子资源：status、scale 与 generation</a></h3>
+<p>启用 <code>subresources.status</code> 后：</p>
+<ul>
+<li>对主资源的 <code>PUT/POST/PATCH</code> 忽略 <code>status</code>；</li>
+<li>对 <code>/status</code> 的 <code>PUT</code> 只接受 <code>status</code>，忽略其他字段；</li>
+<li><code>.metadata.generation</code> 在<strong>除 metadata/status 之外</strong>的内容变化时递增；</li>
+<li>控制器通过 <code>/status</code> 写状态，避免与用户写 spec 冲突。</li>
+</ul>
+<p>代码上，CRD 的 generic strategy 在 create 时删除 status 并置 generation=1；update 时恢复旧 status，并在非 metadata 内容变化时 generation+1。见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/registry/customresource/strategy.go#L144-L187">strategy.go:144-187</a>。</p>
+<p><code>scale</code> 子资源让 HPA 等按 scale 协议工作的组件能像操作 Deployment 一样扩缩 CR：</p>
+<pre><code class="language-yaml">subresources:
+  scale:
+    specReplicasPath: .spec.replicas
+    statusReplicasPath: .status.replicas
+    labelSelectorPath: .status.selector
+</code></pre>
+<p><code>labelSelectorPath</code> 必须是字符串形式的 selector；不设置时，依赖 selector 的组件（例如 HPA 的某些指标）拿不到 selector。见 <a href="https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#scale-subresource">Scale subresource</a>。</p>
+<h3 id="25-版本与存储servedstoragestoredversions"><a class="header" href="#25-版本与存储servedstoragestoredversions">2.5 版本与存储：<code>served</code>、<code>storage</code>、<code>storedVersions</code></a></h3>
+<p>每个 CRD 版本有两个独立开关：</p>
+<ul>
+<li><code>served</code>：是否通过 REST 端点提供服务；</li>
+<li><code>storage</code>：是否作为 etcd 的序列化版本。</li>
+</ul>
+<p>必须<strong>恰好一个</strong>版本 <code>storage: true</code>，否则 CRD 校验失败（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/validation/validation.go#L448">validation.go:448</a>）。</p>
+<p>写入时用当前 storage 版本；读取时按请求版本转换；<strong>已有对象不会因为切换 storage 版本自动重写</strong>，只有 update 才会写到新 storage 版本。<code>status.storedVersions</code> 记录“曾经作为 storage 版本出现过的版本”，只要某个版本还在这个列表里，就不能从 <code>spec.versions</code> 中删除。见 <a href="https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#upgrade-existing-objects-to-a-new-stored-version">Upgrade existing objects to a new stored version</a>。</p>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>切换 storage 版本后，必须做 <strong>storage migration</strong>（StorageVersionMigration 或“逐个 list + 原样 update”），并确认 <code>status.storedVersions</code> 只剩新版本，才能删除旧版本。否则旧对象仍在旧编码里，删掉版本后可能读不出来。</p>
+</blockquote>
+<h3 id="26-conversionnone-还是-webhook"><a class="header" href="#26-conversionnone-还是-webhook">2.6 conversion：<code>None</code> 还是 <code>Webhook</code></a></h3>
+<ul>
+<li><code>strategy: None</code>：只改 <code>apiVersion</code>，不碰其他字段。只适用于<strong>schema 完全兼容、字段含义没有变化</strong>的版本。</li>
+<li><code>strategy: Webhook</code>：API Server 调用外部 conversion webhook，在“请求版本 ↔ 存储版本”之间转换。</li>
+</ul>
+<p>官方明确说：如果不同版本用不同字段表达同一数据，就<strong>不能</strong>用 <code>None</code>。见 <a href="https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#writing-reading-and-updating-versioned-customresourcedefinition-objects">Writing, reading, and updating versioned CRD objects</a>。</p>
+<p>conversion webhook 有几个生产特性：</p>
+<ul>
+<li>它位于<strong>读/写/watch 的关键路径</strong>上：请求非 storage 版本、watch 事件从 storage 版本转成请求版本时都会调用；</li>
+<li>它没有 admission webhook 的 <code>failurePolicy: Ignore</code> 选项；webhook 不可用，需要转换的非 storage 版本请求就失败；</li>
+<li>对已经在目标版本的对象，webhook 会跳过，不调用（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/apiserver/conversion/webhook_converter.go#L122-L142">webhook_converter.go:122-142</a>）；</li>
+<li>列表转换会把“所有需要转换的 item”批量发给 webhook，大列表可能产生很大的请求体。</li>
+</ul>
+<p>Kubebuilder 推荐 <strong>hub-and-spoke</strong> 模型：选一个 hub 版本，其他版本只实现“到 hub / 从 hub”的转换，避免 N×N 条转换路径。见 <a href="https://book.kubebuilder.io/multiversion-tutorial/conversion-concepts">Hubs, spokes, and other wheel metaphors</a>。</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>有损转换的生产做法：在 down-conversion 时把 hub 版本的完整对象序列化到目标对象的 annotation 里，up-conversion 时再取回。Cluster API 用 <code>cluster.x-k8s.io/conversion-data</code> 注解实现这一点，并用 fuzz round-trip 测试保证“spoke → hub → spoke”不丢数据。见 <a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/util/conversion/conversion.go#L40-L120">conversion.go:40-120</a> 和 <a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/util/conversion/conversion.go#L195-L230">FuzzTestFunc</a>。</p>
+</blockquote>
+<h3 id="27-crd-生命周期establishedterminating删除"><a class="header" href="#27-crd-生命周期establishedterminating删除">2.7 CRD 生命周期：Established、Terminating、删除</a></h3>
+<ul>
+<li><code>NamesAccepted</code>：名字没有冲突；</li>
+<li><code>Established</code>：CRD 可以被客户端发现和使用；</li>
+<li><code>Terminating</code>：CRD 正在删除，正在清理所有 CR。</li>
+</ul>
+<p>HA 集群里，establishing controller 会等至少 5 秒再置 <code>Established</code>，避免多 apiserver 竞争。见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/apiserver/customresource_handler.go#L485-L495">customresource_handler.go:485-495</a>。</p>
+<p>删除 CRD 时，<code>customresourcecleanup.apiextensions.k8s.io</code> finalizer 会<strong>先删除该 CRD 下的所有 CR</strong>，再移除 finalizer。代码见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/controller/finalizer/crd_finalizer.go#L181-L232">crd_finalizer.go:181-232</a>。</p>
+<p>这意味着 <code>kubectl delete crd widgets.example.com</code> <strong>等价于删除所有 Widget 实例</strong>。生产环境必须：</p>
+<ul>
+<li>删除前备份 CR（或整库 etcd 快照）；</li>
+<li>用 GitOps/OLM 管理 CRD 生命周期，避免“卸载 Operator 时顺手删 CRD”；</li>
+<li>对用户数据型 CR，设置 <code>helm.sh/resource-policy: keep</code> 或在卸载流程中显式保留 CRD。</li>
+</ul>
+<h2 id="3-api-server-视角一个-cr-请求发生了什么"><a class="header" href="#3-api-server-视角一个-cr-请求发生了什么">3. API Server 视角：一个 CR 请求发生了什么</a></h2>
+<h3 id="31-crd-是委托的-api-server"><a class="header" href="#31-crd-是委托的-api-server">3.1 CRD 是“委托的 API Server”</a></h3>
+<p>CRD 不是客户端库的语法糖。kube-apiserver 内置了 <code>apiextensions-apiserver</code>，它根据 CRD 动态注册 REST 端点：</p>
+<pre><code>/apis/&lt;group&gt;/&lt;version&gt;/&lt;plural&gt;
+/apis/&lt;group&gt;/&lt;version&gt;/namespaces/&lt;ns&gt;/&lt;plural&gt;
+/apis/&lt;group&gt;/&lt;version&gt;/.../&lt;name&gt;/status
+/apis/&lt;group&gt;/&lt;version&gt;/.../&lt;name&gt;/scale
+</code></pre>
+<p><code>crdHandler.ServeHTTP</code> 的处理顺序（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/apiserver/customresource_handler.go#L228-L368">customresource_handler.go:228-368</a>）：</p>
+<ol>
+<li>从请求路径解析 <code>requestInfo</code>；</li>
+<li>用 <code>&lt;resource&gt;.&lt;group&gt;</code> 找到 CRD；</li>
+<li>检查 scope 是否匹配（namespaced/cluster）；</li>
+<li>检查请求版本是否 <code>served</code>；</li>
+<li>检查 <code>NamesAccepted</code> 或 <code>Established</code>；</li>
+<li>标记 <code>terminating</code>（CRD 正在删除）；</li>
+<li><code>getOrCreateServingInfoFor</code> 构建该 CRD 的 per-version storage、request scope、converter、field manager；</li>
+<li>按子资源分发到 <code>serveResource</code> / <code>serveStatus</code> / <code>serveScale</code>。</li>
+</ol>
+<h3 id="32-每个版本一套-storage编码到-storage-版本"><a class="header" href="#32-每个版本一套-storage编码到-storage-版本">3.2 每个版本一套 storage，编码到 storage 版本</a></h3>
+<p><code>getOrCreateServingInfoFor</code> 会：</p>
+<ul>
+<li>找到 <code>storageVersion</code>；</li>
+<li>为每个 <code>served</code> 或 <code>storage</code> 版本构建 <code>customresource.NewStorage</code>；</li>
+<li>设置 <code>decoderVersion = 请求版本</code>，<code>encoderVersion = storageVersion</code>；</li>
+<li>安装 <code>crdConversionRESTOptionsGetter</code>，在读写时做转换；</li>
+<li>安装 per-version 的 <code>managedfields.FieldManager</code>，支持 server-side apply。</li>
+</ul>
+<p>关键代码：</p>
+<pre><code class="language-go">crdConversionRESTOptionsGetter{
+    RESTOptionsGetter:     r.restOptionsGetter,
+    converter:             safeConverter,
+    decoderVersion:        schema.GroupVersion{Group: crd.Spec.Group, Version: v.Name},
+    encoderVersion:        schema.GroupVersion{Group: crd.Spec.Group, Version: storageVersion},
+    ...
+}
+</code></pre>
+<p>见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/apiserver/customresource_handler.go#L860-L879">customresource_handler.go:860-879</a>。</p>
+<p>这解释了三个常见现象：</p>
+<ul>
+<li>用旧版本 <code>kubectl get</code> 看到的对象，可能是 API Server 从 storage 版本<strong>实时转换</strong>出来的；</li>
+<li>用旧版本 watch，每个事件都可能触发 conversion webhook；</li>
+<li>如果对象已经以 storage 版本持久化，用 storage 版本读写不需要转换；迁移完成前，旧对象仍可能触发转换。</li>
+</ul>
+<h3 id="33-准入与校验的顺序"><a class="header" href="#33-准入与校验的顺序">3.3 准入与校验的顺序</a></h3>
+<p>对 CR 的写请求，大致顺序是：</p>
+<ol>
+<li><strong>认证/授权</strong>（RBAC）；</li>
+<li><strong>mutating admission webhooks</strong>（可以改对象、填默认值）；</li>
+<li><strong>CRD schema 校验 + CEL</strong>（在 custom resource strategy 中）；</li>
+<li><strong>validating admission webhooks</strong>；</li>
+<li><strong>写入 etcd</strong>（storage 版本）；</li>
+<li><strong>watch cache 更新</strong>，向 watcher 分发事件。</li>
+</ol>
+<p>CRD 的 schema 校验不是 admission webhook，而是 <code>customResourceStrategy.Validate/ValidateUpdate</code> 的一部分；它和 CEL 一起在 API Server 内执行，不依赖外部服务。见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/registry/customresource/strategy.go#L200-L280">strategy.go:200-280</a>。</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>能用 schema/CEL 表达的校验，优先不要用 webhook。webhook 是额外的可用性风险、延迟来源和证书管理负担；而且 webhook 失效时，所有 CR 写入都可能失败。</p>
+</blockquote>
+<h3 id="34-statusscale-子资源的策略"><a class="header" href="#34-statusscale-子资源的策略">3.4 status/scale 子资源的策略</a></h3>
+<p><code>serveStatus</code> 使用独立的 request scope 和 status schema validator；<code>serveScale</code> 把 CR 的 <code>spec.replicas</code>/<code>status.replicas</code> 映射成 <code>autoscaling/v1.Scale</code>。见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/apiserver/customresource_handler.go#L418-L455">customresource_handler.go:418-455</a>。</p>
+<p>对控制器的实际影响：</p>
+<ul>
+<li>写 status 必须走 <code>client.Status().Update/Patch</code>，否则主资源 update 会忽略/覆盖 status；</li>
+<li>写 status 不会触发 generation 递增，所以 <code>observedGeneration</code> 和 <code>generation</code> 可以对齐；</li>
+<li>HPA 通过 <code>/scale</code> 读写 replicas；其他遵循 scale 协议的工具同理。控制器不要在 reconcile 里无条件把 replicas 改回去，否则会和 autoscaler 打架。</li>
+</ul>
+<h3 id="35-crd-更新会重建-serving-storage"><a class="header" href="#35-crd-更新会重建-serving-storage">3.5 CRD 更新会重建 serving storage</a></h3>
+<p>CRD 的 spec 或 accepted names 变化时，<code>updateCustomResourceDefinition</code> 会移除旧 storage，下一次请求重新构建：</p>
+<pre><code class="language-go">if apiequality.Semantic.DeepEqual(&amp;newCRD.Spec, oldInfo.spec) &amp;&amp;
+   apiequality.Semantic.DeepEqual(&amp;newCRD.Status.AcceptedNames, oldInfo.acceptedNames) {
+    return
+}
+r.removeStorage_locked(newCRD.UID)
+</code></pre>
+<p>见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/apiserver/customresource_handler.go#L507-L513">customresource_handler.go:507-513</a>。</p>
+<p>这意味着：<strong>CRD 变更不是“无感配置更新”</strong>。在重建窗口内，in-flight 请求可能失败；客户端/控制器必须能重试。生产上应避免频繁修改 CRD spec，尤其是 schema 和 conversion 配置。</p>
+<h3 id="36-watch-cacheapi-server-的内存状态"><a class="header" href="#36-watch-cacheapi-server-的内存状态">3.6 watch cache：API Server 的内存状态</a></h3>
+<p>kube-apiserver 为每个 GVR 维护 watch cache：它从 etcd list 一次，然后持续 watch etcd，把事件放进环形历史缓冲；客户端的 list/watch 大多由 watch cache 服务，而不是每次都打 etcd。</p>
+<p>关键语义：</p>
+<ul>
+<li>watch cache 的历史窗口有限，超出范围的 <code>resourceVersion</code> 会返回 <code>410 Gone</code>；</li>
+<li><code>resourceVersion=0</code> 的 list 可以从任意缓存状态返回（Any）；</li>
+<li><code>sendInitialEvents=true</code> 时，watch 流先发 synthetic ADDED，再发 initial-events-end bookmark（需要 <code>allowWatchBookmarks=true</code>）；</li>
+<li>cache 初始化期间，1.37 的 API Server 会拒绝 watch/未分页/带过滤的 list（429 + <code>Retry-After</code>），避免打爆 etcd。见 <a href="https://kubernetes.io/docs/reference/using-api/api-concepts/#watch-cache-initialization">Watch cache initialization</a>。</li>
+</ul>
+<p>历史过期错误的代码位置：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/storage/cacher/watch_cache_history.go#L216-L240">watch_cache_history.go:216-240</a>。</p>
+<h3 id="37-crd-删除的最后一道门"><a class="header" href="#37-crd-删除的最后一道门">3.7 CRD 删除的最后一道门</a></h3>
+<p>CRD 的 finalizer 会：</p>
+<ol>
+<li>设置 <code>Terminating=True</code>；</li>
+<li>列出该 CRD 的所有 CR；</li>
+<li>按 namespace 执行 <code>DeleteCollection</code>；</li>
+<li>等待所有 CR 消失；</li>
+<li>移除 finalizer，CRD 被删除。</li>
+</ol>
+<p>代码见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/controller/finalizer/crd_finalizer.go#L181-L260">crd_finalizer.go:181-260</a>。</p>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>如果某个 CR 自己有 finalizer 且对应 controller 已经卸载，CRD 删除会卡在 <code>Terminating</code>，进而阻塞整个删除流程。卸载顺序必须是：先停止/迁移 controller 的 finalizer 责任，再删 CR，最后删 CRD。</p>
+</blockquote>
+<h2 id="4-listwatch一致性resourceversion-与-410-gone"><a class="header" href="#4-listwatch一致性resourceversion-与-410-gone">4. List/Watch：一致性、<code>resourceVersion</code> 与 <code>410 Gone</code></a></h2>
+<h3 id="41-resourceversion-的语义"><a class="header" href="#41-resourceversion-的语义">4.1 <code>resourceVersion</code> 的语义</a></h3>
+<p><code>resourceVersion</code> 是 API Server 给对象的版本标识。它<strong>必须原样传回</strong>，客户端不能假设它是 etcd 的 <code>mod_revision</code>，也不能跨资源类型比较。1.35+ 的 conformance 要求同一资源类型的 RV 可按十进制整数比较大小；此外只看相等性。见 <a href="https://kubernetes.io/docs/reference/using-api/api-concepts/#resource-versions">Resource versions</a>。</p>
+<p>对 <strong>get/list</strong>：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th><code>resourceVersion</code></th><th>语义</th><th>一致性/来源</th></tr>
+</thead>
+<tbody>
+<tr><td>不设置</td><td>Most Recent</td><td>读到最新一致状态（通常 quorum read / 带 progress 的 cache）</td></tr>
+<tr><td><code>"0"</code></td><td>Any</td><td>任意版本，最新优先；通常由 watch cache 服务，可能较旧</td></tr>
+<tr><td>其他值</td><td>Not older than</td><td>至少和给定 RV 一样新；通常由 watch cache 服务</td></tr>
+</tbody>
+</table>
+</div>
+<p>对 <strong>list</strong>，还受 <code>resourceVersionMatch</code> 和分页参数影响：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th><code>resourceVersionMatch</code></th><th>分页</th><th>不设置 RV</th><th><code>"0"</code></th><th>其他 RV</th></tr>
+</thead>
+<tbody>
+<tr><td>未设置</td><td>无 limit</td><td>Most Recent</td><td>Any</td><td>Not older than</td></tr>
+<tr><td>未设置</td><td>有 limit、无 continue</td><td>Most Recent</td><td>Any</td><td><strong>Exact</strong></td></tr>
+<tr><td><code>Exact</code></td><td>任意</td><td>非法</td><td>非法</td><td>Exact（不可用则 410）</td></tr>
+<tr><td><code>NotOlderThan</code></td><td>任意</td><td>非法</td><td>Any</td><td>Not older than</td></tr>
+</tbody>
+</table>
+</div>
+<p>完整表格见 <a href="https://kubernetes.io/docs/reference/using-api/api-concepts/#semantics-for-get-and-list">Semantics for get and list</a>。</p>
+<p>对 <strong>watch</strong>：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th><code>resourceVersion</code></th><th>语义</th></tr>
+</thead>
+<tbody>
+<tr><td>不设置</td><td>Get State and Start at Most Recent：先 synthetic ADDED 全量状态，再从最新开始</td></tr>
+<tr><td><code>"0"</code></td><td>Get State and Start at Any：从任意可用版本开始，可能返回陈旧数据，<strong>不能假设自己看到了最新状态</strong></td></tr>
+<tr><td>其他值</td><td>Start at Exact：从该 RV 之后开始，不发 synthetic ADDED；客户端应已有初始状态</td></tr>
+</tbody>
+</table>
+</div>
+<p>见 <a href="https://kubernetes.io/docs/reference/using-api/api-concepts/#semantics-for-watch">Semantics for watch</a>。</p>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p><code>resourceVersion=0</code> 的 watch <strong>可能从很旧的版本开始</strong>，甚至回退到客户端已经见过的状态之前。只有能容忍“时间倒流/重复事件”的客户端才可以用。控制器应依赖 Reflector/Informer 的 list-then-watch，而不是自己写 <code>watch?resourceVersion=0</code>。</p>
+</blockquote>
+<h3 id="42-410-gone-与-too-large-resource-version"><a class="header" href="#42-410-gone-与-too-large-resource-version">4.2 <code>410 Gone</code> 与 <code>Too large resource version</code></a></h3>
+<p>API Server 不保证保留所有历史版本。请求的 RV 太旧时返回 <code>410 Gone</code>；请求的 RV 比 cache 还新（例如多 apiserver 之间的进度差）时，可能返回 <code>504</code>/<code>Retry-After</code>，并带 <code>Too large resource version</code> 消息。见 <a href="https://kubernetes.io/docs/reference/using-api/api-concepts/#410-gone-responses">410 Gone responses</a> 和 <a href="https://kubernetes.io/docs/reference/using-api/api-concepts/#unavailable-resource-versions">Unavailable resource versions</a>。</p>
+<p>正确的客户端行为：</p>
+<ul>
+<li><code>410</code> → 清空本地缓存，重新 list，拿新 RV，再 watch；</li>
+<li><code>Too large RV</code> → 退避重试，或回退到较旧/空的 RV；</li>
+<li><strong>不要</strong>假装没看见、继续用旧缓存，否则会永久落后。</li>
+</ul>
+<h3 id="43-reflectorlist-then-watch-的标准实现"><a class="header" href="#43-reflectorlist-then-watch-的标准实现">4.3 Reflector：list-then-watch 的标准实现</a></h3>
+<p>client-go 的 <code>Reflector</code> 把上述逻辑封装起来：</p>
+<ol>
+<li>初始 list（<code>resourceVersion=0</code>，可分页）；</li>
+<li>从 list 返回的 RV 开始 watch；</li>
+<li>处理 <code>ADDED/MODIFIED/DELETED/BOOKMARK</code>；</li>
+<li>遇到 <code>Expired</code> 或 <code>TooLargeResourceVersion</code>，回退到一个安全的 RV（通常是 <code>0</code> 或空）重新 list；</li>
+<li>断流后从最后 RV 重试；</li>
+<li>周期性 resync（可选）。</li>
+</ol>
+<p>关键代码：</p>
+<ul>
+<li><code>ListAndWatchWithContext</code>：先尝试 WatchList（如果启用），失败则回退 list，再进入 watch；见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/tools/cache/reflector.go#L463-L530">reflector.go:463-530</a>。</li>
+<li>list 失败时的 410 回退：见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/tools/cache/reflector.go#L719-L729">reflector.go:719-729</a>。</li>
+<li>watch 事件处理与 bookmark：见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/tools/cache/reflector.go#L1036-L1078">reflector.go:1036-1078</a>。</li>
+</ul>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>不要自己实现“list + watch + 410 处理”，除非你在写一个新的客户端库。Informer/Reflector 已经处理了分页、RV 过期、bookmark、重连和 resync；自己写通常会在“list 和 watch 之间的窗口”丢事件。</p>
+</blockquote>
+<h3 id="44-bookmark-与-streaming-list"><a class="header" href="#44-bookmark-与-streaming-list">4.4 Bookmark 与 Streaming List</a></h3>
+<p><strong>Bookmark</strong> 是一种特殊 watch 事件：对象只带 <code>metadata.resourceVersion</code>，表示“到该 RV 为止的事件都已经发完”。客户端可以用它推进“最后已知 RV”，而不必等一个真实对象变化。<code>allowWatchBookmarks=true</code> 只是“允许”，不保证服务端一定发。见 <a href="https://kubernetes.io/docs/reference/using-api/api-concepts/#watch-bookmarks">Watch bookmarks</a>。</p>
+<p><strong>Streaming list</strong>（<code>sendInitialEvents=true</code>）把初始 list 合并进 watch 流：先发 synthetic ADDED 构建全量状态，再发一个带 <code>k8s.io/initial-events-end</code> 注解的 BOOKMARK，然后继续正常 watch。它要求 <code>resourceVersionMatch=NotOlderThan</code>。见 <a href="https://kubernetes.io/docs/reference/using-api/api-concepts/#streaming-lists">Streaming lists</a>。</p>
+<p>版本状态（1.37）：</p>
+<ul>
+<li><code>WatchList</code> 是 beta，1.34 起默认开启（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/features/kube_features.go#L487-L494">kube_features.go:487-494</a>）；</li>
+<li>client-go 的 <code>WatchListClient</code> 从 1.35 起默认开启（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/features/known_features.go#L141-L145">known_features.go:141-145</a>）。</li>
+</ul>
+<p>它的价值是降低大集群初始 list 的<strong>峰值内存</strong>：不必在服务端构造完整 List 对象再序列化。代价是客户端要正确处理 synthetic ADDED 和 bookmark。</p>
+<h3 id="45-分片客户端分片与-api-server-分片"><a class="header" href="#45-分片客户端分片与-api-server-分片">4.5 分片：客户端分片与 API Server 分片</a></h3>
+<p>大集群里，“每个 controller 副本都 watch 全量 Pod”是不可扩展的。两条路：</p>
+<p><strong>（1）客户端分片（成熟）</strong></p>
+<ul>
+<li>按 namespace 拆分 informer cache（controller-runtime <code>Cache.DefaultNamespaces</code>）；</li>
+<li>按 label/field selector 缩小 watch 范围；</li>
+<li>按对象名/UID 哈希把对象分配给不同副本；</li>
+<li>每个副本用独立的 Lease 做 leader election，互不抢占。</li>
+</ul>
+<p><strong>（2）API Server 端分片（1.36+ alpha）</strong></p>
+<p><code>ShardedListAndWatch</code> 允许客户端在 <code>ListOptions.ShardSelector</code> 里写：</p>
+<pre><code>shardRange(object.metadata.uid, '0x0000000000000000', '0x8000000000000000')
+</code></pre>
+<p>服务端用 FNV-1a 对 <code>metadata.uid</code> 或 <code>metadata.namespace</code> 做哈希，只返回落在区间内的对象和事件。见 <a href="https://kubernetes.io/docs/reference/using-api/api-concepts/#sharded-list-and-watch">Sharded list and watch</a>。</p>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p><code>ShardedListAndWatch</code> 在 1.37 仍是 alpha，默认关闭；而且如果服务端不支持，<code>ShardSelector</code> 会被忽略并返回全量数据。使用前必须检查 list 响应里是否有 <code>shardInfo</code>，否则客户端要自己做 fallback 过滤。</p>
+</blockquote>
+<h3 id="46-降低-watch-成本的几个杠杆"><a class="header" href="#46-降低-watch-成本的几个杠杆">4.6 降低 watch 成本的几个杠杆</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>杠杆</th><th>做法</th><th>代价/限制</th></tr>
+</thead>
+<tbody>
+<tr><td>缩小范围</td><td>namespace 级 cache、label selector、field selector</td><td>需要 API 设计支持 label/field</td></tr>
+<tr><td>只取 metadata</td><td><code>metav1.PartialObjectMetadata</code> / <code>Accept: as=PartialObjectMetadata</code></td><td>看不到 spec/status</td></tr>
+<tr><td>减少类型</td><td>只 watch 真正需要的 GVR</td><td>依赖关系可能要多 watch</td></tr>
+<tr><td>分片</td><td>按 namespace/UID 哈希，多副本</td><td>需要路由与再平衡</td></tr>
+<tr><td>服务端分片</td><td><code>ShardSelector</code>（alpha）</td><td>版本/网关限制</td></tr>
+<tr><td>降低副本数</td><td>leader election + 单活 controller</td><td>故障切换变慢</td></tr>
+</tbody>
+</table>
+</div>
+<p>metadata-only fetch 的协议见 <a href="https://kubernetes.io/docs/reference/using-api/api-concepts/#metadata-only-fetches">Metadata-only fetches</a>；CRD 的 <code>selectableFields</code> 最多 8 个，见 <a href="https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#field-selectors">Field selectors for custom resources</a>。</p>
+<h2 id="5-informerworkqueue从事件到-reconcile"><a class="header" href="#5-informerworkqueue从事件到-reconcile">5. Informer/Workqueue：从事件到 Reconcile</a></h2>
+<h3 id="51-sharedinformer-的三层结构"><a class="header" href="#51-sharedinformer-的三层结构">5.1 SharedInformer 的三层结构</a></h3>
+<p>client-go 的 <code>SharedInformer</code> 由三部分组成：</p>
+<ol>
+<li><strong>Reflector</strong>：负责 list/watch，把事件写进 DeltaFIFO；</li>
+<li><strong>DeltaFIFO + Indexer</strong>：按对象 key 累积 delta，维护本地缓存（Store）；</li>
+<li><strong>sharedProcessor</strong>：把 Add/Update/Delete 通知分发给多个 EventHandler。</li>
+</ol>
+<p>一个 <code>SharedInformerFactory</code> 对每个 GVR 只创建一个 informer，多个 controller 共享同一份缓存和 watch。这也是为什么“多写一个 controller watch 同一个类型”通常不会线性增加 API Server 压力。</p>
+<h3 id="52-deltafifo-的语义"><a class="header" href="#52-deltafifo-的语义">5.2 DeltaFIFO 的语义</a></h3>
+<p>DeltaFIFO 的设计目标（见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/tools/cache/delta_fifo.go#L75-L120">delta_fifo.go:75-120</a>）：</p>
+<ul>
+<li>每个对象的变化<strong>至少处理一次</strong>；</li>
+<li>处理某个对象时，能看到自上次处理以来的<strong>所有 delta</strong>；</li>
+<li>删除也会作为 delta 出现；</li>
+<li>支持周期性 resync；</li>
+<li>同一个 key 的多个事件会合并成一个 <code>Deltas</code>，避免队列膨胀。</li>
+</ul>
+<p>这解释了为什么 Reconcile 不应该依赖“事件次数”：两次快速 update 可能只触发一次 reconcile，但 Reconcile 读到的是最新对象。</p>
+<h3 id="53-eventhandler-只做一件事入队"><a class="header" href="#53-eventhandler-只做一件事入队">5.3 EventHandler 只做一件事：入队</a></h3>
+<p>事件处理函数运行在 informer 的分发 goroutine 上。它应该：</p>
+<ul>
+<li>做最小过滤（predicate）；</li>
+<li>把 <code>namespace/name</code> 放进 workqueue；</li>
+<li>立即返回。</li>
+</ul>
+<p>不要在 EventHandler 里做 API 调用、外部 HTTP、sleep 或复杂计算；这会阻塞该 listener 的事件分发，甚至拖慢整个 informer。</p>
+<p>controller-runtime 的 <code>EnqueueRequestForObject</code> 就是标准做法：Create/Update/Delete 都把对象 key 入队。见 <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/handler/enqueue.go#L40-L90">enqueue.go</a>。</p>
+<h3 id="54-resync-不是重新-list"><a class="header" href="#54-resync-不是重新-list">5.4 Resync 不是“重新 list”</a></h3>
+<p>Informer 的 resync 会为缓存中的每个对象生成一个 <strong>相同 resourceVersion 的 Update 事件</strong>；shared informer 会判断 <code>old RV == new RV</code>，把它标记为 sync，并且只发给显式请求了 resync 的 listener。见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/tools/cache/shared_informer.go#L1083-L1125">shared_informer.go:1083-1125</a>。</p>
+<p>controller-runtime 的 cache 默认 <code>SyncPeriod=10h</code>，带 10% jitter；文档明确说：</p>
+<ul>
+<li>resync 是“防止 controller 漏掉 requeue 的保险”，不是“和服务器对账”；</li>
+<li>如果需要对账/轮询外部系统，应该在 Reconcile 里返回 <code>RequeueAfter</code>，而不是调小 SyncPeriod；</li>
+<li><code>GenerationChangedPredicate</code> 这类 predicate 会过滤掉同 RV 的 resync 事件。</li>
+</ul>
+<p>见 <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/cache/cache.go#L94-L128">cache.go:94-128</a>。</p>
+<h3 id="55-workqueue去重串行化限速"><a class="header" href="#55-workqueue去重串行化限速">5.5 Workqueue：去重、串行化、限速</a></h3>
+<p>workqueue 的核心是三个集合：</p>
+<ul>
+<li><code>queue</code>：待处理 key；</li>
+<li><code>dirty</code>：需要处理的 key；</li>
+<li><code>processing</code>：正在处理的 key。</li>
+</ul>
+<p>关键行为（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/util/workqueue/queue.go#L224-L300">queue.go:224-300</a>）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>操作</th><th>行为</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Add(key)</code></td><td>如果 key 已在 <code>dirty</code>，直接返回；如果在 <code>processing</code>，只标 dirty，不重复入队</td></tr>
+<tr><td><code>Get()</code></td><td>从 queue 取出，放入 <code>processing</code>，从 <code>dirty</code> 删除</td></tr>
+<tr><td><code>Done(key)</code></td><td>从 <code>processing</code> 删除；如果期间又被 Add（dirty），重新入队</td></tr>
+<tr><td><code>AddRateLimited(key)</code></td><td>按 rate limiter 计算延迟后再入队</td></tr>
+<tr><td><code>Forget(key)</code></td><td>清除该 key 的失败计数</td></tr>
+</tbody>
+</table>
+</div>
+<p>这意味着：</p>
+<ul>
+<li><strong>同一个 key 不会并发执行</strong>（在单个 controller 进程内）；<code>MaxConcurrentReconciles</code> 提高的是“不同 key”的并行度。</li>
+<li>事件在 Reconcile 期间到达不会丢：会被标 dirty，等当前 Reconcile 结束后再跑一次。</li>
+<li>失败重试由 rate limiter 控制；成功时必须 <code>Forget</code>，否则失败计数不会清零。</li>
+</ul>
+<p>client-go 默认的 controller rate limiter 是 <code>MaxOf(ItemExponentialFailureRateLimiter(5ms, 1000s), BucketRateLimiter(10qps, 100 burst))</code>，见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/util/workqueue/default_rate_limiters.go#L45-L60">default_rate_limiters.go:45-60</a>。</p>
+<h3 id="56-controller-runtime-的-reconcile-循环"><a class="header" href="#56-controller-runtime-的-reconcile-循环">5.6 controller-runtime 的 Reconcile 循环</a></h3>
+<p>controller-runtime 把上述逻辑封装成：</p>
+<pre><code class="language-go">for {
+    obj, priority, shutdown := c.Queue.GetWithPriority()
+    if shutdown { return false }
+    defer c.Queue.Done(obj)
+    c.reconcileHandler(ctx, obj, priority)
+}
+</code></pre>
+<p>核心判定（<a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/internal/controller/controller.go#L478-L517">controller.go:478-517</a>）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Reconcile 返回</th><th>行为</th></tr>
+</thead>
+<tbody>
+<tr><td><code>err == nil</code></td><td><code>Forget</code>，不再重试，等下一次事件</td></tr>
+<tr><td><code>err != nil</code></td><td>按 rate limiter 重新入队（无限重试）</td></tr>
+<tr><td><code>err</code> 是 <code>TerminalError</code></td><td>不重试，只记录错误指标</td></tr>
+<tr><td><code>RequeueAfter &gt; 0</code></td><td><code>Forget</code> + <code>AddAfter</code>，用于轮询/等待</td></tr>
+<tr><td><code>Requeue</code>（已废弃）</td><td>按 rate limiter 重新入队</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p><code>RequeueAfter</code> 和 <code>error</code> 同时返回时，<code>RequeueAfter</code> 会被忽略。不要既返回 error 又指望按固定间隔重试；要么返回 error 让 rate limiter 退避，要么返回 <code>RequeueAfter</code> 做定时轮询。</p>
+</blockquote>
+<h3 id="57-cache-读与写后读陷阱"><a class="header" href="#57-cache-读与写后读陷阱">5.7 Cache 读与“写后读”陷阱</a></h3>
+<p>controller-runtime 的 <code>client.Get/List</code> 默认读 <strong>informer cache</strong>，不是直接读 API Server：</p>
+<pre><code class="language-go">if !isUncached {
+    return c.cache.Get(ctx, key, obj, opts...)
+}
+</code></pre>
+<p>见 <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/client/client.go#L430-L460">client.go:430-460</a>。</p>
+<p>这带来“写后读”问题：</p>
+<ul>
+<li>Reconcile 里刚 <code>Update</code> 了对象，紧接着 <code>Get</code> 可能还读到旧版本；</li>
+<li>刚创建的子资源，cache 可能还没收到 ADDED；</li>
+<li>依赖“立刻看到自己写的值”的逻辑会不稳定。</li>
+</ul>
+<p>解决方式：</p>
+<ol>
+<li><strong>不要写后立刻读</strong>。更新后直接基于内存对象继续，或返回 <code>RequeueAfter</code> 让下一轮从 cache 读。</li>
+<li>需要强一致读时，用 <code>mgr.GetAPIReader()</code> 直接读 API Server（ sparingly，避免打爆 apiserver）。</li>
+<li>对非 cache 类型（如 <code>unstructured</code> 未配置 cache）配置 <code>Cache.DisableFor</code> 或 <code>Client</code> 的 uncached 选项。</li>
+</ol>
+<h3 id="58-启动顺序与-cache-同步"><a class="header" href="#58-启动顺序与-cache-同步">5.8 启动顺序与 cache 同步</a></h3>
+<p>controller-runtime manager 的启动顺序（<a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/manager/internal.go#L426-L452">internal.go:426-452</a>）：</p>
+<ol>
+<li>HTTP server（health/metrics）；</li>
+<li>Webhook server；</li>
+<li>Cache（informer）；</li>
+<li>非 leader-election runnable；</li>
+<li>Leader election + leader-only runnable。</li>
+</ol>
+<p>两个重要含义：</p>
+<ul>
+<li><strong>Webhook 必须先于 cache 启动</strong>：如果 cache 先启动，它的初始 list 可能需要 conversion webhook 把 storage 版本转成请求版本，而 webhook 还没 ready，就会卡住 cache 初始化，形成死锁。代码注释明确警告了这一点。</li>
+<li><strong>Cache 在 leader election 之前启动</strong>，所以 standby 副本也会 list/watch。做容量规划时，不能只算 leader 的 watch 开销。</li>
+</ul>
+<p><code>CacheSyncTimeout</code> 默认 2 分钟；CRD 未安装时，controller 会等待 cache sync 失败并退出/重试。controller-runtime 的 source 会明确提示 “if kind is a CRD, it should be installed before calling Start”。见 <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/internal/source/kind.go#L90-L100">kind.go:90-100</a>。</p>
+<h3 id="59-workqueue-与-reconcile-的指标"><a class="header" href="#59-workqueue-与-reconcile-的指标">5.9 Workqueue 与 Reconcile 的指标</a></h3>
+<p>controller-runtime 默认暴露：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>指标</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>controller_runtime_reconcile_total{controller,result}</code></td><td>success/error/requeue/requeue_after</td></tr>
+<tr><td><code>controller_runtime_reconcile_errors_total</code></td><td>错误总数</td></tr>
+<tr><td><code>controller_runtime_reconcile_time_seconds</code></td><td>Reconcile 耗时</td></tr>
+<tr><td><code>controller_runtime_max_concurrent_reconciles</code></td><td>配置的并发度</td></tr>
+<tr><td><code>controller_runtime_active_workers</code></td><td>当前活跃 worker</td></tr>
+<tr><td><code>controller_runtime_reconcile_timeouts_total</code></td><td>超时次数</td></tr>
+</tbody>
+</table>
+</div>
+<p>定义见 <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/internal/controller/metrics/metrics.go#L28-L95">metrics.go:28-95</a>。</p>
+<p>workqueue 侧还有 <code>workqueue_depth</code>、<code>workqueue_adds_total</code>、<code>workqueue_queue_duration_seconds</code>、<code>workqueue_work_duration_seconds</code>、<code>workqueue_retries_total</code> 等，见 <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/metrics/workqueue.go#L19-L29">workqueue.go:19-29</a>。</p>
+<h2 id="6-api-设计让-operator-的-api-可长期维护"><a class="header" href="#6-api-设计让-operator-的-api-可长期维护">6. API 设计：让 Operator 的 API 可长期维护</a></h2>
+<h3 id="61-先定边界再写字段"><a class="header" href="#61-先定边界再写字段">6.1 先定边界，再写字段</a></h3>
+<p>在写 <code>types.go</code> 之前，先回答：</p>
+<ol>
+<li>这个 CR 是<strong>声明式资源</strong>还是<strong>操作请求</strong>？如果是“执行一次、返回结果”，它可能不适合 CRD。</li>
+<li>它是 namespace 级还是 cluster 级？多租户场景默认 namespace 级。</li>
+<li>它的生命周期由谁负责？用户删除 CR 后，外部资源应该保留还是删除？</li>
+<li>哪些字段是用户意图，哪些是系统观察？两者必须分到 spec/status。</li>
+<li>哪些字段需要 HPA/调度器/其他生态组件识别？需要 scale subresource 或标准字段。</li>
+<li>哪些字段需要被 <code>kubectl get</code>/field selector 高效查询？需要 printer columns/selectableFields/labels。</li>
+</ol>
+<p>官方明确不建议把 CR 当数据存储：单个对象“超过几 kB”或“上千个对象”就不适合；也不要把终端用户数据、PII、大文件塞进 CR。见 <a href="https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#should-i-add-a-custom-resource-to-my-kubernetes-cluster">Should I add a custom resource to my Kubernetes cluster?</a>。</p>
+<h3 id="62-specstatus-与声明式命名"><a class="header" href="#62-specstatus-与声明式命名">6.2 spec/status 与声明式命名</a></h3>
+<p>API conventions 要求：</p>
+<ul>
+<li><code>spec</code> 是<strong>完整期望状态</strong>，用户写；</li>
+<li><code>status</code> 是<strong>最近观察到的实际状态</strong>，controller 写；</li>
+<li><code>spec</code> 字段用声明式语义，不要用 <code>doThis</code>/<code>start</code>/<code>stop</code> 这类命令式命名；</li>
+<li>同时有 spec/status 的对象，顶层不应再有其他非标准字段；</li>
+<li>主资源的 PUT/POST 必须忽略 status，status 通过 <code>/status</code> 子资源写。</li>
+</ul>
+<p>见 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">Spec and Status</a>。</p>
+<p>一个常见的错误是把“操作”塞进 spec：</p>
+<pre><code class="language-yaml"># 反例：这不是声明式 API
+spec:
+  action: restart
+  requestID: abc-123
+</code></pre>
+<p>更好的做法：</p>
+<ul>
+<li>用 <code>spec.paused</code>/<code>spec.suspend</code> 表达“期望暂停”；</li>
+<li>用 generation/annotation 表达“触发一次滚动”；</li>
+<li>复杂操作拆成独立 CR（如 <code>WidgetUpgrade</code>）或由 controller 内部状态机处理。</li>
+</ul>
+<h3 id="63-optionalrequired-与-pointer"><a class="header" href="#63-optionalrequired-与-pointer">6.3 optional/required 与 pointer</a></h3>
+<p>Kubernetes API conventions 对 optional/required 有明确规则：</p>
+<ul>
+<li>字段必须显式 optional 或 required；</li>
+<li>optional 字段用 pointer 或天然可 nil 的 map/slice，并加 <code>omitempty</code>；</li>
+<li>需要区分“未设置”和“零值”时，必须用 pointer；</li>
+<li>required 字段通常不用 pointer，除非零值是合法值。</li>
+</ul>
+<p>见 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#optional-vs-required">Optional vs. Required</a>。</p>
+<p>Kubebuilder 标记示例：</p>
+<pre><code class="language-go">type WidgetSpec struct {
+    // +kubebuilder:validation:MinLength=1
+    Image string `json:"image"`
+
+    // +optional
+    // +kubebuilder:default=1
+    // +kubebuilder:validation:Minimum=0
+    // +kubebuilder:validation:Maximum=100
+    Replicas *int32 `json:"replicas,omitempty"`
+
+    // +optional
+    // +kubebuilder:validation:Enum=RollingUpdate;Recreate
+    // +kubebuilder:default=RollingUpdate
+    Strategy string `json:"strategy,omitempty"`
+}
+</code></pre>
+<p>不要用 <code>int32</code> + <code>omitempty</code> 表达“可选但零值有意义”的字段：JSON 会把 0 省略，API Server 无法区分“用户写了 0”和“用户没写”。</p>
+<h3 id="64-conditions状态机的标准接口"><a class="header" href="#64-conditions状态机的标准接口">6.4 Conditions：状态机的标准接口</a></h3>
+<p><code>metav1.Condition</code> 是 Kubernetes 的标准条件类型：</p>
+<pre><code class="language-go">type Condition struct {
+    Type               string
+    Status             ConditionStatus // True/False/Unknown
+    ObservedGeneration int64
+    LastTransitionTime Time
+    Reason             string
+    Message            string
+}
+</code></pre>
+<p>字段定义见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apimachinery/pkg/apis/meta/v1/types.go#L1642-L1690">types.go:1642-1690</a>。</p>
+<p>生产约定：</p>
+<ul>
+<li>
+<p><strong>list type 必须是 map，key 是 type</strong>：</p>
+<pre><code class="language-go">// +listType=map
+// +listMapKey=type
+// +optional
+Conditions []metav1.Condition `json:"conditions,omitempty"`
+</code></pre>
+</li>
+<li>
+<p>用 <code>meta.SetStatusCondition</code> 更新，它只在 status 变化时更新 <code>LastTransitionTime</code>，避免每次 reconcile 都刷新时间戳。见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apimachinery/pkg/api/meta/conditions.go#L31-L68">conditions.go:31-68</a>。</p>
+</li>
+<li>
+<p><strong>第一次见到对象就设置条件</strong>，哪怕值是 <code>Unknown</code>；这样其他组件知道 controller 已经开始处理。见 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties">API conventions: Conditions</a>。</p>
+</li>
+<li>
+<p>条件类型描述“当前观察到的状态”，不要描述“正在进行的动作”。用 <code>Ready</code>/<code>Available</code>/<code>Degraded</code>，不要用 <code>Deploying</code>；长耗时过程可以用 <code>Progressing</code> + <code>Unknown</code>。</p>
+</li>
+<li>
+<p>顶层放一个汇总条件（通常是 <code>Ready</code>），细节放子条件；不要让消费者自己组合一堆布尔值。</p>
+</li>
+<li>
+<p><code>Reason</code> 是 CamelCase、稳定的程序标识；<code>Message</code> 是给人看的，不要包含随机数/时间戳。</p>
+</li>
+</ul>
+<h3 id="65-observedgeneration告诉用户我看到的是哪一版-spec"><a class="header" href="#65-observedgeneration告诉用户我看到的是哪一版-spec">6.5 <code>observedGeneration</code>：告诉用户“我看到的是哪一版 spec”</a></h3>
+<p><code>metadata.generation</code> 在 spec 变化时递增；controller 处理完后，把当时的 generation 写进 <code>status.observedGeneration</code>（或每个 condition 的 <code>observedGeneration</code>）。</p>
+<p>判定逻辑：</p>
+<pre><code class="language-go">if obj.Status.ObservedGeneration == obj.Generation {
+    // status 反映的是当前 spec
+}
+</code></pre>
+<p>Cluster API 的做法是：只有 Reconcile 成功时才设置 <code>status.observedGeneration</code>，失败时保留旧值，让用户知道“这一版还没处理完”。见 <a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/core/reconcilers/machine/machine_controller.go#L250-L263">machine_controller.go:250-263</a>。</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>不要只在 condition 里写 <code>observedGeneration</code> 而忘了顶层 <code>status.observedGeneration</code>。很多工具/用户先看顶层字段；两者都写最稳妥。</p>
+</blockquote>
+<h3 id="66-listmap-的-schema-语义"><a class="header" href="#66-listmap-的-schema-语义">6.6 List/Map 的 schema 语义</a></h3>
+<p>Kubernetes 的 SSA 和 patch 依赖 list/map 的拓扑：</p>
+<ul>
+<li><code>x-kubernetes-list-type: atomic</code>：整个 list 作为一个值，单 manager 拥有；</li>
+<li><code>set</code>：元素唯一，按值合并；</li>
+<li><code>map</code>：按 <code>x-kubernetes-list-map-keys</code> 合并，适合 conditions、env、volumeMounts 等。</li>
+</ul>
+<p>API conventions 要求所有 list 字段都设置 listType，并对 set/map 做唯一性校验。见 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#list-fields">List fields</a>。</p>
+<p>生产影响：</p>
+<ul>
+<li>conditions 用 <code>map</code> + key=type，多个 controller 可以各自更新自己的 condition 而不互相覆盖；</li>
+<li>如果 conditions 用了 <code>atomic</code>，任何一次 status 写入都会整体替换，容易丢条件；</li>
+<li>把 <code>atomic</code> 改成 <code>map</code>/<code>set</code> 时，API Server 无法推断已有字段的 ownership，SSA 可能不产生预期冲突；反向改动更危险。见 <a href="https://kubernetes.io/docs/reference/using-api/server-side-apply/#compatibility-across-topology-changes">Compatibility across topology changes</a>。</li>
+</ul>
+<h3 id="67-printer-columnsselectable-fieldsscale"><a class="header" href="#67-printer-columnsselectable-fieldsscale">6.7 Printer columns、selectable fields、scale</a></h3>
+<ul>
+<li><strong>Additional printer columns</strong>：让 <code>kubectl get widgets</code> 直接显示 <code>Ready</code>、<code>Age</code>、<code>Replicas</code> 等。列定义在 <code>spec.versions[].additionalPrinterColumns</code>。</li>
+<li><strong>Selectable fields</strong>：让 <code>kubectl get widgets --field-selector spec.color=green</code> 走 API Server 过滤，而不是客户端全量过滤。最多 8 个，字段必须是 string/boolean/integer，不能是 array/object。见 <a href="https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#field-selectors">Field selectors</a>。</li>
+<li><strong>Scale subresource</strong>：让 HPA 等按 scale 协议工作的组件识别 CR。<code>specReplicasPath</code>/<code>statusReplicasPath</code> 必须在 <code>.spec</code>/<code>.status</code> 下，且是简单 JSONPath。</li>
+</ul>
+<h3 id="68-版本策略从-v1alpha1-到-v1"><a class="header" href="#68-版本策略从-v1alpha1-到-v1">6.8 版本策略：从 v1alpha1 到 v1</a></h3>
+<p>推荐路径：</p>
+<ol>
+<li><strong>v1alpha1</strong>：快速迭代，允许 breaking change；明确标注不支持生产。</li>
+<li><strong>v1beta1</strong>：API 基本稳定，开始提供 conversion；至少保证 N-1 兼容。</li>
+<li><strong>v1</strong>：承诺兼容性；字段只增不删，语义不变；删除字段必须走新版本 + conversion。</li>
+</ol>
+<p>Kubernetes API 的兼容性规则见 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api_changes.md">API changes</a>。核心原则：</p>
+<ul>
+<li>同一版本内，<strong>只能加 optional 字段</strong>，不能改已有字段的类型/语义/默认值；</li>
+<li>删除/重命名字段 = 新版本 + conversion；</li>
+<li>枚举只能加值，不能删值；</li>
+<li>validation 只能放松或通过 ratcheting 渐进收紧；</li>
+<li>默认值变更要谨慎：它会改变读到的对象，可能让旧 controller 行为变化。</li>
+</ul>
+<h3 id="69-api-设计反模式"><a class="header" href="#69-api-设计反模式">6.9 API 设计反模式</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>反模式</th><th>问题</th><th>替代</th></tr>
+</thead>
+<tbody>
+<tr><td><code>spec.action: restart</code></td><td>命令式、不可重放、无法表达“已经完成”</td><td><code>spec.paused</code> / generation / 独立操作 CR</td></tr>
+<tr><td>把 status 当 spec 用</td><td>用户和 controller 互相覆盖</td><td>spec/status 分离 + <code>/status</code></td></tr>
+<tr><td>把大文件/日志/指标塞进 CR</td><td>etcd 压力、watch 放大、备份变慢</td><td>ConfigMap/Secret/对象存储/外部系统</td></tr>
+<tr><td>用 annotation 存核心状态</td><td>无法 schema 校验、无法被工具理解</td><td>status 字段 + conditions</td></tr>
+<tr><td>一个 CR 控制所有资源</td><td>单点、难扩展、错误隔离差</td><td>一个 CRD 一个 controller，必要时分层</td></tr>
+<tr><td>无界 list/map</td><td>CEL cost 爆炸、SSA 冲突、对象过大</td><td><code>maxItems</code>/<code>maxProperties</code> + 分页/子资源</td></tr>
+<tr><td>跨 namespace ownerReference</td><td>Kubernetes 禁止，GC 不工作</td><td>同 namespace ownerRef 或显式 finalizer</td></tr>
+<tr><td>未限定 finalizer 名</td><td>API Server 拒绝</td><td><code>example.com/finalizer</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="7-状态收敛reconcile-的正确形状"><a class="header" href="#7-状态收敛reconcile-的正确形状">7. 状态收敛：Reconcile 的正确形状</a></h2>
+<h3 id="71-一次-reconcile-的标准骨架"><a class="header" href="#71-一次-reconcile-的标准骨架">7.1 一次 Reconcile 的标准骨架</a></h3>
+<pre><code class="language-go">func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+    obj := &amp;examplev1.Widget{}
+    if err := r.Get(ctx, req.NamespacedName, obj); err != nil {
+        // 对象可能已经被删除：不是错误
+        return ctrl.Result{}, client.IgnoreNotFound(err)
+    }
+
+    // 1) 删除路径优先
+    if !obj.DeletionTimestamp.IsZero() {
+        return r.reconcileDelete(ctx, obj)
+    }
+
+    // 2) 先确保 finalizer 存在，再做任何外部副作用
+    if !controllerutil.ContainsFinalizer(obj, widgetFinalizer) {
+        base := obj.DeepCopy()
+        controllerutil.AddFinalizer(obj, widgetFinalizer)
+        if err := r.Patch(ctx, obj, client.MergeFrom(base)); err != nil {
+            return ctrl.Result{}, err
+        }
+        return ctrl.Result{}, nil
+    }
+
+    // 3) 记录进入时的状态，用于最后 diff + patch
+    before := obj.DeepCopy()
+
+    // 4) 观察实际状态（子资源、外部系统）
+    deploy, err := r.observeDeployment(ctx, obj)
+    if err != nil {
+        return r.fail(ctx, obj, before, "ObserveFailed", err)
+    }
+
+    // 5) 收敛
+    if err := r.reconcileDeployment(ctx, obj, deploy); err != nil {
+        return r.fail(ctx, obj, before, "ReconcileFailed", err)
+    }
+
+    // 6) 报告状态：只有成功才推进 observedGeneration
+    obj.Status.ObservedGeneration = obj.Generation
+    meta.SetStatusCondition(&amp;obj.Status.Conditions, metav1.Condition{
+        Type:               "Ready",
+        Status:             metav1.ConditionTrue,
+        Reason:             "Reconciled",
+        Message:            "Widget is ready",
+        ObservedGeneration: obj.Generation,
+    })
+
+    if err := r.patchStatus(ctx, obj, before); err != nil {
+        return ctrl.Result{}, err
+    }
+    return ctrl.Result{}, nil
+}
+</code></pre>
+<p>这个骨架体现了四个原则：</p>
+<ol>
+<li><strong>删除路径优先</strong>：<code>deletionTimestamp</code> 非零时，只做清理，不再创建新资源。</li>
+<li><strong>finalizer 先于副作用</strong>：避免“对象已被删除，但外部资源刚创建”的泄漏窗口。</li>
+<li><strong>失败也要写状态</strong>：<code>fail</code> 里设置 <code>Ready=False</code>、<code>Reason</code>、<code>Message</code>，并保留 <code>observedGeneration</code> 不变。</li>
+<li><strong>成功才推进 observedGeneration</strong>：用户能区分“处理完了”和“还在处理/失败”。</li>
+</ol>
+<h3 id="72-失败分类transientterminalwait"><a class="header" href="#72-失败分类transientterminalwait">7.2 失败分类：transient、terminal、wait</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>失败类型</th><th>例子</th><th>返回方式</th><th>用户看到</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Transient</strong></td><td>API 超时、409 冲突、外部服务 5xx</td><td><code>return ctrl.Result{}, err</code></td><td>rate limiter 退避重试；条件可保持 <code>Unknown</code>/<code>False</code></td></tr>
+<tr><td><strong>Terminal</strong></td><td>spec 非法、引用的 CRD 不存在且不会出现</td><td><code>reconcile.TerminalError(err)</code></td><td>不重试；条件 <code>False</code> + 明确 reason</td></tr>
+<tr><td><strong>Wait</strong></td><td>等待 Deployment ready、等待外部资源创建</td><td><code>RequeueAfter: 30*time.Second</code></td><td>条件 <code>Progressing=True</code>/<code>Ready=False</code></td></tr>
+<tr><td><strong>Success</strong></td><td>收敛完成</td><td><code>return ctrl.Result{}, nil</code></td><td>条件 <code>Ready=True</code></td></tr>
+</tbody>
+</table>
+</div>
+<p><code>TerminalError</code> 的语义是“不再重试，但仍然记录日志和指标”，见 <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/reconcile/reconcile.go#L174-L190">reconcile.go:174-190</a>。</p>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>最常见的热循环：spec 非法或引用的资源永远不存在，Reconcile 每次都返回 error，workqueue 无限重试。对这类错误必须用 <code>TerminalError</code> 或写条件后返回 <code>nil</code>，否则会把 apiserver 和日志打爆。</p>
+</blockquote>
+<h3 id="73-状态冲突status-写入失败不是业务失败"><a class="header" href="#73-状态冲突status-写入失败不是业务失败">7.3 状态冲突：status 写入失败不是业务失败</a></h3>
+<p>status 是共享对象的一部分，多个 controller/用户可能同时写。处理原则：</p>
+<ul>
+<li>用 <code>Status().Patch</code> 而不是 <code>Status().Update</code>，缩小冲突窗口；</li>
+<li>用 <code>client.MergeFromWithOptimisticLock</code> 或带 <code>resourceVersion</code> 的 patch，冲突时重新 GET；</li>
+<li>409 冲突是<strong>可重试的 transient 错误</strong>，不要把它当成“业务失败”写进 <code>Degraded</code>；</li>
+<li>冲突重试不应无限循环；有限次退避后让队列重试。</li>
+</ul>
+<p>Cluster API 的 patch helper 对 conditions 做了 5 次指数退避 + optimistic lock，冲突时 requeue：</p>
+<pre><code class="language-go">backoff := wait.Backoff{Steps: 5, Duration: 100 * time.Millisecond, Jitter: 1.0}
+return wait.ExponentialBackoff(backoff, func() (bool, error) {
+    latest := ...
+    if err := h.client.Get(ctx, key, latest); err != nil { return false, err }
+    conditionsPatch := client.MergeFromWithOptions(
+        latest.DeepCopyObject().(client.Object),
+        client.MergeFromWithOptimisticLock{},
+    )
+    // apply condition diff to latest ...
+    err := h.client.Status().Patch(ctx, latest, conditionsPatch)
+    if apierrors.IsConflict(err) { return false, nil } // retry
+    ...
+})
+</code></pre>
+<p>见 <a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/util/patch/patch.go#L340-L385">patch.go:340-385</a>。</p>
+<h3 id="74-依赖顺序crdwebhook证书operand"><a class="header" href="#74-依赖顺序crdwebhook证书operand">7.4 依赖顺序：CRD、webhook、证书、Operand</a></h3>
+<p>Operator 常见的启动/收敛顺序：</p>
+<ol>
+<li><strong>CRD</strong> 安装并 <code>Established</code>；</li>
+<li><strong>webhook 证书</strong>（Secret/ cert-manager）就绪；</li>
+<li><strong>conversion/validating webhook</strong> Service/Endpoints 就绪；</li>
+<li><strong>controller manager</strong> 启动，cache sync；</li>
+<li><strong>Operand</strong> 资源创建；</li>
+<li><strong>Operand</strong> ready，CR 条件 <code>Ready=True</code>。</li>
+</ol>
+<p>控制器里不要假设“CRD 一定已安装”。controller-runtime 的 source 在 cache sync 失败时会明确提示 CRD 应先安装；如果 CRD 未安装，controller 会一直重试启动，表现为 <code>CrashLoopBackOff</code>/启动失败。见 <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/internal/source/kind.go#L90-L100">kind.go:90-100</a>。</p>
+<p>部署顺序上：</p>
+<ul>
+<li>用 <code>kubectl wait --for=condition=Established crd/widgets.example.com</code> 等 CRD 可用；</li>
+<li>Helm 的 <code>crds/</code> 目录只在首次安装时创建 CRD，<strong>升级不会更新 CRD</strong>；需要单独的 CRD upgrade Job/流程；</li>
+<li>OLM 通过 CSV 的 <code>owned</code> CRD 管理安装/升级，但仍需注意 CRD 版本与 conversion webhook 的顺序。</li>
+</ul>
+<h3 id="75-pausesuspend不要和用户自动伸缩器打架"><a class="header" href="#75-pausesuspend不要和用户自动伸缩器打架">7.5 Pause/Suspend：不要和用户/自动伸缩器打架</a></h3>
+<p>如果 CR 支持 <code>spec.paused</code>/<code>spec.suspend</code>：</p>
+<ul>
+<li>进入 paused 时，停止创建/更新新资源，但<strong>不要停止状态上报</strong>；</li>
+<li>设置 <code>Paused=True</code> 条件，保留其他条件；</li>
+<li>不要删除已有资源；恢复时重新观察并收敛；</li>
+<li>对 HPA 管理的 replicas，paused 不应把 replicas 改回去。</li>
+</ul>
+<p>Cluster API 在 Reconcile 早期调用 <code>paused.EnsurePausedCondition</code>，如果 paused 就返回，不再继续；这是可借鉴的模式。见 <a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/core/reconcilers/machine/machine_controller.go#L229-L231">machine_controller.go:229-231</a>。</p>
+<h3 id="76-drift如何发现有人手动改了"><a class="header" href="#76-drift如何发现有人手动改了">7.6 Drift：如何发现“有人手动改了”</a></h3>
+<p>三种机制：</p>
+<ol>
+<li><strong>watch owned resources</strong>：controller-runtime <code>Owns(&amp;appsv1.Deployment{})</code>，子资源变化会 enqueue owner；</li>
+<li><strong>周期性 reconcile</strong>：<code>RequeueAfter</code> 或 cache resync；resync 会发同 RV Update，predicate 可能过滤；</li>
+<li><strong>对账外部系统</strong>：定时 list 外部资源，按标签/UID 比较。</li>
+</ol>
+<blockquote>
+<p><code>Owns</code> 只负责“子资源事件 → 找到 ownerReference → 把 owner 入队”。它<strong>不做 diff</strong>，也不保证“有变化就更新”；默认只看 <code>controller: true</code> 的 owner。见 <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/builder/controller.go#L333-L345">builder/controller.go:333-345</a> 和 <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/handler/enqueue_owner.go#L42-L83">enqueue_owner.go:42-83</a>。是否真的需要更新，由 Reconcile 里的 diff 决定。</p>
+</blockquote>
+<h4 id="761-为什么期望-spec和-live-spec-一定会-diff"><a class="header" href="#761-为什么期望-spec和-live-spec-一定会-diff">7.6.1 为什么“期望 spec”和 live spec 一定会 diff</a></h4>
+<p>因为 <strong>API Server 会对创建的对象做默认值填充</strong>。你提交的 <code>Deployment</code> 可能只写了 <code>image</code> 和 <code>replicas</code>，但创建后 etcd 里的对象会多出很多字段：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>字段</th><th>API Server 默认值</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Deployment.spec.replicas</code></td><td><code>1</code></td></tr>
+<tr><td><code>Deployment.spec.strategy.type</code></td><td><code>RollingUpdate</code></td></tr>
+<tr><td><code>Deployment.spec.strategy.rollingUpdate.maxUnavailable</code> / <code>maxSurge</code></td><td><code>25%</code></td></tr>
+<tr><td><code>Deployment.spec.revisionHistoryLimit</code></td><td><code>10</code></td></tr>
+<tr><td><code>Deployment.spec.progressDeadlineSeconds</code></td><td><code>600</code></td></tr>
+<tr><td><code>PodSpec.restartPolicy</code></td><td><code>Always</code></td></tr>
+<tr><td><code>PodSpec.dnsPolicy</code></td><td><code>ClusterFirst</code></td></tr>
+<tr><td><code>PodSpec.schedulerName</code></td><td><code>default-scheduler</code></td></tr>
+<tr><td><code>PodSpec.terminationGracePeriodSeconds</code></td><td><code>30</code></td></tr>
+<tr><td><code>Container.imagePullPolicy</code></td><td><code>latest</code> → <code>Always</code>，其他 tag → <code>IfNotPresent</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>代码依据：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/apis/apps/v1/defaults.go#L38-L73">apps/v1/defaults.go:38-73</a>、<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/apis/core/v1/defaults.go#L243-L273">core/v1/defaults.go:243-273</a>、<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/apis/core/v1/defaults.go#L82-L91">core/v1/defaults.go:82-91</a>。</p>
+<p>所以下面这些写法都会“永远有 diff”：</p>
+<pre><code class="language-go">// 反例 1：拿“只写了部分字段的 desired”和 live 直接比
+if !reflect.DeepEqual(desired.Spec, live.Spec) {
+    r.Update(ctx, desired) // 可能把默认值/别人写的字段覆盖掉
+}
+
+// 反例 2：从零构造一个完整对象再 Update
+d := &amp;appsv1.Deployment{ObjectMeta: ..., Spec: appsv1.DeploymentSpec{...}}
+r.Update(ctx, d) // 未写的字段会以零值提交，可能重置默认值
+</code></pre>
+<p>更隐蔽的是 <code>metadata</code>：<code>resourceVersion</code>、<code>uid</code>、<code>creationTimestamp</code>、<code>generation</code>、<code>managedFields</code> 在每次写入后都可能变化；<code>status</code> 也会被子控制器/节点不断更新。<strong>比较整个对象没有意义</strong>。</p>
+<h4 id="762-处理方式-aserver-side-apply推荐"><a class="header" href="#762-处理方式-aserver-side-apply推荐">7.6.2 处理方式 A：Server-Side Apply（推荐）</a></h4>
+<p>SSA 的模型是“我只声明我拥有的字段”，不需要 GET，也不需要自己做 diff：</p>
+<pre><code class="language-go">func (r *Reconciler) applyDeployment(ctx context.Context, w *examplev1.Widget) error {
+    spec := map[string]any{
+        "selector": map[string]any{"matchLabels": map[string]any{"app": w.Name}},
+        // 真实代码必须构造完整的 PodTemplateSpec；这里只展示 apply 的形状
+        "template": podTemplate(w),
+    }
+    if w.Spec.Replicas != nil {
+        spec["replicas"] = *w.Spec.Replicas
+    }
+
+    desired := map[string]any{
+        "apiVersion": "apps/v1",
+        "kind":       "Deployment",
+        "metadata": map[string]any{
+            "name":      w.Name,
+            "namespace": w.Namespace,
+            "labels":    map[string]any{"app.kubernetes.io/instance": w.Name},
+        },
+        "spec": spec,
+    }
+    u := &amp;unstructured.Unstructured{Object: desired}
+    return r.Apply(ctx,
+        client.ApplyConfigurationFromUnstructured(u),
+        client.FieldOwner("widget-controller"),
+        client.ForceOwnership,
+    )
+}
+</code></pre>
+<p>为什么它能解决默认值 diff：</p>
+<ul>
+<li>apply 对象里<strong>没有出现的字段，不会被这个 field manager 拥有</strong>；API Server 填的默认值不会和你的 manager 冲突；</li>
+<li>不需要“desired vs live”全量比较，API Server 按 <code>managedFields</code> 合并；</li>
+<li>对同一个 apply 配置重复执行是幂等的；</li>
+<li>字段所有权清晰：<code>kubectl get --show-managed-fields</code> 能看到谁拥有哪个字段。</li>
+</ul>
+<p>官方对控制器的建议是：<strong>对自己拥有的对象，通常应该 force conflicts</strong>，因为控制器无法交互式解决冲突；但<strong>不要对用户/HPA 拥有的字段盲目 force</strong>。见 <a href="https://kubernetes.io/docs/reference/using-api/server-side-apply/#using-server-side-apply-in-a-controller">Using Server-Side Apply in a controller</a>。</p>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>SSA 的“省略”有代价：apply 配置必须包含<strong>你拥有的全部字段</strong>；如果你之前 apply 了 <code>spec.replicas</code>，这次省略它，且没有其他 owner，API Server 会把它删除/重置。不要用“只写变化字段”的思维写 SSA。</p>
+</blockquote>
+<h4 id="763-处理方式-bget-live只改自己拥有的字段再-patch"><a class="header" href="#763-处理方式-bget-live只改自己拥有的字段再-patch">7.6.3 处理方式 B：GET live，只改自己拥有的字段，再 Patch</a></h4>
+<p>如果暂时不能上 SSA，最稳的老办法是：</p>
+<ol>
+<li>GET 最新 live 对象（带默认值、带别人写的字段）；</li>
+<li><code>DeepCopy</code> 一份 before；</li>
+<li>只改 controller 拥有的字段；</li>
+<li>比较 <strong>before vs after</strong>，而不是 desired vs live；</li>
+<li>用 <code>Patch</code>（MergeFrom）而不是全量 <code>Update</code>。</li>
+</ol>
+<pre><code class="language-go">live := &amp;appsv1.Deployment{}
+if err := r.Get(ctx, key, live); err != nil {
+    return client.IgnoreNotFound(err)
+}
+before := live.DeepCopy()
+
+live.Spec.Replicas = desired.Replicas
+live.Spec.Template = desired.Template
+live.Labels = mergeOwnedLabels(live.Labels, desired.Labels)
+
+if apiequality.Semantic.DeepEqual(before, live) {
+    return nil // 没有变化，不写
+}
+return r.Patch(ctx, live, client.MergeFrom(before))
+</code></pre>
+<p>这样默认值会留在 live 里，不会被零值覆盖；比较的也是“我改前/改后”，不会因为 API Server 填了 <code>strategy</code> 而误判。</p>
+<p>controller-runtime 的 <code>CreateOrUpdate</code> 已经帮你做了 GET + mutate，但它的注释明确警告：<strong>如果 MutateFn 把有默认值的字段重置为零值，它会永远 Update</strong>（例如把 <code>Deployment.Spec.Replicas</code> 设成 <code>nil</code>，而 live 里默认是 1）。见 <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/controller/controllerutil/controllerutil.go#L297-L319">controllerutil.go:297-319</a>。</p>
+<h4 id="764-处理方式-c只比较-owned-字段deepderivative"><a class="header" href="#764-处理方式-c只比较-owned-字段deepderivative">7.6.4 处理方式 C：只比较 owned 字段（DeepDerivative）</a></h4>
+<p>如果只是判断“我关心的字段是否已经满足”，可以比较 desired 的非空字段是否是 live 的子集：</p>
+<pre><code class="language-go">if apiequality.Semantic.DeepDerivative(desired.Spec, live.Spec) {
+    // desired 中设置的非空字段，在 live 中都有相同值
+}
+</code></pre>
+<p><code>DeepDerivative</code> 的语义是：<strong>a1 中的 unset 字段不比较</strong>；unset 包括 nil pointer、空 string、空 slice/map。它适合“desired 只包含部分字段”的场景。见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apimachinery/third_party/forked/golang/reflect/deep_equal.go#L419-L433">deep_equal.go:419-433</a>。</p>
+<p>但要注意：</p>
+<ul>
+<li>它<strong>不忽略零值 int/bool</strong>；<code>replicas: 0</code> 会被当作真实值比较（这通常是对的，因为 0 是“缩到零”的合法意图）；</li>
+<li>它无法表达“把字段清空”：空 string/slice/map 被视为 unset，不会产生 diff；这种场景要显式 patch/SSA 删除；</li>
+<li>它只适合“读判断”，不适合“写回”；写回仍然要 GET live + 只改 owned 字段，或 SSA。</li>
+</ul>
+<h4 id="765-选择建议"><a class="header" href="#765-选择建议">7.6.5 选择建议</a></h4>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>场景</th><th>建议</th></tr>
+</thead>
+<tbody>
+<tr><td>新 controller，字段 ownership 清晰</td><td><strong>SSA</strong>：只 apply owned 字段，force conflicts</td></tr>
+<tr><td>老代码/需要兼容默认值</td><td>GET live → 只改 owned 字段 → 比较 before/after → Patch</td></tr>
+<tr><td>只判断“是否需要处理”</td><td><code>DeepDerivative(desired, live)</code> 或显式 owned-field diff</td></tr>
+<tr><td>全量 <code>Update</code> 从零构造的对象</td><td><strong>避免</strong>；容易覆盖默认值和别人的字段</td></tr>
+<tr><td>字段由 HPA/VPA/用户管理</td><td>不要拥有/force；用 SSA ownership 划分或显式禁用</td></tr>
+<tr><td>需要清空字段</td><td>显式 patch/SSA 删除；不要依赖 <code>DeepDerivative</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>注意：</p>
+<ul>
+<li>ownerReference 只保证“删除时级联”，不保证“子资源被改后自动修复”；修复靠 Reconcile。</li>
+<li>如果子资源被用户改成“不属于 controller”的状态，先判断是否应该接管；不要在未确认 ownership 的情况下强行覆盖。</li>
+<li>对 autoscaler 管理的字段（如 HPA 的 <code>replicas</code>），用 SSA field ownership 或显式禁用对应字段来避免冲突。</li>
+<li><code>Owns</code> 会对子资源的<strong>所有</strong> update 触发（包括 status 变化）；如果 status 更新很频繁，考虑用 predicate 过滤，避免无意义的 Reconcile。</li>
+</ul>
+<h3 id="77-多步操作把进度写进-status"><a class="header" href="#77-多步操作把进度写进-status">7.7 多步操作：把进度写进 status</a></h3>
+<p>复杂 Operator（升级、扩缩容、故障切换）通常需要多步、跨多次 Reconcile：</p>
+<ul>
+<li>在 status 里记录 <code>phase</code>/<code>currentStep</code>/<code>lastTransitionTime</code>；</li>
+<li>每一步都幂等，失败可从当前 step 重试；</li>
+<li>不要用内存变量保存进度；controller 重启后必须能从 status 恢复；</li>
+<li>步骤切换时写条件（<code>Progressing=True</code> + <code>Reason</code>），让用户知道卡在哪；</li>
+<li>对“不可逆”步骤（删数据、切主）先做前置检查，再执行，并记录审计事件。</li>
+</ul>
+<h2 id="8-幂等为什么重试是常态"><a class="header" href="#8-幂等为什么重试是常态">8. 幂等：为什么重试是常态</a></h2>
+<h3 id="81-幂等的定义"><a class="header" href="#81-幂等的定义">8.1 幂等的定义</a></h3>
+<p>在 Operator 语境里，幂等不是“函数返回相同值”，而是：</p>
+<blockquote>
+<p>对同一个期望状态，Reconcile 执行 1 次和执行 N 次，最终集群/外部系统的状态一致，且不会产生重复资源、重复扣费、重复通知。</p>
+</blockquote>
+<p>Kubernetes 的 API 本身提供了两层幂等基础：</p>
+<ul>
+<li><strong>name idempotency</strong>：POST 同名对象返回 409 <code>AlreadyExists</code>；见 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#idempotency">API conventions: Idempotency</a>。</li>
+<li><strong>optimistic concurrency</strong>：update 带旧 <code>resourceVersion</code> 返回 409，客户端 GET 后重试；见 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency">Concurrency Control and Consistency</a>。</li>
+</ul>
+<h3 id="82-create409-不是错误"><a class="header" href="#82-create409-不是错误">8.2 Create：409 不是错误</a></h3>
+<pre><code class="language-go">err := r.Create(ctx, desired)
+switch {
+case err == nil:
+    return nil
+case apierrors.IsAlreadyExists(err):
+    // 可能是上一次 Reconcile 已经创建成功，但状态没写回
+    current := &amp;appsv1.Deployment{}
+    if err := r.Get(ctx, key, current); err != nil {
+        return err
+    }
+    return r.adoptOrVerify(ctx, current, desired)
+default:
+    return err
+}
+</code></pre>
+<p>关键点：</p>
+<ul>
+<li><strong>不要</strong>把 <code>AlreadyExists</code> 当成失败；它往往说明“上一次已经做了一半”。</li>
+<li>创建前用确定性名字（owner name + UID / hash），不要用随机名；否则重试会产生重复资源。</li>
+<li>如果必须用 <code>GenerateName</code>，遇到 409 要重试生成，而不是假设成功。</li>
+<li>创建后立刻把外部 ID/状态写回 status；即使写回失败，下一次也能通过“名字/标签”找回。</li>
+</ul>
+<h3 id="83-updateread-modify-write-与-ssa"><a class="header" href="#83-updateread-modify-write-与-ssa">8.3 Update：read-modify-write 与 SSA</a></h3>
+<p><strong>方式 A：read-modify-write + resourceVersion</strong></p>
+<pre><code class="language-go">for {
+    current := &amp;appsv1.Deployment{}
+    if err := r.Get(ctx, key, current); err != nil { return err }
+    if equal(current.Spec, desired.Spec) { return nil }
+    current.Spec = desired.Spec
+    err := r.Update(ctx, current)
+    if apierrors.IsConflict(err) { continue } // 重新 GET
+    return err
+}
+</code></pre>
+<p>适合字段少、需要精确控制整个对象的场景。缺点是容易和其他 manager 冲突，且可能覆盖别人写的字段。</p>
+<p><strong>方式 B：Server-Side Apply（推荐用于“我拥有这些字段”）</strong></p>
+<p>SSA 的语义是“提交我的完整意图”，API Server 按 field manager 合并：</p>
+<ul>
+<li>不需要先 GET；</li>
+<li>不需要 <code>resourceVersion</code>；</li>
+<li>冲突返回 409，<code>force</code> 可以接管；</li>
+<li>删除字段 = 从 apply 配置里去掉，且没有其他 owner 时才会删除。</li>
+</ul>
+<p>官方对控制器的建议是：<strong>对自己拥有的对象，通常应该 force conflicts</strong>，因为控制器无法交互式解决冲突。见 <a href="https://kubernetes.io/docs/reference/using-api/server-side-apply/#using-server-side-apply-in-a-controller">Using Server-Side Apply in a controller</a>。</p>
+<pre><code class="language-go">func (r *Reconciler) applyDeployment(ctx context.Context, w *examplev1.Widget) error {
+    desired := &amp;appsv1.Deployment{
+        TypeMeta: metav1.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"},
+        ObjectMeta: metav1.ObjectMeta{
+            Name:      w.Name,
+            Namespace: w.Namespace,
+            Labels:    map[string]string{"app.kubernetes.io/instance": w.Name},
+        },
+        Spec: appsv1.DeploymentSpec{
+            // 省略 selector/template；真实代码必须完整
+        },
+    }
+    u, err := runtime.DefaultUnstructuredConverter.ToUnstructured(desired)
+    if err != nil {
+        return err
+    }
+    return r.Apply(ctx,
+        client.ApplyConfigurationFromUnstructured(&amp;unstructured.Unstructured{Object: u}),
+        client.FieldOwner("widget-controller"),
+        client.ForceOwnership,
+    )
+}
+</code></pre>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>不要对“用户拥有的字段”盲目 force。例如 HPA 拥有 <code>spec.replicas</code>，controller 也 force 就会和 HPA 打架。正确做法是：controller 只 apply 自己拥有的字段；需要接管时用 ownership transfer 流程（先共享 ownership，再让原 owner 移除字段）。见 <a href="https://kubernetes.io/docs/reference/using-api/server-side-apply/#transferring-ownership">Transferring ownership</a>。</p>
+</blockquote>
+<h3 id="84-外部副作用真正的难点"><a class="header" href="#84-外部副作用真正的难点">8.4 外部副作用：真正的难点</a></h3>
+<p>Kubernetes 资源可以靠 409/SSA 幂等，外部系统（云 API、数据库、SaaS）不一定。生产模式：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>模式</th><th>做法</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>确定性名字</strong></td><td>外部资源名 = <code>&lt;owner&gt;-&lt;uid&gt;</code> 或 <code>&lt;owner&gt;-&lt;hash&gt;</code>；重试不会新建</td></tr>
+<tr><td><strong>幂等键</strong></td><td>创建请求带 <code>Idempotency-Key</code>/<code>client token</code>；服务端保证同一 key 只创建一次</td></tr>
+<tr><td><strong>标签/所有权标记</strong></td><td>外部资源打上 owner UID、namespace、name 标签；创建前先 list by tag</td></tr>
+<tr><td><strong>先观察后创建</strong></td><td>先查询“是否已存在”，再决定 create；不要盲目 create</td></tr>
+<tr><td><strong>记录外部 ID</strong></td><td>创建成功后把 ID 写进 status；下次优先按 ID 查</td></tr>
+<tr><td><strong>两阶段状态</strong></td><td>先写 <code>Creating</code> + 幂等键，再调用；成功后写 <code>Created</code> + ID；失败可重试</td></tr>
+<tr><td><strong>孤儿清理</strong></td><td>定期扫描“有标签但 owner 不存在”的外部资源，确认后删除</td></tr>
+</tbody>
+</table>
+</div>
+<p>一个典型的失败窗口：</p>
+<pre><code>Reconcile #1: 创建外部资源成功 -&gt; 写 status 前崩溃
+Reconcile #2: 看不到 status 里的 ID
+</code></pre>
+<p>如果名字是确定性的，第二次可以按名字查到；如果名字随机，就会重复创建。<strong>确定性名字 + 标签</strong>是最便宜、最可靠的兜底。</p>
+<h3 id="85-删除也幂等"><a class="header" href="#85-删除也幂等">8.5 删除也幂等</a></h3>
+<pre><code class="language-go">if err := r.Delete(ctx, child); err != nil &amp;&amp; !apierrors.IsNotFound(err) {
+    return err
+}
+// NotFound 视为删除成功
+</code></pre>
+<p>删除外部资源同理：</p>
+<ul>
+<li>外部 API 返回 404 → 视为成功；</li>
+<li>重复删除同一个资源不应报错；</li>
+<li>只有确认“外部资源不存在或已标记删除”后，才移除 finalizer；</li>
+<li>如果外部资源是异步删除（比如云盘有 <code>deleting</code> 状态），要轮询到终态再移除 finalizer。</li>
+</ul>
+<h3 id="86-状态与事件的幂等"><a class="header" href="#86-状态与事件的幂等">8.6 状态与事件的幂等</a></h3>
+<ul>
+<li><strong>status 重算而不是累加</strong>：<code>status.replicas = len(pods)</code>，不要 <code>status.replicas++</code>。</li>
+<li><strong>事件去重</strong>：Event 是 best-effort，不要用事件驱动状态；同一次 Reconcile 不要重复发相同事件。</li>
+<li><strong>条件更新用 <code>SetStatusCondition</code></strong>：只有 status 变化才更新 <code>LastTransitionTime</code>，避免 status 每次 reconcile 都变，引发额外 watch 事件。</li>
+<li><strong>不要每次 reconcile 都写 status</strong>：先 diff，再 patch；否则会形成“写 status → watch → reconcile → 写 status”的自激循环。</li>
+</ul>
+<h2 id="9-清理ownerreferencefinalizer级联删除"><a class="header" href="#9-清理ownerreferencefinalizer级联删除">9. 清理：OwnerReference、Finalizer、级联删除</a></h2>
+<h3 id="91-两种机制解决两个不同问题"><a class="header" href="#91-两种机制解决两个不同问题">9.1 两种机制，解决两个不同问题</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>机制</th><th>解决什么</th><th>不解决什么</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>OwnerReference + GC</strong></td><td>owner 删除后，自动删除其 dependent（namespaced owner 仅限同 namespace）</td><td>不处理外部资源；不跨 namespace；默认不保证顺序</td></tr>
+<tr><td><strong>Finalizer</strong></td><td>删除前执行异步清理（外部资源、数据备份、通知）</td><td>不自动触发；需要 controller 实现；可能卡住删除</td></tr>
+</tbody>
+</table>
+</div>
+<p>生产 Operator 通常<strong>两者都用</strong>：</p>
+<ul>
+<li>对 Kubernetes 内的子资源，用 ownerReference，让 GC 兜底；</li>
+<li>对外部资源/需要顺序的清理，用 finalizer；</li>
+<li>对跨 namespace 的资源，不能用 ownerReference，只能用 finalizer + 标签。</li>
+</ul>
+<h3 id="92-ownerreference-的规则"><a class="header" href="#92-ownerreference-的规则">9.2 OwnerReference 的规则</a></h3>
+<pre><code class="language-go">if err := controllerutil.SetControllerReference(widget, deploy, r.Scheme); err != nil {
+    return err
+}
+</code></pre>
+<p><code>SetControllerReference</code> 会设置 <code>controller: true</code> 和 <code>blockOwnerDeletion: true</code>。规则：</p>
+<ul>
+<li><strong>同 namespace</strong>：namespaced dependent 可以引用同 namespace 的 namespaced owner，也可以引用 cluster-scoped owner；</li>
+<li><strong>cluster-scoped dependent</strong>：只能引用 cluster-scoped owner；</li>
+<li><strong>跨 namespace</strong>：禁止；GC 会把无效引用当作“owner 不存在”，可能删除 dependent；见 <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/owners-dependents/">Owners and Dependents</a>；</li>
+<li><code>blockOwnerDeletion=true</code> 只对 foreground deletion 有意义；它要求调用者有 owner 的 delete 权限。</li>
+</ul>
+<h3 id="93-级联删除的三种模式"><a class="header" href="#93-级联删除的三种模式">9.3 级联删除的三种模式</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>模式</th><th>行为</th><th>使用场景</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Background</strong>（默认）</td><td>立即删除 owner，GC 后台删除 dependents</td><td>大多数场景</td></tr>
+<tr><td><strong>Foreground</strong></td><td>owner 进入 <code>deletionTimestamp</code>，加 <code>foregroundDeletion</code> finalizer；先删 dependents，再删 owner</td><td>需要“子资源先消失”的顺序</td></tr>
+<tr><td><strong>Orphan</strong></td><td>删除 owner，保留 dependents（移除 ownerReference）</td><td>迁移/保留数据</td></tr>
+</tbody>
+</table>
+</div>
+<p>见 <a href="https://kubernetes.io/docs/concepts/architecture/garbage-collection/#cascading-deletion">Cascading deletion</a>。</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Foreground deletion 只阻塞“在 GC cache 中、且 <code>blockOwnerDeletion=true</code>”的 dependents；GC cache 可能因为 list/watch 失败或并发创建而漏掉对象。不要把 foreground 当作严格的事务边界。</p>
+</blockquote>
+<h3 id="94-finalizer-的机制"><a class="header" href="#94-finalizer-的机制">9.4 Finalizer 的机制</a></h3>
+<p>删除一个带 finalizer 的对象时：</p>
+<ol>
+<li>API Server 设置 <code>metadata.deletionTimestamp</code>；</li>
+<li>对象不会被删除，返回 202；</li>
+<li>controller 观察到 <code>deletionTimestamp</code>，执行清理；</li>
+<li>controller 从 <code>finalizers</code> 中移除自己的条目；</li>
+<li>当 <code>finalizers</code> 为空，对象被删除。</li>
+</ol>
+<p>见 <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/">Finalizers</a>。</p>
+<p>关键限制：</p>
+<ul>
+<li><strong>删除开始后不能添加新 finalizer</strong>，只能移除已有条目；</li>
+<li>finalizer 名称必须是 qualified name（<code>example.com/name</code>），否则 API Server 拒绝；见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apimachinery/pkg/api/validation/objectmeta.go#L116-L125">objectmeta.go:116-125</a>；</li>
+<li>多个 finalizer 之间<strong>没有顺序保证</strong>；每个 controller 只负责自己的；</li>
+<li>不能“强制删除”跳过 finalizer；只能删除 finalizer 条目（危险）。</li>
+</ul>
+<h3 id="95-finalizer-的正确写法"><a class="header" href="#95-finalizer-的正确写法">9.5 Finalizer 的正确写法</a></h3>
+<p><strong>第一步：在创建外部资源之前加 finalizer。</strong></p>
+<pre><code class="language-go">if !controllerutil.ContainsFinalizer(obj, finalizerName) {
+    base := obj.DeepCopy()
+    controllerutil.AddFinalizer(obj, finalizerName)
+    if err := r.Patch(ctx, obj, client.MergeFrom(base)); err != nil {
+        return ctrl.Result{}, err
+    }
+    return ctrl.Result{}, nil
+}
+</code></pre>
+<p>Cluster API 的 <code>EnsureFinalizer</code> 就是这个模式，并且明确注释“Finalizers can only be added when the deletionTimestamp is not set”。见 <a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/util/finalizers/finalizers.go#L28-L49">finalizers.go:28-49</a>。</p>
+<p><strong>第二步：删除路径只做清理，不创建新资源。</strong></p>
+<pre><code class="language-go">func (r *Reconciler) reconcileDelete(ctx context.Context, obj *examplev1.Widget) (ctrl.Result, error) {
+    if err := r.deleteExternal(ctx, obj); err != nil {
+        return ctrl.Result{}, err // 保留 finalizer，等待重试
+    }
+    base := obj.DeepCopy()
+    controllerutil.RemoveFinalizer(obj, widgetFinalizer)
+    return ctrl.Result{}, r.Patch(ctx, obj, client.MergeFrom(base))
+}
+</code></pre>
+<p><strong>第三步：清理逻辑必须幂等，NotFound 视为成功。</strong></p>
+<h3 id="96-跨-namespace-清理"><a class="header" href="#96-跨-namespace-清理">9.6 跨 namespace 清理</a></h3>
+<p>Kubernetes 不允许跨 namespace ownerReference，所以：</p>
+<ul>
+<li>如果子资源在另一个 namespace，用 <strong>finalizer + 显式 delete</strong>；</li>
+<li>用 label 标记 owner UID（<code>example.com/owner-uid</code>），定期扫描；</li>
+<li>或者把资源设计成同 namespace，避免跨 namespace 依赖；</li>
+<li>集群级资源可以拥有集群级子资源，但不能拥有 namespaced 子资源。</li>
+</ul>
+<h3 id="97-卡住的-finalizer-怎么排查"><a class="header" href="#97-卡住的-finalizer-怎么排查">9.7 卡住的 finalizer 怎么排查</a></h3>
+<p>症状：对象 <code>deletionTimestamp</code> 非零，<code>finalizers</code> 一直不空，namespace 卡在 <code>Terminating</code>。</p>
+<p>排查顺序：</p>
+<ol>
+<li><code>kubectl get &lt;kind&gt; &lt;name&gt; -o yaml</code> 看 <code>finalizers</code> 列表；</li>
+<li>找到对应 finalizer 的 controller，确认它是否还在运行、日志是否报错；</li>
+<li>检查外部依赖（云 API、DNS、数据库）是否可达；</li>
+<li>检查 controller 是否有权限删除外部资源/更新 CR；</li>
+<li>确认 controller 是否把 <code>deletionTimestamp</code> 分支写对（很多 bug 是“删除时仍然走正常 reconcile，永远不清理”）；</li>
+<li>只有在确认外部资源已经手动清理后，才考虑移除 finalizer；不要把它当成常规操作。</li>
+</ol>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>手动移除 finalizer 会让对象消失，但外部资源可能仍在，造成泄漏/计费。移除前必须确认清理已完成，并记录审计。</p>
+</blockquote>
+<h3 id="98-crd-删除与卸载语义"><a class="header" href="#98-crd-删除与卸载语义">9.8 CRD 删除与“卸载”语义</a></h3>
+<ul>
+<li>删除 CRD = 删除该类型的所有 CR，且不可恢复（除非有备份）；</li>
+<li>卸载 Operator 时，通常应该<strong>保留 CRD 和 CR</strong>，只删除 controller Deployment/RBAC；</li>
+<li>如果产品语义是“卸载即删除数据”，要在文档/安装参数里明确，并提供备份/导出；</li>
+<li>Helm 的 <code>crds/</code> 不会在 <code>helm uninstall</code> 时删除 CRD（这是好事）；OLM 的 CRD 生命周期由 CSV 管理，需要理解其 ownership。</li>
+</ul>
+<h3 id="99-孤儿资源清理器"><a class="header" href="#99-孤儿资源清理器">9.9 孤儿资源清理器</a></h3>
+<p>即使有 finalizer，也可能出现孤儿（controller 崩溃、finalizer 被误删、外部资源创建成功但 status 写失败）。生产上建议一个<strong>低频、只读优先</strong>的 sweeper：</p>
+<ul>
+<li>列出带有 <code>example.com/owner-uid</code> 标签的外部资源；</li>
+<li>查询对应 UID 的 CR 是否存在；</li>
+<li>不存在且超过 grace period → 删除（或先标记、再人工确认）；</li>
+<li>对“存在但 spec 已不引用”的资源，按 owner 的保留策略处理；</li>
+<li>记录 metrics/事件，便于审计。</li>
+</ul>
+<p>sweeper 必须：</p>
+<ul>
+<li>默认 dry-run；</li>
+<li>有白名单/黑名单；</li>
+<li>有速率限制；</li>
+<li>不删除“没有 owner 标签”的资源（可能是别人的）。</li>
+</ul>
+<h2 id="10-并发吞吐顺序与一致性"><a class="header" href="#10-并发吞吐顺序与一致性">10. 并发：吞吐、顺序与一致性</a></h2>
+<h3 id="101-workqueue-已经保证同一对象串行"><a class="header" href="#101-workqueue-已经保证同一对象串行">10.1 Workqueue 已经保证“同一对象串行”</a></h3>
+<p>在单个 controller 进程内，workqueue 的 <code>processing</code> 集合保证同一个 key 不会被两个 worker 同时处理。<code>MaxConcurrentReconciles</code> 提高的是<strong>不同 key</strong> 的并行度，不是同一对象的并行度。见 <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/controller/controller.go#L48-L68">controller.go:48-68</a>。</p>
+<p>因此：</p>
+<ul>
+<li>单对象内部不需要额外加锁；</li>
+<li>同一对象的两次事件会合并成“当前 Reconcile 结束后再跑一次”；</li>
+<li>跨对象的一致性需要显式设计（状态机、锁、单 worker、分片）。</li>
+</ul>
+<h3 id="102-maxconcurrentreconciles-怎么定"><a class="header" href="#102-maxconcurrentreconciles-怎么定">10.2 <code>MaxConcurrentReconciles</code> 怎么定</a></h3>
+<p>经验公式：</p>
+<pre><code>并发度 ≈ min(
+    单副本能承受的外部 API QPS / 单次 Reconcile 的外部调用数,
+    API Server 能给这个 controller 的写 QPS / 单次 Reconcile 的写请求数,
+    CPU 核数 * 2~4
+)
+</code></pre>
+<p>不要凭感觉设 100：</p>
+<ul>
+<li>每个 worker 都可能持有内存对象、打开连接、调用外部 API；</li>
+<li>并发写同一个 namespace 的其他对象会增加冲突；</li>
+<li>外部系统可能有自己的 QPS/租户限制；</li>
+<li>过高的并发会让 rate limiter 失效，错误时形成重试风暴。</li>
+</ul>
+<p>先从 1–4 开始，按 <code>controller_runtime_reconcile_time_seconds</code>、<code>workqueue_depth</code>、外部 API 错误率逐步调。</p>
+<h3 id="103-leader-election单活还是多活"><a class="header" href="#103-leader-election单活还是多活">10.3 Leader Election：单活还是多活</a></h3>
+<p>controller-runtime 默认 <code>NeedLeaderElection=true</code>，即 controller 只在 leader 上运行。Leader election 用 <code>Lease</code>，默认参数：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>参数</th><th>默认</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>LeaseDuration</code></td><td>15s</td><td>非 leader 等待多久强制接管</td></tr>
+<tr><td><code>RenewDeadline</code></td><td>10s</td><td>leader 续约超时</td></tr>
+<tr><td><code>RetryPeriod</code></td><td>2s</td><td>重试间隔</td></tr>
+</tbody>
+</table>
+</div>
+<p>见 <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/manager/manager.go#L219-L236">manager.go:219-236</a> 和 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/tools/leaderelection/leaderelection.go#L211-L230">leaderelection.go:211-230</a>。</p>
+<p>生产注意：</p>
+<ul>
+<li><code>OnStoppedLeading</code> 默认让进程退出（controller-runtime 返回 error，<code>main</code> 里 <code>log.Fatal</code>）；不要吞掉这个错误继续跑，否则会出现“两个 leader”；</li>
+<li><code>LeaderElectionReleaseOnCancel=true</code> 可以在优雅退出时主动释放 Lease，缩短切换时间；但要确保 Reconcile 已经 checkpoint，避免半途而废；</li>
+<li>滚动升级时 <code>maxUnavailable=0</code> + 新 Pod ready 后再切 leader；默认租约下旧 leader 退出到新 leader 接管可能有十几秒空窗（<code>ReleaseOnCancel</code> 可缩短）；</li>
+<li>多副本的 cache 仍然会 list/watch（cache 在 leader election 之前启动），容量规划要算所有副本。</li>
+</ul>
+<h3 id="104-什么时候可以多活"><a class="header" href="#104-什么时候可以多活">10.4 什么时候可以多活</a></h3>
+<p>只有在满足以下条件时，才考虑关闭 leader election、让多副本同时 reconcile：</p>
+<ol>
+<li><strong>对象之间无共享状态</strong>，或者可以按 key 稳定分片；</li>
+<li>对同一对象的并发写有分布式互斥（Lease/DB 锁）；</li>
+<li>外部系统支持幂等 + 并发；</li>
+<li>能接受状态短暂不一致。</li>
+</ol>
+<p>更常见的生产方案是<strong>分片 + 每片单活</strong>：</p>
+<ul>
+<li>按 namespace/cluster ID/对象名哈希分片；</li>
+<li>每个分片一个 Deployment/StatefulSet 副本；</li>
+<li>每个副本用自己的 Lease 名（如 <code>widget-&lt;shard&gt;</code>）；</li>
+<li>分片映射放在 ConfigMap/CR 里，变更时做再平衡；</li>
+<li>或者用 1.36+ 的 <code>ShardSelector</code>（alpha）让 API Server 只发本片对象。</li>
+</ul>
+<h3 id="105-乐观并发与冲突"><a class="header" href="#105-乐观并发与冲突">10.5 乐观并发与冲突</a></h3>
+<p>Kubernetes 用 <code>resourceVersion</code> 做乐观锁：</p>
+<ul>
+<li>update 带旧 RV → 409 <code>Conflict</code>；</li>
+<li>正确反应是 GET 最新对象、重新应用变更、重试；</li>
+<li>etcd 的 <code>GuaranteedUpdate</code> 内部也会在 cache 过期时重试，见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/storage/etcd3/store.go#L473-L570">store.go:473-570</a>。</li>
+</ul>
+<p>生产建议：</p>
+<ul>
+<li>用 <code>retry.RetryOnConflict</code> 包裹 read-modify-write；</li>
+<li>尽量用 patch/SSA 缩小写集；</li>
+<li>status 用 <code>/status</code> 子资源 + patch，减少和 spec 的冲突；</li>
+<li>冲突重试要有上限/退避，避免活锁；</li>
+<li>多 controller 写同一对象时，用 SSA field manager 明确 ownership。</li>
+</ul>
+<h3 id="106-api-server-容量客户端-qpsapfwatch"><a class="header" href="#106-api-server-容量客户端-qpsapfwatch">10.6 API Server 容量：客户端 QPS、APF、watch</a></h3>
+<p>client-go 默认 <code>QPS=5</code>、<code>Burst=10</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/rest/config.go#L48-L49">config.go:48-49</a>）。对 controller 来说这通常太低，但也不能无脑调高：</p>
+<ul>
+<li>读多走 cache，写才消耗 QPS；</li>
+<li>调高 <code>QPS/Burst</code> 后，用 APF 的 FlowSchema 给 controller 分类，避免挤占系统组件；</li>
+<li>监控 <code>apiserver_request_total</code>、<code>apiserver_request_duration_seconds</code>、<code>apiserver_flowcontrol_rejected_requests_total</code>；</li>
+<li>大集群控制面要关注 watch cache 内存和 <code>apiserver_cache_*</code> 指标。</li>
+</ul>
+<p>APF 的机制见本 wiki 的 <a href="./flowschema.html">API Priority and Fairness：FlowSchema 与 PriorityLevelConfiguration</a>。</p>
+<h3 id="107-热循环与重试风暴"><a class="header" href="#107-热循环与重试风暴">10.7 热循环与重试风暴</a></h3>
+<p>常见原因：</p>
+<ul>
+<li>spec 非法，Reconcile 永远返回 error；</li>
+<li>引用的 CRD/Secret/ConfigMap 不存在；</li>
+<li>外部 API 限流，但返回的是可重试错误；</li>
+<li>status 每次 reconcile 都变，触发新的 watch 事件；</li>
+<li>多个 controller 互相写对方拥有的字段，形成 conflict 循环。</li>
+</ul>
+<p>对策：</p>
+<ul>
+<li>区分 transient/terminal，terminal 用 <code>TerminalError</code>；</li>
+<li>写条件后返回 <code>nil</code>，等 spec 变化再重试；</li>
+<li>对“等待外部状态”用 <code>RequeueAfter</code> + 指数退避；</li>
+<li>写 status 前 diff，避免无变化写入；</li>
+<li>用 SSA 明确字段 ownership，避免互相覆盖；</li>
+<li>监控 <code>workqueue_retries_total</code> 和 <code>workqueue_depth</code>。</li>
+</ul>
+<h3 id="108-多-controller-写同一对象"><a class="header" href="#108-多-controller-写同一对象">10.8 多 controller 写同一对象</a></h3>
+<p>不建议两个 controller 管理同一个 CRD。确实需要时：</p>
+<ul>
+<li>用 SSA field manager 划分字段所有权；</li>
+<li>用 conditions 的 type 划分（每个 controller 只写自己的 condition）；</li>
+<li>不要用 full Update，否则会清掉对方字段；</li>
+<li>定义“谁负责删除/最终状态”，避免都以为对方会清理；</li>
+<li>在 CRD 文档里写清楚字段 ownership。</li>
+</ul>
+<h2 id="11-升级crd控制器operand"><a class="header" href="#11-升级crd控制器operand">11. 升级：CRD、控制器、Operand</a></h2>
+<h3 id="111-crd-版本升级的标准流程"><a class="header" href="#111-crd-版本升级的标准流程">11.1 CRD 版本升级的标准流程</a></h3>
+<p>以 <code>v1beta1 → v1</code> 为例：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>步骤</th><th>操作</th><th>验证</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>确定 conversion 策略（schema 相同可用 <code>None</code>，否则 webhook）</td><td>round-trip 测试</td></tr>
+<tr><td>2</td><td>部署 conversion webhook（先于 CRD 变更）</td><td>webhook ready、证书有效</td></tr>
+<tr><td>3</td><td>CRD 增加 <code>v1</code>，<code>served: true</code>，<code>storage</code> 仍为 <code>v1beta1</code></td><td><code>kubectl get crd -o yaml</code></td></tr>
+<tr><td>4</td><td>客户端逐步迁移到 <code>v1</code></td><td>观察 deprecated version 请求</td></tr>
+<tr><td>5</td><td>把 <code>storage</code> 切到 <code>v1</code></td><td>新写入走 <code>v1</code></td></tr>
+<tr><td>6</td><td>迁移存量对象到 <code>v1</code>（SVM 或 list+update）</td><td><code>status.storedVersions</code> 只剩 <code>v1</code></td></tr>
+<tr><td>7</td><td>旧版本 <code>served: false</code></td><td>确认无客户端报错</td></tr>
+<tr><td>8</td><td>从 <code>spec.versions</code> 删除旧版本</td><td>CRD 校验通过</td></tr>
+<tr><td>9</td><td>删除 conversion webhook 对旧版本的支持</td><td>保留回滚窗口</td></tr>
+</tbody>
+</table>
+</div>
+<p>官方流程见 <a href="https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#overview">Overview</a> 和 <a href="https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#version-removal">Version removal</a>。</p>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>不要在第 6 步之前删除旧版本。<code>status.storedVersions</code> 里还有旧版本，说明 etcd 里可能还有旧编码对象；删掉 <code>spec.versions</code> 后这些对象可能无法解码。CRD 校验会阻止你删掉 <code>storedVersions</code> 里的版本，但不会替你完成迁移。</p>
+</blockquote>
+<h3 id="112-conversion-webhook-的运维要求"><a class="header" href="#112-conversion-webhook-的运维要求">11.2 Conversion Webhook 的运维要求</a></h3>
+<p>conversion webhook 是<strong>读路径上的强依赖</strong>：</p>
+<ul>
+<li>至少 2 副本，PDB <code>minAvailable: 1</code>，反亲和/拓扑分布；</li>
+<li>证书自动轮换（cert-manager/controller-runtime cert watcher），监控过期时间；</li>
+<li>Service/Endpoints 就绪探针；</li>
+<li>不要和“正在升级的 controller”绑在同一个 Deployment 里；否则 controller 升级会导致 conversion 不可用，进而所有非 storage 版本请求失败；</li>
+<li>监控 <code>apiserver_crd_conversion_webhook_duration_seconds</code> 和 <code>apiserver_conversion_webhook_request_total</code>（指标名见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/apiserver/conversion/metrics.go#L62-L125">metrics.go:62-125</a>）；</li>
+<li>大列表转换会放大延迟/内存，必要时限制 list 页大小或拆分对象。</li>
+</ul>
+<h3 id="113-storage-migration"><a class="header" href="#113-storage-migration">11.3 Storage Migration</a></h3>
+<p>两种方式：</p>
+<p><strong>（1）StorageVersionMigration（推荐，若集群支持）</strong></p>
+<pre><code class="language-yaml">apiVersion: storagemigration.k8s.io/v1
+kind: StorageVersionMigration
+metadata:
+  name: widgets-v1
+spec:
+  resource:
+    group: example.com
+    resource: widgets
+</code></pre>
+<p>迁移完成后，旧版本会从 <code>status.storedVersions</code> 移除。API 版本以集群实际 serve 为准；1.37 代码中同时存在 <code>v1</code>/<code>v1beta1</code>。</p>
+<p><strong>（2）手动 list + update</strong></p>
+<ol>
+<li>把 <code>storage</code> 切到新版本；</li>
+<li>列出所有对象；</li>
+<li>对每个对象执行一次“内容不变”的 update（强制写到新 storage 版本）；</li>
+<li>确认 <code>storedVersions</code> 只剩新版本；</li>
+<li>再删除旧版本。</li>
+</ol>
+<p>手动方式要注意：</p>
+<ul>
+<li>大集群要分页、限速、可恢复；</li>
+<li>迁移期间不要改 schema；</li>
+<li>迁移是幂等的，可重复执行；</li>
+<li>记录进度，失败可断点续跑。</li>
+</ul>
+<h3 id="114-schema-演进规则"><a class="header" href="#114-schema-演进规则">11.4 Schema 演进规则</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>变更</th><th>是否安全</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td>加 optional 字段</td><td>✅</td><td>旧对象没有该字段；controller 要容忍零值</td></tr>
+<tr><td>加 required 字段</td><td>❌</td><td>存量对象更新会失败；ratcheting 不覆盖 required</td></tr>
+<tr><td>加 default</td><td>⚠️</td><td>读到的对象会变；旧 controller 可能行为变化</td></tr>
+<tr><td>删除字段</td><td>❌</td><td>用新版本 + conversion；直接删会被 pruning</td></tr>
+<tr><td>改字段类型</td><td>❌</td><td>新版本 + conversion</td></tr>
+<tr><td>收紧 validation</td><td>⚠️</td><td>ratcheting 只保护未变更部分；新写入会失败</td></tr>
+<tr><td>放宽 validation</td><td>✅</td><td>一般安全</td></tr>
+<tr><td>改 listType/mapType</td><td>⚠️</td><td>影响 SSA ownership，可能产生冲突；见 SSA 文档</td></tr>
+<tr><td>改 enum 删除值</td><td>❌</td><td>存量对象可能非法；只加不删</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="115-controller-升级滚动兼容窗口finalizer"><a class="header" href="#115-controller-升级滚动兼容窗口finalizer">11.5 Controller 升级：滚动、兼容窗口、finalizer</a></h3>
+<p><strong>滚动升级</strong></p>
+<pre><code class="language-yaml">strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 0
+    maxSurge: 1
+</code></pre>
+<p>配合：</p>
+<ul>
+<li>readiness probe 检查 cache sync（不要让 non-leader 因未选主而不 ready，否则滚动会卡住）；</li>
+<li><code>terminationGracePeriodSeconds</code> 足够完成当前 Reconcile；</li>
+<li>PDB 防止同时驱逐；</li>
+<li>leader election 确保同一时刻只有一个 active controller。</li>
+</ul>
+<p><strong>N-1 兼容窗口</strong></p>
+<p>升级过程中，旧 Pod 和新 Pod 可能同时存在（旧 leader 退出前/新 leader 接管前），也可能短时间内新旧 controller 都处理过同一个对象。要求：</p>
+<ul>
+<li>新 controller 能处理旧 CR 的字段/默认值/status；</li>
+<li>旧 controller 不应把新字段清掉——用 patch/SSA，不要 full Update；</li>
+<li>finalizer 名称保持不变；新旧 controller 都能识别并清理；</li>
+<li>status schema 只加字段，不改语义；</li>
+<li>如果新版本引入了新的外部资源，旧版本至少不能删除它（否则回滚会丢资源）。</li>
+</ul>
+<p><strong>升级顺序</strong></p>
+<ol>
+<li>CRD 先做<strong>加法</strong>（新版本、新字段、新 default），保持旧版本可用；</li>
+<li>部署新 controller（兼容旧 CR）；</li>
+<li>迁移客户端/CR；</li>
+<li>切 storage、迁移数据；</li>
+<li>停止旧版本服务、移除旧字段/旧版本；</li>
+<li>最后删除 conversion 对旧版本的支持。</li>
+</ol>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>不要先删 CRD 字段再升级 controller。CRD pruning 会在写入时静默删除字段，旧 controller 可能因此读到零值，做出错误决策。</p>
+</blockquote>
+<h3 id="116-olm-与升级图"><a class="header" href="#116-olm-与升级图">11.6 OLM 与升级图</a></h3>
+<p>如果通过 OLM 交付：</p>
+<ul>
+<li>CSV 的 <code>spec.customresourcedefinitions.owned</code> 声明 CRD 所有权；</li>
+<li><code>replaces</code> / <code>skips</code> / <code>skipRange</code> 定义升级边（CSV 或 file-based catalog 的 <code>olm.channel</code>）；</li>
+<li>升级图必须是<strong>有向、可测试</strong>的：每个 <code>replaces</code> 边都应该有 e2e；</li>
+<li><code>skipRange</code> 会剪掉中间版本，谨慎使用；最好和 <code>replaces</code> 一起用；</li>
+<li>跨 channel 升级不会自动发生，需要用户手动改 <code>Subscription.spec.channel</code>；</li>
+<li>一个 CRD 只应由一个 Operator 拥有；共享 CRD 用单独的“API operator”。</li>
+</ul>
+<p>见 <a href="https://olm.operatorframework.io/docs/concepts/crds/clusterserviceversion/">ClusterServiceVersion</a> 和 <a href="https://olm.operatorframework.io/docs/concepts/olm-architecture/operator-catalog/creating-an-update-graph/">Creating an update graph with OLM</a>。</p>
+<h3 id="117-回滚边界"><a class="header" href="#117-回滚边界">11.7 回滚边界</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>回滚对象</th><th>可行性</th><th>注意</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Controller image</strong></td><td>✅ 通常可以</td><td>前提是 CRD/CR 仍兼容旧 controller</td></tr>
+<tr><td><strong>CRD schema</strong></td><td>❌ 很难</td><td>已写入的新字段可能被 pruning；旧版本可能不认识新数据</td></tr>
+<tr><td><strong>Storage version</strong></td><td>❌ 很难</td><td>需要反向迁移 + 旧版本仍 served；不建议</td></tr>
+<tr><td><strong>Conversion webhook</strong></td><td>⚠️</td><td>保留双向转换；旧版本 webhook 要能处理新对象</td></tr>
+<tr><td><strong>Operand 数据</strong></td><td>⚠️</td><td>依赖应用自身备份/恢复；Operator 不能假设可回滚</td></tr>
+<tr><td><strong>CR 数据</strong></td><td>⚠️</td><td>删除 CRD/CR 不可逆；用备份/软删除</td></tr>
+</tbody>
+</table>
+</div>
+<p>生产升级前必须：</p>
+<ul>
+<li>备份 etcd（或至少 CR 数据）；</li>
+<li>验证 conversion round-trip；</li>
+<li>在预发环境跑完整的“旧版本 → 新版本 → 回滚”；</li>
+<li>准备“只回滚 controller、不回滚 CRD”的降级方案。</li>
+</ul>
+<h3 id="118-升级测试矩阵"><a class="header" href="#118-升级测试矩阵">11.8 升级测试矩阵</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>测试</th><th>目的</th></tr>
+</thead>
+<tbody>
+<tr><td>旧 CR + 新 controller</td><td>新 controller 能读旧对象并收敛</td></tr>
+<tr><td>新 CR + 旧 controller</td><td>旧 controller 不破坏新字段（在兼容窗口内）</td></tr>
+<tr><td>conversion round-trip</td><td>spoke→hub→spoke 不丢数据</td></tr>
+<tr><td>storage migration</td><td>迁移后 <code>storedVersions</code> 正确、对象可读</td></tr>
+<tr><td>滚动升级</td><td>leader 切换、无重复 active、无长时间中断</td></tr>
+<tr><td>webhook 不可用</td><td>非 storage 版本请求失败，恢复后自动恢复</td></tr>
+<tr><td>回滚 controller</td><td>旧 controller 能接管新 CR</td></tr>
+<tr><td>大规模数据</td><td>迁移/升级在预期时间内完成，API Server 不被打爆</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="12-可观测性与测试"><a class="header" href="#12-可观测性与测试">12. 可观测性与测试</a></h2>
+<h3 id="121-必须暴露的指标"><a class="header" href="#121-必须暴露的指标">12.1 必须暴露的指标</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>类别</th><th>指标</th><th>用途</th></tr>
+</thead>
+<tbody>
+<tr><td>Reconcile</td><td><code>controller_runtime_reconcile_total</code>、<code>..._errors_total</code>、<code>..._time_seconds</code></td><td>成功率、错误率、P99 延迟</td></tr>
+<tr><td>Worker</td><td><code>controller_runtime_active_workers</code>、<code>..._max_concurrent_reconciles</code></td><td>并发是否打满</td></tr>
+<tr><td>Queue</td><td><code>workqueue_depth</code>、<code>workqueue_adds_total</code>、<code>workqueue_retries_total</code>、<code>workqueue_longest_running_processor_seconds</code></td><td>积压、重试风暴、卡死</td></tr>
+<tr><td>APIServer</td><td><code>apiserver_request_total</code>、<code>apiserver_request_duration_seconds</code>、<code>apiserver_flowcontrol_rejected_requests_total</code></td><td>429/5xx、限流</td></tr>
+<tr><td>Watch</td><td><code>apiserver_cache_*</code>、<code>apiserver_watch_events_*</code></td><td>cache 容量、事件量</td></tr>
+<tr><td>Conversion</td><td><code>apiserver_crd_conversion_webhook_duration_seconds</code>、<code>apiserver_conversion_webhook_request_total</code></td><td>转换延迟/失败</td></tr>
+<tr><td>Leader</td><td><code>leader_election_master_status</code></td><td>是否频繁切换</td></tr>
+<tr><td>进程</td><td>Go/process metrics</td><td>内存、GC、fd</td></tr>
+</tbody>
+</table>
+</div>
+<p>controller-runtime 的指标名见 <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/internal/controller/metrics/metrics.go#L28-L95">metrics.go:28-95</a>；workqueue 指标见 <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/metrics/workqueue.go#L19-L29">workqueue.go:19-29</a>。</p>
+<h3 id="122-建议的告警"><a class="header" href="#122-建议的告警">12.2 建议的告警</a></h3>
+<ul>
+<li>Reconcile 错误率 &gt; 5%（按 controller）；</li>
+<li><code>workqueue_depth</code> 持续增长 10 分钟；</li>
+<li><code>workqueue_longest_running_processor_seconds</code> &gt; 5 分钟（可能卡死）；</li>
+<li>conversion webhook 失败率 &gt; 1% 或 P99 &gt; 1s；</li>
+<li>CRD <code>Established=False</code> 超过 5 分钟；</li>
+<li>带 finalizer 的对象年龄 &gt; 1 小时（可能卡删除）；</li>
+<li>apiserver 429/5xx 突增；</li>
+<li>leader election 切换次数 &gt; 3/小时。</li>
+</ul>
+<h3 id="123-日志与事件"><a class="header" href="#123-日志与事件">12.3 日志与事件</a></h3>
+<ul>
+<li>用结构化日志（<code>logr</code>/<code>klog</code>），带 <code>controller</code>、<code>reconcileID</code>、<code>namespace/name</code>、<code>generation</code>；</li>
+<li>不要打印 Secret/Token/密码；</li>
+<li>遵循 Kubernetes 日志约定：大写开头、过去时、对象类型明确、不要句号；见 <a href="https://book.kubebuilder.io/reference/good-practices">Kubebuilder Good practices: logging</a>；</li>
+<li>Event 用于<strong>用户可见的状态变化</strong>（创建成功、升级开始、失败原因），不要每个 reconcile 都发；</li>
+<li>Event 有速率限制/保留时间，不是审计日志。</li>
+</ul>
+<h3 id="124-测试分层"><a class="header" href="#124-测试分层">12.4 测试分层</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>层</th><th>工具</th><th>能测什么</th><th>不能测什么</th></tr>
+</thead>
+<tbody>
+<tr><td>单元</td><td>fake client</td><td>业务分支、错误处理</td><td>schema/default/admission/SSA 细节</td></tr>
+<tr><td>集成</td><td>envtest（真实 apiserver + etcd）</td><td>CRD 校验、status 子资源、conversion、finalizer、GC</td><td>kubelet/节点/真实云资源</td></tr>
+<tr><td>端到端</td><td>kind/真实集群</td><td>安装、升级、删除、外部资源</td><td>极端规模/故障</td></tr>
+<tr><td>转换</td><td>fuzz round-trip</td><td>版本转换不丢数据</td><td>API Server 行为</td></tr>
+<tr><td>故障注入</td><td>杀进程/断网/删外部资源</td><td>幂等、恢复、finalizer</td><td>所有组合</td></tr>
+<tr><td>规模</td><td>大量 CR/watch</td><td>吞吐、内存、API Server 压力</td><td>真实业务分布</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>envtest</code> 会启动本地 etcd + kube-apiserver，不启动 kubelet；适合测 CRD/controller 的 API 语义。见 <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/envtest/doc.go#L17-L26">envtest doc.go</a>。</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>fake client 不执行 CRD schema/defaulting/admission，也不完全模拟 SSA 的 field ownership。不要只用 fake client 测 API 语义；关键路径至少要有 envtest。</p>
+</blockquote>
+<h3 id="125-必须做的故障演练"><a class="header" href="#125-必须做的故障演练">12.5 必须做的故障演练</a></h3>
+<ol>
+<li>Reconcile 中途 kill controller，重启后是否重复创建外部资源？</li>
+<li>创建外部资源成功、写 status 前 kill，是否产生孤儿？</li>
+<li>删除 CR 时外部 API 不可用，finalizer 是否保留、恢复后是否继续？</li>
+<li>conversion webhook 全部不可用，旧版本请求是否快速失败、恢复后是否自愈？</li>
+<li>apiserver 返回 409/429/500，controller 是否退避而不是热循环？</li>
+<li>手动删除/修改 owned 资源，controller 是否修复？</li>
+<li>升级过程中 leader 切换，是否有重复 active/漏处理？</li>
+<li>CRD 删除时仍有 CR/ finalizer，是否按预期阻塞/清理？</li>
+</ol>
+<h2 id="13-生产检查清单"><a class="header" href="#13-生产检查清单">13. 生产检查清单</a></h2>
+<h3 id="api-与-crd"><a class="header" href="#api-与-crd">API 与 CRD</a></h3>
+<ul>
+<li><input disabled="" type="checkbox"> 一个 Operator 管理一类应用；一个 CRD 一个 controller</li>
+<li><input disabled="" type="checkbox"> CRD 有 structural schema，字段有类型/必填/范围/长度</li>
+<li><input disabled="" type="checkbox"> 所有 list 字段设置 listType；conditions 用 <code>map</code> + key=type</li>
+<li><input disabled="" type="checkbox"> 需要跨字段校验的规则用 CEL；CEL 有 <code>maxItems</code>/<code>maxLength</code></li>
+<li><input disabled="" type="checkbox"> 需要区分 unset/zero 的字段用 pointer</li>
+<li><input disabled="" type="checkbox"> status 子资源启用；controller 只写 status</li>
+<li><input disabled="" type="checkbox"> <code>observedGeneration</code> 在成功时推进</li>
+<li><input disabled="" type="checkbox"> 条件类型稳定、Reason 稳定、Message 可读</li>
+<li><input disabled="" type="checkbox"> 需要 HPA 等按 scale 协议工作的组件能识别 CR（scale subresource）</li>
+<li><input disabled="" type="checkbox"> <code>kubectl get</code> 的关键列有 printer columns</li>
+<li><input disabled="" type="checkbox"> 高频过滤字段有 selectableFields/labels</li>
+<li><input disabled="" type="checkbox"> 版本策略明确（alpha/beta/v1），有 conversion 计划</li>
+<li><input disabled="" type="checkbox"> 不在 CR 里存大文件/日志/指标/终端用户数据</li>
+<li><input disabled="" type="checkbox"> finalizer 名是 qualified name</li>
+</ul>
+<h3 id="控制器"><a class="header" href="#控制器">控制器</a></h3>
+<ul>
+<li><input disabled="" type="checkbox"> Reconcile 是 level-based，不依赖事件内容</li>
+<li><input disabled="" type="checkbox"> 删除路径优先，<code>deletionTimestamp</code> 非零时不再创建资源</li>
+<li><input disabled="" type="checkbox"> finalizer 在外部副作用之前添加</li>
+<li><input disabled="" type="checkbox"> Reconcile 幂等，Create 409、Delete 404 都按成功处理</li>
+<li><input disabled="" type="checkbox"> 外部资源用确定性名字/幂等键/标签</li>
+<li><input disabled="" type="checkbox"> status 写前 diff，冲突可重试</li>
+<li><input disabled="" type="checkbox"> transient/terminal/wait 分类清晰</li>
+<li><input disabled="" type="checkbox"> 不用 <code>time.Sleep</code>；用 <code>RequeueAfter</code></li>
+<li><input disabled="" type="checkbox"> 不在 Reconcile 里无限重试同一错误</li>
+<li><input disabled="" type="checkbox"> 不阻塞 worker 做长时间同步操作</li>
+<li><input disabled="" type="checkbox"> <code>ReconciliationTimeout</code> 已设置（如有外部调用）</li>
+<li><input disabled="" type="checkbox"> 不在 EventHandler 里做 API 调用/复杂计算</li>
+<li><input disabled="" type="checkbox"> 对 owned 资源用 <code>Owns</code>/<code>Watches</code>，能发现 drift</li>
+<li><input disabled="" type="checkbox"> 对 autoscaler 管理的字段不盲目覆盖</li>
+<li><input disabled="" type="checkbox"> pause/suspend 语义清晰</li>
+</ul>
+<h3 id="清理"><a class="header" href="#清理">清理</a></h3>
+<ul>
+<li><input disabled="" type="checkbox"> Kubernetes 子资源设置 ownerReference（同 namespace）</li>
+<li><input disabled="" type="checkbox"> 跨 namespace 资源用 finalizer + 标签，不强行 ownerRef</li>
+<li><input disabled="" type="checkbox"> 删除外部资源 NotFound 视为成功</li>
+<li><input disabled="" type="checkbox"> 异步删除轮询到终态再移除 finalizer</li>
+<li><input disabled="" type="checkbox"> 卡住的 finalizer 有 runbook</li>
+<li><input disabled="" type="checkbox"> CRD 删除/卸载策略明确（保留还是删除数据）</li>
+<li><input disabled="" type="checkbox"> 有孤儿资源 sweeper（默认 dry-run）</li>
+<li><input disabled="" type="checkbox"> namespace 删除场景演练过</li>
+</ul>
+<h3 id="并发与容量"><a class="header" href="#并发与容量">并发与容量</a></h3>
+<ul>
+<li><input disabled="" type="checkbox"> <code>MaxConcurrentReconciles</code> 有依据，不是拍脑袋</li>
+<li><input disabled="" type="checkbox"> rate limiter 配置合理，失败不会热循环</li>
+<li><input disabled="" type="checkbox"> leader election 配置/租期符合故障切换目标</li>
+<li><input disabled="" type="checkbox"> 多副本 cache 的 watch 成本已计入容量</li>
+<li><input disabled="" type="checkbox"> client QPS/Burst 调整过，且有 APF 保护</li>
+<li><input disabled="" type="checkbox"> 大集群有 namespace/字段/分片策略</li>
+<li><input disabled="" type="checkbox"> 多 controller 写同一对象时，ownership 清晰</li>
+</ul>
+<h3 id="升级"><a class="header" href="#升级">升级</a></h3>
+<ul>
+<li><input disabled="" type="checkbox"> CRD 版本升级有 conversion + round-trip 测试</li>
+<li><input disabled="" type="checkbox"> conversion webhook 多副本、PDB、证书轮换</li>
+<li><input disabled="" type="checkbox"> storage migration 做过，<code>storedVersions</code> 正确</li>
+<li><input disabled="" type="checkbox"> 旧版本在迁移完成前不删除</li>
+<li><input disabled="" type="checkbox"> controller 升级有 N-1 兼容窗口</li>
+<li><input disabled="" type="checkbox"> finalizer 名称跨版本稳定</li>
+<li><input disabled="" type="checkbox"> 升级顺序有文档（conversion webhook 先于 CRD 版本变更；controller 保持 N-1 兼容；最后迁移 CR）</li>
+<li><input disabled="" type="checkbox"> 回滚方案验证过（至少 controller 回滚）</li>
+<li><input disabled="" type="checkbox"> 升级前备份 CR/etcd</li>
+<li><input disabled="" type="checkbox"> OLM/Helm 的升级图有 e2e</li>
+</ul>
+<h3 id="可观测性与测试"><a class="header" href="#可观测性与测试">可观测性与测试</a></h3>
+<ul>
+<li><input disabled="" type="checkbox"> Reconcile/queue/APIServer/conversion 指标有 dashboard</li>
+<li><input disabled="" type="checkbox"> 关键告警有 runbook</li>
+<li><input disabled="" type="checkbox"> 日志结构化、带 reconcileID、无敏感信息</li>
+<li><input disabled="" type="checkbox"> Event 用于用户可见状态变化</li>
+<li><input disabled="" type="checkbox"> 单元 + envtest + e2e + 故障注入</li>
+<li><input disabled="" type="checkbox"> 升级/回滚/删除路径有 e2e</li>
+<li><input disabled="" type="checkbox"> 大规模/长时间 soak 测试</li>
+<li><input disabled="" type="checkbox"> 关键路径有分布式追踪（可选）</li>
+</ul>
+<h2 id="参考资料"><a class="header" href="#参考资料">参考资料</a></h2>
+<h3 id="官方文档"><a class="header" href="#官方文档">官方文档</a></h3>
+<ul>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/concepts/extend-kubernetes/operator/">Operator pattern</a></li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/">Custom Resources</a></li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/">CustomResourceDefinition</a></li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/">CRD versioning</a></li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/reference/using-api/api-concepts/">API concepts</a></li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/reference/using-api/server-side-apply/">Server-Side Apply</a></li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/">Finalizers</a></li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/owners-dependents/">Owners and Dependents</a></li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/concepts/architecture/garbage-collection/">Garbage Collection</a></li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/storage-version/">Storage Versions</a></li>
+<li>Kubernetes Community：<a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md">API conventions</a></li>
+<li>Kubernetes Community：<a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api_changes.md">API changes</a></li>
+<li>Kubebuilder：<a href="https://book.kubebuilder.io/reference/good-practices">Good practices</a></li>
+<li>Kubebuilder：<a href="https://book.kubebuilder.io/reference/using-finalizers">Using finalizers</a></li>
+<li>Kubebuilder：<a href="https://book.kubebuilder.io/multiversion-tutorial/conversion-concepts">Hubs, spokes, and other wheel metaphors</a></li>
+<li>Operator SDK：<a href="https://sdk.operatorframework.io/docs/best-practices/best-practices/">Operator Best Practices</a></li>
+<li>Operator SDK：<a href="https://sdk.operatorframework.io/docs/overview/operator-capabilities/">Operator Capability Levels</a></li>
+<li>OLM：<a href="https://olm.operatorframework.io/docs/concepts/crds/clusterserviceversion/">ClusterServiceVersion</a></li>
+<li>OLM：<a href="https://olm.operatorframework.io/docs/concepts/olm-architecture/operator-catalog/creating-an-update-graph/">Creating an update graph</a></li>
+</ul>
+<h3 id="源码pinned"><a class="header" href="#源码pinned">源码（pinned）</a></h3>
+<ul>
+<li>Kubernetes v1.37.2 CRD 类型：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1/types.go#L41-L73">types.go</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1/types.go#L170-L210">version/subresources</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1/types.go#L302-L390">conditions</a></li>
+<li>Kubernetes v1.37.2 CRD 校验：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/validation/validation.go#L77-L101">validation.go</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/validation/validation.go#L448">storage version</a></li>
+<li>Kubernetes v1.37.2 CRD 请求路径：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/apiserver/customresource_handler.go#L228-L368">customresource_handler.go</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/apiserver/customresource_handler.go#L860-L879">per-version storage</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/apiserver/customresource_handler.go#L1128-L1144">field manager</a></li>
+<li>Kubernetes v1.37.2 CRD strategy：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/registry/customresource/strategy.go#L144-L187">strategy.go</a></li>
+<li>Kubernetes v1.37.2 CRD finalizer：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/controller/finalizer/crd_finalizer.go#L181-L232">crd_finalizer.go</a></li>
+<li>Kubernetes v1.37.2 conversion：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/apiserver/conversion/webhook_converter.go#L122-L142">webhook_converter.go</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiextensions-apiserver/pkg/apiserver/conversion/metrics.go#L62-L125">metrics.go</a></li>
+<li>Kubernetes v1.37.2 watch cache：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/storage/cacher/watch_cache_history.go#L216-L240">watch_cache_history.go</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/storage/cacher/cacher.go#L516-L645">cacher.go</a></li>
+<li>Kubernetes v1.37.2 reflector：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/tools/cache/reflector.go#L463-L530">reflector.go</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/tools/cache/reflector.go#L719-L729">410 fallback</a></li>
+<li>Kubernetes v1.37.2 informer：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/tools/cache/delta_fifo.go#L75-L120">delta_fifo.go</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/tools/cache/shared_informer.go#L1083-L1125">shared_informer.go</a></li>
+<li>Kubernetes v1.37.2 workqueue：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/util/workqueue/queue.go#L224-L300">queue.go</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/client-go/util/workqueue/default_rate_limiters.go#L45-L60">default_rate_limiters.go</a></li>
+<li>Kubernetes v1.37.2 optimistic concurrency：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/registry/generic/registry/store.go#L792-L809">store.go</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/storage/etcd3/store.go#L473-L570">etcd GuaranteedUpdate</a></li>
+<li>Kubernetes v1.37.2 SSA：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/endpoints/handlers/patch.go#L485-L530">patch.go</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apimachinery/pkg/util/managedfields/internal/fieldmanager.go#L187-L213">fieldmanager.go</a></li>
+<li>Kubernetes v1.37.2 finalizer/GC：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/registry/generic/registry/store.go#L1203-L1292">store.go</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apimachinery/pkg/apis/meta/v1/types.go#L326-L355">ownerReference types</a></li>
+<li>controller-runtime v0.25.2：<a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/controller/controller.go#L48-L101">controller options</a> / <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/internal/controller/controller.go#L478-L517">reconcile loop</a> / <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/manager/internal.go#L426-L452">manager startup</a></li>
+<li>controller-runtime v0.25.2：<a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/client/client.go#L430-L460">client cache</a> / <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/cache/cache.go#L94-L128">cache resync</a> / <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/internal/controller/metrics/metrics.go#L28-L95">metrics</a></li>
+<li>sample-controller：<a href="https://github.com/kubernetes/sample-controller/blob/7204184eb240515173848d28f2e1f3788104a4d1/controller.go#L243-L330">syncHandler</a> / <a href="https://github.com/kubernetes/sample-controller/blob/7204184eb240515173848d28f2e1f3788104a4d1/controller.go#L110-L125">workqueue</a></li>
+<li>Cluster API v1.14.4：<a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/core/reconcilers/machine/machine_controller.go#L190-L290">Reconcile</a> / <a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/util/finalizers/finalizers.go#L28-L49">finalizer first</a> / <a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/util/patch/patch.go#L340-L385">patch helper</a> / <a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/util/conversion/conversion.go#L40-L120">conversion data</a></li>
+</ul>
+<h3 id="本-wiki-相关页面"><a class="header" href="#本-wiki-相关页面">本 wiki 相关页面</a></h3>
+<ul>
+<li><a href="client-go-list-watch.html">client-go list &amp; watch 原理</a>：Reflector、watch cache、apiserver watch 的源码级分析</li>
+<li><a href="./2_kubernetes-api-server.html">Kubernetes API Server</a>：kube-apiserver 的认证、TLS 与架构</li>
+<li><a href="./flowschema.html">API Priority and Fairness：FlowSchema 与 PriorityLevelConfiguration</a>：控制器请求的限流与隔离</li>
+<li><a href="./控制面高可用方案.html">Kubernetes 控制面高可用方案</a>：apiserver/etcd/选主的 HA 基础</li>
+<li><a href="./大规模多集群版本升级.html">大规模多集群 Kubernetes 版本升级</a>：集群版本升级与 Operator 升级的边界</li>
+<li><a href="../Cluster_Lifecycle/cluster-api.html">Cluster API</a>：大规模生产 Operator 的参考实现</li>
+<li><a href="./kueue.html">Kueue</a>：Kubernetes 原生作业队列管理器，另一个 controller-runtime 生产案例</li>
+<li><a href="./容器运行时.html">容器运行时</a>：Operator 管理的 Operand 最终如何落到运行时</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../docs/Cloud_Native/Kubernetes/容器运行时.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../linux_container.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../docs/Cloud_Native/Kubernetes/容器运行时.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../linux_container.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../highlight-abc7f01d.js"></script>
+        <script src="../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>
