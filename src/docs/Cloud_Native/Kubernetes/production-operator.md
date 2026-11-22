@@ -92,19 +92,153 @@ controller-runtime 的 `Reconcile` 文档也强调：Reconcile 不是由单个�
 > [!NOTE]
 > Operator 的最佳实践是**一个 Operator 管理一类应用**、**一个 CRD 一个 controller**；不要让一个 controller 同时 reconcile 多个 Kind。Kubebuilder 和 Operator SDK 都明确建议如此，原因是复杂度、错误隔离、并发与可维护性。见 [Kubebuilder Good practices](https://book.kubebuilder.io/reference/good-practices) 和 [Operator SDK Best practices](https://sdk.operatorframework.io/docs/best-practices/best-practices/)。
 
-### 1.4 成熟度：从“能装”到“能运营”
+### 1.4 先厘清术语：Operator、Operand、CR 与 Managed Resources
 
-Operator SDK 把 Operator 能力分为五级（[Operator Capability Levels](https://sdk.operatorframework.io/docs/overview/operator-capabilities/)）：
+Operator 文档里最容易混淆的是 **Operator** 和 **Operand**。Operator SDK 的定义是：
 
-| 级别 | 能力 | 生产含义 |
+| 术语 | 含义 | 例子（以 PostgreSQL Operator 为例） |
 |---|---|---|
-| L1 Basic Install | 用 CR 完成安装与配置，status 反映就绪 | 能替代一部分 Helm |
-| L2 Seamless Upgrades | Operator 与 Operand 可平滑升级，能管理旧版本 Operand | **生产底线** |
-| L3 Full Lifecycle | 备份/恢复、故障切换、扩缩容、成员变更 | 有状态服务的门槛 |
-| L4 Deep Insights | 指标、告警、事件、仪表盘 | 可运营 |
-| L5 Auto Pilot | 自动扩缩、自愈、调优、异常检测 | 少人值守 |
+| **Operator** | 安装到集群里的自定义控制器，负责把期望状态变成实际状态 | `postgres-operator` 的 Deployment/controller 进程 |
+| **Operand** | Operator 所管理的**业务工作负载/服务**，也就是“被运维的对象” | 一个 PostgreSQL 集群：StatefulSet、Pods、PVC、Service、备份 Job、数据库用户 |
+| **Custom Resource (CR)** | CRD 的一个实例，用户用它描述 Operand 的期望状态 | `kind: PostgresCluster` 的 YAML |
+| **Managed Resources** | Operator 为了构成 Operand 而创建/管理的 Kubernetes 对象或外部资源 | StatefulSet、Service、Secret、PVC、云数据库实例、DNS 记录 |
+| **CRD** | 定义 CR 的 API schema | `postgresclusters.example.com` |
 
-“生产级”至少意味着 L2 + L4 的工程能力；L3/L5 取决于领域。很多事故不是因为不会写 Reconcile，而是因为**升级路径和清理路径**没有设计。
+> 一句话：**Operator 是“运维机器人”，Operand 是“被运维的业务系统”，CR 是“用户给机器人的工单”，Managed Resources 是“机器人实际去创建/修改的东西”。**
+
+所以 L2 里的“能管理旧版本 Operand”指的是：**新版本的 Operator 仍然能接管、升级或迁移由旧版本 Operator 创建的那个 PostgreSQL 集群**，而不是“升级 Operator 自己的 Deployment”。Operand 的版本（如 PostgreSQL 15 → 16）和 Operator 的版本（如 v1.2 → v1.3）是两条独立的版本线。
+
+### 1.5 成熟度：五个能力等级的具体含义
+
+Operator SDK（Software Development Kit，Operator 开发工具包）用 [Operator Capability Levels](https://sdk.operatorframework.io/docs/overview/operator-capabilities/) 把 Operator 对 Operand 的生命周期管理能力分为五级。它不是“代码质量评分”，而是**用户能期待 Operator 替他们做多少事**：
+
+| 级别 | 一句话 | 核心问题 |
+|---|---|---|
+| **L1 Basic Install** | 能装、能配、能报就绪 | 用户只写一个 CR，能不能把 Operand 跑起来？ |
+| **L2 Seamless Upgrades** | 能升级、能兼容旧版本 | 升级 Operator/Operand 会不会中断、会不会管不了旧对象？ |
+| **L3 Full Lifecycle** | 能备份恢复、故障切换、成员变更 | 有状态 Operand 的日常运维能不能交给 Operator？ |
+| **L4 Deep Insights** | 能监控、告警、解释状态 | 出问题时，on-call 能不能不看代码就定位？ |
+| **L5 Auto Pilot** | 能自动扩缩、自愈、调优 | 能不能在无人值守下安全地自我修复和优化？ |
+
+#### L1 Basic Install：能装、能配、能报就绪
+
+**目标**：用户通过一个 CR 就能完成 Operand 的安装和基本配置，Operator 等待 Managed Resources 健康，并把结果写回 status。
+
+具体包括：
+
+- Operator 能创建 Operand 所需的一组资源（Deployment/StatefulSet、Service、ConfigMap、Secret、PVC、RBAC 等），或配置集群外资源；
+- 所有“安装必需”的配置尽量都能在 CR 的 `spec` 里表达，而不是要求用户手工改配置文件；
+- Operator 等待 Managed Resources 达到健康状态，而不是“创建完就返回成功”；
+- `status` 能表达“是否就绪、卡在哪一步”，通常用 `Ready`/`Available` 等 condition + `observedGeneration`；
+- CR 的配置变更能被 reconcile 到 Operand；能非中断的变更不应重启整个 Operand；
+- Operator 本身可以通过 kubectl/Helm/OLM 等方式安装，镜像/版本可覆盖，字段有文档。
+
+**典型例子**：数据库 Operator 创建 StatefulSet、Service、Secret、PVC，初始化数据库 schema，最后把 `Ready=True` 写回 CR。
+
+**验收问题**：
+
+1. 用户是否只需要一个 CR 就能装出可用的 Operand？
+2. `status` 能否区分“创建中/就绪/失败”，并给出可读原因？
+3. 修改 CR 的一个配置字段，Operand 是否会收敛，而不是要求重建？
+
+> L1 能替代一部分 Helm，但**不等于生产级**：它没有回答“升级怎么办、删除怎么办、失败了怎么办”。
+
+#### L2 Seamless Upgrades：能升级、能兼容旧版本
+
+**目标**：Operator 和 Operand 都能平滑升级；新 Operator 能管理旧 Operator 创建的 Operand，升级过程可观测、可回滚或有明确边界。
+
+具体包括：
+
+- **Operand 升级**：升级 Operator 时自动把 Operand 升级到新版本，或者允许用户通过 CR 选择 Operand 版本；
+- **旧 Operand 兼容**：新 Operator 能识别并接管旧版本 Operand 创建的 Managed Resources，而不是“换个 Operator 就不认识旧对象”；
+- **版本矩阵**：明确 Operator 版本与 Operand 版本、Kubernetes 版本、CRD 版本的兼容关系；
+- **升级策略**：滚动升级、`maxUnavailable`/`maxSurge`、PDB、就绪探针、升级前检查（pre-flight）、失败暂停；
+- **状态表达**：升级中写 `Progressing=True`，失败写 `Ready=False` + 明确 reason；无法管理某个 Operand 版本时，在 status 里明确告知，而不是静默失败；
+- **回滚边界**：至少能回滚 Operator 镜像；Operand 数据/CRD 的回滚要有明确说明（见第 11 节）。
+
+**典型例子**：PostgreSQL Operator 从 v1.2 升到 v1.3，自动把 PostgreSQL 15 滚动升级到 16；升级前检查复制状态/磁盘空间，升级中逐个重启实例，保留主从切换能力。
+
+**验收问题**：
+
+1. 旧 CR + 新 Operator，能不能正常接管并收敛？
+2. 新 CR + 旧 Operator（兼容窗口内），旧 Operator 会不会破坏新字段？
+3. 升级过程中业务是否中断？中断时 status 是否说清楚？
+4. 升级失败是否能停在安全状态，而不是继续滚动？
+
+> **L2 是大多数生产 Operator 的底线**。很多“生产事故”不是 L1 功能不够，而是 L2 的升级路径没设计。
+
+#### L3 Full Lifecycle：备份恢复、故障切换、成员变更
+
+**目标**：把有状态 Operand 的日常运维也交给 Operator，而不仅是“装和升级”。
+
+具体包括：
+
+- **备份/恢复**：Operator 能触发应用一致的备份（flush/锁表/快照），并能从备份恢复出一个可被重新纳管的 Operand；
+- **故障切换/回切**：主库故障时能选主、切流、恢复旧主；能处理脑裂/quorum；
+- **成员变更**：增加/删除副本、重新加入集群、重建失败成员；
+- **应用感知扩缩容**：不是简单改 replicas，而是按 Operand 的语义做 rebalance、数据迁移、只读副本扩展；
+- **复杂重配置**：参数变更、存储扩容、网络变更等需要多步、可回滚的流程；
+- **Operand 自身的韧性**：liveness/readiness、多副本、滚动策略、PDB、CPU/内存 requests/limits。
+
+**典型例子**：数据库 Operator 提供 `backup`/`restore` CR 或 annotation；主库故障时自动 failover；增加只读副本时先做基础备份再追日志；缩容前先迁走数据。
+
+**验收问题**：
+
+1. 备份是否应用一致？恢复后能否重新被 Operator 管理？
+2. 杀掉主实例，能否自动选主且不丢数据（在 RPO 内）？
+3. 扩容/缩容/重配置是否按正确顺序执行，失败能否续跑？
+4. Operand 是否有 PDB、探针、资源请求，避免“Operator 自己把 Operand 运维挂”？
+
+> L3 是**有状态服务的门槛**。无状态 Operator 可以停在 L2；数据库、消息队列、存储类 Operator 通常需要 L3。
+
+#### L4 Deep Insights：能监控、告警、解释状态
+
+**目标**：让 on-call 和用户能通过指标、事件、conditions、日志理解 Operand 的健康和性能，而不需要读 Operator 源码。
+
+具体包括：
+
+- **Operator 自身指标**：reconcile 成功率/延迟、队列深度、错误分类、leader election；
+- **Operand 指标**：连接数、QPS、延迟、复制延迟、磁盘使用、缓存命中率等；按 RED/USE 等方法选择；
+- **告警与仪表盘**：Operator 随 CR 创建 PrometheusRule/GrafanaDashboard（或由上层平台统一注入），告警有 runbook/SOP；
+- **事件**：对用户可见的状态变化发 Event（升级开始、备份完成、failover 发生、无法自愈的原因），而不是每个 reconcile 都发；
+- **conditions/status**：能解释“当前处于什么阶段、为什么没 ready、下一步是什么”；
+- **日志/追踪**：结构化日志带 `reconcileID`、对象、generation；关键路径可追踪。
+
+**典型例子**：数据库 Operator 暴露复制延迟、连接数、慢查询指标；主库切换时发 Event；`Ready=False` 的 message 直接告诉用户“等待新 Pod ready，当前 2/3”；告警 “replication lag > 30s” 链到 runbook。
+
+**验收问题**：
+
+1. on-call 能否只看 dashboard/status 就知道 Operand 是否健康？
+2. 告警是否对应症状而非每个可能原因？是否有 runbook？
+3. 失败时 status 是否能说明“卡在哪一步、为什么”？
+4. 指标是否按 CR/namespace 维度可聚合，能定位到具体实例？
+
+> L4 是“可运营”的分水岭。没有 L4，Operator 只是一个自动化脚本；出了事仍然只能看代码和日志。
+
+#### L5 Auto Pilot：自动扩缩、自愈、调优
+
+**目标**：在无人值守下，根据 Operand 的真实指标自动调整、修复、优化，并在无法处理时升级给人类。
+
+具体包括：
+
+- **自动扩缩**：按 Operand 指标（QPS、连接数、队列长度）而不是只看 CPU 扩缩；缩容前做数据迁移/排空；
+- **自愈**：根据指标/告警/日志识别不健康状态，执行重启、failover、重建副本、恢复备份等；有次数/速率限制，避免“修复动作”把系统打得更坏；
+- **自动调优**：根据负载模式调整参数、副本数、存储/节点放置；
+- **异常检测**：学习正常性能基线，发现偏离；无法自动修复时产生高优先级告警；
+- **安全护栏**：破坏性动作需要审批/窗口/干跑；所有自动动作可审计、可回滚；有人工暂停开关。
+
+**典型例子**：数据库 Operator 根据读 QPS 自动加只读副本；检测到慢查询+磁盘延迟后把数据文件迁到更高性能的 StorageClass；发现主库频繁重启且无法自愈时，停止自动动作并告警。
+
+**验收问题**：
+
+1. 自动扩缩/自愈是否有上限、冷却时间、熔断？会不会抖动？
+2. 破坏性动作是否可审计、可暂停、可回滚？
+3. 无法自愈时，是否明确升级为人工告警，而不是无限重试？
+4. 是否做过混沌测试/故障注入，验证自动动作不会扩大故障？
+
+> L5 不是“必须”：大多数 Operator 停在 L2/L3 + L4 就是合理的生产形态。L5 适合平台化、规模化、领域知识非常成熟的场景；没有护栏的 L5 比 L2 更危险。
+
+**一句话总结**：L1 解决“能不能用”，L2 解决“能不能升级”，L3 解决“有状态运维”，L4 解决“能不能运营”，L5 解决“能不能少人值守”。生产级通常至少是 **L2 + L4**；有状态服务再加 **L3**；L5 取决于领域和护栏成熟度。
 
 ## 2. CRD：把 API 契约交给 API Server
 
@@ -1051,11 +1185,154 @@ Cluster API 在 Reconcile 早期调用 `paused.EnsurePausedCondition`，如果 p
 2. **周期性 reconcile**：`RequeueAfter` 或 cache resync；resync 会发同 RV Update，predicate 可能过滤；
 3. **对账外部系统**：定时 list 外部资源，按标签/UID 比较。
 
+> `Owns` 只负责“子资源事件 → 找到 ownerReference → 把 owner 入队”。它**不做 diff**，也不保证“有变化就更新”；默认只看 `controller: true` 的 owner。见 [builder/controller.go:333-345](https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/builder/controller.go#L333-L345) 和 [enqueue_owner.go:42-83](https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/handler/enqueue_owner.go#L42-L83)。是否真的需要更新，由 Reconcile 里的 diff 决定。
+
+#### 7.6.1 为什么“期望 spec”和 live spec 一定会 diff
+
+因为 **API Server 会对创建的对象做默认值填充**。你提交的 `Deployment` 可能只写了 `image` 和 `replicas`，但创建后 etcd 里的对象会多出很多字段：
+
+| 字段 | API Server 默认值 |
+|---|---|
+| `Deployment.spec.replicas` | `1` |
+| `Deployment.spec.strategy.type` | `RollingUpdate` |
+| `Deployment.spec.strategy.rollingUpdate.maxUnavailable` / `maxSurge` | `25%` |
+| `Deployment.spec.revisionHistoryLimit` | `10` |
+| `Deployment.spec.progressDeadlineSeconds` | `600` |
+| `PodSpec.restartPolicy` | `Always` |
+| `PodSpec.dnsPolicy` | `ClusterFirst` |
+| `PodSpec.schedulerName` | `default-scheduler` |
+| `PodSpec.terminationGracePeriodSeconds` | `30` |
+| `Container.imagePullPolicy` | `latest` → `Always`，其他 tag → `IfNotPresent` |
+
+代码依据：[apps/v1/defaults.go:38-73](https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/apis/apps/v1/defaults.go#L38-L73)、[core/v1/defaults.go:243-273](https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/apis/core/v1/defaults.go#L243-L273)、[core/v1/defaults.go:82-91](https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/apis/core/v1/defaults.go#L82-L91)。
+
+所以下面这些写法都会“永远有 diff”：
+
+```go
+// 反例 1：拿“只写了部分字段的 desired”和 live 直接比
+if !reflect.DeepEqual(desired.Spec, live.Spec) {
+    r.Update(ctx, desired) // 可能把默认值/别人写的字段覆盖掉
+}
+
+// 反例 2：从零构造一个完整对象再 Update
+d := &appsv1.Deployment{ObjectMeta: ..., Spec: appsv1.DeploymentSpec{...}}
+r.Update(ctx, d) // 未写的字段会以零值提交，可能重置默认值
+```
+
+更隐蔽的是 `metadata`：`resourceVersion`、`uid`、`creationTimestamp`、`generation`、`managedFields` 在每次写入后都可能变化；`status` 也会被子控制器/节点不断更新。**比较整个对象没有意义**。
+
+#### 7.6.2 处理方式 A：Server-Side Apply（推荐）
+
+SSA 的模型是“我只声明我拥有的字段”，不需要 GET，也不需要自己做 diff：
+
+```go
+func (r *Reconciler) applyDeployment(ctx context.Context, w *examplev1.Widget) error {
+    spec := map[string]any{
+        "selector": map[string]any{"matchLabels": map[string]any{"app": w.Name}},
+        // 真实代码必须构造完整的 PodTemplateSpec；这里只展示 apply 的形状
+        "template": podTemplate(w),
+    }
+    if w.Spec.Replicas != nil {
+        spec["replicas"] = *w.Spec.Replicas
+    }
+
+    desired := map[string]any{
+        "apiVersion": "apps/v1",
+        "kind":       "Deployment",
+        "metadata": map[string]any{
+            "name":      w.Name,
+            "namespace": w.Namespace,
+            "labels":    map[string]any{"app.kubernetes.io/instance": w.Name},
+        },
+        "spec": spec,
+    }
+    u := &unstructured.Unstructured{Object: desired}
+    return r.Apply(ctx,
+        client.ApplyConfigurationFromUnstructured(u),
+        client.FieldOwner("widget-controller"),
+        client.ForceOwnership,
+    )
+}
+```
+
+为什么它能解决默认值 diff：
+
+- apply 对象里**没有出现的字段，不会被这个 field manager 拥有**；API Server 填的默认值不会和你的 manager 冲突；
+- 不需要“desired vs live”全量比较，API Server 按 `managedFields` 合并；
+- 对同一个 apply 配置重复执行是幂等的；
+- 字段所有权清晰：`kubectl get --show-managed-fields` 能看到谁拥有哪个字段。
+
+官方对控制器的建议是：**对自己拥有的对象，通常应该 force conflicts**，因为控制器无法交互式解决冲突；但**不要对用户/HPA 拥有的字段盲目 force**。见 [Using Server-Side Apply in a controller](https://kubernetes.io/docs/reference/using-api/server-side-apply/#using-server-side-apply-in-a-controller)。
+
+> [!WARNING]
+> SSA 的“省略”有代价：apply 配置必须包含**你拥有的全部字段**；如果你之前 apply 了 `spec.replicas`，这次省略它，且没有其他 owner，API Server 会把它删除/重置。不要用“只写变化字段”的思维写 SSA。
+
+#### 7.6.3 处理方式 B：GET live，只改自己拥有的字段，再 Patch
+
+如果暂时不能上 SSA，最稳的老办法是：
+
+1. GET 最新 live 对象（带默认值、带别人写的字段）；
+2. `DeepCopy` 一份 before；
+3. 只改 controller 拥有的字段；
+4. 比较 **before vs after**，而不是 desired vs live；
+5. 用 `Patch`（MergeFrom）而不是全量 `Update`。
+
+```go
+live := &appsv1.Deployment{}
+if err := r.Get(ctx, key, live); err != nil {
+    return client.IgnoreNotFound(err)
+}
+before := live.DeepCopy()
+
+live.Spec.Replicas = desired.Replicas
+live.Spec.Template = desired.Template
+live.Labels = mergeOwnedLabels(live.Labels, desired.Labels)
+
+if apiequality.Semantic.DeepEqual(before, live) {
+    return nil // 没有变化，不写
+}
+return r.Patch(ctx, live, client.MergeFrom(before))
+```
+
+这样默认值会留在 live 里，不会被零值覆盖；比较的也是“我改前/改后”，不会因为 API Server 填了 `strategy` 而误判。
+
+controller-runtime 的 `CreateOrUpdate` 已经帮你做了 GET + mutate，但它的注释明确警告：**如果 MutateFn 把有默认值的字段重置为零值，它会永远 Update**（例如把 `Deployment.Spec.Replicas` 设成 `nil`，而 live 里默认是 1）。见 [controllerutil.go:297-319](https://github.com/kubernetes-sigs/controller-runtime/blob/5d8467b3065818a3b382d8f6941147a801fd1969/pkg/controller/controllerutil/controllerutil.go#L297-L319)。
+
+#### 7.6.4 处理方式 C：只比较 owned 字段（DeepDerivative）
+
+如果只是判断“我关心的字段是否已经满足”，可以比较 desired 的非空字段是否是 live 的子集：
+
+```go
+if apiequality.Semantic.DeepDerivative(desired.Spec, live.Spec) {
+    // desired 中设置的非空字段，在 live 中都有相同值
+}
+```
+
+`DeepDerivative` 的语义是：**a1 中的 unset 字段不比较**；unset 包括 nil pointer、空 string、空 slice/map。它适合“desired 只包含部分字段”的场景。见 [deep_equal.go:419-433](https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apimachinery/third_party/forked/golang/reflect/deep_equal.go#L419-L433)。
+
+但要注意：
+
+- 它**不忽略零值 int/bool**；`replicas: 0` 会被当作真实值比较（这通常是对的，因为 0 是“缩到零”的合法意图）；
+- 它无法表达“把字段清空”：空 string/slice/map 被视为 unset，不会产生 diff；这种场景要显式 patch/SSA 删除；
+- 它只适合“读判断”，不适合“写回”；写回仍然要 GET live + 只改 owned 字段，或 SSA。
+
+#### 7.6.5 选择建议
+
+| 场景 | 建议 |
+|---|---|
+| 新 controller，字段 ownership 清晰 | **SSA**：只 apply owned 字段，force conflicts |
+| 老代码/需要兼容默认值 | GET live → 只改 owned 字段 → 比较 before/after → Patch |
+| 只判断“是否需要处理” | `DeepDerivative(desired, live)` 或显式 owned-field diff |
+| 全量 `Update` 从零构造的对象 | **避免**；容易覆盖默认值和别人的字段 |
+| 字段由 HPA/VPA/用户管理 | 不要拥有/force；用 SSA ownership 划分或显式禁用 |
+| 需要清空字段 | 显式 patch/SSA 删除；不要依赖 `DeepDerivative` |
+
 注意：
 
 - ownerReference 只保证“删除时级联”，不保证“子资源被改后自动修复”；修复靠 Reconcile。
 - 如果子资源被用户改成“不属于 controller”的状态，先判断是否应该接管；不要在未确认 ownership 的情况下强行覆盖。
 - 对 autoscaler 管理的字段（如 HPA 的 `replicas`），用 SSA field ownership 或显式禁用对应字段来避免冲突。
+- `Owns` 会对子资源的**所有** update 触发（包括 status 变化）；如果 status 更新很频繁，考虑用 predicate 过滤，避免无意义的 Reconcile。
 
 ### 7.7 多步操作：把进度写进 status
 
@@ -1835,7 +2112,7 @@ controller-runtime 的指标名见 [metrics.go:28-95](https://github.com/kuberne
 
 ### 本 wiki 相关页面
 
-- [client-go list & watch 原理](<5_client-go list & watch 原理.md>)：Reflector、watch cache、apiserver watch 的源码级分析
+- [client-go list & watch 原理](client-go-list-watch.md)：Reflector、watch cache、apiserver watch 的源码级分析
 - [Kubernetes API Server](./2_kubernetes-api-server.md)：kube-apiserver 的认证、TLS 与架构
 - [API Priority and Fairness：FlowSchema 与 PriorityLevelConfiguration](./flowschema.md)：控制器请求的限流与隔离
 - [Kubernetes 控制面高可用方案](./控制面高可用方案.md)：apiserver/etcd/选主的 HA 基础

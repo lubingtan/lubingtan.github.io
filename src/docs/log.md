@@ -1,5 +1,41 @@
 # Operation Log
 
+## [2026-11-22] update | 补充 owned resources 的 diff 与默认值处理
+
+针对“`Owns` 触发后如何比较 desired/live”补充 `production-operator.md` §7.6：
+
+- 说明 `Owns` 只负责子资源事件 → owner 入队，不做 diff；默认只看 `controller: true` 的 ownerReference。
+- 新增 §7.6.1：解释 Deployment/Pod 创建后 API Server 会填充 `replicas=1`、`strategy`、`revisionHistoryLimit`、`progressDeadlineSeconds`、`restartPolicy`、`dnsPolicy`、`schedulerName`、`terminationGracePeriodSeconds`、`imagePullPolicy` 等默认值，因此“部分 desired spec”和 live spec 必然有差异。
+- 新增 §7.6.2：推荐 SSA，只 apply controller 拥有的字段，依赖 `managedFields`，不对 HPA/用户字段盲目 `ForceOwnership`；并说明省略 owned 字段会导致删除/重置。
+- 新增 §7.6.3：GET live → DeepCopy before → 只改 owned 字段 → 比较 before/after → `Patch`，避免全量 `Update` 覆盖默认值；引用 `CreateOrUpdate` 对默认值字段的警告。
+- 新增 §7.6.4：`apiequality.Semantic.DeepDerivative(desired, live)` 的语义与边界（忽略 nil/空 string/slice/map，不忽略零值 int/bool，无法表达清空）。
+- 新增 §7.6.5：SSA / GET+patch / DeepDerivative / 全量 Update 的选择表，以及 HPA、清空字段、status-only 事件的注意事项。
+
+**验证**：`make build` 通过；97 条 pinned GitHub 链接全部 verified、`bad=0`；121 个外部 URL 全部 2xx；9 条相对链接 `missing=0`。
+
+## [2026-11-22] update | 重写 client-go List/Watch 并改用英文文件名
+
+把 `5_client-go list & watch 原理.md` 重写并改名为 `client-go-list-watch.md`（符合 AGENTS.md 的短英文 + 连字符命名约定），从原来的 apiserver watch 片段扩展为 654 行的完整链路：
+
+- **API 语义**：`resourceVersion` 的 get/list/watch 语义表、`resourceVersionMatch`、`410 Gone`/`Too large resource version`、bookmark、streaming list（WatchList）、分页 `limit`/`continue`。
+- **服务端**：`ListResource` → `handleWatch`（30–60 分钟随机超时）→ `WatchServer`（WebSocket/chunked）→ `Cacher.Watch`（B-tree 对象 + 75s 事件历史 + 429 初始化保护）→ `etcd3.watcher`（RangeStream/分页 sync + `clientv3.Watch`）。
+- **client-go**：`ListWatch`（只是两个函数）→ `Reflector`（list RV 选择、410 回退、watch 重连、bookmark）→ `WatchList`（临时 Store + initial-events-end bookmark）→ `DeltaFIFO`（按 key 累积/dedup/Replace）→ `SharedIndexInformer`（Controller/processDeltas/HasSynced）→ `sharedProcessor`（多 handler 与慢 handler 反压）。
+- **自定义 watch**：`watch.Interface`/`StreamWatcher`、`RetryWatcher`/`Until`/`UntilWithSync` 的能力边界（尤其 410 与顺序保证）。
+- **生产坑**：RV=0、忽略 `watch.Error`、自定义分页、慢 handler、watch 重连风暴（`Request.Watch` 不限速）、启动 `WaitForCacheSync`、resync≠relist、metadata-only/分片/指标排障。
+
+同步更新 `index.md` 及 5 处页面内相对链接；`SUMMARY.md` 由 `make gen-summary` 重新生成。
+
+**验证**：`make build` 通过；62 条 pinned GitHub 链接全部 verified、`bad=0`；70 个外部 URL 全部 2xx；6 条相对链接 `missing=0`。
+
+## [2026-11-22] update | 补充 Operand 术语与 Operator 五级能力说明
+
+针对 `production-operator.md` 中 L2 出现的 Operand 和 Operator SDK 做了澄清：
+
+- 新增 §1.4 术语表：Operator（运维机器人）、Operand（被运维的业务工作负载/服务）、CR（工单）、Managed Resources（实际创建的对象）、CRD（API schema）；明确 Operand 不是 Operator 自己的 Deployment，并用 PostgreSQL 集群举例说明 L2 “管理旧版本 Operand” 的含义。
+- 将原 §1.4 的五级能力简表展开为 §1.5 的 L1–L5 分节说明：每级给出目标、具体能力、典型例子和验收问题；补充 SDK = Software Development Kit，以及“L2+L4 是多数生产 Operator 的底线、有状态服务再加 L3、L5 取决于护栏成熟度”的结论。
+
+**验证**：`make build` 通过；页面 pinned 链接仍为 90 条全部 verified、`bad=0`；外部 URL 与相对链接检查通过。
+
 ## [2026-11-22] update | kube-apiserver 原理、生产故障与参数调优
 
 把 `Cloud_Native/Kubernetes/2_kubernetes-api-server.md` 从空壳（仅"理解 Kubernetes 证书"两个标题）重写为 710 行的专题页，版本基准 Kubernetes v1.37.2（`c50e5395`）与 etcd v3.7.4（`2e8a5c99`）：
@@ -118,7 +154,7 @@ Web research + synthesis，新建 `Cloud_Native/Platform_Engineering/` 下 6 页
 
 **Lead 审校修正**：① 健康检查语义——`/livez` 并非"纯进程存活"：etcd 的 `etcd` health 组经 `AddHealthChecks` 同时注册进 healthz/livez/readyz，只有 `etcd-readiness` 是 readyz-only，两页的表格与说明已按源码更正并补 `healthz.go#L79-L110` 证据；② 修正 `cluster-api.md` 一个原本 404 的 CAPI 开发指南链接（改用 `developer/providers/overview`）；③ 统一三页"参考资料 + 本 wiki 相关页面"结构，并把 etcd 版本口径（kubeadm 1.37 默认 3.7.0、证据 checkout 3.7.4）写进页首版本表。
 
-**证据与校验**：三页共 2154 行；去重后 pinned-SHA 代码链接 217 个（全部 40 位 SHA + `#Lx-Ly` 行号），官方文档/博客/SLA 等外部链接 71 个；`verify-links.py` 三页分别 93/63/120 条 pinned 链接全部 verified、`bad=0`；267 个去重外部 URL 逐条 curl 全部 2xx；相对链接 106 条 0 缺失；`make build` 通过（3 个 HTML 页面、8 个 mermaid 块、2 张 SVG 正确渲染）。交叉引用：`2_kubernetes-api-server.md`、`5_client-go list & watch 原理.md`、`flowschema.md`、`kubelet原理.md`、`cluster-api.md` 增加延伸阅读；`index.md` 三条索引；`SUMMARY.md` 由 `make gen-summary` 重新生成。研究简报与版本矩阵留在 `.repos/CONTROL_PLANE_RESEARCH_BRIEF.md`（gitignored），并新增 `raw/RESEARCH-k8s-control-plane.md` 作为可入库的来源清单与事实基线。
+**证据与校验**：三页共 2154 行；去重后 pinned-SHA 代码链接 217 个（全部 40 位 SHA + `#Lx-Ly` 行号），官方文档/博客/SLA 等外部链接 71 个；`verify-links.py` 三页分别 93/63/120 条 pinned 链接全部 verified、`bad=0`；267 个去重外部 URL 逐条 curl 全部 2xx；相对链接 106 条 0 缺失；`make build` 通过（3 个 HTML 页面、8 个 mermaid 块、2 张 SVG 正确渲染）。交叉引用：`2_kubernetes-api-server.md`、`client-go-list-watch.md`、`flowschema.md`、`kubelet原理.md`、`cluster-api.md` 增加延伸阅读；`index.md` 三条索引；`SUMMARY.md` 由 `make gen-summary` 重新生成。研究简报与版本矩阵留在 `.repos/CONTROL_PLANE_RESEARCH_BRIEF.md`（gitignored），并新增 `raw/RESEARCH-k8s-control-plane.md` 作为可入库的来源清单与事实基线。
 
 ## [2026-11-19] update | KVM 部分新增可运行实验（最小 VMM）
 

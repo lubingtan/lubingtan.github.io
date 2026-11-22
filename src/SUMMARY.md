@@ -25,7 +25,7 @@
   - [Kueue: Kubernetes 原生作业队列管理器](./docs/Cloud_Native/Kubernetes/kueue.md)
   - [Pod](./docs/Cloud_Native/Kubernetes/1-1_k8s工作负载.md)
   - [What is Kubernetes Service](./docs/Cloud_Native/Kubernetes/6_service相关.md)
-  - [client-go list & watch 原理](./docs/Cloud_Native/Kubernetes/5_client-go%20list%20&%20watch%20原理.md)
+  - [client-go List/Watch 原理：从 API 语义到 SharedInformer](./docs/Cloud_Native/Kubernetes/client-go-list-watch.md)
   - [cni详解](./docs/Cloud_Native/Kubernetes/cni详解.md)
   - [k8s scheduler 源码分析](./docs/Cloud_Native/Kubernetes/4_kube-scheduler源码分析.md)
   - [k8s之pleg](./docs/Cloud_Native/Kubernetes/k8s之pleg.md)

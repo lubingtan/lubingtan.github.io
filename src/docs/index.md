@@ -12,7 +12,7 @@
 - [K8s 工作负载](./Cloud_Native/Kubernetes/1-1_k8s工作负载.md) — Pod 的概念、原理及工作负载资源类型
 - [kube-apiserver：原理、生产故障与参数调优](./Cloud_Native/Kubernetes/2_kubernetes-api-server.md) — 三层 server 与请求链路、写入/读取路径与 watch cache（1.37 B-tree/快照/RangeStream）、12 类生产故障模式、apiserver 与 etcd 参数调优、1.33–1.37 重要特性（WatchList、VAP/MAP、混合版本代理等）
 - [kube-scheduler 源码分析](./Cloud_Native/Kubernetes/4_kube-scheduler源码分析.md) — scheduler 的工作流程、配置初始化与调度算法源码解读
-- [client-go list & watch 原理](./Cloud_Native/Kubernetes/5_client-go%20list%20&%20watch%20原理.md) — client-go 中 List-Watch 机制的实现原理
+- [client-go List/Watch 原理](./Cloud_Native/Kubernetes/client-go-list-watch.md) — 从 resourceVersion/410/bookmark 语义、watch cache 与 etcd watch，到 Reflector、DeltaFIFO、SharedInformer 与自定义 watch 的完整链路
 - [Service 相关](./Cloud_Native/Kubernetes/6_service相关.md) — Kubernetes Service 的概念、类型及其实现原理
 - [CNI 详解](./Cloud_Native/Kubernetes/cni详解.md) — 容器网络接口的实现：IP 分配、network namespace、veth pair、bridge
 - [API Priority and Fairness：FlowSchema 与 PriorityLevelConfiguration](./Cloud_Native/Kubernetes/flowschema.md) — APF 的请求分类与并发隔离：FlowSchema 规则与匹配优先级、PriorityLevelConfiguration 的份额/队列/借还、内置 mandatory 与 suggested 策略、自定义与调参方法
