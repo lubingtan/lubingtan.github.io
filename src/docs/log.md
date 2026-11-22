@@ -1,5 +1,15 @@
 # Operation Log
 
+## [2026-11-22] ingest | Kubernetes 网络全链路与多集群互联
+
+以本地源码/文档为主要证据，补齐 Kubernetes 网络专题。基线：`kubernetes@c50e5395`（v1.37.2）、`containerd@b7a25261`（v2.4.2）、CNI spec 1.1.0（`42e11794`）、CNI plugins（`0581b429`）、`coredns@996a30df`、`mcs-api@a3bfd21f`、`submariner@a920c26e`、`metallb@0db4a44c`、`gateway-api@d04e7458`；关键行号均用本地 checkout 核对，并用 `verify-links.py` 校验固定 commit 的 permalink。
+
+- 新建 `k8s-network-path.md`：以"四张地址表 + 五层数据面"为主线，给出 Pod→Pod（同节点/underlay/overlay）、Pod→Service（PREROUTING→KUBE-SERVICES→KUBE-SVC→KUBE-SEP→DNAT→conntrack 回程）、外部→Service（NodePort/LB/Ingress/Gateway）、DNS（resolv.conf/search/ndots/CoreDNS/NodeLocal）、出集群 NAT 的完整路径；附抓包证据地图、L0–L7 检查表、12 个经典案例。重点澄清 `br_netfilter` 对同节点 Service 回包的作用、hairpin SNAT 的边界、`REJECT` vs `DROP`、IPVS 1.40/1.43 退场与 nftables 1.33 GA 但默认仍是 iptables。
+- 重写 `cni详解.md`（原为 ~3KB 笔记）：CNI 边界与 6 个动词（ADD/DEL/CHECK/GC/STATUS/VERSION）、kubelet→CRI→containerd→go-cni→libcni→插件的调用链，纠正"netns 由 CNI 创建"的误解（实为 containerd 在 pause sandbox 阶段 unshare+bind mount）；bridge/host-local/portmap/bandwidth/tuning 的逐插件行为与源码；ptp/ipvlan/macvlan 对比；NodeIPAM 与静态/BGP/overlay/云路由；VXLAN/IPIP/Geneve/WireGuard/MTU 算术；host-local 磁盘状态与 IP 耗尽；CNI ipMasq 与 kube-proxy SNAT 的边界；NetworkPolicy 数据面（iptables/ipset/eBPF）；kindnet 的真实构成；故障表与 `crictl/nsenter` 命令。
+- 重写 `6_service相关.md`（原为未完成的笔记）：Service 四类型与默认值、headless/ExternalName/无 selector、EndpointSlice 结构与 ready/serving/terminating 语义、100 端点/片、topology hints 与 `trafficDistribution`（1.37 的 PreferSameZone/PreferSameNode/PreferClose）；kube-proxy 的 informer→tracker→sync 骨架与 1s/30s 周期；iptables 模式 1.37 的链布局（`KUBE-SERVICES/EXTERNAL-SERVICES/NODEPORTS/POSTROUTING/MARK-MASQ/FORWARD/PROXY-FIREWALL`、`KUBE-SVC/SVL/EXT/FW/SEP`），纠正旧资料里的 `KUBE-XLB-*`/`KUBE-MARK-DROP`；IPVS 的 `kube-ipvs0`/ipset/sysctl 与弃用；nftables 的 map/set/hairpin；conntrack 与 UDP 陈旧条目清理；ETP/ITP/双栈；云 CCM 与 MetalLB L2（active-passive）/BGP（ECMP）、kube-vip/DSR；Ingress 冻结与 Gateway API 角色分离、GEP-1748。
+- 新建 `multicluster-networking.md`：四种连通模型（flat L3/网关隧道/service export-import/DNS-only）、成员集群与成员地址的精确定义及在 Submariner/Cilium/MCS/Karmada 中的落点、地址重叠与 Globalnet/Liqo；MCS-API 只有 ServiceExport/ServiceImport 两个 CRD（无 ClusterSet CRD）、EndpointSlice 导出标签、`clusterset.local`、冲突按最老 export 胜出、MCS 不是数据面；Submariner 组件/cable/端口（纠正 500/udp、4800、8080 三个常见错误）/NAT-T/Globalnet/数据路径；Cilium ClusterMesh 的前置条件、Global Service、策略、MCS；Istio/Liqo/Skupper/Karmada 对比；跨集群 DNS 与 search/ndots 坑；信任域/NAT/MTU；排障 runbook 与选型。
+- 交叉引用：四页互相链接，并在 `index.md` 更新摘要；`SUMMARY.md` 由 `make gen-summary` 重新生成。
+
 ## [2026-11-22] update | 补充 owned resources 的 diff 与默认值处理
 
 针对“`Owns` 触发后如何比较 desired/live”补充 `production-operator.md` §7.6：

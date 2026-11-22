@@ -13,8 +13,10 @@
 - [kube-apiserver：原理、生产故障与参数调优](./Cloud_Native/Kubernetes/2_kubernetes-api-server.md) — 三层 server 与请求链路、写入/读取路径与 watch cache（1.37 B-tree/快照/RangeStream）、12 类生产故障模式、apiserver 与 etcd 参数调优、1.33–1.37 重要特性（WatchList、VAP/MAP、混合版本代理等）
 - [kube-scheduler 源码分析](./Cloud_Native/Kubernetes/4_kube-scheduler源码分析.md) — scheduler 的工作流程、配置初始化与调度算法源码解读
 - [client-go List/Watch 原理](./Cloud_Native/Kubernetes/client-go-list-watch.md) — 从 resourceVersion/410/bookmark 语义、watch cache 与 etcd watch，到 Reflector、DeltaFIFO、SharedInformer 与自定义 watch 的完整链路
-- [Service 相关](./Cloud_Native/Kubernetes/6_service相关.md) — Kubernetes Service 的概念、类型及其实现原理
-- [CNI 详解](./Cloud_Native/Kubernetes/cni详解.md) — 容器网络接口的实现：IP 分配、network namespace、veth pair、bridge
+- [Kubernetes 网络全链路：Pod、Service、LoadBalancer 与 DNS](./Cloud_Native/Kubernetes/k8s-network-path.md) — 四张地址表与五层数据面、Pod→Pod/Service/外部入口/DNS/egress 的完整路径、iptables/IPVS/nftables/eBPF 差异、抓包证据地图与分层排障决策树
+- [Service、kube-proxy 与 LoadBalancer](./Cloud_Native/Kubernetes/6_service相关.md) — Service 语义与默认值、EndpointSlice/readiness、kube-proxy 三种模式的链布局与规则生成、conntrack、ETP/ITP/拓扑、MetalLB L2/BGP、Ingress/Gateway API
+- [CNI 详解：从 kubelet 到 veth、bridge 与 overlay](./Cloud_Native/Kubernetes/cni详解.md) — CNI 规范与调用链、containerd 创建 netns/pause、bridge/host-local/portmap/bandwidth、ptp/ipvlan/macvlan、PodCIDR 与路由、overlay MTU、IPAM、NAT 与 NetworkPolicy 数据面
+- [多集群网络互联：发现、访问、成员地址与 NAT 穿透](./Cloud_Native/Kubernetes/multicluster-networking.md) — 四种连通模型、成员集群/成员地址、地址冲突与 Globalnet、MCS-API、Submariner 隧道与端口、Cilium ClusterMesh、跨集群 DNS 与排障
 - [API Priority and Fairness：FlowSchema 与 PriorityLevelConfiguration](./Cloud_Native/Kubernetes/flowschema.md) — APF 的请求分类与并发隔离：FlowSchema 规则与匹配优先级、PriorityLevelConfiguration 的份额/队列/借还、内置 mandatory 与 suggested 策略、自定义与调参方法
 - [PLEG](./Cloud_Native/Kubernetes/k8s之pleg.md) — Pod Lifecycle Event Generator 的原理与僵尸进程排查
 - [Kubelet 原理](./Cloud_Native/Kubernetes/kubelet原理.md) — kubelet 创建 Pod 的完整流程：syncLoop、PLEG、容器运行时
