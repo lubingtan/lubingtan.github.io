@@ -10,7 +10,7 @@
 
 - [Kubernetes 概念](./Cloud_Native/Kubernetes/1_kubernetes概念.md) — Kubernetes 是什么、为什么需要它，以及容器部署的发展历史
 - [K8s 工作负载](./Cloud_Native/Kubernetes/1-1_k8s工作负载.md) — Pod 的概念、原理及工作负载资源类型
-- [Kubernetes API Server](./Cloud_Native/Kubernetes/2_kubernetes-api-server.md) — kube-apiserver 的证书认证、SSL/TLS 与架构分析
+- [kube-apiserver：原理、生产故障与参数调优](./Cloud_Native/Kubernetes/2_kubernetes-api-server.md) — 三层 server 与请求链路、写入/读取路径与 watch cache（1.37 B-tree/快照/RangeStream）、12 类生产故障模式、apiserver 与 etcd 参数调优、1.33–1.37 重要特性（WatchList、VAP/MAP、混合版本代理等）
 - [kube-scheduler 源码分析](./Cloud_Native/Kubernetes/4_kube-scheduler源码分析.md) — scheduler 的工作流程、配置初始化与调度算法源码解读
 - [client-go list & watch 原理](./Cloud_Native/Kubernetes/5_client-go%20list%20&%20watch%20原理.md) — client-go 中 List-Watch 机制的实现原理
 - [Service 相关](./Cloud_Native/Kubernetes/6_service相关.md) — Kubernetes Service 的概念、类型及其实现原理
@@ -25,6 +25,7 @@
 - [大规模多集群 K8s 版本升级](./Cloud_Native/Kubernetes/大规模多集群版本升级.md) — 多集群升级规划：支持窗口/版本 skew/API 生命周期、依赖兼容矩阵、波次与门禁、kubeadm/CAPI/托管集群执行顺序、常见故障处理与回滚边界
 - [RBAC](./Cloud_Native/Kubernetes/rbac.md) — 基于角色的访问控制：用户创建、证书签名请求、权限绑定
 - [Kueue](./Cloud_Native/Kubernetes/kueue.md) — Kubernetes 原生作业队列管理器：配额管理、公平共享、抢占与多集群调度
+- [生产级 Kubernetes Operator](./Cloud_Native/Kubernetes/production-operator.md) — 从 CRD/schema/CEL/版本转换、API Server 请求路径、List/Watch 与 Informer/Workqueue，到 spec/status 与 conditions 设计、Reconcile 收敛、幂等与外部副作用、OwnerRef/Finalizer 清理、并发分片、CRD/控制器/OLM 升级的完整生产指南
 
 ### AI Infrastructure
 

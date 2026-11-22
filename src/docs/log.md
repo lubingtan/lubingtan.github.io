@@ -1,5 +1,35 @@
 # Operation Log
 
+## [2026-11-22] update | kube-apiserver 原理、生产故障与参数调优
+
+把 `Cloud_Native/Kubernetes/2_kubernetes-api-server.md` 从空壳（仅"理解 Kubernetes 证书"两个标题）重写为 710 行的专题页，版本基准 Kubernetes v1.37.2（`c50e5395`）与 etcd v3.7.4（`2e8a5c99`）：
+
+- **原理**：aggregator → kube → apiextensions 三层 server 与 delegate 降级；handler chain 的完整执行顺序（认证 → 审计 → 伪装 → APF → 授权）；准入插件顺序（MAP → mutating webhook → VAP → validating webhook）；写路径 `OptimisticPut(compare mod_revision)` 与冲突重试；读路径四种 `resourceVersion` 语义及 `ShouldDelegateList` 判定；watch cache 在 1.37 的结构（B-tree 全量对象 + 75s 事件历史 + 快照，环形缓冲已移除）；`/registry` key 布局；启动时 cache 初始化与 `storage-readiness` hook。
+- **生产故障**：12 个模式（APF 429、OOM、1.5MiB 大对象、LIST 风暴、410/Too large RV、etcd 慢、webhook、聚合 API/CRD 转换、审计阻塞、证书/SA token、LB/HTTP2、升级期 404），每个按症状/机理/定位/处置展开，并附症状→层速查表。
+- **调优**：apiserver 并发/缓存/审计参数表与 etcd 参数表（quota、compaction、snapshot-count、heartbeat/election、max-request-bytes、慢盘 warning），apiserver↔etcd 客户端常量，OS/网络/LB 建议，三档容量起点与六条调参禁区。
+- **新特性**（1.33–1.37）：WatchList/`WatchListCompression`/`EtcdRangeStream`/`ListFromCacheSnapshot`/`DetectCacheInconsistency`/`ConsistentListFromCacheSkipTimeoutFallback`、`ShardedListAndWatch`、VAP/MAP/`ManifestBasedAdmissionControlConfig`/`DeclarativeValidation`、`ConstrainedImpersonation`/结构化认证授权/KEP-6060、Mixed Version Proxy 与 `--emulated-version`、`WebhookRoundTripLoadBalancing`、`/flagz` `/statusz`。
+- **证据**：87 个真实外部 URL 逐一 curl 验证 2xx（另有 3 个 `127.0.0.1:6443` 与 1 个 `apiserver:6443` 示例端点，不作外链校验）；相对链接全部存在；关键结论固定到行号，并对照 v1.36 源码确认 1.37 才移除 watch cache 的 `capacity` 环形缓冲。
+
+同步更新 `index.md` 条目与 `SUMMARY.md`。
+
+## [2026-11-22] ingest | 生产级 Kubernetes Operator：从 CRD 到状态收敛与升级
+
+Web research + 源码核对，新建 `Cloud_Native/Kubernetes/production-operator.md`（约 1850 行），并写入来源台账 `raw/RESEARCH-k8s-operator.md`。文件名采用短英文 `production-operator.md`（不与 H1 标题相同），该命名约定已写入 `AGENTS.md` 的 Page Conventions。覆盖用户要求的完整链路：
+
+- **CRD**：group/names/scope/versions、structural schema、pruning、defaulting、OpenAPI/CEL/ratcheting、status/scale 子资源、`served`/`storage`/`storedVersions`、conversion（None vs Webhook）、Established/Terminating/删除语义、CRD vs Aggregated API。
+- **API Server**：`crdHandler` 如何解析 `<resource>.<group>`、按版本构建 storage（decoder=请求版本、encoder=storage 版本）、admission 与 schema/CEL 顺序、status/scale scope、CRD spec 更新导致 storage 重建、watch cache 初始化保护。
+- **List/Watch**：`resourceVersion` 的 get/list/watch 语义表、`resourceVersionMatch`、`410 Gone`/`Too large resource version`、Reflector 的 list-then-watch/回退、bookmark、streaming list（WatchList beta）、客户端/API Server 分片（`ShardSelector` alpha）、metadata-only 与 field selector。
+- **Informer/Workqueue**：SharedInformer/DeltaFIFO/Indexer 三层、resync 是“同 RV Update”而非重新 list、workqueue 的 dirty/processing 去重与串行化、rate limiter/Forget、controller-runtime 的 Reconcile 返回语义、cache 读的“写后读”陷阱、启动顺序（webhook→cache→leader election）、指标。
+- **API 设计**：spec/status 分离、声明式命名、optional/required 与 pointer、conditions（`metav1.Condition`、listType=map、observedGeneration、polarity）、list/map 拓扑与 SSA、printer columns/selectableFields/scale、v1alpha1→v1 兼容规则、8 条反模式。
+- **状态收敛**：Reconcile 骨架（删除优先→finalizer→观察→收敛→status）、transient/terminal/wait 分类、status 冲突重试、依赖顺序、pause、drift、多步状态机。
+- **幂等**：name idempotency/409、read-modify-write+RV、SSA field ownership/force 边界、外部副作用的确定性名字/幂等键/标签/两阶段状态/孤儿清理、删除与 status/event 幂等。
+- **清理**：ownerReference 同 namespace 限制、background/foreground/orphan、finalizer 机制与 qualified name、finalizer 先于副作用、跨 namespace 清理、卡住 finalizer 排查、CRD 删除=删除所有 CR、孤儿 sweeper。
+- **并发**：per-key 串行 vs `MaxConcurrentReconciles`、Lease 选主参数与切换、单活/多活/分片、resourceVersion 冲突、client-go 默认 QPS=5/Burst=10 与 APF、热循环治理、多 controller 字段 ownership。
+- **升级**：CRD 版本升级 9 步、conversion webhook HA/证书/监控、StorageVersionMigration/手动迁移、schema 演进矩阵、controller 滚动与 N-1 兼容窗口、OLM `replaces`/`skips`/`skipRange`、回滚边界、升级测试矩阵。
+- **可观测性与测试**：controller-runtime/workqueue/APIServer/conversion 指标、告警、日志/事件、envtest/e2e/fuzz/故障注入、62 项生产检查清单。
+
+**证据**：Kubernetes v1.37.2（`c50e5395`）、controller-runtime v0.25.2（`5d8467b3`）、sample-controller（`7204184e`）、Cluster API v1.14.4（`4356c154`）四个 pinned checkout；`verify-links.py` 90 条 pinned GitHub 链接全部 verified、`bad=0`；114 个外部 URL 逐条 curl 全部 2xx；8 条相对链接 missing=0；`make build` 通过。同步更新 `index.md`、`SUMMARY.md`，并在 `.repos/verify-links.py` 增加 controller-runtime/sample-controller 的本地 checkout 映射。与既有页面交叉引用：client-go list & watch、API Server、APF/FlowSchema、控制面 HA、多集群版本升级、Cluster API、Kueue、容器运行时。
+
 ## [2026-11-21] update | DevOps 理念与实践迁入 Platform_Engineering 并补全基础篇
 
 将 `Cloud_Native/CICD/devops-thinking.md` 移至 `Cloud_Native/Platform_Engineering/devops-thinking.md`（CICD 目录随之移除），并按“基础篇”定位补全：

@@ -67,7 +67,7 @@ Report findings to the user and offer to fix them.
 - **Links**: Use relative links between wiki pages (e.g. `../Cloud_Native/Kubernetes/kubelet原理.md`)
 - **Headings**: Use `#` for page title, `##` for sections, `###` for subsections. Keep hierarchy clean.
 - **Frontmatter**: Not required. Add YAML frontmatter only when the page has metadata worth querying (tags, dates).
-- **File names**: Existing mixed Chinese/English names are acceptable. New pages should use descriptive names.
+- **File names**: Use a short, lowercase English filename with hyphens for new pages (e.g. `production-operator.md`); do not reuse the page title (especially a Chinese title) as the filename. The H1 heading carries the human-readable title. This keeps URLs/SUMMARY paths stable and avoids Chinese punctuation in paths. Existing mixed Chinese/English filenames are grandfathered and need not be renamed just for style.
 - **Assets**: Images and attachments go in `src/docs/{category}/{page}.assets/` directories.
 
 ## Index and Log
