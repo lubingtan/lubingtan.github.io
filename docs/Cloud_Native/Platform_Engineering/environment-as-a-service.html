@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-c4cdfd1b.js";
+            window.path_to_searchindex_js = "../../../searchindex-dfe22a86.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-ee3a948c.js"></script>
+        <script src="../../../toc-d9461900.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -345,8 +345,8 @@ spec:
 <h3 id="64-容量与调度"><a class="header" href="#64-容量与调度">6.4 容量与调度</a></h3>
 <ul>
 <li>为不同负载设置节点池/优先级：在线服务、批处理、GPU、构建；</li>
-<li>批处理与 AI 训练用队列与配额管理（<a href="../Kubernetes/kueue.html">Kueue</a>），避免挤占在线服务；</li>
-<li>GPU 共享/隔离用 <a href="../AI_Infrastructure/hami.html">HAMi</a> 等方案，按显存/算力切分；</li>
+<li>批处理与 AI 训练用队列与配额管理（<a href="../Kubernetes/Scheduling/kueue.html">Kueue</a>），避免挤占在线服务；</li>
+<li>GPU 共享/隔离用 <a href="../AI_Infrastructure/Accelerators/hami.html">HAMi</a> 等方案，按显存/算力切分；</li>
 <li>预留容量与抢占策略要明确：谁能抢占谁、抢占后如何通知；</li>
 <li>集群生命周期用 <a href="../Cluster_Lifecycle/cluster-api.html">Cluster API</a> 管理，环境集群与业务集群分开治理。</li>
 </ul>
@@ -404,10 +404,10 @@ spec:
 <li><a href="./agent-era-devops.html">Agent 时代的 DevOps</a></li>
 <li><a href="./platform-as-a-product.html">平台工程：把工程能力变成可复用的产品</a></li>
 <li><a href="./ci-cd-quality-gates.html">CI/CD 与自动化质量保障</a></li>
-<li><a href="../Kubernetes/kueue.html">Kueue：Kubernetes 原生作业队列管理器</a></li>
-<li><a href="../AI_Infrastructure/hami.html">HAMi：Kubernetes 异构 AI 算力虚拟化与调度</a></li>
+<li><a href="../Kubernetes/Scheduling/kueue.html">Kueue：Kubernetes 原生作业队列管理器</a></li>
+<li><a href="../AI_Infrastructure/Accelerators/hami.html">HAMi：Kubernetes 异构 AI 算力虚拟化与调度</a></li>
 <li><a href="../Cluster_Lifecycle/cluster-api.html">Cluster API：声明式集群生命周期管理</a></li>
-<li><a href="../AI_Infrastructure/agent-sandbox.html">Agent Sandbox</a></li>
+<li><a href="../AI_Infrastructure/Agents/agent-sandbox.html">Agent Sandbox</a></li>
 <li><a href="https://www.crossplane.io/">Crossplane</a> / <a href="https://www.vcluster.com/">vCluster</a> / <a href="https://kubevela.io/">KubeVela</a></li>
 <li><a href="https://karpenter.sh/">Karpenter</a> / <a href="https://opencost.io/">OpenCost</a></li>
 </ul>

@@ -1,0 +1,1014 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>GPU 算力/显存池化：从 CUDA 单卡视角到跨节点透明调度 - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../searchindex-dfe22a86.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../toc-d9461900.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Machine_Learning/High_Performance_Computing/gpu-cluster-pooling.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="gpu-算力显存池化从-cuda-单卡视角到跨节点透明调度"><a class="header" href="#gpu-算力显存池化从-cuda-单卡视角到跨节点透明调度">GPU 算力/显存池化：从 CUDA 单卡视角到跨节点透明调度</a></h1>
+<blockquote>
+<p><strong>结论先行</strong>：生产环境里不存在一个「任意 CUDA 程序零改动、跨节点把 N 张卡当成 1 张卡」的通用系统。
+能真正做到透明的是<strong>地址空间与显存容量</strong>（UVM、VMM + fabric memory、CXL 内存池）；<strong>算力</strong>的跨卡扩展
+必须显式切分 kernel——要么由通信库（NCCL/NVSHMEM）承担，要么由框架（TP/PP/EP）承担。
+所谓「底层 Runtime 按最优拓扑分配算力和显存」，在 2026 年最接近的实现是
+<strong>MNNVL（Multi-Node NVLink）+ IMEX + <code>CU_MEM_HANDLE_TYPE_FABRIC</code></strong> 构成的机架级单一内存 fabric，
+它把 72 张 GPU 的显存映射进同一套虚拟地址空间，但每张卡仍然要各自 launch kernel。
+CUDA 13 系列新增的 Compute Fabric Transport（logical endpoint）进一步把远端访问从「映射地址」推进到
+「带完成状态、可重试的 fabric 操作」，但仍然是显式编程，不是自动透明。</p>
+</blockquote>
+<p>本文把「应用视角单卡」拆成可验证的五个契约，再按透明性光谱盘点六类方案，最后给出选型判断。</p>
+<h2 id="一单卡视角到底意味着什么"><a class="header" href="#一单卡视角到底意味着什么">一、「单卡视角」到底意味着什么</a></h2>
+<p>一个 CUDA 应用「认为自己在一张卡上」，实际上依赖五个契约。任何分布式方案，只要打破了其中一条，应用就会感知到。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>#</th><th>契约</th><th>应用侧的可见形式</th><th>跨节点时谁最容易打破它</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td><strong>单设备枚举</strong></td><td><code>cudaGetDeviceCount()</code> 返回 1；一个 primary context</td><td>所有方案；通常要用 rank/环境变量伪装</td></tr>
+<tr><td>2</td><td><strong>单一虚拟地址空间</strong></td><td>任意指针在 kernel 内可直接解引用（UVA）</td><td>MNNVL 可以做到；PCIe/网络方案要靠显式拷贝</td></tr>
+<tr><td>3</td><td><strong>容量与带宽语义</strong></td><td><code>cudaMemGetInfo()</code> 看到聚合容量；访问延迟接近 HBM</td><td>池化/远端内存只能做到「容量像、延迟不像」</td></tr>
+<tr><td>4</td><td><strong>单设备执行模型</strong></td><td>一次 kernel launch 覆盖整个 grid；stream/event 单设备语义</td><td><strong>没有任何方案能完全做到跨节点</strong></td></tr>
+<tr><td>5</td><td><strong>单故障域</strong></td><td>一张卡/一个进程，挂了只影响自己</td><td>MNNVL 的一个 partition/clique 故障会带走整个域</td></tr>
+</tbody>
+</table>
+</div>
+<p>第 4 条是关键。CUDA 运行时<strong>没有</strong>「把一个 grid 自动切到 N 张卡」的 API：<code>&lt;&lt;&lt;grid, block&gt;&gt;&gt;</code> 的 grid 只在一个 device 上执行。
+Compute Capability 9.0（Hopper）引入的 Thread Block Cluster 看上去像「分布式」，但它只是把最多 8 个 block 协同调度到<strong>同一张 GPU 的一个 GPC</strong>，
+共享的是单卡内的 shared memory（DSMEM），不是跨卡内存。这一点经常被误解，先排除。</p>
+<h2 id="二透明性光谱六种单卡视角"><a class="header" href="#二透明性光谱六种单卡视角">二、透明性光谱：六种「单卡视角」</a></h2>
+<pre class="mermaid">flowchart TB
+    APP["CUDA 应用（以为自己在 1 张卡上）"]
+    APP --&gt; L1["L1 单机地址空间统一&lt;br/&gt;UVM / VMM / EGM"]
+    APP --&gt; L2["L2 机架级 NVLink 域&lt;br/&gt;MNNVL + IMEX + fabric memory"]
+    APP --&gt; L3["L3 远程单卡&lt;br/&gt;API Remoting"]
+    APP --&gt; L4["L4 显存容量弹性&lt;br/&gt;Pooling / CXL / Oversubscription"]
+    APP --&gt; L5["L5 库内并行&lt;br/&gt;NCCL / NVSHMEM / cuBLASMp"]
+    APP --&gt; L6["L6 编排层池化&lt;br/&gt;HAMi / MIG / DRA"]
+
+    L1 --&gt; G1["同机 CPU + 8 GPU"]
+    L2 --&gt; G2["跨节点 72 GPU 单一 NVLink 域"]
+    L3 --&gt; G3["远端 1 张物理卡"]
+    L4 --&gt; G4["本机/机架内存池"]
+    L5 --&gt; G5["N 张卡，显式 rank"]
+    L6 --&gt; G6["资源分配，不改语义"]
+</pre>
+
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>层级</th><th>「单卡」的真实含义</th><th>代表实现</th><th>应用改动</th><th>跨节点</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>L1 地址空间统一</strong></td><td>一个 OS 实例内的所有 CPU/GPU 共享地址空间</td><td>CUDA UVM、VMM、EGM、HMM</td><td>零/少量（换 allocator）</td><td>❌（单机）</td></tr>
+<tr><td><strong>L2 机架级 NVLink 域</strong></td><td>72 张卡的显存映射进同一 VA；或经 logical endpoint 访问</td><td>MNNVL + IMEX + fabric memory / CFT + multicast</td><td>需按 rank 映射/启动；库可隐藏</td><td>✅（NVLink 域内）</td></tr>
+<tr><td><strong>L3 远程单卡</strong></td><td>应用看到 1 张卡，实际是网络另一端的 1 张卡</td><td>rCUDA、GVirtuS、Bitfusion、HAMi Lupine</td><td>零（<code>LD_PRELOAD</code>/拦截）</td><td>✅（但不聚合）</td></tr>
+<tr><td><strong>L4 容量弹性</strong></td><td>显存不够时借用本机/机架/池化内存</td><td>EMA、Memory Harvesting、VUGVA、CXL pool</td><td>零/少量</td><td>部分（CXL 可跨节点）</td></tr>
+<tr><td><strong>L5 库内并行</strong></td><td>应用不改，但库把计算切到 N 卡</td><td>NCCL、NVSHMEM、cuBLASMp/cuFFTMp、TRT-LLM</td><td>改库调用/并行配置</td><td>✅</td></tr>
+<tr><td><strong>L6 编排池化</strong></td><td>调度器把 Pod/Job 放到拓扑最优的卡组</td><td>HAMi、MIG、MPS、K8s DRA、Slurm</td><td>零（改 YAML/脚本）</td><td>✅（放置层）</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p>这张表最重要的一行是 L2 与 L5 的分工：<strong>L2 让「内存」看起来是一张卡的，L5 让「计算」看起来是一张卡的</strong>。
+两者组合，才是 NVIDIA 在 NVL72 上宣传的「rack-scale single GPU」的实际工程含义。</p>
+</blockquote>
+<h2 id="三硬件底座拓扑决定最优"><a class="header" href="#三硬件底座拓扑决定最优">三、硬件底座：拓扑决定「最优」</a></h2>
+<h3 id="31-互联层次"><a class="header" href="#31-互联层次">3.1 互联层次</a></h3>
+<p>「最优拓扑」不是抽象概念，它由物理链路决定。GPU 访问不同位置内存的带宽/延迟差一个到两个数量级：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>介质</th><th>典型带宽（单向）</th><th>延迟量级</th><th>作用域</th><th>能否被 GPU load/store</th></tr>
+</thead>
+<tbody>
+<tr><td>HBM3/HBM3e</td><td>3–8 TB/s</td><td>百 ns</td><td>单卡</td><td>✅</td></tr>
+<tr><td>NVLink 4（H100）</td><td>450 GB/s（双向 900 GB/s）</td><td>~1 µs</td><td>单机 8 卡</td><td>✅</td></tr>
+<tr><td>NVLink 5（B200）</td><td>900 GB/s（双向 1.8 TB/s）</td><td>~1 µs</td><td>机架 72 卡</td><td>✅</td></tr>
+<tr><td>NVSwitch</td><td>全互联，聚合 130 TB/s（NVL72）</td><td>~1–2 µs</td><td>机架</td><td>✅（经 fabric）</td></tr>
+<tr><td>NVLink-C2C（Grace）</td><td>450 GB/s（双向 900 GB/s）</td><td>~数百 ns</td><td>CPU↔GPU</td><td>✅（硬件一致）</td></tr>
+<tr><td>PCIe 5.0 x16</td><td>64 GB/s</td><td>数 µs</td><td>单机</td><td>✅（P2P，需 ACS/IOMMU 配合）</td></tr>
+<tr><td>PCIe 6.0 x16</td><td>128 GB/s</td><td>数 µs</td><td>单机</td><td>✅</td></tr>
+<tr><td>CXL 2.0 / 3.0</td><td>2.0：32 GT/s/lane；3.0：64 GT/s/lane；支持池化/共享</td><td>数百 ns–µs</td><td>机架</td><td>✅（取决于设备类型）</td></tr>
+<tr><td>InfiniBand NDR/XDR</td><td>400/800 Gb/s</td><td>数 µs</td><td>集群</td><td>❌（需 RDMA/GPUDirect）</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p>数值是量级参考，具体型号有差异。关键结论：<strong>跨节点 NVLink 的带宽仍是本卡 HBM 的 1/4–1/5，延迟高一个数量级</strong>；
+所以「透明远端内存」永远不可能和本地 HBM 同性能，只能靠预取/局部性把差距藏起来。</p>
+</blockquote>
+<h3 id="32-nvl72-解剖"><a class="header" href="#32-nvl72-解剖">3.2 NVL72 解剖</a></h3>
+<p>NVIDIA GB200 NVL72 是目前最典型的「机架即一个 NVLink 域」：</p>
+<ul>
+<li>18 个 compute tray，每个 tray 2 颗 Grace CPU + 4 颗 Blackwell GPU → <strong>72 GPU / 36 Grace</strong></li>
+<li>9 个 NVLink switch tray，第五代 NVLink</li>
+<li>13.4 TB HBM3e，576 TB/s 聚合 HBM 带宽；30.2 TB「total fast memory」（HBM + LPDDR5X）</li>
+<li>每 GPU 1.8 TB/s GPU-to-GPU 带宽，聚合 130 TB/s</li>
+<li><strong>默认是一个 72 GPU 的单一 NVLink Partition</strong>；管理员可切成多个 User Partition（最多 72 个单卡 partition）</li>
+</ul>
+<p>这意味着：在默认配置下，72 张卡的显存<strong>在硬件上属于同一个 NVLink memory fabric</strong>，任意两张卡之间都可以互相映射内存，
+不需要经过 CPU 或网卡。这正是「底层按拓扑分配显存」的物理基础。</p>
+<h3 id="33-拓扑怎么被发现"><a class="header" href="#33-拓扑怎么被发现">3.3 拓扑怎么被发现</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>层面</th><th>工具/API</th><th>用途</th></tr>
+</thead>
+<tbody>
+<tr><td>系统</td><td><code>nvidia-smi topo -m</code></td><td>打印 GPU 间/GPU-NIC 的 NVLink/PCIe/NUMA 关系</td></tr>
+<tr><td>系统</td><td><code>nvidia-smi nvlink -s</code></td><td>查看 NVLink 链路状态与速率</td></tr>
+<tr><td>CUDA</td><td><code>cudaDeviceGetP2PAttribute</code></td><td>查询 P2P 能力/带宽（<code>cudaDevP2PAttrPerformanceRank</code>）</td></tr>
+<tr><td>CUDA</td><td><code>cuDeviceGetAttribute(CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_FABRIC_SUPPORTED)</code></td><td>是否支持 fabric memory</td></tr>
+<tr><td>CUDA</td><td><code>cuDeviceGetAttribute(CU_DEVICE_ATTRIBUTE_MULTICAST_SUPPORTED)</code></td><td>是否支持 multicast object</td></tr>
+<tr><td>NVML</td><td><code>nvmlDeviceGetTopologyCommonAncestor</code></td><td>两张卡最近的公共祖先（NVSwitch/PCIe 桥/NUMA）</td></tr>
+<tr><td>通信库</td><td>NCCL topology detection / <code>NCCL_TOPO_DUMP_FILE</code></td><td>生成拓扑图，选 ring/tree/NVLS</td></tr>
+<tr><td>K8s</td><td><code>nvidia.com/gpu.clique</code></td><td>DRA 节点标签，保证同一 NVLink clique</td></tr>
+<tr><td>Linux</td><td><code>numactl -H</code>、<code>/sys/class/drm</code></td><td>NUMA/PCIe 亲和性</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="34-最优拓扑的三层决策"><a class="header" href="#34-最优拓扑的三层决策">3.4 「最优拓扑」的三层决策</a></h3>
+<p>很多方案宣称「自动按最优拓扑分配」，拆开看是三层不同的决策：</p>
+<ol>
+<li>
+<p><strong>硬边界（谁和谁能互通）</strong></p>
+<ul>
+<li>NVLink Partition：把 72 卡切成若干隔离域；跨 partition 不能走 NVLink。</li>
+<li>IMEX domain / ComputeDomain：决定哪些节点/GPU 能互相 import 显存。</li>
+<li>MIG：把一张卡切成若干实例，实例间没有 NVLink 关系。</li>
+</ul>
+</li>
+<li>
+<p><strong>软放置（数据/进程放哪）</strong></p>
+<ul>
+<li>rank → GPU 的映射（<code>CUDA_VISIBLE_DEVICES</code>、<code>local_rank</code>、MPI rankfile）。</li>
+<li>显存放在哪个 device（VMM <code>CUmemAllocationProp.location</code>、UVM first-touch、<code>cudaMemAdvise</code>）。</li>
+<li>NUMA/PCIe 亲和性（GPU 与 NIC、CPU 内存节点）。</li>
+</ul>
+</li>
+<li>
+<p><strong>运行时（走哪条路）</strong></p>
+<ul>
+<li>NCCL 选 ring/tree/NVLS/collnet；NVSHMEM 选 NVLink/IB transport；UVM 决定迁移/预取策略。</li>
+<li>这一步才是「按拓扑优化」的核心，也是最容易被「透明层」掩盖的部分。</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>所以「底层 SDK 自动分配」通常只覆盖第 2、3 层；第 1 层是管理员/调度器显式划的边界。
+没有硬边界，拓扑最优无从谈起；有了硬边界，跨边界仍然要显式编程。</p>
+</blockquote>
+<h2 id="四方案-a单机地址空间统一uvm--vmm--egm"><a class="header" href="#四方案-a单机地址空间统一uvm--vmm--egm">四、方案 A：单机地址空间统一（UVM / VMM / EGM）</a></h2>
+<h3 id="41-cuda-unified-memoryuvm"><a class="header" href="#41-cuda-unified-memoryuvm">4.1 CUDA Unified Memory（UVM）</a></h3>
+<p>UVM 是 CUDA 最接近「单卡视角」的官方机制：</p>
+<ul>
+<li><code>cudaMallocManaged()</code> / <code>__managed__</code> / 系统分配内存（<code>malloc</code>、<code>new</code>、<code>mmap</code>）统一到一个地址空间。</li>
+<li>所有 CPU 和 GPU 可以<strong>并发</strong>访问同一块内存；物理页在访问时按页错误迁移。</li>
+<li><code>cudaMemAdvise</code> 提供 <code>SetPreferredLocation</code>、<code>SetReadMostly</code>、<code>SetAccessedBy</code> 等提示；
+<code>cudaMemPrefetchAsync</code> 可显式预取，避免首次访问的页错误抖动。</li>
+<li>在 full UVM 系统上（Grace Hopper、Power9+Volta、开启 HMM 的 Linux），系统分配的内存也自动统一。</li>
+</ul>
+<p><strong>系统要求</strong>（容易踩坑）：</p>
+<ul>
+<li>compute capability ≥ 7.5</li>
+<li>Linux HMM：6.1.24+ / 6.2.11+ / 6.3+</li>
+<li>CUDA driver ≥ 535，且安装 <strong>Open Kernel Modules</strong></li>
+<li><code>pageableMemoryAccess</code> / <code>concurrentManagedAccess</code> 属性可用于运行时探测</li>
+</ul>
+<pre><code class="language-cpp">float *p;
+cudaMallocManaged(&amp;p, N * sizeof(float));
+cudaMemAdvise(p, N * sizeof(float), cudaMemAdviseSetPreferredLocation, dev);
+cudaMemAdvise(p, N * sizeof(float), cudaMemAdviseSetAccessedBy, peer_dev);
+cudaMemPrefetchAsync(p, N * sizeof(float), dev, stream);
+</code></pre>
+<p><strong>边界</strong>：</p>
+<ul>
+<li>只在<strong>单个 OS 实例</strong>内有效。跨节点没有页错误转发机制，CUDA 本身不提供跨节点 UVM。</li>
+<li>页错误粒度是 4 KB/2 MB，不是 warp 粒度；一个 miss 会 stall 整个 SM 的 warp，远端延迟又是 HBM 的 10 倍以上，
+访问模式不好时会出现严重抖动（thrashing）。</li>
+<li>不提供跨节点的缓存一致性/原子性语义；多卡并发写同一页需要应用自己保证。</li>
+</ul>
+<h3 id="42-cuda-virtual-memory-managementvmm"><a class="header" href="#42-cuda-virtual-memory-managementvmm">4.2 CUDA Virtual Memory Management（VMM）</a></h3>
+<p>VMM 是「把多张卡的物理内存拼进同一段虚拟地址」的底层原语。CUDA 10.2 引入，核心是把 VA 与物理分配解耦：</p>
+<pre><code class="language-cpp">CUdeviceptr va;
+cuMemAddressReserve(&amp;va, size, 0, 0, 0);          // 保留一段 VA
+
+CUmemAllocationProp prop = {};
+prop.type = CU_MEM_ALLOCATION_TYPE_PINNED;
+prop.location.type = CU_MEM_LOCATION_TYPE_DEVICE;
+prop.location.id = dev;
+CUmemGenericAllocationHandle h;
+cuMemCreate(&amp;h, size, &amp;prop, 0);                   // 在指定 device 上分配物理页
+
+cuMemMap(va, size, 0, h, 0);                       // 映射到 VA
+CUmemAccessDesc desc = {};
+desc.location = {CU_MEM_LOCATION_TYPE_DEVICE, dev};
+desc.flags = CU_MEM_ACCESS_FLAGS_PROT_READWRITE;
+cuMemSetAccess(va, size, &amp;desc, 1);                // 授予访问权限
+</code></pre>
+<p>关键能力：</p>
+<ul>
+<li>把<strong>不同 device</strong> 的物理分配映射到同一段连续 VA（<code>cuMemMap</code> 多次，不同 offset）。</li>
+<li>通过 <code>cuMemExportToShareableHandle</code> / <code>cuMemImportFromShareableHandle</code> 在进程间共享（POSIX FD / Win32 / <strong>FABRIC</strong>）。</li>
+<li>支持 virtual aliasing：同一物理页映射到多个 VA。</li>
+<li>支持 compressible memory（<code>CU_MEM_ALLOCATION_COMP_GENERIC</code>）等内存属性。</li>
+</ul>
+<p>VMM 本身不提供迁移/页错误；它只提供「地址空间怎么拼」。页迁移要么由 UVM/HMM 做，要么由用户态池化系统自己做。
+<strong>它是所有「显存池化/跨节点共享」方案的共同底座</strong>。</p>
+<h3 id="43-extended-gpu-memoryegm"><a class="header" href="#43-extended-gpu-memoryegm">4.3 Extended GPU Memory（EGM）</a></h3>
+<p>EGM 利用 NVLink-C2C，让 GPU 线程直接访问 CPU 附加内存：</p>
+<ul>
+<li>分配时把 <code>CUmemAllocationProp.location</code> 设为 <code>CU_MEM_LOCATION_TYPE_HOST_NUMA</code>，<code>id</code> 填 NUMA node。</li>
+<li>访问走 NVLink-C2C，而不是 PCIe；带宽/延迟接近 GPU 侧。</li>
+<li>当前支持单节点单卡、单节点多卡、多节点多卡三类拓扑；跨节点时配合 <code>CU_MEM_HANDLE_TYPE_FABRIC</code> 走 fabric handle。</li>
+<li>注意：用 cgroup 限制设备会阻断 EGM 路由，应该用 <code>CUDA_VISIBLE_DEVICES</code>。</li>
+</ul>
+<p>EGM 的意义：把「显存」的边界从 HBM 扩展到整机的 LPDDR5X/HBM 组合（例如 GH200 的 480 GB LPDDR5X + 96/144 GB HBM3/HBM3e）。
+跨节点场景下它依赖 fabric handle，仍属于「显式映射」，不是自动页迁移。</p>
+<h3 id="44-单机方案的工程评价"><a class="header" href="#44-单机方案的工程评价">4.4 单机方案的工程评价</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>评价</th></tr>
+</thead>
+<tbody>
+<tr><td>透明性</td><td>高：换 allocator 即可，<code>cudaMallocManaged</code> 与 <code>cudaMalloc</code> 语法几乎一致</td></tr>
+<tr><td>性能</td><td>取决于访问局部性；预取/advise 做得好可接近显式拷贝，做得差会抖动</td></tr>
+<tr><td>规模</td><td>单机 8 卡（HGX）或单机 Grace-Hopper 超片</td></tr>
+<tr><td>适用</td><td>原型、内存超订阅、CPU-GPU 共享数据结构、单机多卡不规则访问</td></tr>
+<tr><td>不适用</td><td>跨节点、强性能一致性要求、频繁随机访问大远端数据集</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="五方案-b跨节点-nvlink-域mnnvl--imex--fabric-memory"><a class="header" href="#五方案-b跨节点-nvlink-域mnnvl--imex--fabric-memory">五、方案 B：跨节点 NVLink 域（MNNVL / IMEX / fabric memory）</a></h2>
+<p>这是目前唯一能在<strong>硬件层面</strong>把「跨节点显存」做成单一地址空间的官方方案，也是 NVL72 的核心卖点。</p>
+<h3 id="51-mnnvl-与-imex"><a class="header" href="#51-mnnvl-与-imex">5.1 MNNVL 与 IMEX</a></h3>
+<p>MNNVL 把 NVLink 从「单机 8 卡」扩展到「机架 72 卡」：</p>
+<ul>
+<li>18 个 compute tray（2 Grace + 4 Blackwell）通过 9 个 NVLink switch tray 全互联。</li>
+<li><strong>Fabric Manager（FM）</strong> 配置 NVSwitch，把所有参与 GPU 组成<strong>单一 memory fabric</strong>。</li>
+<li><strong>NVLSM</strong>（NVLink Subnet Manager）发现拓扑、分配 LID、计算并下发 NVSwitch 转发表。</li>
+<li>默认一个 72 GPU 的 <strong>Default Partition</strong>；管理员可以创建 User Partition 做多租户隔离。</li>
+</ul>
+<p><strong>IMEX（Internode Memory Exchange）</strong> 是跨 OS domain 的关键：</p>
+<ul>
+<li>它是一种<strong>带访问控制的内存映射服务</strong>，本身不传数据；管理面走 TCP/gRPC，数据面走 NVLink。</li>
+<li>导出侧：CUDA 进程 <code>cuMemCreate</code> 得到 shareable handle，建立 <strong>VA → PA → Fabric Address（FA）</strong> 映射。</li>
+<li>导入侧：通过 MPI/NCCL 拿到 handle，驱动导入并建立 <strong>VA → FA</strong> 映射；GPU 访问时由内存系统识别
+「foreign GPU」，生成 NVLink 包直接访问对端 HBM。</li>
+<li>每个 compute node 通过一个逻辑字符设备 <code>/dev/nvidia-caps-imex-channels/channelN</code> 参与；没有权限就不能共享。</li>
+<li>单机/单进程不需要 IMEX。</li>
+</ul>
+<blockquote>
+<p>这就是「应用以为在访问本地显存，实际访问的是另一台机器 HBM」的硬件机制。关键是：<strong>它是显式映射的</strong>，
+不是自动页迁移——你必须先拿到 handle、import、map，才能解引用。</p>
+</blockquote>
+<h3 id="52-fabric-memorycuda-124"><a class="header" href="#52-fabric-memorycuda-124">5.2 Fabric Memory（CUDA 12.4+）</a></h3>
+<p>CUDA 12.4 引入 <code>CU_MEM_HANDLE_TYPE_FABRIC</code>，把 VMM 的 shareable handle 扩展到跨节点：</p>
+<pre><code class="language-cpp">// 导出侧
+prop.requestedHandleTypes = CU_MEM_HANDLE_TYPE_FABRIC;
+cuMemCreate(&amp;h, size, &amp;prop, 0);
+CUmemFabricHandle fh;
+cuMemExportToShareableHandle(&amp;fh, h, CU_MEM_HANDLE_TYPE_FABRIC, 0);
+// 通过 MPI/NCCL 把 fh 发给其他 rank
+
+// 导入侧
+CUmemGenericAllocationHandle peer_h;
+cuMemImportFromShareableHandle(&amp;peer_h, &amp;fh, CU_MEM_HANDLE_TYPE_FABRIC);
+cuMemMap(va_for_peer, size, 0, peer_h, 0);
+cuMemSetAccess(va_for_peer, size, &amp;desc, 1);
+</code></pre>
+<p>前提：</p>
+<ul>
+<li>设备支持 <code>CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_FABRIC_SUPPORTED</code></li>
+<li>节点上运行 <code>nvidia-imex</code> 服务，进程有 IMEX channel 权限</li>
+<li>所有 rank 在同一个 NVLink domain / IMEX domain</li>
+</ul>
+<p>Fabric handle 是<strong>不透明字节</strong>，任何在同一 NVLink 域内的 rank 都能 import，不依赖 OS 的 FD 传递机制。
+这是它相对 POSIX FD 的关键优势：POSIX FD 只能同机，fabric handle 可以跨机。</p>
+<h3 id="53-compute-fabric-transportcuda-13-系列"><a class="header" href="#53-compute-fabric-transportcuda-13-系列">5.3 Compute Fabric Transport（CUDA 13 系列）</a></h3>
+<p>Fabric memory 是**地址中心（address-centric）**的：peer 的物理内存被映射进本地 VA，kernel 用普通 load/store 访问。
+这在超大 fabric 上有两个硬伤：</p>
+<ol>
+<li>虚拟地址没有错误通道：远端 load/store 要么返回数据，要么触发内存错误/杀进程，kernel 无法重试或改道。</li>
+<li>地址只能命名内存：非内存资源无法通过映射访问。</li>
+</ol>
+<p>CUDA 13 系列引入 <strong>Compute Fabric Transport（CFT）</strong>，改用**资源中心（resource-centric）**模型：</p>
+<ul>
+<li>应用创建 <strong>logical endpoint</strong>：一个 32 位 <code>logical endpoint id</code> + 64 位 offset 命名的传输对象，不要求 peer 映射本地 VA。</li>
+<li>endpoint 的 backing memory 可以由 owner 重新绑定（扩容/替换），peer 不需要重新 import；只需在 rebind 期间同步。</li>
+<li>对 endpoint 发起异步 <strong>put / get / red / pullred / atom</strong>，每个操作都有显式完成状态；失败可重试、改道或走 fallback。</li>
+<li>提供 <strong>counted operation</strong>：数据到达时递增目的端字节计数器，接收方可轮询计数器，省掉单独完成消息。</li>
+<li>支持 unicast 与 multicast endpoint；multicast endpoint 的每个成员绑定自己的 replica。</li>
+<li>需要 NVLink fabric + IMEX daemon/channel；endpoint 通过 fabric IPC handle 共享。</li>
+</ul>
+<pre><code class="language-cpp">// 生命周期（伪代码，参数顺序以 Driver API 文档为准）
+cuLogicalEndpointIdReserve(&amp;baseId, n, 0);
+cuLogicalEndpointCreate(&amp;le, &amp;prop, baseId + rank);   // unicast/multicast
+cuLogicalEndpointExport(&amp;h, le, CU_LOGICAL_ENDPOINT_IPC_HANDLE_TYPE_FABRIC, 0);
+// peer: cuLogicalEndpointImport(&amp;peerLe, &amp;h, ...);
+cuLogicalEndpointBindMem(le, 0, memHandle, 0, size, 0);
+// kernel: cuda::ptx::fabric_try_put(...) + 完成等待/状态检查
+</code></pre>
+<p>定位：CFT 主要面向 <strong>NCCL/NVSHMEM 这类通信库的作者</strong>；普通应用应优先用这些库的设备端 API。
+它不代表「单卡透明」，而是把「跨节点内存/资源访问」做得更可编程、更可恢复——这是从「共享地址空间」走向
+「可编程 fabric」的一步。</p>
+<h3 id="54-multicast-与-nvlink-sharp"><a class="header" href="#54-multicast-与-nvlink-sharp">5.4 Multicast 与 NVLink SHARP</a></h3>
+<p>除了「点对点映射」，MNNVL 还提供<strong>多播对象</strong>，把「一份数据写到所有副本」或「从所有副本规约」交给交换机做：</p>
+<pre><code class="language-cpp">CUmemGenericAllocationHandle mc;
+CUmemAllocationProp mcProp = {};
+mcProp.numDevices = N;
+mcProp.handleTypes = CU_MEM_HANDLE_TYPE_FABRIC;
+cuMulticastCreate(&amp;mc, &amp;mcProp);
+cuMulticastAddDevice(mc, dev_i);                  // 所有设备先加入
+cuMulticastBindMem(mc, 0, h_i, 0, size, 0);       // 每个设备绑定自己的物理页
+// kernel 内用 multimem.ld_reduce / multimem.st 等 PTX 指令
+</code></pre>
+<ul>
+<li>需要 NVSwitch + NVLink SHARP；<code>CU_DEVICE_ATTRIBUTE_MULTICAST_SUPPORTED</code> 查询。</li>
+<li><code>multimem</code> PTX 指令让一条 load/store 在 fabric 内完成广播/规约，避免 N 次点对点拷贝。</li>
+<li>这是 NCCL/NVSHMEM 内部实现 all-reduce/broadcast 的底层能力之一。</li>
+</ul>
+<h3 id="55-对称内存把单卡视角封装进库"><a class="header" href="#55-对称内存把单卡视角封装进库">5.5 对称内存：把「单卡视角」封装进库</a></h3>
+<p>裸写 fabric handle 太底层。实际生产里，应用接触的是<strong>对称内存（symmetric memory）</strong>：</p>
+<ul>
+<li>每个 rank 分配同样大小的 buffer，并把所有 peer 的 buffer 映射进自己的 VA。</li>
+<li>kernel 里用普通 load/store 访问 peer 内存（<code>ptr + i * stride</code>），不需要 <code>cudaMemcpyPeer</code>。</li>
+<li>典型实现：FlashInfer 的 <code>MnnvlMemory</code> / <code>SymmDeviceMemory</code>、NCCL 2.27+ 的 symmetric memory、NVSHMEM 的 symmetric heap。</li>
+</ul>
+<p>FlashInfer 的选择逻辑很能说明工程复杂度：</p>
+<pre><code class="language-text">choose_mnnvl_handle_type(comm, dev_id)
+  ├─ 单机：所有 GPU 支持 FABRIC → FABRIC；否则 POSIX FD
+  └─ 多机：所有 GPU 支持 FABRIC 且 NVML fabric cluster UUID 非零且一致 → FABRIC
+           否则报错（POSIX FD 不能跨机）
+</code></pre>
+<p>分配流程：每个 rank <code>cuMemCreate</code> → 导出 handle → allgather 交换 → 每个 rank import 所有 peer → 映射到
+<code>start + i * rank_stride</code>。启用 multicast 时，rank 0 创建 multicast object 并广播 handle，每个 rank import 并绑定自己的 buffer。</p>
+<p><strong>这就是「应用视角单卡」在库层的实现</strong>：应用拿到一个 <code>[group_size, size]</code> 的 tensor，第 i 行就是 rank i 的显存；
+kernel 里按行读写即可，底层是跨机 NVLink。</p>
+<h3 id="56-nccl-与-nvshmem-的分工"><a class="header" href="#56-nccl-与-nvshmem-的分工">5.6 NCCL 与 NVSHMEM 的分工</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>库</th><th>抽象</th><th>谁发起</th><th>典型用途</th><th>是否「透明」</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>NCCL</strong></td><td>collective（all-reduce/all-gather/…）</td><td>host 或 device</td><td>训练梯度同步、TP/PP 通信</td><td>应用不改集合语义，但要按 rank 调用</td></tr>
+<tr><td><strong>NVSHMEM</strong></td><td>PGAS（symmetric heap + put/get/atomic）</td><td>host 或 GPU kernel</td><td>细粒度、GPU 发起的通信；cuBLASMp/cuFFTMp 底座</td><td>需要显式 <code>nvshmem_put/get</code></td></tr>
+<tr><td><strong>NCCL symmetric memory</strong></td><td>对称 buffer + 低延迟 kernel</td><td>device</td><td>NVL72 内 all-reduce/all-to-all</td><td>库内透明，应用配置即可</td></tr>
+<tr><td><strong>NVSHMEM multicast</strong></td><td>multicast object + multimem</td><td>device</td><td>in-network 广播/规约</td><td>库内透明</td></tr>
+</tbody>
+</table>
+</div>
+<p>NVSHMEM 的定位最值得注意：它把「集群中多个 GPU 的内存聚合到一个 PGAS」，提供 <code>nvshmem_malloc</code> 的对称堆，
+允许 CUDA kernel 线程直接 <code>nvshmem_put/get/atomic</code>。这已经是「分布式共享内存」的编程模型，但<strong>仍然要求应用显式调用通信原语</strong>，
+不是自动把单卡程序变成多卡。</p>
+<h3 id="57-跨节点方案的工程评价"><a class="header" href="#57-跨节点方案的工程评价">5.7 跨节点方案的工程评价</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>评价</th></tr>
+</thead>
+<tbody>
+<tr><td>透明性</td><td>内存地址空间透明；执行模型不透明（每 rank 各自 launch）</td></tr>
+<tr><td>性能</td><td>跨卡 NVLink 带宽约为本地 HBM 的 1/4–1/5；适合近邻通信、KV cache 传输、all-to-all</td></tr>
+<tr><td>规模</td><td>单个 NVLink 域 72 GPU（NVL72）；跨域仍需 IB/RoCE</td></tr>
+<tr><td>适用</td><td>LLM 推理的 KV cache 共享、MoE all-to-all、TP/EP、机架内参数服务器</td></tr>
+<tr><td>不适用</td><td>跨机架/跨数据中心、需要缓存一致性的任意指针访问、强故障隔离</td></tr>
+<tr><td>运维复杂度</td><td>高：Fabric Manager、NVLSM、IMEX、partition、clique、驱动版本都要对齐</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="六方案-capi-remoting远程单卡"><a class="header" href="#六方案-capi-remoting远程单卡">六、方案 C：API Remoting（远程单卡）</a></h2>
+<p>如果目标只是「让没有 GPU 的节点用上远端的卡」，而不是扩展显存/算力，API remoting 是最直接的方案。</p>
+<h3 id="61-原理"><a class="header" href="#61-原理">6.1 原理</a></h3>
+<p>拦截 CUDA Runtime/Driver API（<code>LD_PRELOAD</code>、<code>dlsym</code>、<code>cuGetProcAddress</code>），把调用序列化后经网络发到远端 server，
+server 在真实 GPU 上执行并回传结果。应用看到的仍然是 1 张卡，只是这张卡在另一台机器上。</p>
+<h3 id="62-代表实现"><a class="header" href="#62-代表实现">6.2 代表实现</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>系统</th><th>机制</th><th>传输</th><th>特点</th><th>状态</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>rCUDA</strong></td><td>拦截 CUDA Runtime API，client/server</td><td>InfiniBand / RoCE</td><td>应用零改动；支持 remote GPU 池；公开白皮书基线 CUDA 8.0</td><td>学术/研究为主</td></tr>
+<tr><td><strong>GVirtuS</strong></td><td>frontend/backend 插件框架</td><td>TCP 或 InfiniBand RDMA</td><td>开源；CUDA 10.2+；可插件化扩展 cuBLAS/cuDNN</td><td>活跃开源</td></tr>
+<tr><td><strong>vCUDA / mrCUDA</strong></td><td>API remoting + 迁移/回退</td><td>网络</td><td>支持 live migration、remote→local 迁移</td><td>学术</td></tr>
+<tr><td><strong>VMware Bitfusion</strong></td><td>GPU 网络池化，vSphere 集成</td><td>网络</td><td>企业级；把远端 GPU 切片给 VM</td><td>EOA 2023-05，EOL 2025-05</td></tr>
+<tr><td><strong>HAMi Lupine</strong></td><td>K8s 原生 remote GPU；client 可为纯 CPU 节点</td><td>网络</td><td>v2.11.0+；session relay；与 HAMi 调度集成</td><td>活跃</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="63-评价"><a class="header" href="#63-评价">6.3 评价</a></h3>
+<ul>
+<li><strong>优点</strong>：应用零改动；可以把 GPU 集中到资源池，提高利用率；适合 CPU-only 边缘节点、突发推理、开发调试。</li>
+<li><strong>缺点</strong>：
+<ul>
+<li>每次 kernel launch 都有网络 RTT；小 kernel、频繁同步的场景会被放大。</li>
+<li>数据传输要显式/隐式拷贝，除非用 GPUDirect RDMA。</li>
+<li><strong>不扩展显存容量，也不扩展算力</strong>：仍然是 1 张物理卡。</li>
+<li>故障域变成「网络 + 远端进程」，延迟抖动大。</li>
+</ul>
+</li>
+<li><strong>适用</strong>：远程开发、轻量推理、GPU 池化接入；<strong>不适用</strong>大模型训练/高吞吐推理。</li>
+</ul>
+<h2 id="七方案-d显存池化与弹性借用只解决容量"><a class="header" href="#七方案-d显存池化与弹性借用只解决容量">七、方案 D：显存池化与弹性借用（只解决容量）</a></h2>
+<p>这类方案的目标不是「把算力分散」，而是「让显存不够的 GPU 借用别人的空闲显存」。算力仍在本地。</p>
+<h3 id="71-问题背景"><a class="header" href="#71-问题背景">7.1 问题背景</a></h3>
+<p>多卡服务器上，静态切分会导致「一张卡 OOM、另一张卡闲置」。LLM 推理的 KV cache、训练 checkpoint、
+MoE 的 expert 参数都有很强的动态性，固定分区利用率低。</p>
+<h3 id="72-ema单机多卡弹性借还"><a class="header" href="#72-ema单机多卡弹性借还">7.2 EMA：单机多卡弹性借还</a></h3>
+<p>EMA（arXiv 2609.27040，2026）让同一台服务器内的 GPU 互相借还显存，形成一个弹性池：</p>
+<ul>
+<li><strong>borrower</strong>：预取（prefetch）隐藏远端访问成本，使远端与本地内存「性能不可区分」。</li>
+<li><strong>lender</strong>：借出的内存可随时回收，保证自己的性能不低于静态分区。</li>
+<li>结果：单用户吞吐 +52%，达到 2 倍容量系统的 96%，延迟接近本地基线。</li>
+</ul>
+<p>关键设计是「性能透明」而不是「地址透明」：它不要求应用改代码，但通过预取/回收策略保证 SLA。</p>
+<h3 id="73-memory-harvesting-与-oversubscription"><a class="header" href="#73-memory-harvesting-与-oversubscription">7.3 Memory Harvesting 与 oversubscription</a></h3>
+<ul>
+<li><strong>Memory Harvesting</strong>（USENIX ATC’22）：层次化 UVM，把空闲 GPU 的显存「收割」给需要的人；
+通过 UVM 的页迁移在多卡间搬数据。</li>
+<li><strong>GPUswap</strong>（VEE’15）：透明换出 GPU 显存到 host，支持超额订阅。</li>
+<li><strong>NVMe paging</strong>：把显存页换到本地 SSD，容量更大但延迟高一个数量级，适合冷数据。</li>
+</ul>
+<p>这类方案的共同点：<strong>依赖页错误/换页机制</strong>，性能取决于访问局部性和预取策略；不适合随机访问的大工作集。</p>
+<h3 id="74-vugvacuda-拦截--p2p-虚拟分页"><a class="header" href="#74-vugvacuda-拦截--p2p-虚拟分页">7.4 VUGVA：CUDA 拦截 + P2P 虚拟分页</a></h3>
+<p>VUGVA（Zenodo 2026，preprint）针对<strong>非 NVLink</strong> 的多卡集群：</p>
+<ul>
+<li>在用户态拦截 CUDA runtime，统一多张卡的 VRAM 到一个虚拟地址空间。</li>
+<li>用 NUMA-aware 的 P2P 虚拟分页，把页放到「最优」的卡上。</li>
+<li>宣称达到 NVLink 方案 85% 的性能、&lt;15% 的成本。</li>
+</ul>
+<p>这是「用软件弥补硬件拓扑」的典型思路：没有 NVLink，就用 PCIe P2P + 页迁移模拟；代价是延迟和 CPU 开销。</p>
+<h3 id="75-cxl-内存池"><a class="header" href="#75-cxl-内存池">7.5 CXL 内存池</a></h3>
+<p>CXL 把内存从「主板插槽」变成「可池化/可共享的 fabric 资源」：</p>
+<ul>
+<li>CXL 2.0 支持单主机内存扩展；CXL 3.0 支持多主机共享、端口路由（PBR）、非树形拓扑。</li>
+<li>GPU 通过 CXL/PCIe 访问共享内存池，获得 load/store 语义，不需要 RDMA 的显式 send/recv。</li>
+<li><strong>Beluga</strong>（SIGMOD’26，arXiv 2511.20172）：GPU 经 CXL switch 直接访问大规模内存池，用于 KV cache；
+相比 RDMA 方案 TTFT 降低 89.6%，vLLM 吞吐提升 7.35 倍。</li>
+<li><strong>Pond</strong>（ASPLOS’23）等则从云平台角度研究 CXL 内存池的分配/隔离。</li>
+</ul>
+<p>CXL 的优势是「容量大、可共享、load/store」；劣势是带宽/延迟介于本地 DRAM 和网络之间，且 GPU 对 CXL 的支持
+仍在演进（多数 GPU 通过 PCIe/CXL.io 访问，不是原生 CXL.mem 设备）。</p>
+<h3 id="76-池化方案的工程评价"><a class="header" href="#76-池化方案的工程评价">7.6 池化方案的工程评价</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>评价</th></tr>
+</thead>
+<tbody>
+<tr><td>透明性</td><td>高（应用通常无感），但性能不透明</td></tr>
+<tr><td>扩展目标</td><td>显存<strong>容量</strong>，不是算力</td></tr>
+<tr><td>性能</td><td>取决于预取/局部性；CXL 优于 RDMA，NVLink 优于 CXL，本地 HBM 最好</td></tr>
+<tr><td>适用</td><td>KV cache 扩容、显存超订阅、多租户显存碎片整理</td></tr>
+<tr><td>不适用</td><td>需要稳定低延迟的随机访问、跨节点强一致共享</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="八方案-e库框架层的伪透明"><a class="header" href="#八方案-e库框架层的伪透明">八、方案 E：库/框架层的「伪透明」</a></h2>
+<p>生产环境里，最接近「应用不改、自动多卡」的其实是<strong>库和框架</strong>，而不是 CUDA runtime。</p>
+<h3 id="81-多卡数学库"><a class="header" href="#81-多卡数学库">8.1 多卡数学库</a></h3>
+<ul>
+<li><strong>cuBLASMp / cuFFTMp / cuSOLVERMp</strong>：NVIDIA HPC SDK 里的多卡/多节点库，基于 NVSHMEM。
+应用调用的是「分布式 GEMM/FFT」API，库内部按拓扑切分数据、走 NVLink/IB。</li>
+<li>这类库的「透明」是<strong>API 级</strong>的：应用仍然要知道自己在做分布式计算，只是不用手写通信。</li>
+</ul>
+<h3 id="82-推理训练框架"><a class="header" href="#82-推理训练框架">8.2 推理/训练框架</a></h3>
+<ul>
+<li><strong>TensorRT-LLM / FlashInfer / vLLM</strong>：TP/PP/EP 并行、KV cache 管理、NIXL 传输。</li>
+<li><strong>DeepSpeed ZeRO / FSDP</strong>：参数/梯度/优化器状态切分，显存不够时 offload 到 CPU/NVMe。</li>
+<li><strong>TRANSIT</strong>（arXiv 2610.07593）：多节点 LLM 训练的透明 scale-in，通过 UVM oversubscription + 零拷贝，
+最多少用 50% GPU、保留 &gt;90% 吞吐。</li>
+</ul>
+<p>这些系统的「单卡视角」是<strong>框架给的</strong>，不是 CUDA 给的：
+应用写的是单卡模型代码，框架通过 sharding/collective 把它变成多卡执行。代价是应用必须接受框架的并行策略。</p>
+<h3 id="83-边界"><a class="header" href="#83-边界">8.3 边界</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>说法</th><th>是否成立</th></tr>
+</thead>
+<tbody>
+<tr><td>「应用代码不用改」</td><td>多数成立（换库/换配置）</td></tr>
+<tr><td>「并行策略不用改」</td><td>不成立：TP/PP/EP 的切分方式、batch、序列长度都会影响性能</td></tr>
+<tr><td>「CUDA runtime 自动切 kernel」</td><td>不成立：切分发生在框架/库层</td></tr>
+<tr><td>「拓扑自动最优」</td><td>部分成立：库会做 topology detection，但需要正确的 rank/placement 输入</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="九方案-f编排层k8s--slurm"><a class="header" href="#九方案-f编排层k8s--slurm">九、方案 F：编排层（K8s / Slurm）</a></h2>
+<p>编排层不改变 CUDA 语义，但它决定「哪些卡放在一起」，从而决定上层方案能不能用。</p>
+<h3 id="91-kubernetes"><a class="header" href="#91-kubernetes">9.1 Kubernetes</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>机制</th><th>作用</th><th>局限</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Device Plugin</strong>（<code>nvidia.com/gpu</code>）</td><td>整数卡分配</td><td>看不到显存/算力/拓扑</td></tr>
+<tr><td><strong>DRA</strong>（<code>resource.k8s.io</code>）</td><td>结构化设备属性、claim、cel 约束</td><td>需要 1.34+；生态仍在演进</td></tr>
+<tr><td><strong>MIG</strong></td><td>一张卡切多个实例（A100/H100 最多 7 个）</td><td>实例间无 NVLink；显存固定</td></tr>
+<tr><td><strong>MPS</strong></td><td>多进程共享一张卡</td><td>无内存隔离；不适合多租户</td></tr>
+<tr><td><strong>HAMi</strong></td><td>vGPU 切分（显存 MiB + 算力百分比）</td><td>单卡内；不跨节点聚合</td></tr>
+<tr><td><strong>ComputeDomain</strong>（NVIDIA DRA）</td><td>创建 IMEX domain，跨节点 MNNVL</td><td>需要 GB200/GB300 NVL72；每节点一个活跃 domain</td></tr>
+<tr><td><strong><code>nvidia.com/gpu.clique</code></strong></td><td>保证 Pod 落在同一 NVLink clique</td><td>只保证拓扑，不保证性能</td></tr>
+<tr><td><strong>LWS / DisaggregatedSet</strong></td><td>多机多卡 gang scheduling + 自动 ComputeDomain</td><td>需要 KEP-1259 / 新版 LWS</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>ComputeDomain</code> 的工作方式（driver-managed 模式）：</p>
+<ol>
+<li>创建 <code>ComputeDomain</code> CR（<code>resource.nvidia.com/v1beta1</code>），声明参与节点数。</li>
+<li><code>compute-domain-controller</code> 为每个 domain 创建 <code>nvidia-imex</code> DaemonSet 和 <code>ResourceClaimTemplate</code>。</li>
+<li>每个 daemon 发布 IP、clique membership、ready 状态到 <code>ComputeDomainClique</code>。</li>
+<li>业务 Pod 通过 <code>resourceClaims</code> 申请 IMEX channel；kubelet plugin 注入
+<code>/dev/nvidia-caps-imex-channels/channelN</code>。</li>
+<li>Pod 内的 CUDA 进程即可用 fabric handle 跨节点 import 显存。</li>
+</ol>
+<p>关键约束：<strong>IMEX channel 只连接同一物理 NVLink clique 内的 GPU</strong>；driver-managed 模式下<strong>每节点最多一个活跃 ComputeDomain</strong>。
+所以调度器必须把同一 domain 的 Pod 放到同一 clique，且不同 domain 不共享节点。</p>
+<h3 id="92-slurm"><a class="header" href="#92-slurm">9.2 Slurm</a></h3>
+<ul>
+<li>GRES（<code>--gpus</code>、<code>--gpus-per-node</code>、<code>--gpus-per-task</code>）做卡级分配。</li>
+<li><code>topology/</code> 插件 + <code>--constraint</code> + <code>--gres-flags=enforce-bindings</code> 做拓扑约束。</li>
+<li>在 NVL72 上，Slurm 可以与 IMEX 配合，在 job 运行时动态切分 NVLink Default Partition。</li>
+<li>缺点：Slurm 只负责「分配」，不负责「聚合显存/算力」；跨节点通信仍靠 MPI/NCCL/NVSHMEM。</li>
+</ul>
+<h3 id="93-编排层能做什么不能做什么"><a class="header" href="#93-编排层能做什么不能做什么">9.3 编排层能做什么、不能做什么</a></h3>
+<ul>
+<li><strong>能</strong>：把「需要 NVLink 的 Pod」放到同一 clique；把「需要大显存的 Pod」放到有空闲显存的节点；
+用 MIG/HAMi 做单卡切分；用 DRA 表达设备属性。</li>
+<li><strong>不能</strong>：把多张卡的显存合成一张给应用；自动切 kernel；替代 NCCL/NVSHMEM。</li>
+</ul>
+<h2 id="十横向对比矩阵"><a class="header" href="#十横向对比矩阵">十、横向对比矩阵</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>方案</th><th>代表实现</th><th>应用改动</th><th>地址空间</th><th>跨节点</th><th>显存容量扩展</th><th>算力扩展</th><th>性能代价</th><th>成熟度</th></tr>
+</thead>
+<tbody>
+<tr><td>单机 UVM</td><td><code>cudaMallocManaged</code></td><td>换 allocator</td><td>统一</td><td>❌</td><td>✅（到 host）</td><td>❌</td><td>中（页错误）</td><td>高</td></tr>
+<tr><td>单机 VMM + P2P</td><td><code>cuMemCreate/Map</code></td><td>中</td><td>统一</td><td>❌</td><td>✅（多卡拼接）</td><td>❌</td><td>低</td><td>高</td></tr>
+<tr><td>EGM</td><td><code>HOST_NUMA</code> 分配</td><td>中</td><td>统一</td><td>❌</td><td>✅（CPU 内存）</td><td>❌</td><td>低</td><td>中</td></tr>
+<tr><td>MNNVL fabric memory</td><td><code>CU_MEM_HANDLE_TYPE_FABRIC</code></td><td>高（按 rank 映射）</td><td>统一</td><td>✅（72 GPU）</td><td>✅</td><td>部分（库）</td><td>中</td><td>中（新）</td></tr>
+<tr><td>CFT logical endpoint</td><td><code>cuLogicalEndpoint*</code> + <code>fabric_try_*</code></td><td>高（改 kernel）</td><td>资源中心</td><td>✅</td><td>✅</td><td>部分（库）</td><td>低</td><td>新（CUDA 13.x）</td></tr>
+<tr><td>NVSHMEM</td><td>symmetric heap</td><td>高（改 kernel）</td><td>PGAS</td><td>✅</td><td>✅</td><td>✅（需显式）</td><td>低</td><td>高</td></tr>
+<tr><td>NCCL</td><td>collective</td><td>中</td><td>不共享</td><td>✅</td><td>❌</td><td>✅</td><td>低</td><td>高</td></tr>
+<tr><td>rCUDA/GVirtuS</td><td>API remoting</td><td>零</td><td>远端单卡</td><td>✅</td><td>❌</td><td>❌</td><td>高（RTT）</td><td>中</td></tr>
+<tr><td>Bitfusion</td><td>GPU 池化</td><td>零</td><td>远端单卡</td><td>✅</td><td>❌</td><td>❌</td><td>高</td><td>EOL</td></tr>
+<tr><td>HAMi Lupine</td><td>远程 GPU</td><td>零</td><td>远端单卡</td><td>✅</td><td>❌</td><td>❌</td><td>高</td><td>中</td></tr>
+<tr><td>EMA</td><td>借还显存</td><td>零</td><td>本地/peer</td><td>❌</td><td>✅</td><td>❌</td><td>中</td><td>研究</td></tr>
+<tr><td>Memory Harvesting</td><td>层次 UVM</td><td>零</td><td>统一</td><td>❌</td><td>✅</td><td>❌</td><td>中</td><td>研究</td></tr>
+<tr><td>VUGVA</td><td>runtime 拦截 + 分页</td><td>零</td><td>统一</td><td>部分（非 NVLink）</td><td>✅</td><td>❌</td><td>中高</td><td>preprint</td></tr>
+<tr><td>CXL pool（Beluga）</td><td>CXL switch</td><td>低</td><td>共享池</td><td>✅</td><td>✅</td><td>❌</td><td>中</td><td>中</td></tr>
+<tr><td>GPUswap / NVMe</td><td>换页</td><td>零</td><td>统一</td><td>❌</td><td>✅</td><td>❌</td><td>高</td><td>中</td></tr>
+<tr><td>HAMi / MIG / MPS</td><td>单卡切分</td><td>零</td><td>单卡</td><td>❌</td><td>❌</td><td>❌</td><td>低</td><td>高</td></tr>
+<tr><td>DRA ComputeDomain</td><td>IMEX 编排</td><td>零</td><td>统一</td><td>✅</td><td>✅</td><td>部分</td><td>中</td><td>中</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p>「算力扩展」一列只有 NVSHMEM/NCCL/框架是 ✅，因为它们真的把计算切到了多卡；
+其他方案要么只扩容量，要么只是远程用卡。</p>
+</blockquote>
+<h2 id="十一为什么完全透明做不到"><a class="header" href="#十一为什么完全透明做不到">十一、为什么「完全透明」做不到</a></h2>
+<h3 id="111-页错误粒度与-gpu-执行模型不匹配"><a class="header" href="#111-页错误粒度与-gpu-执行模型不匹配">11.1 页错误粒度与 GPU 执行模型不匹配</a></h3>
+<p>UVM 的迁移单位是页（4 KB/2 MB），而 GPU 以 warp/SM 为单位执行。一个页错误会阻塞整个 warp，
+如果访问模式是随机的，SM 会频繁停顿。远端内存延迟又是 HBM 的 10 倍以上，靠预取只能缓解，不能消除。</p>
+<h3 id="112-跨节点没有缓存一致性"><a class="header" href="#112-跨节点没有缓存一致性">11.2 跨节点没有缓存一致性</a></h3>
+<p>Fabric memory 给你的是「可映射的远端内存」，不是 cache-coherent NUMA：</p>
+<ul>
+<li>普通 load/store 的可见性需要 <code>fence</code>/<code>nvshmem_fence</code>/signal 操作保证。</li>
+<li>原子操作的语义/范围有限，不能假设和本地 HBM 一样。</li>
+<li>CUDA 13 的 CFT 之所以要给每个 fabric 操作单独的完成状态，正是因为远端访问不是普通 load/store，
+失败会以「操作失败」而非「内存值」的形式出现。</li>
+<li>多卡并发写同一 cache line 需要应用自己避免 false sharing。</li>
+</ul>
+<h3 id="113-kernel-不会自动切分"><a class="header" href="#113-kernel-不会自动切分">11.3 kernel 不会自动切分</a></h3>
+<p>CUDA runtime 没有「把一个 grid 切到 N 张卡」的 API。跨卡执行要么：</p>
+<ul>
+<li>库把问题切好，每张卡 launch 一个 kernel（NCCL/NVSHMEM/cuBLASMp）；</li>
+<li>框架把模型切好，每张卡跑一部分（TP/PP/EP）；</li>
+<li>编译器/DSL 生成多卡代码（XLA、Triton 分布式等）。</li>
+</ul>
+<p>这三条都需要「知道问题怎么切」，而这不是 runtime 能自动推断的。</p>
+<h3 id="114-故障域无法隐藏"><a class="header" href="#114-故障域无法隐藏">11.4 故障域无法隐藏</a></h3>
+<p>单卡视角要求「N 张卡同生共死」。实际上：</p>
+<ul>
+<li>一个 NVLink partition 的链路/交换机故障会影响整个域。</li>
+<li>一张卡掉线，fabric handle 失效，所有 import 过它的进程都要处理错误。</li>
+<li>IMEX channel 权限/daemon 故障会让跨节点映射失败。</li>
+</ul>
+<p>要维持「单卡」语义，需要 checkpoint/restart、rank 重配置、fault-tolerant collective，这些都不是透明的。</p>
+<h3 id="115-多租户与安全是反向需求"><a class="header" href="#115-多租户与安全是反向需求">11.5 多租户与安全是反向需求</a></h3>
+<p>IMEX 的访问控制、NVLink partition、MIG、cgroup 都是「划边界」；而「透明聚合」是「拆边界」。
+两者在安全模型上天然冲突。生产多租户场景不会允许任意进程 import 别人的显存。</p>
+<h3 id="116-生态惯性"><a class="header" href="#116-生态惯性">11.6 生态惯性</a></h3>
+<p>cuBLAS/cuDNN/cuFFT 等主力库默认单卡；要扩展需要 cuBLASMp/cuFFTMp 这类显式多卡库。
+大量存量 CUDA 代码假设 <code>cudaGetDeviceCount()==1</code>、假设指针可直接解引用，迁移成本高。</p>
+<h3 id="117-透明性--性能--规模不可能三角"><a class="header" href="#117-透明性--性能--规模不可能三角">11.7 「透明性 / 性能 / 规模」不可能三角</a></h3>
+<pre class="mermaid">flowchart TB
+    T["透明性"] --- P["性能"]
+    P --- S["规模"]
+    S --- T
+    T -.-&gt; A["单机 UVM / MNNVL 小域"]
+    P -.-&gt; B["显式并行 + NCCL/NVSHMEM"]
+    S -.-&gt; C["API Remoting / 池化"]
+</pre>
+
+<ul>
+<li>要<strong>透明 + 性能</strong>：把规模限制在单机/单域（UVM、MNNVL）。</li>
+<li>要<strong>透明 + 规模</strong>：接受远程单卡/池化的性能损失（API remoting、CXL）。</li>
+<li>要<strong>性能 + 规模</strong>：接受显式并行（NCCL/NVSHMEM/TP/PP）。</li>
+</ul>
+<p>三者最多取二，这是当前硬件与软件栈的硬约束。</p>
+<h2 id="十二选型决策树"><a class="header" href="#十二选型决策树">十二、选型决策树</a></h2>
+<pre class="mermaid">flowchart TB
+    Q1{"应用能否改代码?"}
+    Q1 --&gt;|完全不能| Q2{"只是想把远端卡用起来?"}
+    Q2 --&gt;|是| R1["API Remoting&lt;br/&gt;rCUDA / GVirtuS / Lupine"]
+    Q2 --&gt;|否，要扩显存| R2["池化/远程内存&lt;br/&gt;EMA / CXL / VUGVA"]
+    Q1 --&gt;|能改| Q3{"有 NVL72 / GB200 吗?"}
+    Q3 --&gt;|有| Q4{"需要跨节点共享显存?"}
+    Q4 --&gt;|是| R3["MNNVL + IMEX + fabric memory&lt;br/&gt;+ NVSHMEM / FlashInfer / NCCL"]
+    Q4 --&gt;|否| R4["单机 UVM/VMM + NCCL"]
+    Q3 --&gt;|没有| Q5{"显存不够还是算力不够?"}
+    Q5 --&gt;|显存| R5["UVM / 池化 / CXL / offload"]
+    Q5 --&gt;|算力| R6["显式 TP/PP/EP + NCCL"]
+</pre>
+
+<p>补充判断：</p>
+<ul>
+<li><strong>要极致吞吐</strong>：不要追求透明，直接上 TP/PP/EP + NCCL/NVSHMEM/cuBLASMp。</li>
+<li><strong>要快速验证/远程开发</strong>：API remoting 最省事。</li>
+<li><strong>要多租户隔离</strong>：MIG/HAMi + DRA；MNNVL 用 ComputeDomain 划分 IMEX domain。</li>
+<li><strong>要跨机架</strong>：NVLink 域之外只能走 IB/RoCE + NCCL/NVSHMEM；没有透明方案。</li>
+</ul>
+<h2 id="十三关键-api--命令速查"><a class="header" href="#十三关键-api--命令速查">十三、关键 API / 命令速查</a></h2>
+<h3 id="131-拓扑"><a class="header" href="#131-拓扑">13.1 拓扑</a></h3>
+<pre><code class="language-bash">nvidia-smi topo -m                 # GPU/NIC/NUMA 拓扑矩阵
+nvidia-smi nvlink -s               # NVLink 链路状态
+nvidia-smi nvlink -c               # NVLink 能力
+nvidia-smi -q | grep -i fabric     # fabric 状态
+</code></pre>
+<h3 id="132-uvm"><a class="header" href="#132-uvm">13.2 UVM</a></h3>
+<pre><code class="language-cpp">cudaMallocManaged(&amp;p, bytes);
+cudaMemAdvise(p, bytes, cudaMemAdviseSetPreferredLocation, dev);
+cudaMemAdvise(p, bytes, cudaMemAdviseSetAccessedBy, peer);
+cudaMemPrefetchAsync(p, bytes, dev, stream);
+cudaMemAdvise(p, bytes, cudaMemAdviseUnsetPreferredLocation, dev);
+</code></pre>
+<h3 id="133-vmm"><a class="header" href="#133-vmm">13.3 VMM</a></h3>
+<pre><code class="language-cpp">cuMemGetAllocationGranularity(&amp;gran, &amp;prop, CU_MEM_ALLOC_GRANULARITY_MINIMUM);
+cuMemAddressReserve(&amp;va, size, 0, 0, 0);
+cuMemCreate(&amp;h, size, &amp;prop, 0);
+cuMemMap(va, size, 0, h, 0);
+cuMemSetAccess(va, size, &amp;desc, 1);
+cuMemUnmap(va, size);
+cuMemRelease(h);
+cuMemAddressFree(va, size);
+</code></pre>
+<h3 id="134-fabric--multicast"><a class="header" href="#134-fabric--multicast">13.4 Fabric / multicast</a></h3>
+<pre><code class="language-cpp">prop.requestedHandleTypes = CU_MEM_HANDLE_TYPE_FABRIC;
+cuMemExportToShareableHandle(&amp;fh, h, CU_MEM_HANDLE_TYPE_FABRIC, 0);
+cuMemImportFromShareableHandle(&amp;peer_h, &amp;fh, CU_MEM_HANDLE_TYPE_FABRIC);
+
+cuMulticastCreate(&amp;mc, &amp;mcProp);
+cuMulticastAddDevice(&amp;mc, dev);
+cuMulticastBindMem(mc, 0, h, 0, size, 0);
+</code></pre>
+<h3 id="135-nvshmem"><a class="header" href="#135-nvshmem">13.5 NVSHMEM</a></h3>
+<pre><code class="language-cpp">nvshmem_init();
+p = nvshmem_malloc(bytes);          // symmetric heap
+nvshmem_putmem(peer_p, local_p, bytes, pe);
+nvshmem_quiet();
+nvshmem_free(p);
+nvshmem_finalize();
+</code></pre>
+<h3 id="136-设备属性"><a class="header" href="#136-设备属性">13.6 设备属性</a></h3>
+<pre><code class="language-cpp">cuDeviceGetAttribute(&amp;v, CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_FABRIC_SUPPORTED, dev);
+cuDeviceGetAttribute(&amp;v, CU_DEVICE_ATTRIBUTE_MULTICAST_SUPPORTED, dev);
+cuDeviceGetAttribute(&amp;v, CU_DEVICE_ATTRIBUTE_VIRTUAL_MEMORY_MANAGEMENT_SUPPORTED, dev);
+</code></pre>
+<h2 id="十四术语表"><a class="header" href="#十四术语表">十四、术语表</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>术语</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>UVA</strong></td><td>Unified Virtual Addressing，CPU/GPU 共享的虚拟地址空间</td></tr>
+<tr><td><strong>UVM</strong></td><td>Unified Memory，页错误驱动迁移的统一内存</td></tr>
+<tr><td><strong>HMM</strong></td><td>Heterogeneous Memory Management，Linux 内核的异构内存框架</td></tr>
+<tr><td><strong>VMM</strong></td><td>CUDA Virtual Memory Management，VA 与物理分配解耦的 API</td></tr>
+<tr><td><strong>P2P</strong></td><td>Peer-to-Peer，GPU 间直接访问（NVLink/PCIe）</td></tr>
+<tr><td><strong>EGM</strong></td><td>Extended GPU Memory，GPU 经 NVLink-C2C 访问 CPU 内存</td></tr>
+<tr><td><strong>MNNVL</strong></td><td>Multi-Node NVLink，跨节点 NVLink 域</td></tr>
+<tr><td><strong>IMEX</strong></td><td>Internode Memory Exchange，跨 OS domain 的 GPU 内存映射服务</td></tr>
+<tr><td><strong>FA</strong></td><td>Fabric Address，NVLink fabric 内的物理地址</td></tr>
+<tr><td><strong>SHARP</strong></td><td>Scalable Hierarchical Aggregation and Reduction Protocol，交换机内规约</td></tr>
+<tr><td><strong>PGAS</strong></td><td>Partitioned Global Address Space，分区全局地址空间</td></tr>
+<tr><td><strong>DSMEM</strong></td><td>Distributed Shared Memory，线程块簇内共享内存（单卡）</td></tr>
+<tr><td><strong>MIG</strong></td><td>Multi-Instance GPU，单卡硬件切分</td></tr>
+<tr><td><strong>MPS</strong></td><td>Multi-Process Service，多进程共享单卡</td></tr>
+<tr><td><strong>DRA</strong></td><td>Dynamic Resource Allocation，K8s 动态资源分配</td></tr>
+<tr><td><strong>ComputeDomain</strong></td><td>NVIDIA DRA 的 MNNVL/IMEX domain CRD</td></tr>
+<tr><td><strong>CXL</strong></td><td>Compute Express Link，内存/缓存一致性互连</td></tr>
+<tr><td><strong>CFT</strong></td><td>Compute Fabric Transport，CUDA 13.x 的资源中心 fabric 传输模型</td></tr>
+<tr><td><strong>Logical endpoint</strong></td><td>32 位 id + offset 命名的 fabric 传输对象，不绑定本地 VA</td></tr>
+<tr><td><strong>KV cache</strong></td><td>LLM 推理的键值缓存</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="十五参考"><a class="header" href="#十五参考">十五、参考</a></h2>
+<h3 id="nvidia-官方"><a class="header" href="#nvidia-官方">NVIDIA 官方</a></h3>
+<ul>
+<li><a href="https://docs.nvidia.com/cuda/cuda-programming-guide/04-special-topics/unified-memory.html">CUDA Unified Memory</a></li>
+<li><a href="https://docs.nvidia.com/cuda/cuda-programming-guide/04-special-topics/virtual-memory-management.html">CUDA Virtual Memory Management</a></li>
+<li><a href="https://docs.nvidia.com/cuda/cuda-programming-guide/04-special-topics/extended-gpu-memory.html">CUDA Extended GPU Memory</a></li>
+<li><a href="https://docs.nvidia.com/cuda/cuda-programming-guide/04-special-topics/compute-fabric-transport.html">CUDA Compute Fabric Transport</a></li>
+<li><a href="https://docs.nvidia.com/multi-node-nvlink-systems/mnnvl-user-guide/overview.html">MNNVL User Guide</a></li>
+<li><a href="https://docs.nvidia.com/multi-node-nvlink-systems/imex-guide/overview.html">IMEX Service for NVLink Networks</a></li>
+<li><a href="https://docs.nvidia.com/multi-node-nvlink-systems/partition-guide.pdf">NVLink Partition Guide</a></li>
+<li><a href="https://docs.nvidia.com/mission-control/docs/systems-administration-guide/2.0.0/high-speed-fabric-management.html">NVIDIA Mission Control: High-Speed Fabric Management</a></li>
+<li><a href="https://www.nvidia.com/en-us/data-center/dgx-gb200/">DGX GB200 规格</a></li>
+<li><a href="https://docs.nvidia.com/nvshmem/api/introduction.html">NVSHMEM 文档</a></li>
+<li><a href="https://developer.nvidia.com/blog/enabling-fast-inference-and-resilient-training-with-nccl-2-27/">NCCL 2.27: Symmetric Memory</a></li>
+<li><a href="https://www.nvidia.com/en-us/data-center/nvlink-fusion/">NVLink Fusion</a></li>
+</ul>
+<h3 id="kubernetes--编排"><a class="header" href="#kubernetes--编排">Kubernetes / 编排</a></h3>
+<ul>
+<li><a href="https://dra-driver-nvidia-gpu.sigs.k8s.io/docs/concepts/compute-domains/">DRA Driver for NVIDIA GPUs: ComputeDomains</a></li>
+<li><a href="https://github.com/kubernetes-sigs/lws/blob/main/keps/1259-auto-compute-domain/README.md">KEP-1259: Automatic ComputeDomain Lifecycle Management for MNNVL</a></li>
+</ul>
+<h3 id="开源实现"><a class="header" href="#开源实现">开源实现</a></h3>
+<ul>
+<li><a href="https://github.com/flashinfer-ai/flashinfer/blob/main/docs/design_docs/symmetric_memory.md">FlashInfer: Symmetric Memory over NVLink</a></li>
+<li><a href="https://github.com/gvirtus/GVirtuS">GVirtuS</a></li>
+<li><a href="http://rcuda.net/">rCUDA</a></li>
+<li><a href="https://project-hami.io/docs/next/userguide/nvidia-device/remote-gpu">HAMi: Remote GPU with Lupine</a></li>
+</ul>
+<h3 id="论文--研究"><a class="header" href="#论文--研究">论文 / 研究</a></h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2609.27040">EMA: Elastic and Performance Transparent Memory Across GPUs (arXiv 2609.27040)</a></li>
+<li><a href="https://arxiv.org/abs/2511.20172">Beluga: A CXL-Based Memory Architecture for LLM KVCache (arXiv 2511.20172)</a></li>
+<li><a href="https://arxiv.org/abs/2610.07593">TRANSIT: Transparent Scale-in for Multi-Node LLM Training (arXiv 2610.07593)</a></li>
+<li><a href="https://dblp.org/rec/conf/usenix/ChoiKJAJKA22.html">Memory Harvesting in Multi-GPU Systems with Hierarchical UVM (ATC’22)</a></li>
+<li><a href="https://doi.org/10.1145/2731186.2731192">GPUswap: Enabling Oversubscription of GPU Memory through Transparent Swapping (VEE’15)</a></li>
+<li><a href="https://zenodo.org/records/21549808">VUGVA: Virtual Unified GPU VRAM Architecture (preprint)</a></li>
+</ul>
+<h3 id="其他厂商--内核"><a class="header" href="#其他厂商--内核">其他厂商 / 内核</a></h3>
+<ul>
+<li><a href="https://docs.kernel.org/mm/hmm.html">Linux HMM</a></li>
+<li><a href="https://rocm.docs.amd.com/projects/HIP/en/latest/how-to/hip_runtime_api/memory_management/unified_memory.html">ROCm HIP Unified Memory</a></li>
+<li><a href="https://instinct.docs.amd.com/projects/amdgpu-docs/en/docs-30.10/gpu-partitioning/mi300a/index.html">AMD MI300A APU</a></li>
+<li><a href="https://www.intel.com/content/www/us/en/docs/oneapi/optimization-guide-gpu/2024-0/unified-shared-memory-allocations.html">Intel oneAPI USM</a></li>
+<li><a href="https://knowledge.broadcom.com/external/article/322267/end-of-availability-eoa-for-vsphere-bitf.html">VMware Bitfusion EOA</a></li>
+</ul>
+<h2 id="相关页面"><a class="header" href="#相关页面">相关页面</a></h2>
+<ul>
+<li><a href="../../Cloud_Native/AI_Infrastructure/Accelerators/hami.html">HAMi：Kubernetes 异构 AI 算力虚拟化与调度</a></li>
+<li><a href="../../Cloud_Native/AI_Infrastructure/Accelerators/hami-core.html">HAMi-core：容器内 CUDA 劫持与资源隔离</a></li>
+<li><a href="./slurm.html">Slurm</a></li>
+<li><a href="./ompi架构介绍.html">Open MPI 架构</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../high_performance_computing.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../docs/Machine_Learning/High_Performance_Computing/ompi架构介绍.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../high_performance_computing.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../docs/Machine_Learning/High_Performance_Computing/ompi架构介绍.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../highlight-abc7f01d.js"></script>
+        <script src="../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

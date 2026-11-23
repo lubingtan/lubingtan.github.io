@@ -1,0 +1,463 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>云原生分布式训练：编排与稳定性专题 - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../../searchindex-dfe22a86.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../../toc-d9461900.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/AI_Infrastructure/Distributed_Training/overview.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="云原生分布式训练编排与稳定性专题"><a class="header" href="#云原生分布式训练编排与稳定性专题">云原生分布式训练：编排与稳定性专题</a></h1>
+<blockquote>
+<p><strong>结论先行</strong>：把训练作业当成「一组无状态 Pod」是大多数编排与稳定性问题的起点。
+分布式训练真正要维护的对象是<strong>成员关系（membership）</strong>：哪些进程属于同一个训练组、它们如何发现彼此、
+何时算「到齐」、谁挂了之后由谁重建。Kubernetes 只保证 Pod 被创建和重启，不保证成员到齐，更不保证
+集合通信已经建立。于是同一个「训练挂了」在不同层有完全不同的含义和恢复代价。</p>
+</blockquote>
+<p>本专题用<strong>三层 membership</strong> 作为统一框架，把工作负载建模、启动通信、故障自愈、Checkpoint/抢占恢复、
+RL 后训练串成一条链。每一篇都尽量落到具体 API 字段、代码路径和可复现的故障信号，而不是停留在概念层。</p>
+<h2 id="一三层-membership"><a class="header" href="#一三层-membership">一、三层 membership</a></h2>
+<pre class="mermaid">flowchart TB
+    subgraph L1["L1 编排层 membership"]
+        W["Job / JobSet / LWS / TrainJob&lt;br/&gt;副本组、角色、启动顺序"]
+        G["PodGroup / gang / 队列配额"]
+        S["Service / DNS / 卷"]
+    end
+    subgraph L2["L2 框架层 membership"]
+        R["rendezvous / store&lt;br/&gt;run_id、round、join"]
+        P["ProcessGroup&lt;br/&gt;rank、world_size、backend"]
+    end
+    subgraph L3["L3 通信层 membership"]
+        N["NCCL communicator&lt;br/&gt;uniqueId、channel、transport"]
+        F["IB QP / NVLink / Socket"]
+    end
+
+    W --&gt; R
+    G --&gt; W
+    S --&gt; R
+    R --&gt; P
+    P --&gt; N
+    N --&gt; F
+</pre>
+
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>层</th><th>谁维护</th><th>「成员」是什么</th><th>建立信号</th><th>典型时间尺度</th><th>失败表现</th><th>重建成本</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>L1 编排层</strong></td><td>kubelet、Job/JobSet/LWS/TrainJob 控制器、调度器</td><td>Pod（或 Pod 组）</td><td>Pod <code>Ready</code>、Job <code>status.ready</code>、JobSet <code>Ready</code>、<code>minAvailable</code> 满足</td><td>秒–分钟</td><td>Pending、ImagePullBackOff、CrashLoop、组不齐</td><td>分钟级（重新调度/拉镜像）</td></tr>
+<tr><td><strong>L2 框架层</strong></td><td>torchrun agent、TF 运行时、MPI launcher</td><td>rank 进程</td><td><code>next_rendezvous</code> 返回、<code>init_process_group</code> 完成</td><td>毫秒–分钟</td><td>join timeout、rank 缺失、<code>Address already in use</code></td><td>秒–分钟（同节点重启进程）</td></tr>
+<tr><td><strong>L3 通信层</strong></td><td>NCCL / UCX / 框架 collective</td><td>communicator、QP、channel</td><td><code>ncclCommInitRank</code> + 首个 collective 成功</td><td>毫秒–秒</td><td>hang、<code>NCCL timeout</code>、<code>remote process exited</code></td><td>秒级（重建 communicator）</td></tr>
+</tbody>
+</table>
+</div>
+<p>三层的关键差异不是「谁更底层」，而是<strong>故障域不同</strong>：L1 的故障域是 Pod/节点，L2 是进程组，L3 是 communicator。
+一次节点故障会同时打断三层，但三层恢复的触发条件、超时和代价完全不同。编排原语的能力边界，本质上就是
+<strong>它能把哪一层 membership 写进 API，以及它默认在哪一层做恢复</strong>。</p>
+<h2 id="二三个容易混淆的就绪与完成"><a class="header" href="#二三个容易混淆的就绪与完成">二、三个容易混淆的「就绪」与「完成」</a></h2>
+<h3 id="21-三种就绪"><a class="header" href="#21-三种就绪">2.1 三种就绪</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>就绪</th><th>判定者</th><th>含义</th><th>常见误判</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Pod Ready</strong></td><td>kubelet + readinessProbe</td><td>容器已启动；若配置了 probe，则 probe 通过</td><td>训练 Pod 往往没有 readinessProbe，容器一启动就 <code>Ready</code>，此时 rendezvous 还没开始</td></tr>
+<tr><td><strong>成员就绪</strong></td><td>rendezvous / store / Job 控制器</td><td>该到的 rank 都加入了同一个 round</td><td><code>minAvailable</code> 满足只说明 Pod 被调度，不说明进程已 join</td></tr>
+<tr><td><strong>通信就绪</strong></td><td>NCCL / 框架</td><td>communicator 建好，首个 collective 成功</td><td>没有任何 K8s 信号；只能靠日志、指标或应用层 barrier 观测</td></tr>
+</tbody>
+</table>
+</div>
+<p>这解释了一个常见现象：<strong>Gang 调度成功、Pod 全部 <code>Running</code>、训练却仍然卡住</strong>。Gang 只保证「资源同时到位」，
+不保证「进程同时到齐」，更不保证「通信同时建好」。LWS 的 <code>LeaderReady</code>、Volcano 的 <code>minAvailable</code>、
+JobSet 的 <code>DependsOn</code> 都只是在不同粒度上逼近「成员就绪」，没有一个原语能直接表达「通信就绪」。</p>
+<h3 id="22-三种完成"><a class="header" href="#22-三种完成">2.2 三种完成</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>完成</th><th>判定者</th><th>含义</th><th>风险</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>进程完成</strong></td><td>容器运行时</td><td>主进程 exit 0</td><td>训练脚本捕获异常后 <code>exit 0</code>，会被当成成功</td></tr>
+<tr><td><strong>作业完成</strong></td><td>Job/JobSet/Volcano/TrainJob 的 successPolicy</td><td>满足声明的成功条件</td><td>默认语义可能是「所有 Pod 成功」或「任一成功」，与业务目标不一定一致</td></tr>
+<tr><td><strong>业务完成</strong></td><td>训练脚本 / 外部控制器 / eval gate</td><td>达到目标 step、指标或验收门槛</td><td>不在 K8s API 里，需要显式建模，否则无法审计和自动重试</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="23-三种角色"><a class="header" href="#23-三种角色">2.3 三种角色</a></h3>
+<p>同一个「角色」在三层里可能是三个不同的东西：</p>
+<ul>
+<li><strong>编排角色</strong>：JobSet 的 <code>ReplicatedJob</code>、LWS 的 leader/worker、Volcano 的 <code>TaskSpec</code>、TrainJob runtime 里的 PodSet。</li>
+<li><strong>框架角色</strong>：PyTorch 的 rank 0、TF 的 chief/worker/ps/evaluator、MPI 的 rank。</li>
+<li><strong>失败域角色</strong>：rank 0 / leader / PS / coordinator 往往是单点；它们的故障会放大成整组故障。</li>
+</ul>
+<p>建模时必须把这三者对齐，否则会出现「K8s 认为 worker-3 只是一个可替换副本，但框架认为它是 chief」的错位。</p>
+<h2 id="三一个统一的生命周期"><a class="header" href="#三一个统一的生命周期">三、一个统一的生命周期</a></h2>
+<pre class="mermaid">flowchart LR
+    A["建模&lt;br/&gt;Workload spec"] --&gt; B["准入/调度&lt;br/&gt;quota + gang"]
+    B --&gt; C["启动&lt;br/&gt;rank + rendezvous"]
+    C --&gt; D["通信&lt;br/&gt;NCCL comm"]
+    D --&gt; E["训练循环"]
+    E --&gt; F{"故障?"}
+    F -- "否" --&gt; G["完成条件&lt;br/&gt;successPolicy / eval"]
+    F -- "是" --&gt; H["定位首发&lt;br/&gt;first cause"]
+    H --&gt; I["选恢复单元&lt;br/&gt;进程/子组/整组/整 Job"]
+    I --&gt; J["重建 membership"]
+    J --&gt; K["加载 checkpoint"]
+    K --&gt; E
+    E --&gt; L["周期性 checkpoint"]
+    L --&gt; E
+</pre>
+
+<p>这条链上，每一段都有独立的「正确性问题」：</p>
+<ol>
+<li><strong>建模</strong>：API 是否表达了你真正需要的角色、依赖、就绪和完成语义？</li>
+<li><strong>启动</strong>：rank/world size 是谁算的？成员怎么发现彼此？超时设在哪一层？</li>
+<li><strong>故障</strong>：你看到的是首发原因，还是其他 rank 的连锁症状？</li>
+<li><strong>恢复</strong>：最小可恢复的 membership 单元是什么？重建后如何证明状态一致？</li>
+<li><strong>接入</strong>：多个阶段（训练/rollout/eval）如何共享资源、版本和失败域？</li>
+</ol>
+<h2 id="四原语选择先问成员关系再问功能"><a class="header" href="#四原语选择先问成员关系再问功能">四、原语选择：先问「成员关系」，再问「功能」</a></h2>
+<pre class="mermaid">flowchart TB
+    S["训练负载"] --&gt; Q1{"需要长期常驻&lt;br/&gt;或对外提供推理服务?"}
+    Q1 -- "是" --&gt; D["Deployment / StatefulSet&lt;br/&gt;训练另起 Job"]
+    Q1 -- "否" --&gt; Q2{"只是一组同构 Pod?"}
+    Q2 -- "是" --&gt; Q3{"需要 gang / 队列配额?"}
+    Q3 -- "是" --&gt; V["Volcano Job&lt;br/&gt;+ Kueue 配额"]
+    Q3 -- "否" --&gt; J["K8s Job&lt;br/&gt;Indexed + headless Service"]
+    Q2 -- "否" --&gt; Q4{"多角色 / 多 Job 依赖?"}
+    Q4 -- "是" --&gt; JS["JobSet"]
+    Q4 -- "否" --&gt; Q5{"leader + worker&lt;br/&gt;稳定组身份?"}
+    Q5 -- "是" --&gt; L["LWS"]
+    Q5 -- "否" --&gt; Q6{"框架特定&lt;br/&gt;且需要复用运行时?"}
+    Q6 -- "是" --&gt; T["TrainJob / MPIJob"]
+    Q6 -- "否" --&gt; JS
+</pre>
+
+<blockquote>
+<p>这不是互斥的分类，而是<strong>默认承载关系</strong>：TrainJob 内部会生成 JobSet，JobSet 内部生成 Job，Job 生成 Pod；
+LWS 也可以被 TrainJob/JobSet 引用。选择时先确定「谁是 membership 的 owner」，再决定用哪一层表达。</p>
+</blockquote>
+<p>几个判断规则：</p>
+<ul>
+<li><strong>只需要「跑完就退出」</strong>：K8s Job（Indexed 需要稳定序号时）+ headless Service 足够。</li>
+<li><strong>需要「同时到位」</strong>：Volcano 的 gang 或 scheduler-plugins 的 coscheduling；Kueue 负责队列/配额，不负责进程组。</li>
+<li><strong>需要「多角色、多 Job、依赖关系」</strong>：JobSet 的 <code>ReplicatedJob</code> + <code>DependsOn</code>/<code>StartupPolicy</code>。</li>
+<li><strong>需要「leader + worker 稳定身份、整组重启」</strong>：LWS 的 <code>replicas × size</code> + <code>RestartPolicy</code>。</li>
+<li><strong>需要「框架语义 + 可复用运行时」</strong>：TrainJob 的 <code>ClusterTrainingRuntime</code> + framework plugin；MPI 用 MPIJob。</li>
+<li><strong>需要「常驻服务」</strong>：Deployment/StatefulSet；不要用 Job 模拟长期服务。</li>
+<li><strong>K8s 1.37 起还有一层原生选项</strong>：<code>scheduling.k8s.io/v1beta1</code> 的 Workload/PodGroup（<code>GenericWorkload</code> beta，默认关闭）
+把 gang、优先级、中断模式收进核心；Job 的 <code>WorkloadWithJob</code> 仍是 alpha。它只建模<strong>调度策略模板</strong>，不建模角色
+Pod 模板、成功条件或重启语义，适合作为其他原语的底座，而不是单独承载训练作业。详见
+<a href="./workload-modeling.html#37-k8s-原生-workload--podgroup137-beta默认关闭">工作负载建模 §3.7</a>。</li>
+</ul>
+<h2 id="五六个常见误区"><a class="header" href="#五六个常见误区">五、六个常见误区</a></h2>
+<ol>
+<li><strong>Gang 调度 = 训练就绪</strong>。Gang 只保证资源同时到位；成员是否 join、communicator 是否建好是另外两层。</li>
+<li><strong>Pod 重启 = 训练恢复</strong>。DDP/FSDP 的一个 rank 退出会让其余 rank 在 collective 上超时；多数框架要求整组重建，
+而不是只重启一个 Pod（LWS 的 <code>RecreateGroupOnPodRestart</code> 就是把这个语义显式化）。</li>
+<li><strong>Checkpoint = 保存模型权重</strong>。缺 optimizer state、LR scheduler、RNG、数据偏移，恢复后 loss 会跳变、
+数据会重复或跳过；这些状态必须一起持久化。</li>
+<li><strong>所有 rank 都报 NCCL timeout = NCCL 故障</strong>。NCCL 的超时是<strong>本地观察到的症状</strong>，首发原因可能是某个 rank
+OOM、某个节点 Xid、某条链路降级，甚至只是 rendezvous 少了一个成员。</li>
+<li><strong><code>restartPolicy: Always</code> 或 <code>backoffLimit</code> 足够</strong>。容器内 hang 不触发重启；节点故障不一定计入 Job 重试；
+OOM 循环会把预算烧光。失败预算要覆盖「计数」和「不计数」两类失败。</li>
+<li><strong>RL 是一个大 Job</strong>。RL 后训练是 actor、rollout、reward、reference、critic、eval 多个异构角色的流水线，
+各角色的资源周期、版本和失败域都不同；把它塞进一个 Pod 模板通常会在扩展和恢复上付出代价。</li>
+</ol>
+<h2 id="六专题页面"><a class="header" href="#六专题页面">六、专题页面</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>页面</th><th>回答的问题</th><th>关键产出</th></tr>
+</thead>
+<tbody>
+<tr><td><a href="./workload-modeling.html">工作负载建模：从 Pod 到可恢复的成员组</a></td><td>角色、资源、依赖、就绪/完成、服务暴露、卷、放置怎么表达？Volcano Job / JobSet / LWS / TrainJob 怎么选？</td><td>七维建模表、原语对比、YAML 骨架、选择树</td></tr>
+<tr><td><a href="../../../Machine_Learning/Distributed_Training/startup-communication.html">训练启动与通信：rank、rendezvous 与第一个 collective</a></td><td>TF/MPI/PyTorch 的角色和成员怎么组织？rank/world size 从哪来？首个 step 前发生了什么？</td><td>启动时序、PyTorch/TF/MPI 对照、NCCL 初始化、失败窗口</td></tr>
+<tr><td><a href="./failure-self-healing.html">训练失败与自愈：首发原因、恢复单元与失败预算</a></td><td>启动失败、join 超时、hang、单 rank 退出、节点/设备故障怎么区分？谁来恢复？如何避免无限重试？</td><td>故障分层、首发定位法、恢复语义对照、预算模型</td></tr>
+<tr><td><a href="./checkpoint-preemption.html">Checkpoint 与抢占恢复：状态、恢复点与成员重建</a></td><td>必须保留哪些状态？恢复点怎么定义？world size 变了怎么办？如何验证加载正确？</td><td>状态清单、DCP/FSDP/torchtitan 实现、进度损失公式、恢复 runbook</td></tr>
+<tr><td><a href="./rl-post-training.html">RL 后训练与业务接入：阶段、版本与失败域</a></td><td>训练/rollout/评分/eval/模型同步的数据流是什么？先问清什么再沉淀平台能力？</td><td>阶段图、verl 结构、版本与 staleness、失败域表、能力沉淀决策表</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="七版本基线"><a class="header" href="#七版本基线">七、版本基线</a></h2>
+<p>本篇与各子页的证据基于以下代码/文档快照（2026-11-23 拉取）。API 演进很快，引用时请以文中 permalink 的
+commit 为准；正文会标注「当前 main」与「最新稳定版」的差异。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>项目</th><th>快照</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td>Kubernetes</td><td><code>v1.37.2</code> (<code>c50e5395f1ae</code>)</td><td>Job/Pod/调度 API</td></tr>
+<tr><td>Volcano</td><td>main <code>2006640ed881</code>（tag <code>v1.17.0-alpha.0</code>）</td><td>Job/PodGroup/gang/plugins</td></tr>
+<tr><td>JobSet</td><td>main <code>32c9ea314409</code>（tag <code>v0.14.0-devel</code>）</td><td>ReplicatedJob/Network/FailurePolicy</td></tr>
+<tr><td>LWS</td><td><code>v1.0.0</code> (<code>51d7d5ad84f7</code>)</td><td>LeaderWorkerSet/DisaggregatedSet</td></tr>
+<tr><td>Kubeflow Trainer</td><td><code>v2.4.0</code> (<code>ae27d3faf401</code>)</td><td>TrainJob/TrainingRuntime</td></tr>
+<tr><td>Training Operator v1</td><td><code>v1.9.4</code> (<code>4445c12aa62e</code>)</td><td>旧 TFJob/PyTorchJob/MPIJob</td></tr>
+<tr><td>MPI Operator</td><td><code>v0.8.2</code> (<code>a057ca529cb7</code>)</td><td>MPIJob</td></tr>
+<tr><td>Kueue</td><td>main <code>be7dc9d31470</code>（tag <code>v0.21.0-rc.1</code>）</td><td>配额/抢占</td></tr>
+<tr><td>PyTorch</td><td>main <code>02e06c707ee3</code></td><td>elastic/c10d/NCCL</td></tr>
+<tr><td>NCCL</td><td><code>v2.32.6-1</code> (<code>ad2d192c1f27</code>)</td><td>communicator/bootstrap</td></tr>
+<tr><td>verl</td><td>main <code>7b6c9cc0e19d</code></td><td>RL 后训练</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="八参考入口"><a class="header" href="#八参考入口">八、参考入口</a></h2>
+<ul>
+<li><a href="https://kubernetes.io/docs/concepts/workloads/controllers/job/">Kubernetes Job</a></li>
+<li><a href="https://volcano.sh/en/docs/vcjob/">Volcano Job</a></li>
+<li><a href="https://jobset.sigs.k8s.io/docs/overview/">JobSet</a></li>
+<li><a href="https://lws.sigs.k8s.io/docs/overview/">LeaderWorkerSet</a></li>
+<li><a href="https://trainer.kubeflow.org/">Kubeflow Trainer</a></li>
+<li><a href="https://www.kubeflow.org/docs/components/training/mpi/">MPI Operator</a></li>
+<li><a href="https://docs.pytorch.org/docs/stable/distributed.html">PyTorch distributed</a></li>
+<li><a href="https://docs.pytorch.org/docs/stable/elastic/run.html">PyTorch elastic</a></li>
+<li><a href="https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/">NCCL</a></li>
+<li><a href="https://kueue.sigs.k8s.io/">Kueue</a></li>
+</ul>
+<h2 id="相关页面"><a class="header" href="#相关页面">相关页面</a></h2>
+<ul>
+<li><a href="../../Kubernetes/Scheduling/kueue.html">Kueue：Kubernetes 原生作业队列管理器</a></li>
+<li><a href="../../Kubernetes/Extensibility/production-operator.html">生产级 Kubernetes Operator</a></li>
+<li><a href="../../../Machine_Learning/High_Performance_Computing/slurm.html">Slurm</a></li>
+<li><a href="../../../Machine_Learning/High_Performance_Computing/ompi架构介绍.html">Open MPI 架构</a></li>
+<li><a href="../../../Machine_Learning/High_Performance_Computing/gpu-cluster-pooling.html">GPU 算力/显存池化</a></li>
+<li><a href="../../../Machine_Learning/Inference/vLLM%20Production%20Stack实战.html">vLLM Production Stack 实战</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../../docs/Cloud_Native/AI_Infrastructure/Distributed_Training/rl-post-training.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../../docs/Cloud_Native/AI_Infrastructure/Distributed_Training/workload-modeling.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../../docs/Cloud_Native/AI_Infrastructure/Distributed_Training/rl-post-training.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../../docs/Cloud_Native/AI_Infrastructure/Distributed_Training/workload-modeling.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../../highlight-abc7f01d.js"></script>
+        <script src="../../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

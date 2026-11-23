@@ -1,0 +1,659 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>RL 后训练与业务接入：阶段、版本与失败域 - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../../searchindex-dfe22a86.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../../toc-d9461900.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/AI_Infrastructure/Distributed_Training/rl-post-training.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="rl-后训练与业务接入阶段版本与失败域"><a class="header" href="#rl-后训练与业务接入阶段版本与失败域">RL 后训练与业务接入：阶段、版本与失败域</a></h1>
+<blockquote>
+<p><strong>结论先行</strong>：RL 后训练不是「一个大训练 Job」，而是<strong>一条带反馈环的数据流水线</strong>：同一份权重被三种程序以三种
+并行方式消费（训练 / 生成 / 评分），每一圈都要把新权重搬回生成侧。所有编排复杂度都来自这一句。
+因此决定拓扑的不是算法，而是四个问题：<strong>角色是否同镜像、资源周期是否同频、版本号是否贯穿、失败域是否可分割</strong>。
+这四个问题的答案，直接决定「用 TrainJob/LWS/JobSet 还是只做 API 与可观测」。</p>
+</blockquote>
+<p>本页先给阶段图与两种拓扑，再以 verl 的一个具体快照展示代码级结构，然后拆解模型同步、版本、失败域与评估，
+最后给业务接入的提问顺序和平台能力沉淀决策表。</p>
+<blockquote>
+<p>专题导航：<a href="./overview.html">总纲</a> · <a href="./workload-modeling.html">工作负载建模</a> · <a href="../../../Machine_Learning/Distributed_Training/startup-communication.html">启动通信</a> · <a href="./failure-self-healing.html">故障自愈</a> · <a href="./checkpoint-preemption.html">Checkpoint</a> · <a href="./rl-post-training.html">RL</a></p>
+</blockquote>
+<h2 id="一阶段图与数据流"><a class="header" href="#一阶段图与数据流">一、阶段图与数据流</a></h2>
+<h3 id="11-六种角色"><a class="header" href="#11-六种角色">1.1 六种角色</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>角色</th><th>做什么</th><th>并行方式</th><th>是否每 step 参与</th><th>典型资源</th></tr>
+</thead>
+<tbody>
+<tr><td>actor / policy</td><td>前向+反向，产出新权重</td><td>FSDP/Megatron TP/PP/EP</td><td>是</td><td>GPU，显存最大</td></tr>
+<tr><td>rollout（推理引擎）</td><td>按 prompt 生成 n 条轨迹</td><td>vLLM/SGLang TP/DP</td><td>是</td><td>GPU，KV cache 大</td></tr>
+<tr><td>reference model</td><td>算 <code>ref_log_prob</code> 供 KL</td><td>同 actor 并行</td><td>是（若启用 KL）</td><td>可与 actor 共享</td></tr>
+<tr><td>critic / value</td><td>算 value，供 GAE</td><td>同 actor 并行</td><td>仅 GAE 类算法</td><td>可与 actor 共享</td></tr>
+<tr><td>reward model / scorer</td><td>打分：规则、RM、LLM-judge</td><td>CPU 或小 GPU 池</td><td>是</td><td>CPU 或独立 GPU 池</td></tr>
+<tr><td>evaluation</td><td>验收门禁，不参与反传</td><td>批处理</td><td>否（按 freq）</td><td>独立作业</td></tr>
+</tbody>
+</table>
+</div>
+<p>数据流（以 verl 的实现顺序为例）：</p>
+<pre class="mermaid">flowchart LR
+    P["prompts(uid)"] --&gt; R["rollout&lt;br/&gt;每条 n 个样本"]
+    R --&gt; S["reward / score"]
+    S --&gt; B["replay buffer&lt;br/&gt;按组/版本"]
+    B --&gt; O["old_log_prob"]
+    O --&gt; RF["ref_log_prob（KL）"]
+    RF --&gt; V["values（critic）"]
+    V --&gt; ADV["advantage"]
+    ADV --&gt; U["actor / critic update"]
+    U --&gt; W["weight sync"]
+    W --&gt; R
+    U --&gt; CK["checkpoint&lt;br/&gt;model+optim+data"]
+    CK --&gt; U
+    R --&gt; EV["offline eval&lt;br/&gt;独立作业"]
+    EV --&gt; G["发布门禁"]
+</pre>
+
+<p>关键点：<strong>reward 在 advantage 之前、在 rollout 之后</strong>，所以 reward 服务是「生成侧」的依赖，不是「训练侧」的依赖；
+它可以和 rollout 并行（异步打分），也可以被 rollout 的 CPU worker 直接调用。eval 则应当在训练环之外，
+用独立作业/独立配额跑，否则会与训练抢 rollout 容量。</p>
+<h3 id="12-两种拓扑"><a class="header" href="#12-两种拓扑">1.2 两种拓扑</a></h3>
+<p><strong>拓扑 A：同步 + colocated</strong></p>
+<pre><code class="language-text">┌───────────────────── Trainer 进程（单控制器 driver）──────────────────────┐
+│ dataloader → prompts(uid) → TransferQueue(pending/running/finished)       │
+│      │                                                                    │
+│      ├─ AgentLoopWorker (CPU actor) ──HTTP──► LLM server (vLLM/SGLang)    │
+│      │                                          ▲ 与 actor 同卡           │
+│      │                                          │ sleep/wake + IPC 搬权重 │
+│      ├─ RewardLoopWorker (CPU actor) ──► RM router（或独立 RM 池）        │
+│      └─ actor / ref / critic 同一 WorkerGroup（fused worker，同池同卡）   │
+└───────────────────────────────────────────────────────────────────────────┘
+每个 step：gen → reward → old_log_prob → ref → values → adv → update → update_weights
+</code></pre>
+<p>一个 step 内<strong>严格串行</strong>：生成完 → 训练完 → 搬权重 → 再生成。GPU 在「生成」和「训练」之间分时复用；
+权重搬运是<strong>进程内</strong>的：rollout 必须已 sleep，actor 直接把张量写进推理进程的权重 buffer。失败域被绑定：
+actor/rollout/ref 在同一批 Ray actor 里，任何一方崩溃都会打穿整个 step。</p>
+<p><strong>拓扑 B：异步 + disaggregated</strong></p>
+<pre><code class="language-text">┌─ Trainer 作业（GPU 池 A）──┐          ┌─ Rollout 作业（GPU 池 B，可常驻）──┐
+│ actor / critic / ref       │          │ LLM server replicas (vLLM/SGLang)  │
+│ step k 产出 v_k ───────────┼─NCCL/NIXL─► 收 v_k：abort → 放 KV → 装权重   │
+│                            │          │ → resume generation                │
+└──────────┬─────────────────┘          └───────────────┬────────────────────┘
+           │ 采样（轨迹版本 ≤ k）                          │ 产出轨迹
+           └──────────► TransferQueue（K/V 分离：meta 在 meta server）◄──────┘
+</code></pre>
+<ul>
+<li><code>colocate_async</code>：两侧仍同池，但 rollout 在训练期间继续跑（partial rollout），step 结束时 abort + sleep +
+搬权重 + resume。</li>
+<li><code>separate_async</code>：rollout 独占 GPU，<strong>必须</strong>用非 <code>naive</code> 的 checkpoint engine（代码 assert）。训练侧默认不装
+推理引擎；开了 <code>hybrid_rollout.enable_switch</code> 才会在训练卡上再放一份 hybrid replica，空闲时借给生成。</li>
+<li>异步的代价是<strong>版本不再唯一</strong>：一条轨迹可能跨多个策略版本，于是需要 staleness 控制。</li>
+</ul>
+<h3 id="13-on-policy--off-policystaleness-与-rollout-ratio"><a class="header" href="#13-on-policy--off-policystaleness-与-rollout-ratio">1.3 on-policy / off-policy：staleness 与 rollout ratio</a></h3>
+<ul>
+<li><strong>on-policy</strong>：样本由当前权重生成。同步拓扑天然 on-policy（除非开 DAPO 过滤）。</li>
+<li><strong>off-policy 程度</strong>在 verl 里用「模型版本数」计量，而不是时间：<code>max_off_policy_threshold</code>（默认 8）表示
+「一条轨迹从首次生成到被训练，最多跨多少个 <code>global_steps</code>」；超阈值时 <code>drop</code>（丢弃整组并补采）或 <code>wait</code>
+（阻塞等它跑完）。代码判定是 <code>global_steps - prompt_global_steps + 1 &gt; threshold</code>。</li>
+<li><strong>partial rollout 会制造「轨迹内跨版本」</strong>：中途 abort 时保留已生成 token，用新版本续跑并重建 KV；
+因此监控要同时看 <code>trajectory_spans</code>（一条轨迹用了几个版本）和 <code>trajectory_staleness</code>（最老/最新版本差）。</li>
+</ul>
+<p><strong>rollout ratio 有三个不同层次，接入时必须问清是哪一个：</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>层次</th><th>含义</th><th>典型旋钮</th></tr>
+</thead>
+<tbody>
+<tr><td>样本比</td><td>每个 prompt 生成几条（GRPO 组大小）</td><td><code>actor_rollout_ref.rollout.n</code>，默认 1</td></tr>
+<tr><td>批比</td><td>每次从 dataloader 取多少 prompt、允许多少批在飞</td><td><code>data.gen_batch_size</code>、DAPO 的 <code>max_inflight_gen_batches</code></td></tr>
+<tr><td>资源比</td><td>trainer GPU 数 : rollout GPU 数</td><td><code>trainer.nnodes</code> vs <code>rollout.nnodes</code>；hybrid 借出由 <code>switch_threshold_ratio</code> 控制</td></tr>
+</tbody>
+</table>
+</div>
+<p>资源比是唯一需要<strong>跨作业</strong>协商的量：它在 K8s 层是两个 Job 的副本数，在 verl 层只是一个 config 字段。
+平台若想「按业务调比例」，要么改 config 重启，要么把两侧拆成可独立伸缩的作业。</p>
+<h2 id="二verl-的代码级结构一个快照"><a class="header" href="#二verl-的代码级结构一个快照">二、verl 的代码级结构（一个快照）</a></h2>
+<blockquote>
+<p>本页基于 <code>verl-project/verl</code> 的 <code>7b6c9cc0e19d</code>（2026-11-23）。该版本已重构为 V1 trainer
+（<code>verl/trainer/ppo/v1/</code>，<code>RayPPOTrainer</code> 被 <code>PPOTrainer</code> + TensorDict/TransferQueue 取代），
+与网上大量基于旧版 <code>ray_trainer.py</code> 的文章不一致。引用时以本 SHA 为准；其他版本请按实际代码复核。</p>
+</blockquote>
+<h3 id="21-入口与三种-trainer"><a class="header" href="#21-入口与三种-trainer">2.1 入口与三种 trainer</a></h3>
+<p><code>verl/trainer/main_ppo.py</code> 是唯一入口：Hydra 读 <code>config/ppo_trainer.yaml</code>，起 Ray，把 <code>TaskRunnerV1</code> 作为远程
+actor 跑 <code>run()</code>；<code>run()</code> 里按 <code>config.trainer.v1.trainer_mode</code> 从注册表取 trainer 类
+（<code>sync</code> / <code>colocate_async</code> / <code>separate_async</code>）。</p>
+<p><code>PPOTrainer.init()</code> 的组件清单：WorkerGroup（actor/critic/ref + model engine）、LLMServerManager（起推理副本）、
+CheckpointEngineManager（搬权重）、RewardLoopManager（打分）、可选 teacher 池。</p>
+<h3 id="22-角色--资源池"><a class="header" href="#22-角色--资源池">2.2 角色 → 资源池</a></h3>
+<p><code>_init_resource_pool_mgr()</code> 维护两张表：<code>role_worker_mapping</code>（角色→Ray 类）与 <code>mapping</code>（角色→池名）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>角色</th><th>何时存在</th><th>池</th></tr>
+</thead>
+<tbody>
+<tr><td><code>ActorRolloutRef</code></td><td><code>hybrid_engine=true</code> 且需要 ref 且未用 LoRA</td><td><code>global_pool</code></td></tr>
+<tr><td><code>ActorRollout</code></td><td>同上但不需要 ref</td><td><code>global_pool</code></td></tr>
+<tr><td><code>Actor</code> + <code>RefPolicy</code> 分离</td><td><code>hybrid_engine=false</code>（only separate_async）</td><td><code>global_pool</code>（两个 WorkerGroup）</td></tr>
+<tr><td><code>Critic</code></td><td><code>critic.enable</code> 或 <code>adv_estimator=gae</code></td><td><code>global_pool</code></td></tr>
+<tr><td><code>RewardModel</code></td><td><code>reward.reward_model.enable</code></td><td><code>reward_pool</code>（若 <code>enable_resource_pool</code>）否则 <code>global_pool</code></td></tr>
+<tr><td><code>TeacherModel</code></td><td>开了蒸馏</td><td><code>teacher_pool</code></td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>WorkerGroup / ResourcePool 的分层是 <code>single_controller</code> 的核心抽象。<code>ResourcePoolManager</code> 把「池名 → 每节点
+GPU 数列表」建为 Ray placement group，并在建池前校验总卡数，不够直接报错。</li>
+<li>同池多角色靠 <code>create_colocated_worker_cls()</code> 融合成一个 fused worker（一个 Ray actor 内多个角色），
+所以「同池」在物理上就是<strong>同一个进程、同一张卡</strong>，不是两个容器。</li>
+<li><strong>结论</strong>：verl 的资源隔离粒度是 Ray placement group，不是 K8s Pod。想让 reward 用 CPU 节点、eval 用另一批卡，
+必须显式给它单独的池，或干脆拆成独立作业。</li>
+</ul>
+<h3 id="23-一个-step-的数据流"><a class="header" href="#23-一个-step-的数据流">2.3 一个 step 的数据流</a></h3>
+<p><code>PPOTrainer.step()</code> 把 <code>train_batch_size</code> 按 <code>parameter_sync_step</code> 切成若干 mini-batch；每个 mini-batch 走一次
+<code>_step_once()</code>：</p>
+<pre><code class="language-text">1 sample          ← replay_buffer.sample(global_steps, "train")   取已生成好的轨迹
+2 reward(colocate)← 仅当 reward 不是独立 worker 时，在本地算分
+3 balance         ← 跨 DP 组按 seqlen 重排，避免长尾
+4 old_log_prob    ← 用当前 actor 算 π_old（异步模式下可能要临时换回旧权重）
+5 ref_log_prob    ← 可选，KL 用
+6 values          ← 可选，critic
+7 advantage       ← GAE / GRPO / RLOO ...
+8 update_critic   ← 可选
+9 update_actor    ← 真正改权重；之后 on_step_end 触发 update_weights
+</code></pre>
+<p>样本来自 TransferQueue 中「已 finished 的组」，而不是本 step 直接调生成函数。同步模式下 <code>prepare_step()</code> 在
+step 开头把整批 prompt 提交给 AgentLoop，随后采样阻塞等待，所以生成与训练仍是<strong>分时串行</strong>；异步模式下生成
+流水线持续运行、trainer 只消费队列，两者才真正并发。这个「生成写出、训练读取」的数据层接口，正是它能同时支持
+sync 与 async 的原因。</p>
+<h3 id="24-weight-sync-的三条路径"><a class="header" href="#24-weight-sync-的三条路径">2.4 weight sync 的三条路径</a></h3>
+<p><code>CheckpointEngineManager</code> 把设计讲得很清楚：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>路径</th><th>backend</th><th>机制</th><th>用于</th></tr>
+</thead>
+<tbody>
+<tr><td>进程内直写</td><td><code>naive</code>（<code>ColocatedCheckpointEngine</code>）</td><td>actor 调 <code>rollout.update_weights()</code>，经 ZMQ 传元数据 + CUDA IPC handle / 共享内存传张量</td><td>sync / colocate</td></tr>
+<tr><td>强同步集合通信</td><td><code>nccl</code> / <code>hccl</code> / <code>nixl</code> / <code>mooncake</code></td><td>actor 侧 all-gather → broadcast（NIXL 是 ring p2p）</td><td>disaggregated</td></tr>
+<tr><td>发布/提交解耦</td><td><code>support_publish_weights=True</code>（如 D2H 快照 + RDMA 读）</td><td>trainer 先 publish 快照，rollout 在后台线程 commit</td><td>大规模/弹性</td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li><strong>naive 路径</strong>：<code>ActorRolloutRefWorker.update_weights(mode="naive")</code> 先 <code>resume(tags=["weights"])</code>，拿
+<code>get_per_tensor_param()</code> 的全量 HF 权重逐桶写进推理引擎，然后 <code>torch.distributed.barrier()</code> 等所有 rank 卸载完，
+再 <code>resume(tags=["kv_cache"])</code>。vLLM 侧走 <code>update_weights_from_ipc</code>，传输层是「ZMQ + IPC，shm 兜底」。</li>
+<li><strong>NCCL 路径</strong>：<code>submit_update()</code> 里先 abort 生成、释放 KV、<code>build_process_group()</code> 重建通信域，再 trainer publish +
+rollout commit，最后双方 <code>finalize()</code> 并 resume。</li>
+<li><strong>一致性保证</strong>：manager 只允许<strong>一个未提交版本</strong>，每次新 update 先等上一次 commit，防止版本乱序安装。
+这是「weight sync 原子性」在代码里的真实含义——不是分布式事务，而是<strong>单飞 + 等提交</strong>。</li>
+</ul>
+<p>checkpoint engine 的能力矩阵：naive 性能最高但只能在同卡；nccl 快但弹性差（要重建通信组）；NIXL 支持弹性与
+异构；另有 <code>delta_sharded</code> 只传变化的 ~1–3% 参数。</p>
+<h3 id="25-异步partial-rollout多轮-agent-loop"><a class="header" href="#25-异步partial-rollout多轮-agent-loop">2.5 异步、partial rollout、多轮 agent loop</a></h3>
+<ul>
+<li><strong>partial rollout 不是开关，而是异步 client 的固有行为</strong>：请求被 abort 时保留已生成 token 与 logprob，
+经 load balancer 重试，用新版本续跑并重建 KV。</li>
+<li><strong>多轮 agent loop 真实存在</strong>：<code>verl/experimental/agent_loop/</code> 下有 <code>single_turn_agent_loop.py</code>、
+<code>tool_agent_loop.py</code>，<code>AgentLoopManager</code> 把 batch 切块分发给 CPU actor（<code>rollout.agent.num_workers</code>），
+round-robin 绑到有 CPU 的节点。工具调用在 agent loop 里完成，reward 可以在同一 worker 里顺带算。</li>
+<li><strong>online/offline 的边界</strong>：<code>verl/trainer/main_eval.py</code> 是纯离线评分器——读 parquet、对每条 response 调 reward
+fn、按 data_source 求均值。它不启动推理引擎，也不碰 Trainer。</li>
+</ul>
+<h2 id="三rollout-引擎与模型同步"><a class="header" href="#三rollout-引擎与模型同步">三、rollout 引擎与模型同步</a></h2>
+<h3 id="31-vllm--sglang-的接口"><a class="header" href="#31-vllm--sglang-的接口">3.1 vLLM / SGLang 的接口</a></h3>
+<ul>
+<li>vLLM 侧 verl 用的是 <code>update_weights_from_ipc</code>（worker extension）：先 <code>resume(tags=["weights"])</code> 把权重 buffer
+恢复，再通过 ZMQ 传 <code>(name, shape, dtype, handle)</code>，rollout 进程用 <code>rebuild_ipc()</code> 把 CUDA IPC handle 还原成
+tensor 并原地写。vLLM 官方把这类能力归为「Weight Updates / Weight Transfer」，列出 IPC（同卡）、NCCL
+（跨节点广播）、sparse NCCL 等后端。</li>
+<li>SGLang 侧是 <code>update_weights(weights_generator)</code>，按 <code>update_weights_bucket_megabytes</code> 分桶，官方文档对应
+「Update Weights from Tensor / from Disk」。</li>
+<li><strong>sleep / wake</strong>：vLLM 的 sleep mode 可以把权重和 KV cache 释放但不退出进程，<code>wake_up(tags=["weights"])</code>
+只恢复权重、<code>tags=["kv_cache"]</code> 只恢复 KV——这正是 colocate RL 的关键 API。verl 的调用顺序严格遵循：
+先 resume weights → 写权重 → 再 resume kv_cache。</li>
+</ul>
+<h3 id="32-colocate-的显存与算力复用"><a class="header" href="#32-colocate-的显存与算力复用">3.2 colocate 的显存与算力复用</a></h3>
+<ul>
+<li>复用是<strong>分时</strong>不是分享：生成阶段推理引擎占满显存，训练阶段它必须 sleep 把显存让出来；反之训练完要 wake
+才能生成。</li>
+<li>CUDA graph 是这块最容易被忽略的成本：verl 文档明确写「cudagraph memory 不能 offload 到 CPU，训练时仍占着
+显存」，所以 colocate 场景要用 <code>cudagraph_capture_sizes</code> 限制捕获的 batch 形状。</li>
+<li>权重原地更新（in-place refit）可以让已捕获的 CUDA graph 继续有效，因为地址没变；但 vLLM 的 sleep 会 unmap
+权重，恢复后是否需要重捕获<strong>取决于引擎版本与分配器行为</strong>，需实测。</li>
+<li>算力复用的收益有上限：官方 benchmark 里，同预算下 sync → colocate_async 约 -35% 训练时间，但这是
+35B MoE + 长输出的特定负载，不能当通用系数。</li>
+</ul>
+<h3 id="33-版本一致性"><a class="header" href="#33-版本一致性">3.3 版本一致性</a></h3>
+<p>需要三样东西同时成立：</p>
+<ol>
+<li><strong>版本号单一来源</strong>：<code>global_steps</code> 由 trainer 分配，随 <code>update_weights(global_steps)</code> 传到 rollout，
+vLLM 侧还会 <code>set_global_steps</code> 记录。</li>
+<li><strong>样本带版本</strong>：TransferQueue 的 prompt tag 记录 <code>global_steps</code>；replay buffer 用它算 staleness。</li>
+<li><strong>切换有屏障</strong>：naive 路径靠 <code>torch.distributed.barrier()</code> + <code>resume(kv_cache)</code>；NCCL 路径靠「等上一次 commit」
+与 <code>finalize()</code>；生成侧在搬运前必须 <code>abort</code> 并把 KV 放掉，否则会用旧 KV 配新权重。</li>
+</ol>
+<p><strong>陈旧样本怎么处理</strong>：<code>drop</code> 直接丢弃整组并补采（组内任一轨迹 stale，整组丢，因为 GRPO 需要完整组）；
+<code>wait</code> 则阻塞采样等它跑完。两种策略的取舍是「样本利用率 vs 策略滞后」，没有默认正确答案，只有业务可接受的
+滞后上限。</p>
+<h2 id="四失败域"><a class="header" href="#四失败域">四、失败域</a></h2>
+<p>前提：本 SHA 全仓 <code>grep max_restarts</code> 为空，<code>RayWorkerGroup</code> 没有为 worker actor 设置自动重启；Ray 的默认语义是
+actor 死亡 → 调用方收到 <code>RayActorError</code> → driver 异常退出。所以下表「局部重启」列多数是<strong>代码没有、靠外层编排</strong>。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>失败点</th><th>表现</th><th>丢什么</th><th>能否局部重启</th><th>幂等/重放手段</th></tr>
+</thead>
+<tbody>
+<tr><td>trainer rank 挂</td><td>WorkerGroup RPC 失败，driver 抛错，整个 Ray job 结束</td><td>当前 step 的梯度与在飞 rollout</td><td>否（同组必须整组）</td><td>最近 ckpt（model+optimizer+extra）+ dataloader state + TransferQueue state；异步模式下重启后 <code>_reissue_inflight_prompts()</code> 重发 pending/running 的 prompt</td></tr>
+<tr><td>rollout engine 挂</td><td>生成 RPC / 权重提交失败；异步模式下 <code>update_weights</code> 卡在等 commit</td><td>该副本上未完成的轨迹</td><td>代码无自动重建；<code>add_replicas/remove_replicas</code> 是为弹性扩缩、会重建通信域，不是故障自愈</td><td>已 finished 的轨迹在 TransferQueue 里，可继续被采样；需要外层重建整个 rollout 作业</td></tr>
+<tr><td>reward 服务挂</td><td>该 prompt 组 rollouts 标记 <code>failure</code></td><td>这一组样本</td><td><strong>可以</strong>：异步模式按组 evict + <code>refill_fn(k)</code> 补采；同步模式默认不补，失败组会被 pad</td><td>组级幂等：同一 uid 重采即重算；<code>sync_refill_failed_groups=True</code> 打开同步补采</td></tr>
+<tr><td>weight sync 挂</td><td>NCCL 组已建但 transfer 失败 / 版本未提交</td><td>新权重没生效，rollout 仍是 v_{k-1}</td><td>否；通信域需重建，代码无重试</td><td>版本号单调 + 单飞提交：重跑整个 step 不会版本错装</td></tr>
+<tr><td>eval 挂</td><td>训练内 <code>_validate()</code> 与训练共享 rollout 池，会拖慢并占用容量；离线 <code>main_eval</code> 独立</td><td>只有评估结果，不影响训练</td><td><strong>可以</strong>：离线 eval 是独立作业，重跑即可</td><td>输入是落盘的 parquet + 固定 reward fn 版本，天然可重放</td></tr>
+<tr><td>TransferQueue / 存储挂</td><td>采样阻塞或 ckpt 不可写</td><td>在飞轨迹、ckpt</td><td>取决于部署</td><td>TQ 支持 checkpoint（V1 异步模式会把 TQ state 存进 <code>global_step_N/transfer_queue</code>）</td></tr>
+</tbody>
+</table>
+</div>
+<p>一条推论：<strong>「能否局部重启」几乎完全由「状态是否外置」决定</strong>。verl 把状态外置到 ckpt + TransferQueue，所以
+进程可整组重来；但没有把 rollout 副本做成可替换单元，所以 rollout 挂 = 整作业重来。断点续训的入口在
+<code>verl/utils/checkpoint/checkpoint_manager.py::find_latest_ckpt_path()</code>：读 <code>latest_checkpointed_iteration.txt</code>
+再拼出 <code>global_step_{N}</code>。</p>
+<h2 id="五评估与评分"><a class="header" href="#五评估与评分">五、评估与评分</a></h2>
+<h3 id="51-eval-与-reward-是两种东西"><a class="header" href="#51-eval-与-reward-是两种东西">5.1 eval 与 reward 是两种东西</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>reward（训练信号）</th><th>eval（验收门禁）</th></tr>
+</thead>
+<tbody>
+<tr><td>目的</td><td>给梯度方向</td><td>决定「能不能发版」</td></tr>
+<tr><td>数据</td><td>训练集，允许重复、允许噪声</td><td>固定 holdout，不允许进训练</td></tr>
+<tr><td>稳定性</td><td>可以每 step 变（DAPO 动态过滤）</td><td>必须跨版本可比</td></tr>
+<tr><td>成本</td><td>每 step 每样本都要算</td><td>按需、可批处理</td></tr>
+<tr><td>失败语义</td><td>算不出来就丢样本/补采</td><td>算不出来就是「不能发版」</td></tr>
+<tr><td>实现</td><td>RewardLoopWorker / RM 池 / 规则函数</td><td><code>main_eval.py</code> 离线批处理，或训练内 <code>_validate()</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>verl 里两者<strong>共用同一套 reward function</strong>（<code>get_custom_reward_fn</code>），但调用路径、资源与失败域不同。
+共用函数是合理的（口径一致），共用运行时是危险的（SLO 相反）。</p>
+<h3 id="52-三类评分器"><a class="header" href="#52-三类评分器">5.2 三类评分器</a></h3>
+<ul>
+<li><strong>规则评分</strong>：<code>verl/utils/reward_score/</code> 下 <code>gsm8k</code>、<code>math_verify</code>、<code>math_dapo</code>、<code>prime_code</code>、
+<code>sandbox_fusion</code> 等 preset，纯 CPU、可并行、可复现，是最该被平台化的部分。</li>
+<li><strong>reward model</strong>：判别式（<code>/classify</code> pooling）或生成式（genrm）。<code>full_determinism</code> 下前者会被强制
+<code>max_num_seqs=1</code> 以保证 bitwise 可复现；后者本质是 LLM 调用，成本与延迟都高一个量级。</li>
+<li><strong>LLM-as-judge</strong>：verl 没有专门的 judge 抽象，judge 就是一个「自定义 reward function + 一个 LLM endpoint」。
+平台若要做，必须自己解决：judge 模型版本固定、prompt 模板版本化、分数校准、以及 judge 与被评模型同源导致的
+自我偏好。</li>
+</ul>
+<h3 id="53-数据污染与可复现性"><a class="header" href="#53-数据污染与可复现性">5.3 数据污染与可复现性</a></h3>
+<ul>
+<li><strong>污染</strong>：RL 的 train/eval 同源风险比 SFT 更高——prompt 分布相同、reward 函数相同，eval 集一旦泄漏进训练，
+指标会单调上涨而能力不涨。工程上必须做到：eval 集物理隔离（不同 bucket/dataset id）、训练侧 dataloader 只读
+训练清单、eval 集 hash 进版本元数据。</li>
+<li><strong>可复现</strong>：verl 提供 <code>full_determinism</code>，会设 <code>VERL_FULL_DETERMINISM=1</code>、<code>VLLM_BATCH_INVARIANT=1</code>、
+<code>PYTHONHASHSEED</code>；但 batch invariance 只对生成模型验证过，pooling RM 要单独串行化。即便如此，
+<strong>跨硬件/跨并行度不可复现</strong>是常态，验收只能要求「同配置重跑同结果」，不能要求「换机器同结果」。</li>
+</ul>
+<h3 id="54-eval-的资源与失败域"><a class="header" href="#54-eval-的资源与失败域">5.4 eval 的资源与失败域</a></h3>
+<ul>
+<li>训练内 <code>_validate()</code>：走同一个 AgentLoop + rollout 池，会与未完成的训练轨迹抢容量，文档明确说
+<code>timing_s/testing</code> 里包含了这部分竞争。所以频繁 validate 会直接吃掉吞吐。</li>
+<li>离线 <code>main_eval.py</code>：Ray 任务级并行，每个 item 一个 remote task，按 data_source 聚合均值。这是正确的形态——
+独立作业、独立配额、失败可重跑、结果落盘。</li>
+<li>建议：把 eval 做成<strong>独立 Job + 独立配额</strong>，训练只负责在 ckpt 落盘后触发一次 eval（verl 提供
+<code>CheckpointCallback.on_save</code> 钩子）。</li>
+</ul>
+<h2 id="六业务接入清单"><a class="header" href="#六业务接入清单">六、业务接入清单</a></h2>
+<h3 id="61-四个必答问题按顺序问不要跳"><a class="header" href="#61-四个必答问题按顺序问不要跳">6.1 四个必答问题（按顺序问，不要跳）</a></h3>
+<p><strong>Q1 角色</strong>：actor / rollout / ref / critic / reward / eval 是否同镜像、同资源形状、同生命周期？</p>
+<ul>
+<li>同镜像同卡（FSDP + 小模型）→ <code>hybrid_engine=true</code>，一个作业搞定。</li>
+<li>rollout 要独立扩缩或要用不同推理引擎版本 → 必须拆作业，weight sync 必须走 NCCL/NIXL。</li>
+<li>reward 是 CPU 规则 → 放 CPU 池，不要占 GPU 配额；reward 是 RM → 给它 <code>reward_pool</code>，否则会和 actor 抢卡。</li>
+</ul>
+<p><strong>Q2 资源周期</strong>：长期常驻 vs 每 step/每 epoch 拉起？</p>
+<ul>
+<li>rollout 常驻的收益是省掉引擎初始化与首次权重同步；代价是空转占卡。verl 文档给的数字：不装 hybrid replica 时，
+每步省掉 engine init、启动权重同步、offload 预留，但 warmup 变慢。</li>
+<li>训练作业按需拉起、rollout 常驻，是最常见的生产形态；此时<strong>两侧版本必须解耦</strong>（rollout 允许落后 k 个版本）。</li>
+<li>分时复用（同一批卡白天推理晚上训练）在 K8s 层是两套 Job 抢同一个队列，不要试图在一个 Pod 里做。</li>
+</ul>
+<p><strong>Q3 版本</strong>：policy / rollout / reward / eval 四个版本怎么表示、谁分配、兼容矩阵是什么？</p>
+<ul>
+<li>最小要求：一个单调递增的 <code>policy_version</code> 贯穿「样本、ckpt、eval 报告」。</li>
+<li>兼容矩阵至少覆盖：训练框架 ↔ 推理引擎（vLLM/SGLang 版本强绑定，verl 对两者都有版本适配层）、
+reward 函数版本 ↔ 数据集版本、eval 集版本 ↔ 报告。</li>
+<li>weight sync 的原子性 = 「单飞 + 等提交 + 版本单调」，不要指望分布式事务。</li>
+</ul>
+<p><strong>Q4 失败域</strong>：哪个角色挂了可以局部重启，哪个必须整组？数据/ckpt 是否可重放？</p>
+<ul>
+<li>可局部重启的只有：reward worker（组级丢样本补采）、离线 eval（重跑）。</li>
+<li>必须整组的：trainer WorkerGroup（NCCL 通信域）、rollout 副本组（权重版本一致）。</li>
+<li>可重放的判据：状态是否外置。ckpt + dataloader state + TransferQueue 三件套齐了，才能「整组重来但不丢进度」。</li>
+</ul>
+<h3 id="62-平台能力沉淀决策表"><a class="header" href="#62-平台能力沉淀决策表">6.2 平台能力沉淀决策表</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>业务形态</th><th>需要的原语</th><th>建议承载</th><th>不要做</th></tr>
+</thead>
+<tbody>
+<tr><td>单团队、固定拓扑、就是跑一条 verl 命令</td><td>gang 启动、失败重启、日志</td><td><strong>JobSet</strong>：<code>replicatedJobs</code> 分 trainer/rollout，<code>failurePolicy</code> 按角色决定重启 Job 还是整个 JobSet</td><td>不要写 Operator；不要为「跑一条命令」造 CRD</td></tr>
+<tr><td>需要复用训练运行时（镜像/入口/依赖固定）</td><td>运行时模板 + 覆盖</td><td><strong>TrainJob + TrainingRuntime</strong>：runtime 里放 JobSet 模板，TrainJob 只填参数</td><td>不要把业务参数塞进 runtime</td></tr>
+<tr><td>多团队共享 GPU、要配额/公平/抢占</td><td>队列、配额、gang</td><td><strong>Kueue</strong>（ClusterQueue/LocalQueue 管配额与准入）+ <strong>Volcano</strong> PodGroup 管 gang；TrainJob 暴露 <code>suspend</code>，Kueue 用它做准入/挂起</td><td>不要自己做队列和抢占</td></tr>
+<tr><td>rollout 常驻、要组语义、要热更权重</td><td>leader/worker 组、整组重启</td><td><strong>LWS</strong>：<code>restartPolicy=RecreateGroupOnPodRestart</code> 保证组内同生共死；权重热更走引擎自己的 HTTP/IPC 接口</td><td>不要用 Deployment（无组语义、无 leader 概念）</td></tr>
+<tr><td>训练/rollout/reward 生命周期差异大</td><td>独立伸缩、独立配额</td><td>拆成 3 个作业，用对象存储 + TransferQueue 解耦；已在 Ray 上则训练用 Ray Train、常驻推理用 Ray Serve</td><td>不要塞进一个 Pod 用 supervisor 管</td></tr>
+<tr><td>只要「看得见、算得清、限得住」</td><td>label、指标、配额视图</td><td>只做 <strong>API + 可观测 + 配额</strong>：给作业打 <code>policy_version/experiment_id/role</code> 标签，采集 <code>timing_s/gen</code>、<code>timing_s/update_weights</code>、<code>off_policy/*</code></td><td>不要抽象运行时</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>「何时沉淀为通用能力」的判据</strong>（按此顺序，四项全同才沉淀运行时）：</p>
+<ol>
+<li>同镜像？ 2. 同资源形状（GPU/CPU、卡数、拓扑）？ 3. 同生命周期（常驻/按需/每 step）？ 4. 同失败恢复语义
+（可丢/可重放/必须整组）？</li>
+</ol>
+<ul>
+<li>四项全同 → 沉淀 <strong>Operator/CRD</strong>（例如「RL 训练作业」这种一等公民）。</li>
+<li>部分相同 → 只沉淀 <strong>契约</strong>：weight-sync API、样本 schema（含 <code>policy_version</code>）、指标名、配额模型。</li>
+<li>都不同 → 只做 <strong>配额与可观测</strong>，把编排留给业务自己的 JobSet。</li>
+</ul>
+<p>按这个判据，verl 当前形态最值得沉淀的是「契约层」而不是「运行时层」：weight sync 有清晰的三后端抽象、
+样本有稳定的键格式、指标有固定命名——这三样跨业务可复用；而「一个 step 里怎么排 stage」是算法团队的事，
+不该被平台固化。</p>
+<h3 id="63-明确不要做的抽象"><a class="header" href="#63-明确不要做的抽象">6.3 明确不要做的抽象</a></h3>
+<ul>
+<li><strong>不要把 rollout 抽象成通用 InferenceService</strong>：它的请求可以被 abort、KV 可以被清空、权重可以被替换，
+与在线服务的「请求不可丢、版本不可变」正好相反。共用 LWS 可以，共用 SLO/限流/灰度语义不行。</li>
+<li><strong>不要把 reward 抽象成通用微服务网关</strong>：规则 reward 是纯函数，RM 是模型，judge 是第三方 API，
+三者的幂等性、成本、超时语义完全不同。只统一「输入样本 schema → 输出 score + extra_info」这一层。</li>
+<li><strong>不要为「多角色」造统一调度器</strong>：Ray 已经做了 actor 级调度，K8s 已经做了 Pod 级调度；平台真正缺的是
+「跨作业的配额与版本视图」，不是第三个调度器。</li>
+</ul>
+<h2 id="七证据"><a class="header" href="#七证据">七、证据</a></h2>
+<h3 id="阶段图与-verl-结构"><a class="header" href="#阶段图与-verl-结构">阶段图与 verl 结构</a></h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2409.19256">HybridFlow 论文（3D-HybridEngine、单/多控制器混合）</a></li>
+<li><a href="https://verl.readthedocs.io/en/latest/advance/v1_async_trainer.html">verl 官方文档：V1 Async Trainer</a></li>
+<li><a href="https://verl.readthedocs.io/en/latest/hybrid_flow.html">verl 官方文档：HybridFlow Programming Guide</a></li>
+<li><a href="https://verl.readthedocs.io/en/latest/single_controller.html">verl 官方文档：single_controller（WorkerGroup/ResourcePool）</a></li>
+<li><a href="https://github.com/verl-project/verl/blob/7b6c9cc0e19de780ca52c0c35d5157348955a3dc/verl/trainer/ppo/v1/trainer_base.py#L229-L246">PPOTrainer.init() 的组件清单</a></li>
+<li><a href="https://github.com/verl-project/verl/blob/7b6c9cc0e19de780ca52c0c35d5157348955a3dc/verl/trainer/ppo/v1/trainer_base.py#L865-L925">角色→资源池映射与 placement group 校验</a></li>
+<li><a href="https://github.com/verl-project/verl/blob/7b6c9cc0e19de780ca52c0c35d5157348955a3dc/verl/trainer/ppo/v1/trainer_base.py#L330-L370">hybrid_engine 的 fused worker（同进程同卡）</a></li>
+<li><a href="https://github.com/verl-project/verl/blob/7b6c9cc0e19de780ca52c0c35d5157348955a3dc/verl/trainer/ppo/v1/trainer_base.py#L591-L680">step() / _step_once() 的九段数据流</a></li>
+<li><a href="https://github.com/verl-project/verl/blob/7b6c9cc0e19de780ca52c0c35d5157348955a3dc/verl/trainer/ppo/v1/trainer_sync.py#L25-L42">sync trainer：step 末搬权重、采样后 sleep</a></li>
+<li><a href="https://github.com/verl-project/verl/blob/7b6c9cc0e19de780ca52c0c35d5157348955a3dc/verl/trainer/ppo/v1/trainer_colocate_async.py#L19-L45">colocate_async：abort + sleep + update + resume</a></li>
+<li><a href="https://github.com/verl-project/verl/blob/7b6c9cc0e19de780ca52c0c35d5157348955a3dc/verl/trainer/ppo/v1/trainer_separate_async.py#L56-L75">separate_async：rollout 独立池、必须非 naive backend</a></li>
+</ul>
+<h3 id="模型同步与版本"><a class="header" href="#模型同步与版本">模型同步与版本</a></h3>
+<ul>
+<li><a href="https://github.com/verl-project/verl/blob/7b6c9cc0e19de780ca52c0c35d5157348955a3dc/verl/workers/engine_workers.py#L790-L890">update_weights 的 naive 路径、barrier、resume kv_cache</a></li>
+<li><a href="https://github.com/verl-project/verl/blob/7b6c9cc0e19de780ca52c0c35d5157348955a3dc/verl/checkpoint_engine/base.py#L403-L450">CheckpointEngineManager：publish/commit、单飞版本、abort/finalize</a></li>
+<li><a href="https://github.com/verl-project/verl/blob/7b6c9cc0e19de780ca52c0c35d5157348955a3dc/verl/checkpoint_engine/README.md#L13-L25">checkpoint engine 后端能力矩阵</a></li>
+<li><a href="https://github.com/verl-project/verl/blob/7b6c9cc0e19de780ca52c0c35d5157348955a3dc/verl/trainer/ppo/v1/replay_buffer.py#L523-L560">replay buffer：staleness 判定与 drop/wait</a></li>
+<li><a href="https://github.com/verl-project/verl/blob/7b6c9cc0e19de780ca52c0c35d5157348955a3dc/verl/trainer/config/ppo_trainer.yaml#L237-L330">staleness 配置：max_off_policy_threshold=8</a></li>
+<li><a href="https://github.com/verl-project/verl/blob/7b6c9cc0e19de780ca52c0c35d5157348955a3dc/verl/trainer/config/rollout/rollout.yaml#L140-L141">rollout.n（每个 prompt 生成几条）</a></li>
+<li><a href="https://github.com/verl-project/verl/blob/7b6c9cc0e19de780ca52c0c35d5157348955a3dc/verl/workers/rollout/vllm_rollout/vllm_rollout.py#L210-L260">vLLM rollout 的 update_weights（ZMQ + IPC/shm）</a></li>
+<li><a href="https://github.com/verl-project/verl/blob/7b6c9cc0e19de780ca52c0c35d5157348955a3dc/verl/workers/rollout/sglang_rollout/sglang_rollout.py#L305-L330">SGLang rollout 的 update_weights（分桶）</a></li>
+<li><a href="https://docs.vllm.ai/en/latest/features/sleep_mode/">vLLM：Sleep Mode</a></li>
+<li><a href="https://docs.vllm.ai/en/latest/training/weight_updates/">vLLM：Weight Updates / Weight Transfer</a></li>
+<li><a href="https://docs.sglang.io/docs/advanced_features/sglang_for_rl">SGLang for RL Systems</a></li>
+</ul>
+<h3 id="失败域评估与平台"><a class="header" href="#失败域评估与平台">失败域、评估与平台</a></h3>
+<ul>
+<li><a href="https://github.com/verl-project/verl/blob/7b6c9cc0e19de780ca52c0c35d5157348955a3dc/verl/trainer/ppo/v1/trainer_base.py#L927-L1036">trainer 的 checkpoint 与 in-flight prompt 重发</a></li>
+<li><a href="https://github.com/verl-project/verl/blob/7b6c9cc0e19de780ca52c0c35d5157348955a3dc/verl/trainer/main_eval.py#L34-L75">离线评估入口：读 parquet、逐条打分</a></li>
+<li><a href="https://github.com/verl-project/verl/blob/7b6c9cc0e19de780ca52c0c35d5157348955a3dc/verl/experimental/agent_loop/agent_loop.py#L1294-L1345">AgentLoopManager 的多 CPU 节点</a></li>
+<li><a href="https://github.com/verl-project/verl/blob/7b6c9cc0e19de780ca52c0c35d5157348955a3dc/verl/experimental/reward_loop/reward_loop.py#L273-L345">RewardLoopManager 与 determinism</a></li>
+<li><a href="https://docs.ray.io/en/latest/ray-core/fault_tolerance/actors.html">Ray Actor 容错语义</a></li>
+<li><a href="https://github.com/kubernetes-sigs/lws/blob/51d7d5ad84f7badeee1466e4a7b846cacfdbc961/api/leaderworkerset/v1/leaderworkerset_types.go#L719-L735">LWS 组重启策略</a></li>
+<li><a href="https://github.com/kubernetes-sigs/jobset/blob/32c9ea3144095df1fbc778433505c35a53e5acfe/api/jobset/v1alpha2/jobset_types.go#L460-L530">JobSet FailurePolicy / RestartJob / RestartJobSet</a></li>
+<li><a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/apis/kueue/v1beta2/localqueue_types.go#L33-L60">Kueue LocalQueue / ClusterQueue 配额</a></li>
+</ul>
+<h2 id="相关页面"><a class="header" href="#相关页面">相关页面</a></h2>
+<ul>
+<li><a href="./overview.html">专题总纲</a></li>
+<li><a href="./workload-modeling.html">工作负载建模</a></li>
+<li><a href="../../../Machine_Learning/Distributed_Training/startup-communication.html">训练启动与通信</a></li>
+<li><a href="./failure-self-healing.html">训练失败与自愈</a></li>
+<li><a href="./checkpoint-preemption.html">Checkpoint 与抢占恢复</a></li>
+<li><a href="../../../Machine_Learning/Inference/vLLM%20Production%20Stack实战.html">vLLM Production Stack 实战</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../../docs/Cloud_Native/AI_Infrastructure/Distributed_Training/checkpoint-preemption.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../../docs/Cloud_Native/AI_Infrastructure/Distributed_Training/overview.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../../docs/Cloud_Native/AI_Infrastructure/Distributed_Training/checkpoint-preemption.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../../docs/Cloud_Native/AI_Infrastructure/Distributed_Training/overview.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../../highlight-abc7f01d.js"></script>
+        <script src="../../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

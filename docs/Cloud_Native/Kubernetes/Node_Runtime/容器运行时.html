@@ -1,0 +1,1048 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>容器运行时全链路：OCI、CRI、containerd、shim 与 RuntimeClass - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../../searchindex-dfe22a86.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../../toc-d9461900.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/Kubernetes/Node_Runtime/容器运行时.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="容器运行时全链路ocicricontainerdshim-与-runtimeclass"><a class="header" href="#容器运行时全链路ocicricontainerdshim-与-runtimeclass">容器运行时全链路：OCI、CRI、containerd、shim 与 RuntimeClass</a></h1>
+<p>这五个词经常被混在一起说，但它们回答的是完全不同的问题：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>名词</th><th>回答的问题</th><th>本质</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>OCI</strong></td><td>容器“长什么样“、运行时“该做什么“？</td><td>规范/契约（image-spec、runtime-spec、distribution-spec）</td></tr>
+<tr><td><strong>CRI</strong></td><td>kubelet 怎么和运行时说话？</td><td>gRPC API（kubelet 是 client，运行时是 server）</td></tr>
+<tr><td><strong>containerd</strong></td><td>节点上谁在管镜像、rootfs、容器任务？</td><td>容器守护进程 + 插件体系</td></tr>
+<tr><td><strong>shim</strong></td><td>谁真正“抱着“容器进程，containerd 重启也不松手？</td><td>每个 Pod 一个的伴生进程</td></tr>
+<tr><td><strong>RuntimeClass</strong></td><td>Kubernetes 用户/管理员怎么选择用哪个运行时？</td><td><code>node.k8s.io/v1</code> API + admission + 调度约束</td></tr>
+</tbody>
+</table>
+</div>
+<p>一句话链路（后文逐段拆开）：</p>
+<pre><code>kubectl → kube-apiserver → kubelet
+  → CRI (gRPC, unix socket)  → containerd 的 CRI plugin
+  → containerd runtime v2    → shim（ttrpc）
+  → OCI runtime（runc）      → 容器进程
+</code></pre>
+<blockquote>
+<p><strong>引用约定</strong>：本文所有代码/规范引用都固定到 2026-11 拉取的具体 commit，链接形如
+<code>https://github.com/&lt;org&gt;/&lt;repo&gt;/blob/&lt;commit&gt;/&lt;path&gt;#Lx-Ly</code>，行号与当时本地代码一致。
+版本一览：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>项目</th><th>tag</th><th>commit</th></tr>
+</thead>
+<tbody>
+<tr><td>OCI runtime-spec</td><td>v1.3.0</td><td><code>92249139eea7161e13745abd4cb6d0ea02a3227a</code></td></tr>
+<tr><td>OCI image-spec</td><td>v1.1.1</td><td><code>147f9c13cedb47a0c4d9a11a222961073d585877</code></td></tr>
+<tr><td>runc</td><td>v1.5.3</td><td><code>46365c62967c76a765a5e347f48f0c7b3b571fe9</code></td></tr>
+<tr><td>containerd</td><td>v2.4.2</td><td><code>b7a25261e029d68978bbf290df0a62fc819b3c51</code></td></tr>
+<tr><td>Kubernetes</td><td>v1.37.2</td><td><code>c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32</code></td></tr>
+<tr><td>CRI API</td><td>v0.37.2</td><td><code>d279f3cbb9d18b653d5fab12e187589914329c77</code></td></tr>
+<tr><td>CRI-O</td><td>v1.37.4</td><td><code>c11d3e70365ab7a671894258601d54091ec384cf</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>本文 134 条 GitHub 固定链接均用脚本校验过：文件在对应 commit 存在、<code>#Lx-Ly</code> 不越界、commit 与本地 checkout 一致。</p>
+</blockquote>
+<hr>
+<h2 id="1-全景图"><a class="header" href="#1-全景图">1. 全景图</a></h2>
+<pre class="mermaid">flowchart TB
+    subgraph CP["控制面"]
+        API["kube-apiserver&lt;br/&gt;RuntimeClass / Pod"]
+        SCH["kube-scheduler&lt;br/&gt;nodeSelector / overhead"]
+    end
+
+    subgraph NODE["节点"]
+        KL["kubelet&lt;br/&gt;(CRI client)"]
+        CD["containerd 守护进程&lt;br/&gt;CRI plugin + runtime v2"]
+        SH["containerd-shim-*-v2&lt;br/&gt;(每 Pod 一个)"]
+        R["OCI runtime engine&lt;br/&gt;runc / crun / runsc / kata"]
+        P["容器进程&lt;br/&gt;(Pod 内容器共享 sandbox 的 namespaces)"]
+        CS[("content store + snapshotter&lt;br/&gt;镜像层 / rootfs")]
+    end
+
+    subgraph REG["镜像仓库"]
+        HUB["Registry&lt;br/&gt;(OCI distribution-spec)"]
+    end
+
+    API --&gt;|"watch Pod"| KL
+    API -.-&gt;|"RuntimeClass 解析"| KL
+    SCH -.-&gt;|"调度结果 (nodeName)"| KL
+    KL --&gt;|"gRPC: RuntimeService / ImageService"| CD
+    CD --&gt;|"ttrpc: Task service"| SH
+    SH --&gt;|"fork/exec + OCI bundle"| R
+    R --&gt;|"clone/exec"| P
+    CD &lt;--&gt;|"pull / unpack (OCI image)"| CS
+    CD &lt;--&gt;|"pull manifest/layers"| HUB
+</pre>
+
+<p>分层要点：</p>
+<ul>
+<li><strong>OCI 在两个地方生效</strong>：镜像拉取/解包时用 image-spec；创建容器时用 runtime-spec（生成 <code>config.json</code>）。</li>
+<li><strong>CRI 只描述“操作语义“</strong>（RunPodSandbox、CreateContainer…），不规定底层实现。</li>
+<li><strong>containerd 负责“准备“</strong>：拉镜像、解包成 rootfs、生成 OCI config、管理元数据。</li>
+<li><strong>shim 负责“持有“</strong>：容器进程的父/收养者、stdio 转发、退出码回收。</li>
+<li><strong>RuntimeClass 只负责“选“</strong>：把用户意图变成 CRI 的 <code>runtime_handler</code> 字符串，再由 containerd 映射到具体 runtime 配置。</li>
+</ul>
+<hr>
+<h2 id="2-为什么长成这样一条历史线"><a class="header" href="#2-为什么长成这样一条历史线">2. 为什么长成这样：一条历史线</a></h2>
+<p>理解分层的最好方式是看它解决过什么问题。</p>
+<ol>
+<li><strong>Docker 单体时代</strong>：kubelet 只能通过 dockershim 跟 Docker 的 daemon 对话。Docker 内部有自己的“运行时“概念，Kubernetes 被迫依赖 Docker 的实现细节。</li>
+<li><strong>OCI 成立（2015）</strong>：把“镜像格式“和“运行时行为“标准化为 image-spec / runtime-spec，2017 年发布 1.0。runc 成为 runtime-spec 的参考实现。→ 镜像和运行时终于可以互换。</li>
+<li><strong>CRI 引入（Kubernetes 1.5，2016）</strong>：把 kubelet 与运行时之间的接口定义成 gRPC API，kubelet 不再关心底层是 Docker、containerd 还是 CRI-O。官方定义：“CRI is a plugin interface which enables the kubelet to use a wide variety of container runtimes”（<a href="https://kubernetes.io/docs/concepts/containers/cri/">K8s 官方 CRI 文档</a>）。</li>
+<li><strong>containerd 独立</strong>：2017 年从 Docker 捐给 CNCF，成为通用容器守护进程；1.1 起内置 CRI plugin（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/README.md#L131">containerd README</a>）。Docker 自己则用 containerd 作为底层。</li>
+<li><strong>dockershim 移除（Kubernetes 1.24）</strong>：kubelet 不再内置 dockershim，节点必须直接配置 containerd/CRI-O 等 CRI 实现（<a href="https://kubernetes.io/blog/2022/02/17/dockershim-faq/">官方 FAQ</a>）。</li>
+<li><strong>RuntimeClass（1.20 GA）</strong>：把“选择运行时“变成 K8s 一等 API，支持异构节点调度与 Pod Overhead（<a href="https://kubernetes.io/docs/concepts/containers/runtime-class/">K8s RuntimeClass 文档</a>）。</li>
+</ol>
+<blockquote>
+<p>注意：CRI 的 API 从 v1.23 起稳定；从 <strong>Kubernetes 1.26</strong> 起，kubelet 要求运行时必须支持 <strong>CRI v1</strong>，否则节点无法注册（<a href="https://kubernetes.io/docs/concepts/containers/cri/">CRI 文档</a>）。</p>
+</blockquote>
+<hr>
+<h2 id="3-oci只定义契约不提供实现"><a class="header" href="#3-oci只定义契约不提供实现">3. OCI：只定义契约，不提供实现</a></h2>
+<p>OCI（Open Container Initiative）产出三个规范：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>规范</th><th>管什么</th><th>本文关注点</th></tr>
+</thead>
+<tbody>
+<tr><td><a href="https://github.com/opencontainers/image-spec/blob/147f9c13cedb47a0c4d9a11a222961073d585877/spec.md">image-spec</a></td><td>镜像的 manifest/config/layer 格式</td><td>containerd 拉镜像、解包 rootfs</td></tr>
+<tr><td><a href="https://github.com/opencontainers/runtime-spec/blob/92249139eea7161e13745abd4cb6d0ea02a3227a/runtime.md">runtime-spec</a></td><td>容器的配置（bundle 里的 config.json）与生命周期操作</td><td>runc 等 runtime engine 执行</td></tr>
+<tr><td><a href="https://github.com/opencontainers/distribution-spec">distribution-spec</a></td><td>镜像仓库的 pull/push API</td><td>与 kubelet/containerd 拉镜像相关</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>OCI 不定义 CRI，也不实现任何运行时。</strong> 它只规定“符合规范的 runtime 在收到 create/start/kill/delete 时应该做什么“，以及“镜像应该长什么样“。</p>
+<h3 id="31-image-spec内容寻址的树"><a class="header" href="#31-image-spec内容寻址的树">3.1 image-spec：内容寻址的树</a></h3>
+<p>OCI 镜像不是“一个 tar 包“，而是一棵由 <strong>content descriptor</strong>（<code>mediaType</code> + <code>digest</code> + <code>size</code> 三元组，<a href="https://github.com/opencontainers/image-spec/blob/147f9c13cedb47a0c4d9a11a222961073d585877/descriptor.md#L20-L35">descriptor.md#L20-L35</a>）串起来的树：</p>
+<pre class="mermaid">flowchart LR
+    IDX["image index (可选)&lt;br/&gt;多架构列表"] --&gt; MAN["image manifest"]
+    MAN --&gt; CFG["image config&lt;br/&gt;(env/entrypoint/cmd/rootfs.diff_ids)"]
+    MAN --&gt; L1["layer 1 (tar+gzip)"]
+    MAN --&gt; L2["layer 2"]
+    MAN --&gt; L3["layer 3"]
+</pre>
+
+<ul>
+<li><strong>manifest</strong>：指向一个 config + 一组 layers（<a href="https://github.com/opencontainers/image-spec/blob/147f9c13cedb47a0c4d9a11a222961073d585877/manifest.md#L12-L16">manifest.md#L12-L16</a>）。</li>
+<li><strong>image index</strong>：多架构/多平台的入口（<a href="https://github.com/opencontainers/image-spec/blob/147f9c13cedb47a0c4d9a11a222961073d585877/image-index.md#L10">image-index.md#L10</a>）。</li>
+<li><strong>config</strong>：容器的默认进程配置和 <code>rootfs.diff_ids</code>（每层未压缩 digest）（<a href="https://github.com/opencontainers/image-spec/blob/147f9c13cedb47a0c4d9a11a222961073d585877/config.md#L91">config.md#L91</a>）。</li>
+<li><strong>layer</strong>：文件系统增量（changeset），通常是 tar（可压缩）；<code>.wh.</code> 开头的 whiteout 文件表示“删除下层路径“。</li>
+</ul>
+<blockquote>
+<p>layer 的 tar 格式、diffID 与 blob digest 的区别、whiteout/opaque 文件语义，以及它们如何被 apply 成 OverlayFS 的 upperdir，见 <a href="../../Linux_Container/OverlayFS与镜像层.html">OverlayFS 与镜像层</a>；snapshotter 的 Prepare/Commit 协议与 rootfs 挂载细节，见 <a href="../../Linux_Container/镜像快照器snapshotter.html">镜像快照器 Snapshotter</a>。</p>
+</blockquote>
+<p>OCI 还定义了可选的 <a href="https://github.com/opencontainers/image-spec/blob/147f9c13cedb47a0c4d9a11a222961073d585877/image-layout.md#L3-L10">image layout</a>：<code>oci-layout</code> + <code>index.json</code> + <code>blobs/&lt;algo&gt;/&lt;hex&gt;</code>，文件系统上的目录结构就是 CAS。</p>
+<p>为什么 containerd 可以直接消费？因为所有内容都用 digest 寻址，天然适配 content-addressable storage（CAS）：拉取时按 digest 校验并落到 content store，解包时按 manifest 顺序叠加成 rootfs（snapshotter）。Docker 镜像格式在 2017 年后已与 OCI 对齐，所以“docker 镜像“和“OCI 镜像“在绝大多数场景下是同一套东西。</p>
+<h3 id="32-runtime-specbundle--configjson--生命周期"><a class="header" href="#32-runtime-specbundle--configjson--生命周期">3.2 runtime-spec：bundle + config.json + 生命周期</a></h3>
+<p>OCI runtime 的输入是一个 <strong>filesystem bundle</strong>：一个目录，里面必须有 <code>config.json</code>，以及 <code>root.path</code> 指向的 rootfs（<a href="https://github.com/opencontainers/runtime-spec/blob/92249139eea7161e13745abd4cb6d0ea02a3227a/bundle.md#L5-L20">bundle.md#L5-L20</a>）。</p>
+<p><code>config.json</code> 的核心字段（<a href="https://github.com/opencontainers/runtime-spec/blob/92249139eea7161e13745abd4cb6d0ea02a3227a/config.md">config.md</a>）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>字段</th><th>含义</th><th>与本链路的关系</th></tr>
+</thead>
+<tbody>
+<tr><td><code>ociVersion</code></td><td>规范版本</td><td>containerd 生成 spec 时写入</td></tr>
+<tr><td><code>process</code></td><td>要执行的程序、args/env/cwd、rlimits（<a href="https://github.com/opencontainers/runtime-spec/blob/92249139eea7161e13745abd4cb6d0ea02a3227a/config.md#L237">#L237</a>）</td><td>来自 CRI 的 <code>ContainerConfig</code></td></tr>
+<tr><td><code>root</code></td><td>rootfs 路径与只读标记（<a href="https://github.com/opencontainers/runtime-spec/blob/92249139eea7161e13745abd4cb6d0ea02a3227a/config.md#L27">#L27</a>）</td><td>containerd snapshotter 挂载出的 rootfs</td></tr>
+<tr><td><code>mounts</code></td><td>额外挂载（<a href="https://github.com/opencontainers/runtime-spec/blob/92249139eea7161e13745abd4cb6d0ea02a3227a/config.md#L63">#L63</a>）</td><td>CRI 的 volume/secret/configmap 挂载</td></tr>
+<tr><td><code>linux.namespaces</code> / <code>cgroups</code> / <code>seccomp</code> / <code>capabilities</code></td><td>隔离与资源限制</td><td>来自 <code>LinuxContainerSecurityContext</code></td></tr>
+<tr><td><code>hooks</code>（prestart/createRuntime/…/poststop，<a href="https://github.com/opencontainers/runtime-spec/blob/92249139eea7161e13745abd4cb6d0ea02a3227a/config.md#L548">#L548</a>）</td><td>生命周期钩子</td><td>例如 kata 的 VM 启动钩子</td></tr>
+<tr><td><code>annotations</code></td><td>任意元数据</td><td>CRI 把 Pod/容器注解透传进来</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>生命周期</strong>（规范规定 13 步，<a href="https://github.com/opencontainers/runtime-spec/blob/92249139eea7161e13745abd4cb6d0ea02a3227a/runtime.md#L54-L79">runtime.md#L54-L79</a>）：</p>
+<ol>
+<li><code>create &lt;id&gt; &lt;bundle&gt;</code>：按 config.json 创建运行环境，<strong>但不执行 process.args</strong>；</li>
+<li>依次触发 <code>prestart</code>、<code>createRuntime</code>、<code>createContainer</code> hooks；</li>
+<li><code>start &lt;id&gt;</code>：触发 <code>startContainer</code> hooks → <strong>执行用户进程</strong> → <code>poststart</code> hooks；</li>
+<li>进程退出 → <code>delete &lt;id&gt;</code>：销毁 create 阶段创建的资源 → <code>poststop</code> hooks。</li>
+</ol>
+<p>状态机（<a href="https://github.com/opencontainers/runtime-spec/blob/92249139eea7161e13745abd4cb6d0ea02a3227a/runtime.md#L8-L38">runtime.md#L8-L38</a>）：<code>creating → created → running → stopped</code>。</p>
+<blockquote>
+<p><strong>关键点</strong>：<code>create</code> 和 <code>start</code> 是分开的，<code>create</code> 阶段不能跑用户进程。这个“两段式“设计正是 runc 能“create 完就退出、由 shim 后续 start“的基础。</p>
+</blockquote>
+<h3 id="33-谁实现-runtime-spec"><a class="header" href="#33-谁实现-runtime-spec">3.3 谁实现 runtime-spec</a></h3>
+<p>OCI 官方列的 runtime 实现（<a href="https://github.com/opencontainers/runtime-spec/blob/92249139eea7161e13745abd4cb6d0ea02a3227a/implementations.md#L7-L20">implementations.md#L7-L20</a>）：</p>
+<ul>
+<li>普通容器：<strong>runc</strong>（参考实现）、crun（C）、youki（Rust）、systemd-nspawn</li>
+<li>虚拟化/用户态内核：<strong>runsc</strong>（gVisor，用户态内核）、<strong>kata-runtime</strong>（轻量 VM）、runv —— 三者的隔离边界与实现原理见 <a href="../../Virtualization/沙箱与虚拟化技术全景.html">沙箱与虚拟化技术全景</a></li>
+</ul>
+<p>它们对上层提供同一套语义，因此 containerd 可以只实现一次“调用 runtime“，就支持所有 OCI runtime —— 这也是 <strong>RuntimeClass</strong> 能把 runc/gVisor/Kata 统一到同一个 API 下的原因。</p>
+<hr>
+<h2 id="4-runc一个一次性进程"><a class="header" href="#4-runc一个一次性进程">4. runc：一个“一次性“进程</a></h2>
+<p>runc 是 runtime-spec 的参考实现。理解 runc 的关键是：<strong>它没有守护进程，create 后就退出</strong>。</p>
+<h3 id="41-命令到代码"><a class="header" href="#41-命令到代码">4.1 命令到代码</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>CLI</th><th>入口</th><th>实际动作</th></tr>
+</thead>
+<tbody>
+<tr><td><code>runc create</code></td><td><a href="https://github.com/opencontainers/runc/blob/46365c62967c76a765a5e347f48f0c7b3b571fe9/create.go#L63">create.go#L63</a></td><td><code>startContainer(ctx, CT_ACT_CREATE)</code></td></tr>
+<tr><td><code>runc start</code></td><td>start.go</td><td><code>container.Exec()</code>：打开 exec fifo 读端，解除 init 的阻塞，使其 execve 用户进程</td></tr>
+<tr><td><code>runc delete</code></td><td>delete.go</td><td>销毁 cgroup/namespace/rootfs 等资源</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="42-runc-create-的-forkexec-内幕"><a class="header" href="#42-runc-create-的-forkexec-内幕">4.2 <code>runc create</code> 的 fork/exec 内幕</a></h3>
+<p><code>runc create</code> → <code>startContainer()</code>（<a href="https://github.com/opencontainers/runc/blob/46365c62967c76a765a5e347f48f0c7b3b571fe9/utils_linux.go#L367">utils_linux.go#L367</a>）→ <code>runner.run()</code>（<a href="https://github.com/opencontainers/runc/blob/46365c62967c76a765a5e347f48f0c7b3b571fe9/utils_linux.go#L222">utils_linux.go#L222</a>）→ <code>container.Start()</code>：</p>
+<ol>
+<li><code>container_linux.go</code> 的 <code>start()</code> 先 <code>createExecFifo()</code>，在 state 目录创建一个 FIFO（<a href="https://github.com/opencontainers/runc/blob/46365c62967c76a765a5e347f48f0c7b3b571fe9/libcontainer/container_linux.go#L447">container_linux.go#L447</a>）；</li>
+<li><code>newParentProcess()</code> 把运行配置编码成 bootstrap 数据（netlink 格式，含 initConfig 与 config），通过 pipe 传给子进程，并 <strong>fork/exec 自己</strong>：<code>runc init</code>（带 <code>_LIBCONTAINER_INITPIPE</code>、<code>_LIBCONTAINER_FIFOFD</code> 等环境变量）；</li>
+<li>子进程从 root <code>init.go</code> 的 <code>init()</code> 进入（<a href="https://github.com/opencontainers/runc/blob/46365c62967c76a765a5e347f48f0c7b3b571fe9/init.go#L10-L16">init.go#L10-L16</a>）——注意这是在 <code>nsexec</code>（C 代码）之后、<code>main()</code> 之前执行的，用来在正确的 namespace 里做初始化；</li>
+<li><code>libcontainer.Init()</code>（<a href="https://github.com/opencontainers/runc/blob/46365c62967c76a765a5e347f48f0c7b3b571fe9/libcontainer/init_linux.go#L106">init_linux.go#L106</a>）→ <code>startInitialization()</code>（<a href="https://github.com/opencontainers/runc/blob/46365c62967c76a765a5e347f48f0c7b3b571fe9/libcontainer/init_linux.go#L128">#L128</a>）：设置 namespaces、cgroup、挂载 rootfs、<code>pivot_root</code>、降权，然后<strong>在写 exec fifo 时阻塞</strong>，等待 <code>runc start</code> 打开读端；</li>
+<li>因为 <code>CT_ACT_CREATE</code> 时 <code>detach = true</code>（<a href="https://github.com/opencontainers/runc/blob/46365c62967c76a765a5e347f48f0c7b3b571fe9/utils_linux.go#L258">utils_linux.go#L258</a>），runc 父进程写完 state 后直接返回，<strong>不等待容器进程</strong>。</li>
+</ol>
+<h3 id="43-runc-start-的-fifo-握手"><a class="header" href="#43-runc-start-的-fifo-握手">4.3 <code>runc start</code> 的 fifo 握手</a></h3>
+<p>方向要搞对：<strong>init 进程写、<code>runc start</code> 读</strong>。init 在 execve 前把 exec.fifo 以 <code>O_WRONLY</code> 重新打开并写入一个字节 <code>"0"</code>；由于此时还没有读端，这个 write 会<strong>阻塞</strong>（这正是容器能停在 <code>created</code> 状态的原因）。<code>runc start</code> 走 <code>container.Exec()</code> 打开读端（<a href="https://github.com/opencontainers/runc/blob/46365c62967c76a765a5e347f48f0c7b3b571fe9/libcontainer/container_linux.go#L226-L249">container_linux.go#L226-L249</a>）、用 <code>readFromExecFifo</code> 读走数据（<a href="https://github.com/opencontainers/runc/blob/46365c62967c76a765a5e347f48f0c7b3b571fe9/libcontainer/container_linux.go#L256">#L256</a>），init 的 write 完成，随即 <code>execve</code> 用户进程。</p>
+<p><code>exec.fifo</code> 的存在与否本身就是状态标志：runc 的 <code>refreshState</code> 先看 init 进程是否存活，再看 exec.fifo 是否存在 —— 存在 = <code>created</code>，不存在 = <code>running</code>（start 时删除该文件）（<a href="https://github.com/opencontainers/runc/blob/46365c62967c76a765a5e347f48f0c7b3b571fe9/libcontainer/container_linux.go#L874-L891">container_linux.go#L874-L891</a>）。再加上 <code>&lt;root&gt;/&lt;id&gt;/state.json</code>（<code>--root</code> 默认 <code>/run/runc</code>），runc 的状态完全落在磁盘上，任何进程都能接管同一容器。</p>
+<pre class="mermaid">sequenceDiagram
+    participant CD as containerd/shim
+    participant RUNC as runc (父)
+    participant INIT as runc init (容器 init 进程)
+    CD-&gt;&gt;RUNC: runc create &lt;id&gt; &lt;bundle&gt;
+    RUNC-&gt;&gt;INIT: fork/exec "runc init" + bootstrap pipe
+    INIT-&gt;&gt;INIT: 建 namespace/cgroup/rootfs, pivot_root
+    INIT-&gt;&gt;INIT: 阻塞读 exec fifo
+    RUNC--&gt;&gt;CD: 写 state, 退出 (detach)
+    CD-&gt;&gt;RUNC: runc start &lt;id&gt;
+    RUNC-&gt;&gt;INIT: 打开 exec fifo 读端
+    INIT-&gt;&gt;INIT: write "0" 完成, execve 用户进程
+</pre>
+
+<h3 id="44-为什么-runc-单独撑不起-kubernetes"><a class="header" href="#44-为什么-runc-单独撑不起-kubernetes">4.4 为什么 runc 单独撑不起 Kubernetes</a></h3>
+<ul>
+<li>没有 daemon：create 完就退出，<strong>没人负责后续的 wait/信号转发/日志</strong>；</li>
+<li>没有 API：只有 CLI，kubelet 无法直接对话；</li>
+<li>没有状态管理：容器 ID、镜像、快照、网络、事件都不管。</li>
+</ul>
+<p>于是需要 containerd 管“平台能力“，需要 <strong>shim</strong> 管“进程寿命“。这正好引出下一节。</p>
+<hr>
+<h2 id="5-crikubelet-与运行时的-grpc-接口"><a class="header" href="#5-crikubelet-与运行时的-grpc-接口">5. CRI：kubelet 与运行时的 gRPC 接口</a></h2>
+<h3 id="51-定义"><a class="header" href="#51-定义">5.1 定义</a></h3>
+<blockquote>
+<p>“The CRI is a plugin interface which enables the kubelet to use a wide variety of container runtimes, without having a need to recompile the cluster components.”（<a href="https://kubernetes.io/docs/concepts/containers/cri/">K8s CRI 文档</a>）</p>
+</blockquote>
+<ul>
+<li>kubelet 是 <strong>client</strong>，通过 gRPC 连接运行时的 unix socket（<code>--container-runtime-endpoint</code>，如 <code>unix:///run/containerd/containerd.sock</code>）；</li>
+<li>运行时（containerd 的 CRI plugin / CRI-O）是 <strong>server</strong>；</li>
+<li>接口定义在独立仓库 <a href="https://github.com/kubernetes/cri-api/blob/d279f3cbb9d18b653d5fab12e187589914329c77/pkg/apis/runtime/v1/api.proto"><code>kubernetes/cri-api</code></a>，kubelet 侧实现位于 <code>staging/src/k8s.io/cri-client</code>。</li>
+</ul>
+<h3 id="52-两组服务"><a class="header" href="#52-两组服务">5.2 两组服务</a></h3>
+<p><code>api.proto</code> 定义了两个 service：</p>
+<ul>
+<li><strong>RuntimeService</strong>（<a href="https://github.com/kubernetes/cri-api/blob/d279f3cbb9d18b653d5fab12e187589914329c77/pkg/apis/runtime/v1/api.proto#L24">api.proto#L24</a>）</li>
+<li><strong>ImageService</strong>（<a href="https://github.com/kubernetes/cri-api/blob/d279f3cbb9d18b653d5fab12e187589914329c77/pkg/apis/runtime/v1/api.proto#L230">api.proto#L230</a>）</li>
+</ul>
+<p>核心 RPC 与它们在本链路中的落点：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>RPC</th><th>作用</th><th>谁真正干活</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Version</code></td><td>协商 API 版本（v1）</td><td>运行时返回 <code>runtime_name</code> / <code>runtime_version</code> / <code>runtime_api_version</code>（<a href="https://github.com/kubernetes/cri-api/blob/d279f3cbb9d18b653d5fab12e187589914329c77/pkg/apis/runtime/v1/api.proto#L273-L286">#L273</a>）</td></tr>
+<tr><td><code>RunPodSandbox</code></td><td>创建并启动 Pod 级 sandbox</td><td>containerd：pause 容器 + netns/CNI</td></tr>
+<tr><td><code>CreateContainer</code> / <code>StartContainer</code></td><td>在 sandbox 里创建/启动业务容器</td><td>containerd → shim → OCI runtime</td></tr>
+<tr><td><code>ExecSync</code> / <code>Exec</code> / <code>Attach</code> / <code>PortForward</code></td><td>执行命令 / 流式接入</td><td>返回 streaming URL（由 CRI 实现的 streaming server 提供，kubelet 反代）</td></tr>
+<tr><td><code>StopContainer</code> / <code>RemoveContainer</code> / <code>StopPodSandbox</code> / <code>RemovePodSandbox</code></td><td>停止/删除</td><td>幂等语义写在 proto 注释里</td></tr>
+<tr><td><code>PullImage</code> / <code>ListImages</code> / <code>ImageFsInfo</code> / <code>RemoveImage</code></td><td>镜像管理</td><td>containerd content store + snapshotter</td></tr>
+<tr><td><code>Status</code> / <code>UpdateRuntimeConfig</code></td><td>运行时状态、Pod CIDR 等运行时配置</td><td>各实现</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="53-podsandboxcri-最重要的抽象也是术语坑"><a class="header" href="#53-podsandboxcri-最重要的抽象也是术语坑">5.3 PodSandbox：CRI 最重要的抽象（也是术语坑）</a></h3>
+<p>CRI 里没有“直接创建容器“这回事 —— <strong>所有容器都必须属于一个 PodSandbox</strong>：</p>
+<ul>
+<li><strong>sandbox 是 Pod 级资源的载体</strong>：网络 namespace、IPC/UTS namespace、cgroup、DNS、端口映射都在 sandbox 上（<a href="https://github.com/kubernetes/cri-api/blob/d279f3cbb9d18b653d5fab12e187589914329c77/pkg/apis/runtime/v1/api.proto#L578-L625">PodSandboxConfig#L578-L625</a>）；</li>
+<li>同一 sandbox 内的容器共享这些 namespace，这才实现了“Pod 内容器像在同一台机器上“；</li>
+<li>CRI 只定义“sandbox“这个概念，<strong>具体怎么实现由运行时决定</strong>：containerd 默认用 <strong>pause 容器</strong>（一个只 sleep 的占位进程）持有 namespace，Kata 用 VM，gVisor 用 sentry。containerd 文档明确描述了 pause 容器的角色（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/cri/architecture.md">docs/cri/architecture.md</a>）。</li>
+</ul>
+<blockquote>
+<p>⚠️ <strong>术语重载警告</strong>：CRI 的 “PodSandbox” 是“Pod 级 namespace 载体“的抽象，和“安全沙箱（sandboxed runtime，如 gVisor/Kata）“不是同一个概念。前者是 CRI API 的对象，后者是隔离强度。</p>
+</blockquote>
+<p><strong>runtime handler 到底在哪个字段？</strong> 这是一个很容易看错的地方：<code>runtime_handler</code> <strong>不在</strong> <code>PodSandboxConfig</code> 里，而是 <code>RunPodSandboxRequest</code> 的独立字段：</p>
+<pre><code class="language-protobuf">message RunPodSandboxRequest {
+    PodSandboxConfig config = 1;
+    // Named runtime configuration to use for this PodSandbox.
+    // If the runtime handler is unknown, this request should be rejected.
+    // An empty string should select the default handler...
+    string runtime_handler = 2;
+}
+</code></pre>
+<p>（<a href="https://github.com/kubernetes/cri-api/blob/d279f3cbb9d18b653d5fab12e187589914329c77/pkg/apis/runtime/v1/api.proto#L627-L636">api.proto#L627-L636</a>）</p>
+<p>对应的 kubelet 侧调用也印证了这一点：<code>RunPodSandbox(ctx, podSandboxConfig, runtimeHandler)</code> 是三个参数（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kuberuntime/kuberuntime_sandbox.go#L60-L71">kuberuntime_sandbox.go#L60-L71</a>）。此外 <code>PodSandboxStatus.runtime_handler</code> 用于回读（<a href="https://github.com/kubernetes/cri-api/blob/d279f3cbb9d18b653d5fab12e187589914329c77/pkg/apis/runtime/v1/api.proto#L717">api.proto#L717</a>）。</p>
+<p><code>metadata</code>/<code>labels</code>/<code>annotations</code>/<code>log_directory</code> 等字段的语义都直接写在 proto 注释里，是理解 CRI 契约的好材料。</p>
+<h3 id="54-流式接口运行时提供-streaming-serverkubelet-只做反代"><a class="header" href="#54-流式接口运行时提供-streaming-serverkubelet-只做反代">5.4 流式接口：运行时提供 streaming server，kubelet 只做反代</a></h3>
+<p><code>Exec</code> / <code>Attach</code> / <code>PortForward</code> 的 gRPC 调用<strong>不传输数据</strong>，只返回一个 <code>url</code>（<code>ExecResponse.url</code>，<a href="https://github.com/kubernetes/cri-api/blob/d279f3cbb9d18b653d5fab12e187589914329c77/pkg/apis/runtime/v1/api.proto#L1640-L1664">api.proto#L1640-L1664</a>）。真正的 streaming server 由 <strong>CRI 实现</strong>提供：</p>
+<ul>
+<li>containerd 的 CRI plugin 内部自带 streaming server（<code>internal/cri/streaming</code>，初始化在 <a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/service.go#L250">service.go#L250</a>），<code>Exec</code> handler 直接返回 <code>c.streamServer.GetExec(r)</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/container_exec.go#L28-L39">container_exec.go#L28-L39</a>）；</li>
+<li>CRI-O 同样内嵌 <code>k8s.io/cri-streaming</code> 的 server。</li>
+</ul>
+<p>kubelet 侧不再自己起 streaming server，而是把请求<strong>反向代理</strong>到运行时返回的 URL（<code>proxy.NewUpgradeAwareHandler</code>，<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/server/server.go#L1176-L1182">pkg/kubelet/server/server.go#L1176-L1182</a>）。<code>k8s.io/cri-streaming</code> 作为独立 module 提供 <code>GetExec</code>/<code>GetAttach</code>/<code>GetPortForward</code> 接口（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/cri-streaming/pkg/streaming/server.go#L46-L48">server.go#L46-L48</a>），供各 CRI 实现复用。</p>
+<h3 id="55-kubelet-侧完整调用链代码级"><a class="header" href="#55-kubelet-侧完整调用链代码级">5.5 kubelet 侧完整调用链（代码级）</a></h3>
+<pre class="mermaid">sequenceDiagram
+    participant K as kubelet
+    participant RC as cri-client (remote_runtime.go)
+    participant RT as 运行时 (containerd CRI plugin)
+    K-&gt;&gt;K: syncLoop → dispatchWork → syncPod
+    K-&gt;&gt;K: computePodActions (决定 create/kill)
+    K-&gt;&gt;K: generatePodSandboxConfig + LookupRuntimeHandler
+    K-&gt;&gt;RC: RunPodSandbox(config, runtimeHandler)
+    RC-&gt;&gt;RT: gRPC RuntimeService.RunPodSandbox
+    RT--&gt;&gt;RC: podSandboxID
+    K-&gt;&gt;RC: CreateContainer(podSandboxID, config, sandboxConfig)
+    RC-&gt;&gt;RT: gRPC CreateContainer
+    K-&gt;&gt;RC: StartContainer(containerID)
+    RC-&gt;&gt;RT: gRPC StartContainer
+</pre>
+
+<p>关键代码点：</p>
+<ol>
+<li><strong>客户端初始化</strong>：<code>PreInitRuntimeService</code> 创建 runtime/image 两个 client，分别连 <code>--container-runtime-endpoint</code> 与 <code>--image-service-endpoint</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kubelet.go#L407-L433">kubelet.go#L407-L433</a>）。端点默认值是 <code>unix:///run/containerd/containerd.sock</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/apis/config/v1beta1/defaults.go#L303-L304">defaults.go#L303-L304</a>）。</li>
+<li><strong>连接即验版本</strong>：<code>validateServiceConnection</code> 连上后先调 <code>Version</code>，不通过就报错（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/cri-client/pkg/remote_runtime.go#L250-L263">remote_runtime.go#L250-L263</a>）。此外 kubelet 要求 <code>VersionResponse.version</code> 严格等于 <code>"0.1.0"</code>（<code>kubeRuntimeAPIVersion</code>，<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kuberuntime/kuberuntime_manager.go#L82">kuberuntime_manager.go#L82</a>、判等逻辑 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kuberuntime/kuberuntime_manager.go#L299-L312">#L299-L312</a>），不匹配返回 <code>ErrVersionNotSupported</code>。</li>
+<li><strong>RunPodSandbox</strong>：超时是普通请求的 2 倍（注释说明 sandbox 操作更慢）（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/cri-client/pkg/remote_runtime.go#L308-L343">remote_runtime.go#L308-L343</a>）。</li>
+<li><strong>SyncPod</strong>：kubelet 的核心同步函数（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kuberuntime/kuberuntime_manager.go#L1854">kuberuntime_manager.go#L1854</a>），内部 <code>computePodActions</code> 决定要创建哪些 sandbox/container，然后调用 <code>createPodSandbox</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kuberuntime/kuberuntime_manager.go#L2018">#L2018</a>）。</li>
+<li><strong>创建 sandbox</strong>：<code>createPodSandbox</code> 里先 <code>generatePodSandboxConfig</code>，再 <code>LookupRuntimeHandler(pod.Spec.RuntimeClassName)</code>，最后 <code>RunPodSandbox(ctx, config, handler)</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kuberuntime/kuberuntime_sandbox.go#L41-L78">kuberuntime_sandbox.go#L41-L78</a>）。</li>
+<li><strong>启动容器</strong>：<code>startContainer</code> 四步 —— 拉镜像（把 handler 传进 <code>ImageSpec</code>）→ <code>CreateContainer</code> → <code>StartContainer</code> → 执行 PostStart hook（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kuberuntime/kuberuntime_container.go#L200-L340">kuberuntime_container.go#L200-L340</a>）。</li>
+<li><strong>镜像也能带 handler（但默认关闭）</strong>：<code>ImageSpec.runtime_handler</code>（<a href="https://github.com/kubernetes/cri-api/blob/d279f3cbb9d18b653d5fab12e187589914329c77/pkg/apis/runtime/v1/api.proto#L956-L973">api.proto#L956-L973</a>）让运行时按 handler 拉镜像；kubelet 侧受 feature gate <code>RuntimeClassInImageCriAPI</code>（Alpha、默认 false）控制才填充（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kuberuntime/convert.go#L65-L78">convert.go#L65-L78</a>、<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/features/kube_features.go#L2087-L2089">kube_features.go#L2087-L2089</a>）。</li>
+</ol>
+<blockquote>
+<p>也就是说：<strong>kubelet 从头到尾只认识 CRI 的 <code>PodSandbox</code> / <code>Container</code> 抽象和字符串 handler，完全不知道 runc/containerd 的存在。</strong></p>
+</blockquote>
+<h3 id="56-cri-的实现者"><a class="header" href="#56-cri-的实现者">5.6 CRI 的实现者</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>实现</th><th>形态</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>containerd（内置 CRI plugin）</strong></td><td>一个 daemon 里的插件</td><td>K8s 默认生态；同时服务 CRI 和 containerd 原生 API（ctr/nerdctl）</td></tr>
+<tr><td><strong>CRI-O</strong></td><td>独立的 CRI daemon</td><td>“OCI-based implementation of Kubernetes Container Runtime Interface”（<a href="https://github.com/cri-o/cri-o/blob/c11d3e70365ab7a671894258601d54091ec384cf/README.md#L5">README</a>）</td></tr>
+<tr><td><strong>dockershim</strong></td><td>kubelet 内置适配层</td><td>1.24 移除（见第 2 节）</td></tr>
+</tbody>
+</table>
+</div>
+<p>CRI-O 的实现方式是“直接调 OCI runtime + conmon“，containerd 则是“CRI plugin → containerd runtime v2 → shim“。两者都暴露同一个 CRI 接口，所以可以互换。</p>
+<hr>
+<h2 id="6-containerd节点侧的容器管理器"><a class="header" href="#6-containerd节点侧的容器管理器">6. containerd：节点侧的容器管理器</a></h2>
+<h3 id="61-它管什么"><a class="header" href="#61-它管什么">6.1 它管什么</a></h3>
+<p>containerd 的定位是“管理节点上容器与内容的 daemon“，核心内部对象：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>组件</th><th>作用</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>content store</strong></td><td>按 digest 存镜像 manifest/config/layer（OCI image 的 CAS）</td></tr>
+<tr><td><strong>snapshotter</strong></td><td>把 layer 叠加成容器 rootfs（overlayfs 等）；三态快照、mount 参数、GC 详见 <a href="../../Linux_Container/镜像快照器snapshotter.html">镜像快照器 Snapshotter</a></td></tr>
+<tr><td><strong>metadata</strong></td><td>bbolt 存容器/镜像/任务的元数据</td></tr>
+<tr><td><strong>namespace</strong></td><td>多租户隔离（k8s.io 命名空间等）</td></tr>
+<tr><td><strong>task service</strong></td><td>容器任务（进程）生命周期</td></tr>
+<tr><td><strong>event service</strong></td><td>发布容器事件（TaskExit 等）</td></tr>
+<tr><td><strong>plugin</strong></td><td>所有能力都是插件（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/PLUGINS.md">docs/PLUGINS.md</a>）</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>containerd 本身不创建容器进程</strong>，它只负责准备 rootfs/config，然后让 runtime（shim + engine）去做。containerd 官方文档原话：</p>
+<blockquote>
+<p>“containerd, the daemon, does not directly launch containers. Instead, it acts as a higher-level manager or hub for coordinating the activities of containers and content, that lower-level programs, called ‘runtimes’, actually implement to start, stop and manage containers.”（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/runtime-v2.md#L3-L8">docs/runtime-v2.md#L3-L8</a>）</p>
+</blockquote>
+<h3 id="62-cri-plugincontainerd-里的cri-server"><a class="header" href="#62-cri-plugincontainerd-里的cri-server">6.2 CRI plugin：containerd 里的“CRI server“</a></h3>
+<p>containerd 的 CRI 实现不是独立进程，而是内置插件。它接收 kubelet 的 CRI gRPC 请求，翻译成 containerd 内部操作：</p>
+<ul>
+<li>文档：<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/cri/architecture.md">docs/cri/architecture.md</a> 描述了 “kubelet → CRI plugin → containerd internals → pause 容器 + CNI” 的完整流程；</li>
+<li>插件注册：<code>plugins/cri/runtime/plugin.go</code>（ID <code>runtime</code>，<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/cri/runtime/plugin.go#L49">#L49</a>）与 <code>plugins/cri/images/plugin.go</code>（ID <code>images</code>，<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/plugins/cri/images/plugin.go#L47">#L47</a>）；</li>
+<li><strong>containerd 2.x 的插件 ID 变了</strong>：配置段从 1.x 的 <code>plugins."io.containerd.grpc.v1.cri"</code> 改为 <code>plugins."io.containerd.cri.v1.runtime"</code> / <code>plugins."io.containerd.cri.v1.images"</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/cri/config.md#L90-L108">docs/cri/config.md#L90-L108</a>）。</li>
+</ul>
+<p><code>RunPodSandbox</code> 在 containerd 里的主要步骤（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/sandbox_run.go#L54">internal/cri/server/sandbox_run.go#L54</a>）：</p>
+<ol>
+<li>生成 sandbox ID/name，创建 lease；</li>
+<li>准备并 <code>setupPodNetwork</code>（CNI 配置 netns、分配 IP）；</li>
+<li>调 <code>sandboxService.CreateSandbox</code> / <code>StartSandbox</code>（2.x 的 sandbox API）；</li>
+<li>确保 pause 镜像存在（<code>ensurePauseImageExists</code>，<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/sandbox_run.go#L416">#L416</a>）；containerd 2.4 的默认 sandbox 镜像是 <code>registry.k8s.io/pause:3.10.2</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/config/config.go#L73-L75">config.go#L73-L75</a>），可用 <code>sandbox_image</code> 覆盖（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/cri/config.md#L375-L376">docs/cri/config.md#L375-L376</a>）；</li>
+<li>等待 sandbox 退出事件、标记 Ready。</li>
+</ol>
+<blockquote>
+<p>containerd 2.x 引入了 <strong>sandboxer</strong> 抽象：默认 <code>podsandbox</code>（pause 容器），VM 类 runtime 可以注册自己的 sandboxer 直接管理 VM（<code>Runtime.Sandboxer</code> 字段，<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/config/config.go#L122-L126">internal/cri/config/config.go#L122-L126</a>）。这是 2.x 相对 1.x 的一个重要架构变化，但“CRI sandbox“的语义未变。</p>
+</blockquote>
+<h3 id="63-handler-如何映射到-runtime-配置"><a class="header" href="#63-handler-如何映射到-runtime-配置">6.3 handler 如何映射到 runtime 配置</a></h3>
+<p>kubelet 传来的 <code>runtime_handler</code> 字符串，在 containerd 里由 <code>Config.GetSandboxRuntime</code> 解析（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/config/config.go#L692-L720">internal/cri/config/config.go#L692-L720</a>）：</p>
+<pre><code class="language-go">if runtimeHandler == "" {
+    runtimeHandler = config.DefaultRuntimeName
+}
+r, ok := config.Runtimes[runtimeHandler]
+if !ok {
+    return Runtime{}, fmt.Errorf("no runtime for %q is configured", runtimeHandler)
+}
+return r, nil
+</code></pre>
+<p>每个 runtime 配置项（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/config/config.go#L84-L130">internal/cri/config/config.go#L84-L130</a>）决定“用哪个 shim“：</p>
+<pre><code class="language-toml">[plugins."io.containerd.cri.v1.runtime".containerd]
+  default_runtime_name = "runc"
+  [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.runc]
+    runtime_type = "io.containerd.runc.v2"   # → containerd-shim-runc-v2
+    [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.runc.options]
+      SystemdCgroup = true
+</code></pre>
+<p><code>runtime_type</code> 是 shim 的名字（见 7.6 的命名算法），<code>options</code> 是传给 shim 的 protobuf 配置。</p>
+<h3 id="64-从-cri-容器到-oci-spec"><a class="header" href="#64-从-cri-容器到-oci-spec">6.4 从 CRI 容器到 OCI spec</a></h3>
+<p>创建业务容器时（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/container_create.go">internal/cri/server/container_create.go</a>）：</p>
+<ol>
+<li>取 sandbox 的 runtime 配置（<code>getPodSandboxRuntime</code>，<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/container_create.go#L234">#L234</a>）；</li>
+<li>把 <code>ContainerConfig</code> 翻译成 <strong>OCI spec</strong>（<code>runtimeSpec</code>，<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/container_create.go#L613">#L613</a>）；</li>
+<li>用 <code>containerd.NewContainer(..., containerd.WithRuntime(runtimeName, runtimeOption))</code> 创建<strong>容器元数据</strong>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/container_create.go#L379-L390">#L379-L390</a>）—— 此时还没有 task/shim。</li>
+</ol>
+<p>真正的 task 是在 <strong><code>StartContainer</code></strong> 里创建的：<code>container.NewTask()</code> 才会触发 shim 启动（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/container_start.go#L146-L149">container_start.go#L146-L149</a>），随后 <code>task.Start()</code>。这也是为什么 <code>CreateContainer</code> 很快、<code>StartContainer</code> 才可能因为运行时问题失败。</p>
+<hr>
+<h2 id="7-shim为什么-containerd-重启后容器还活着"><a class="header" href="#7-shim为什么-containerd-重启后容器还活着">7. shim：为什么 containerd 重启后容器还活着</a></h2>
+<h3 id="71-shim-的职责"><a class="header" href="#71-shim-的职责">7.1 shim 的职责</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>职责</th><th>说明</th><th>代码证据</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>进程持有</strong></td><td>容器进程的父进程/收养者；containerd 只是“客户端“</td><td>shim 把自己设为 sub-reaper（<code>PR_SET_CHILD_SUBREAPER</code>，<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/pkg/sys/reaper/reaper_utils_linux.go#L27">reaper_utils_linux.go#L27</a>）</td></tr>
+<tr><td><strong>回收僵尸</strong></td><td>SIGCHLD → <code>reaper.Reap()</code></td><td><a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/pkg/shim/shim_unix.go#L85">shim_unix.go#L85</a></td></tr>
+<tr><td><strong>stdio/TTY 转发</strong></td><td>containerd 通过 FIFO 与 shim 传 stdout/stderr/stdin</td><td><a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/runtime-v2.md#L325-L350">docs/runtime-v2.md#L325-L350</a></td></tr>
+<tr><td><strong>隔离 runtime 实现</strong></td><td>shim 提供统一的 ttrpc API，内部可调 runc/crun/runsc/kata</td><td><a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/runtime-v2.md#L58-L84">docs/runtime-v2.md#L58-L84</a></td></tr>
+</tbody>
+</table>
+</div>
+<p>“containerd 重启容器不挂“不是魔法：容器进程的父进程是 shim，不是 containerd。containerd 挂掉/升级时，shim 和容器都不受影响；containerd 重启后通过 bundle 里的地址信息<strong>重新连上 shim</strong>（<code>loadShims</code>，<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/runtime/v2/shim_load.go#L66">shim_load.go#L66</a>、<code>loadShim</code>，<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/runtime/v2/shim_load.go#L128">#L128</a>）。</p>
+<h3 id="72-启动时序containerd-24-的代码路径"><a class="header" href="#72-启动时序containerd-24-的代码路径">7.2 启动时序（containerd 2.4 的代码路径）</a></h3>
+<pre class="mermaid">sequenceDiagram
+    participant CD as containerd
+    participant ST as shim "start" 进程
+    participant SH as shim 常驻进程
+    participant RUNC as runc
+
+    CD-&gt;&gt;CD: startShim: resolveRuntimePath / 拼 shim 二进制
+    CD-&gt;&gt;ST: exec containerd-shim-runc-v2 start (cwd=bundle)
+    ST-&gt;&gt;ST: manager.Start: 读 bundle/config.json 注解
+    ST-&gt;&gt;ST: 按 io.kubernetes.cri.sandbox-id 分组，建 unix socket
+    ST-&gt;&gt;SH: 再 exec 自己（无 action），fd 3 传 socket，Setpgid
+    ST--&gt;&gt;CD: stdout 返回 BootstrapResult(address)，退出
+    CD-&gt;&gt;SH: 连 ttrpc，CreateTask
+    SH-&gt;&gt;RUNC: runc create &lt;id&gt; &lt;bundle&gt;
+    CD-&gt;&gt;SH: StartTask
+    SH-&gt;&gt;RUNC: runc start &lt;id&gt;
+    RUNC--&gt;&gt;SH: 容器 init 进程被 shim 收养
+    SH--&gt;&gt;CD: TaskExit 事件 / 退出码
+</pre>
+
+<p>逐步对应代码：</p>
+<ol>
+<li><strong>containerd 侧</strong>：<code>ShimManager.Start</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/runtime/v2/shim_manager.go#L205">core/runtime/v2/shim_manager.go#L205</a>）→ <code>startShim</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/runtime/v2/shim_manager.go#L348">#L348</a>）→ <code>resolveRuntimePath</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/runtime/v2/shim_manager.go#L422">#L422</a>）把 <code>io.containerd.runc.v2</code> 解析成 <code>containerd-shim-runc-v2</code>。</li>
+<li><strong>执行 shim</strong>：<code>binary.Start</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/runtime/v2/binary.go#L66">core/runtime/v2/binary.go#L66</a>）以 <code>cwd = bundle</code> 执行 <code>&lt;shim&gt; start</code>，并通过 stdin 传 <code>BootstrapParams</code>（containerd 2.3+ 的新 bootstrap 协议）。</li>
+<li><strong>shim “start” 模式</strong>：<code>pkg/shim</code> 的 <code>case "start"</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/pkg/shim/shim.go#L272">pkg/shim/shim.go#L272</a>）读 bootstrap → <code>manager.Start</code>。</li>
+<li><strong>runc shim 的 manager.Start</strong>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/cmd/containerd-shim-runc-v2/manager/manager_linux.go#L187">manager_linux.go#L187</a>）：
+<ul>
+<li>读 bundle 里的 <code>config.json</code> 注解，按 <code>io.kubernetes.cri.sandbox-id</code> 分组（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/cmd/containerd-shim-runc-v2/manager/manager_linux.go#L67-L69">#L67-L69</a>）；</li>
+<li>建 unix socket，<strong>再 exec 自己一次</strong>（不带 action），用 fd 3 把 socket 传过去（<code>newCommand</code>，<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/cmd/containerd-shim-runc-v2/manager/manager_linux.go#L84-L114">#L84-L114</a>）；</li>
+<li>返回 address 后退出 —— 所以 containerd 看到的是一次短命的 “start” 进程。</li>
+</ul>
+</li>
+<li><strong>常驻 shim</strong>：不带 action 启动，<code>serve</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/pkg/shim/shim.go#L466">pkg/shim/shim.go#L466</a>）在继承的 socket fd 上提供 ttrpc；同时 <code>subreaper()</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/pkg/shim/shim.go#L233">#L233</a>）和 SIGCHLD reap 生效。</li>
+<li><strong>task 操作</strong>：containerd 连上 ttrpc 后调 <code>CreateTask</code>/<code>StartTask</code>，shim 内部调 <code>runc create</code>/<code>runc start</code>。runc 退出后，容器 init 进程被 shim 收养，后续信号、退出码、日志都由 shim 负责。</li>
+</ol>
+<h3 id="73-一个-shim-服务一个-pod而不是一个容器"><a class="header" href="#73-一个-shim-服务一个-pod而不是一个容器">7.3 一个 shim 服务一个 Pod，而不是一个容器</a></h3>
+<p>shim 的分组逻辑在 <code>manager.Start</code> 里：读取 bundle <code>config.json</code> 的 annotations，命中 <code>io.kubernetes.cri.sandbox-id</code> 就把 grouping 设为 sandbox ID，这样<strong>同一个 Pod 的所有容器共用一个 shim/socket</strong>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/cmd/containerd-shim-runc-v2/manager/manager_linux.go#L206-L212">manager_linux.go#L206-L212</a>）。</p>
+<p>这与 containerd 文档一致：“containers launched by Kubernetes, that are part of the same Kubernetes pod, are handled by a single shim, grouping on the <code>io.kubernetes.cri.sandbox-id</code> label”（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/runtime-v2.md#L104-L112">docs/runtime-v2.md#L104-L112</a>）。</p>
+<blockquote>
+<p>实践意义：<code>ps aux | grep containerd-shim</code> 看到的 shim 数量约等于 Pod 数，而不是容器数。</p>
+</blockquote>
+<h3 id="74-shim-v1--v2"><a class="header" href="#74-shim-v1--v2">7.4 shim v1 → v2</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th></th><th>shim v1</th><th>shim v2</th></tr>
+</thead>
+<tbody>
+<tr><td>二进制</td><td>每个容器一个（如 <code>docker-containerd-shim</code>）</td><td>统一 <code>containerd-shim-&lt;engine&gt;-v2</code>，同一二进制可服务多个容器</td></tr>
+<tr><td>通信</td><td>gRPC</td><td><strong>ttrpc</strong>（更轻量的 RPC，protobuf + unix socket）</td></tr>
+<tr><td>接口</td><td>自定义 Shim service</td><td>ttrpc <code>Task</code> service；containerd 2.4 默认 task API 是 <code>containerd.task.v3</code>，v2 由 <code>ttrpcV2Bridge</code> 兼容（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/runtime/v2/bridge.go#L70-L95">bridge.go#L70-L95</a>）</td></tr>
+<tr><td>配置</td><td><code>runtime_type = "io.containerd.runtime.v1.linux"</code></td><td><code>runtime_type = "io.containerd.runc.v2"</code> 等</td></tr>
+<tr><td>现状</td><td>containerd v2.0 已移除</td><td>当前默认</td></tr>
+</tbody>
+</table>
+</div>
+<p>证据：containerd 的 <code>RELEASES.md</code> 明确列出 “Runtime V1 API and implementation (<code>io.containerd.runtime.v1.linux</code>)” 在 v2.0 移除、推荐 <code>io.containerd.runc.v2</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/RELEASES.md#L606">RELEASES.md#L606</a>）；同一张表里 <code>io.containerd.runc.v1</code> 也在 v2.0 移除（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/RELEASES.md#L607">#L607</a>）。ttrpc 与 shim API 的设计说明见 <a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/runtime-v2.md#L575">docs/runtime-v2.md#L575</a>。</p>
+<blockquote>
+<p>命名注意：<strong>“shim v2” 是架构名，不是 task API 的版本号</strong>。containerd 2.4 默认 task API 已经是 v3（v2 兼容）， <code>containerd-shim-runc-v2</code> 里的 <code>v2</code> 指的是 shim 架构，不是 RPC 版本。</p>
+</blockquote>
+<h3 id="75-shim-不是一个容器运行时"><a class="header" href="#75-shim-不是一个容器运行时">7.5 shim 不是一个“容器运行时“</a></h3>
+<ul>
+<li><strong>shim 不实现 OCI runtime spec</strong>，它是 containerd 的伴生进程，负责暴露 ttrpc 并管理容器进程；</li>
+<li>真正实现 runtime-spec 的是 runc/crun/runsc/kata；</li>
+<li><code>containerd-shim-runc-v2</code> 名字里的 <code>runc</code> 只表示“默认调 runc 这个 OCI engine“，用 <code>--runc-binary</code> 或 <code>options.BinaryName</code> 可以换成 crun（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/runtime-v2.md#L160-L166">docs/runtime-v2.md#L160-L166</a>）。</li>
+</ul>
+<h3 id="76-名字解密runtime_type--shim-二进制"><a class="header" href="#76-名字解密runtime_type--shim-二进制">7.6 名字解密：runtime_type → shim 二进制</a></h3>
+<p>containerd 的转换规则（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/runtime-v2.md#L117-L160">docs/runtime-v2.md#L117-L160</a>、<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/pkg/shim/util.go#L41-L45">pkg/shim/util.go#L41-L45</a>）：</p>
+<ol>
+<li>把 runtime 名字里的 <code>.</code> 换成 <code>-</code>；</li>
+<li>取最后两段（engine + version）；</li>
+<li>前面拼 <code>containerd-shim-</code>。</li>
+</ol>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>runtime_type</th><th>shim 二进制</th></tr>
+</thead>
+<tbody>
+<tr><td><code>io.containerd.runc.v2</code></td><td><code>containerd-shim-runc-v2</code></td></tr>
+<tr><td><code>io.containerd.runsc.v1</code></td><td><code>containerd-shim-runsc-v1</code></td></tr>
+<tr><td><code>io.containerd.kata.v2</code></td><td><code>containerd-shim-kata-v2</code></td></tr>
+<tr><td><code>io.containerd.spin.v2</code>（runwasi）</td><td><code>containerd-shim-spin-v2</code></td></tr>
+</tbody>
+</table>
+</div>
+<p><code>BinaryName</code> 的实现只有几行（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/pkg/shim/util.go#L41-L45">util.go#L41-L45</a>），格式串 <code>containerd-shim-%s-%s</code> 定义在 <a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/pkg/shim/util_unix.go#L46">pkg/shim/util_unix.go#L46</a>。</p>
+<hr>
+<h2 id="8-runtimeclass把选择运行时暴露给-kubernetes"><a class="header" href="#8-runtimeclass把选择运行时暴露给-kubernetes">8. RuntimeClass：把“选择运行时“暴露给 Kubernetes</a></h2>
+<h3 id="81-api-定义"><a class="header" href="#81-api-定义">8.1 API 定义</a></h3>
+<p><code>node.k8s.io/v1</code> 的集群级资源（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/node/v1/types.go#L36-L100">types.go#L36-L100</a>）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>字段</th><th>作用</th></tr>
+</thead>
+<tbody>
+<tr><td><code>handler</code></td><td><strong>必填</strong>，对应 CRI/containerd 里的 runtime handler 名（DNS label，小写）</td></tr>
+<tr><td><code>overhead</code></td><td>Pod 固定开销（<code>podFixed</code>），用于调度记账（Pod Overhead）</td></tr>
+<tr><td><code>scheduling.nodeSelector</code></td><td>限制哪些节点能跑该 RuntimeClass 的 Pod</td></tr>
+<tr><td><code>scheduling.tolerations</code></td><td>追加容忍，匹配被 taint 的专用节点</td></tr>
+</tbody>
+</table>
+</div>
+<p>校验规则：<code>handler</code> 必填、小写 DNS label、不可变（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/apis/node/validation/validation.go#L45-L70">validation.go#L45-L70</a>）；RuntimeClass 自身是集群级资源（<code>NameIsDNSSubdomain</code>），Pod 侧 <code>runtimeClassName</code> 同样是 DNS subdomain，指向 RuntimeClass 的 <code>metadata.name</code>。</p>
+<p>设计文档：<a href="https://github.com/kubernetes/enhancements/tree/master/keps/sig-node/585-runtime-class">KEP-585 RuntimeClass</a>；使用文档：<a href="https://kubernetes.io/docs/concepts/containers/runtime-class/">K8s RuntimeClass</a>。</p>
+<h3 id="82-端到端解析链"><a class="header" href="#82-端到端解析链">8.2 端到端解析链</a></h3>
+<pre class="mermaid">flowchart LR
+    U["Pod.spec.runtimeClassName"] --&gt; A["apiserver&lt;br/&gt;RuntimeClass admission"]
+    A --&gt;|"写 Pod.Spec.Overhead&lt;br/&gt;合并 nodeSelector/tolerations"| S["scheduler"]
+    A --&gt;|"Pod 持久化"| K["kubelet"]
+    K --&gt;|"LookupRuntimeHandler&lt;br/&gt;(RuntimeClass informer)"| H["handler 字符串"]
+    H --&gt;|"CRI RunPodSandbox(runtime_handler)"| CD["containerd&lt;br/&gt;GetSandboxRuntime"]
+    CD --&gt;|"Runtimes[handler].runtime_type"| SH["containerd-shim-*-v2"]
+</pre>
+
+<ol>
+<li><strong>admission</strong>：apiserver 的 <code>RuntimeClass</code> 插件做两件事（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/plugin/pkg/admission/runtimeclass/admission.go#L166-L214">admission.go#L166-L214</a>）：
+<ul>
+<li>把 <code>RuntimeClass.spec.overhead.podFixed</code> 写进 <code>Pod.Spec.Overhead</code>（校验不一致则拒绝）；</li>
+<li>合并 <code>scheduling.nodeSelector</code>（冲突则拒绝）与 <code>tolerations</code>。</li>
+</ul>
+</li>
+<li><strong>scheduler</strong>：按合并后的 nodeSelector/tolerations 选节点，并把 <code>Pod.Spec.Overhead</code> 计入资源账本（Pod Overhead 概念见<a href="https://kubernetes.io/docs/concepts/scheduling-eviction/pod-overhead/">官方文档</a>）。</li>
+<li><strong>kubelet</strong>：<code>LookupRuntimeHandler(pod.Spec.RuntimeClassName)</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/runtimeclass/runtimeclass_manager.go#L62-L78">runtimeclass_manager.go#L62-L78</a>）——用 informer/lister 查 RuntimeClass；名字为空返回 <code>""</code>（默认 handler），查不到返回 NotFound。</li>
+<li><strong>CRI</strong>：handler 作为 <code>RunPodSandboxRequest.runtime_handler</code> 发出（见 5.3）。</li>
+<li><strong>containerd</strong>：<code>GetSandboxRuntime</code> 用 handler 查 <code>Runtimes</code> 表；空 handler 用 <code>default_runtime_name</code>；查不到直接报错（见 6.3）。</li>
+</ol>
+<blockquote>
+<p><strong>“RuntimeClass 不存在“到底会怎样？</strong> 默认开启的 RuntimeClass admission 在<strong>创建 Pod 时</strong>就直接 Forbidden（<code>pod rejected: RuntimeClass "xxx" not found</code>），见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/plugin/pkg/admission/runtimeclass/admission.go#L152-L160">admission.go#L152-L160</a>。官方文档所说的 “Pod 进入 Failed 终态“更接近另一种情况：Pod 已存在，而 RuntimeClass 后来被删除（或 admission 被禁用），kubelet 的 <code>LookupRuntimeHandler</code> 失败、反复产生 <code>FailedCreatePodSandBox</code> 事件。以实际集群配置为准。</p>
+</blockquote>
+<h3 id="83-配置示例"><a class="header" href="#83-配置示例">8.3 配置示例</a></h3>
+<p><strong>containerd 2.x</strong>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/cri/config.md#L90-L108">docs/cri/config.md#L90-L108</a>）：</p>
+<pre><code class="language-toml">version = 3
+[plugins."io.containerd.cri.v1.runtime".containerd]
+  default_runtime_name = "runc"
+  [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.runc]
+    runtime_type = "io.containerd.runc.v2"
+  [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.runsc]
+    runtime_type = "io.containerd.runsc.v1"
+  [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.kata]
+    runtime_type = "io.containerd.kata.v2"
+</code></pre>
+<p><strong>RuntimeClass + Pod</strong>：</p>
+<pre><code class="language-yaml">apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: gvisor
+handler: runsc          # 对应 containerd 的 runtimes.runsc
+scheduling:
+  nodeSelector:
+    sandbox: gvisor     # 只在装了 runsc 的节点上调度
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: untrusted-workload
+spec:
+  runtimeClassName: gvisor
+  containers:
+    - name: app
+      image: nginx
+</code></pre>
+<p><strong>CRI-O</strong>：<code>crio.conf</code> 用 <code>crio.runtime.runtimes.&lt;handler&gt;.runtime_path</code> 指定运行时二进制（<a href="https://github.com/cri-o/cri-o/blob/c11d3e70365ab7a671894258601d54091ec384cf/docs/crio.conf.5.md#L353-L365">crio.conf.5.md#L353-L365</a>）：</p>
+<pre><code class="language-toml">[crio.runtime.runtimes.runc]
+runtime_path = "/usr/bin/runc"
+[crio.runtime.runtimes.kata]
+runtime_path = "/usr/bin/containerd-shim-kata-v2"
+</code></pre>
+<blockquote>
+<p>注意 CRI-O 的 handler 配置键名是 <code>runtime_path</code>，而 containerd 是 <code>runtime_type</code> + <code>options</code>。<strong>RuntimeClass 的 handler 是 CR 实现无关的字符串，但节点侧配置格式由 CRI 实现决定。</strong></p>
+</blockquote>
+<h3 id="84-典型-handler-生态"><a class="header" href="#84-典型-handler-生态">8.4 典型 handler 生态</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>handler（示例）</th><th>runtime_type</th><th>隔离级别</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td><code>runc</code>（默认）</td><td><code>io.containerd.runc.v2</code></td><td>内核 namespace + cgroup</td><td>默认运行时，无额外隔离</td></tr>
+<tr><td><code>runsc</code></td><td><code>io.containerd.runsc.v1</code></td><td>用户态内核（gVisor）</td><td>系统调用被 Sentry 拦截，隔离强、兼容性/性能有折损</td></tr>
+<tr><td><code>kata</code></td><td><code>io.containerd.kata.v2</code></td><td>轻量 VM</td><td>每个 Pod 一个 VM，shim 是 VM 代理</td></tr>
+<tr><td><code>spin</code> / <code>wasmtime</code></td><td><code>io.containerd.spin.v2</code> 等</td><td>Wasm 沙箱</td><td><a href="https://github.com/containerd/runwasi">runwasi</a> 提供的 wasm shim</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>RuntimeClass 本身不提供隔离</strong>，它只是“选择器 + 调度约束 + 开销声明“；隔离来自被选中的 runtime/shim。这也是为什么“用了 RuntimeClass 就安全了“是错的 —— 关键看 handler 指向什么。</p>
+<blockquote>
+<p>表中 <code>runsc</code> 与 <code>kata</code> 的隔离机制（用户态内核 vs 硬件虚拟化）、启动/内存开销与选型建议，见 <a href="../../Virtualization/沙箱与虚拟化技术全景.html">沙箱与虚拟化技术全景</a>。</p>
+</blockquote>
+<h3 id="85-失败语义与常见坑"><a class="header" href="#85-失败语义与常见坑">8.5 失败语义与常见坑</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>现象</th><th>原因</th><th>排查</th></tr>
+</thead>
+<tbody>
+<tr><td>Pod <code>Failed</code>，event 含 <code>no runtime for "xxx" is configured</code></td><td>节点 containerd/CRI-O 没配该 handler</td><td>检查 <code>RuntimeClass.spec.handler</code> 与节点 config</td></tr>
+<tr><td>Pod 创建被 apiserver 拒绝：<code>pod rejected: RuntimeClass "xxx" not found</code></td><td>RuntimeClass 不存在（admission 在创建时拒绝）</td><td><code>kubectl get runtimeclass</code>；注意 RuntimeClass 名 ≠ handler 名</td></tr>
+<tr><td>Pod 停在 Pending，反复出现 <code>FailedCreatePodSandBox</code></td><td>Pod 已创建后 RuntimeClass 才被删除 / admission 被禁用，kubelet 解析 handler 失败</td><td>看 kubelet 日志与 Pod events</td></tr>
+<tr><td>Pod <code>Pending</code></td><td><code>scheduling.nodeSelector</code> 与节点标签不匹配</td><td><code>kubectl describe pod</code> 看调度事件</td></tr>
+<tr><td>Pod 创建被 apiserver 拒绝</td><td>nodeSelector 与 Pod 自身冲突（admission 拒绝）</td><td>检查 Pod 手写的 nodeSelector</td></tr>
+<tr><td>以为 overhead 只是调度参数</td><td>overhead 既进调度账本（scheduler 的 <code>PodRequests</code>），也由 kubelet 作为 <code>LinuxPodSandboxConfig.Overhead</code> 落到 pod-level cgroup；容器自身资源会扣减以避免重复计数</td><td>看 <code>Pod.Spec.Overhead</code> 与容器 <code>resources</code>，二者含义不同</td></tr>
+<tr><td>多租户误用</td><td>RuntimeClass 是集群级资源，普通用户可创建任意 handler</td><td>用 RBAC 限制 RuntimeClass 写权限（官方推荐）</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="9-端到端kubectl-apply-一个-pod-到底发生了什么"><a class="header" href="#9-端到端kubectl-apply-一个-pod-到底发生了什么">9. 端到端：<code>kubectl apply</code> 一个 Pod 到底发生了什么</a></h2>
+<pre class="mermaid">sequenceDiagram
+    autonumber
+    participant U as 用户
+    participant API as kube-apiserver
+    participant SCH as kube-scheduler
+    participant KL as kubelet
+    participant CRI as containerd CRI plugin
+    participant SH as shim
+    participant R as runc
+    participant K as Linux kernel
+
+    U-&gt;&gt;API: create Pod (runtimeClassName: gvisor)
+    API-&gt;&gt;API: RuntimeClass admission: overhead + nodeSelector/tolerations
+    API--&gt;&gt;U: Pod 已创建 (Pending)
+    SCH-&gt;&gt;API: watch 到未调度 Pod
+    SCH-&gt;&gt;SCH: 按 nodeSelector/taints/overhead 选节点
+    SCH-&gt;&gt;API: bind Pod → node
+    KL-&gt;&gt;API: watch 到 assigned Pod
+    KL-&gt;&gt;KL: syncPod → computePodActions
+    KL-&gt;&gt;CRI: RunPodSandbox(config, handler="runsc")
+    CRI-&gt;&gt;CRI: 建 netns + CNI, StartSandbox (pause/VM)
+    CRI--&gt;&gt;KL: sandboxID
+    KL-&gt;&gt;CRI: PullImage(image, runtime_handler="runsc")
+    CRI-&gt;&gt;CRI: content store + snapshotter 解包 rootfs
+    KL-&gt;&gt;CRI: CreateContainer(sandboxID, containerConfig)
+    CRI-&gt;&gt;CRI: 生成 OCI spec、记录 runtime_type=io.containerd.runsc.v1（仅元数据）
+    CRI--&gt;&gt;KL: containerID
+    KL-&gt;&gt;CRI: StartContainer(containerID)
+    CRI-&gt;&gt;SH: NewTask → CreateTask（首次触发 shim 启动）
+    SH-&gt;&gt;R: runsc create &lt;id&gt; &lt;bundle&gt;
+    CRI-&gt;&gt;SH: StartTask
+    SH-&gt;&gt;R: runsc start &lt;id&gt;
+    R-&gt;&gt;K: clone(CLONE_NEWNS|NEWPID|...), pivot_root, execve
+    K--&gt;&gt;R: 容器进程运行
+    Note over KL,R: 之后 kubelet 通过 CRI 的 Status/Stats/Exec/Logs 持续协调
+</pre>
+
+<p>分步说明（每一步的“证据“）：</p>
+<ol>
+<li><strong>API 层</strong>：Pod 对象入库；admission 把 RuntimeClass 的 overhead/scheduling 合并进 Pod（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/plugin/pkg/admission/runtimeclass/admission.go#L166">admission.go#L166</a>）。</li>
+<li><strong>调度层</strong>：scheduler 只看到 Pod 的 nodeSelector/overhead，不关心 runc/gVisor。</li>
+<li><strong>kubelet 同步</strong>：<code>syncLoop</code> → <code>syncPod</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kuberuntime/kuberuntime_manager.go#L1854">kuberuntime_manager.go#L1854</a>）。</li>
+<li><strong>sandbox</strong>：<code>createPodSandbox</code> 解析 handler 后调 CRI（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kuberuntime/kuberuntime_sandbox.go#L60-L71">kuberuntime_sandbox.go#L60-L71</a>）；containerd 完成 netns/CNI/pause（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/sandbox_run.go#L54">sandbox_run.go#L54</a>）。</li>
+<li><strong>镜像</strong>：kubelet 调 ImageService；containerd 按 OCI image-spec 拉取并按 digest 校验、snapshotter 解包。</li>
+<li><strong>容器</strong>：kubelet <code>startContainer</code> 依次 <code>CreateContainer</code>/<code>StartContainer</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kuberuntime/kuberuntime_container.go#L200">kuberuntime_container.go#L200</a>）；containerd 在 <code>CreateContainer</code> 时生成 OCI spec 并记录 <code>WithRuntime(runtime_type)</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/container_create.go#L379-L390">container_create.go#L379-L390</a>），在 <code>StartContainer</code> 时才 <code>NewTask</code> 触发 shim（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/container_start.go#L146-L149">container_start.go#L146-L149</a>）。</li>
+<li><strong>task</strong>：containerd runtime v2 → shim（按 sandbox ID 分组）→ OCI engine <code>create</code>/<code>start</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/runtime-v2.md#L414-L497">runtime-v2.md#L414-L497</a> 的官方时序图与本文 7.2 一致）。</li>
+<li><strong>内核</strong>：最终是 namespace/cgroup/pivot_root + execve。这部分可对照本 wiki 的 <a href="../../Linux_Container/容器知识备忘录.html">容器知识备忘录</a>。</li>
+</ol>
+<hr>
+<h2 id="10-概念对照与常见误解"><a class="header" href="#10-概念对照与常见误解">10. 概念对照与常见误解</a></h2>
+<h3 id="101-对照表"><a class="header" href="#101-对照表">10.1 对照表</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>概念</th><th>所在层</th><th>一句话</th><th>不属于</th></tr>
+</thead>
+<tbody>
+<tr><td>OCI image-spec</td><td>制品格式</td><td>镜像 = descriptor 树</td><td>不是运行时</td></tr>
+<tr><td>OCI runtime-spec</td><td>契约</td><td>bundle/config.json + 生命周期</td><td>不是实现</td></tr>
+<tr><td>runc</td><td>实现</td><td>一次性 CLI，create 后退出</td><td>不是 daemon</td></tr>
+<tr><td>CRI</td><td>API</td><td>kubelet ↔ runtime 的 gRPC 契约</td><td>不是实现，不是 containerd</td></tr>
+<tr><td>containerd</td><td>daemon</td><td>镜像/rootfs/元数据/任务管理</td><td>不是 OCI runtime，不是 CRI</td></tr>
+<tr><td>shim</td><td>伴生进程</td><td>持有容器进程、转发 I/O、回收</td><td>不是 OCI runtime</td></tr>
+<tr><td>RuntimeClass</td><td>K8s API</td><td>选 handler + 调度约束 + 开销</td><td>不提供隔离</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="102-常见误解逐条纠正"><a class="header" href="#102-常见误解逐条纠正">10.2 常见误解（逐条纠正）</a></h3>
+<ol>
+<li><strong>“OCI 是一个容器运行时”</strong> —— 错。OCI 是规范组织（Linux Foundation 下），runtime-spec 只是契约；runc 才是实现。</li>
+<li><strong>“OCI 镜像就是 Docker 镜像”</strong> —— 现在基本可以等同：Docker 镜像格式已与 OCI 对齐；但“镜像“和“容器“是两回事。</li>
+<li><strong>“CRI 是 containerd 的一部分”</strong> —— 错。CRI 是 kubelet 的接口；containerd 只是实现了它（作为一个 plugin），CRI-O 也实现它。</li>
+<li><strong>“containerd 重启，容器会挂”</strong> —— 不会。容器父进程是 shim；containerd 重启后 re-adopt shim（见 7.1）。</li>
+<li><strong>“shim 就是 runc”</strong> —— 不是。shim 是 containerd 的伴生进程；runc 是实现 OCI runtime-spec 的 engine，被 shim 调用。</li>
+<li><strong>“RuntimeClass 会提供安全隔离”</strong> —— 不会。它只是选择 handler；隔离取决于 handler 指向的 runtime（runsc/kata 才有额外隔离）。</li>
+<li><strong>“PodSandbox 就是 pause 容器”</strong> —— 不完全是。PodSandbox 是 CRI 抽象；pause 容器是 containerd 的默认实现。Kata 的 sandbox 是一个 VM。</li>
+<li><strong>“CRI 的 runtime_handler 在 PodSandboxConfig 里”</strong> —— 错，在 <code>RunPodSandboxRequest.runtime_handler</code>（见 5.3）。</li>
+<li><strong>“kubelet 会调 runc/containerd API”</strong> —— 不会。kubelet 只会调 CRI；containerd 的 CRI plugin 再走 containerd 内部 API。</li>
+<li><strong>“一个容器一个 shim”</strong> —— 默认是一个 Pod 一个 shim（按 <code>io.kubernetes.cri.sandbox-id</code> 分组）。</li>
+<li><strong>“runtime_type 就是容器运行时”</strong> —— runtime_type 实际是 <strong>shim</strong> 的名字（<code>io.containerd.runc.v2</code> → <code>containerd-shim-runc-v2</code>），shim 再调 OCI engine。</li>
+<li><strong>“用了 containerd 就不需要 CRI”</strong> —— containerd 也可以被 ctr/nerdctl 直接使用（不走 CRI）；Kubernetes 场景才需要 CRI plugin。</li>
+</ol>
+<hr>
+<h2 id="11-版本与近期变化均可在代码中验证"><a class="header" href="#11-版本与近期变化均可在代码中验证">11. 版本与近期变化（均可在代码中验证）</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>变化</th><th>说明</th><th>证据</th></tr>
+</thead>
+<tbody>
+<tr><td>CRI v1 成为唯一版本</td><td>1.26 起 kubelet 要求 v1</td><td><a href="https://kubernetes.io/docs/concepts/containers/cri/">CRI 文档</a></td></tr>
+<tr><td>CRI List 流式 RPC</td><td><code>StreamPodSandboxes</code>/<code>StreamContainers</code>/<code>StreamImages</code>（KEP-5825，feature gate <code>CRIListStreaming</code>）</td><td><a href="https://github.com/kubernetes/cri-api/blob/d279f3cbb9d18b653d5fab12e187589914329c77/pkg/apis/runtime/v1/api.proto#L50-L63">api.proto#L50-L63</a></td></tr>
+<tr><td>dockershim 移除</td><td>1.24 起节点必须直接配 CRI 实现</td><td><a href="https://kubernetes.io/blog/2022/02/17/dockershim-faq/">dockershim FAQ</a></td></tr>
+<tr><td>containerd 2.x 移除 Runtime V1</td><td><code>io.containerd.runtime.v1.linux</code> 移除</td><td><a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/RELEASES.md#L606">RELEASES.md#L606</a></td></tr>
+<tr><td>containerd 2.x CRI plugin ID 变更</td><td><code>io.containerd.cri.v1.runtime</code> / <code>.images</code></td><td><a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/cri/config.md#L90-L108">docs/cri/config.md#L90-L108</a></td></tr>
+<tr><td>containerd 2.3+ Bootstrap 协议</td><td>shim start 从 CLI flags/env 改为 stdin 上的 <code>BootstrapParams</code></td><td><a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/runtime-v2.md#L197-L228">docs/runtime-v2.md#L197-L228</a></td></tr>
+<tr><td>containerd 2.x sandbox API/sandboxer</td><td>CRI sandbox 走 SandboxService，默认 podsandbox（pause）</td><td><a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/sandbox_run.go#L279-L298">sandbox_run.go#L279-L298</a></td></tr>
+<tr><td>RuntimeClass GA</td><td>1.20 起 stable；overhead 1.24 stable</td><td><a href="https://kubernetes.io/docs/concepts/containers/runtime-class/">RuntimeClass 文档</a></td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="111-动手验证清单在一个节点上"><a class="header" href="#111-动手验证清单在一个节点上">11.1 动手验证清单（在一个节点上）</a></h3>
+<pre><code class="language-bash"># 1) kubelet 连的是哪个 endpoint
+ps -ef | grep kubelet | tr ' ' '\n' | grep -A1 container-runtime-endpoint
+
+# 2) CRI 实现暴露了哪些 runtime handler（需要 crictl）
+crictl info            # 看 runtimeName/runtimeVersion/config（不同 CRI 实现字段不同）
+
+# 3) containerd 的 CRI 插件是否加载、版本与 handler 配置
+ctr plugins ls | grep -E 'cri|runtime'
+cat /etc/containerd/config.toml | grep -A6 'runtimes'
+
+# 4) 当前每个 Pod 对应的 shim（数量应约等于 Pod 数）
+ps -eo pid,ppid,cmd | grep containerd-shim | grep -v grep
+ls /run/containerd/io.containerd.runtime.v2.task/k8s.io/   # 每个 sandbox 一个目录
+
+# 5) shim 与 containerd 的地址信息（containerd 重启后靠它重连）
+cat /run/containerd/io.containerd.runtime.v2.task/k8s.io/&lt;sandbox-id&gt;/bootstrap.json
+
+# 6) runc 视角的容器状态（root 用户）
+runc --root /run/runc list
+
+# 7) RuntimeClass → Pod 的账本
+kubectl get runtimeclass
+kubectl get pod &lt;pod&gt; -o jsonpath='{.spec.runtimeClassName}{"\n"}{.spec.overhead}{"\n"}'
+</code></pre>
+<p>这些命令对应的机制分别在第 5、6、7、8 节，可对照阅读。</p>
+<hr>
+<h2 id="12-参考"><a class="header" href="#12-参考">12. 参考</a></h2>
+<h3 id="规范与-oci"><a class="header" href="#规范与-oci">规范与 OCI</a></h3>
+<ul>
+<li>OCI runtime-spec v1.3.0：<a href="https://github.com/opencontainers/runtime-spec/tree/92249139eea7161e13745abd4cb6d0ea02a3227a">repo</a> / <a href="https://github.com/opencontainers/runtime-spec/blob/92249139eea7161e13745abd4cb6d0ea02a3227a/runtime.md">runtime.md（生命周期/状态/操作）</a> / <a href="https://github.com/opencontainers/runtime-spec/blob/92249139eea7161e13745abd4cb6d0ea02a3227a/config.md">config.md（config.json）</a> / <a href="https://github.com/opencontainers/runtime-spec/blob/92249139eea7161e13745abd4cb6d0ea02a3227a/bundle.md">bundle.md</a> / <a href="https://github.com/opencontainers/runtime-spec/blob/92249139eea7161e13745abd4cb6d0ea02a3227a/implementations.md">implementations.md</a></li>
+<li>OCI image-spec v1.1.1：<a href="https://github.com/opencontainers/image-spec/blob/147f9c13cedb47a0c4d9a11a222961073d585877/spec.md">spec.md</a> / <a href="https://github.com/opencontainers/image-spec/blob/147f9c13cedb47a0c4d9a11a222961073d585877/manifest.md">manifest.md</a> / <a href="https://github.com/opencontainers/image-spec/blob/147f9c13cedb47a0c4d9a11a222961073d585877/descriptor.md">descriptor.md</a> / <a href="https://github.com/opencontainers/image-spec/blob/147f9c13cedb47a0c4d9a11a222961073d585877/image-index.md">image-index.md</a></li>
+<li>OCI distribution-spec：<a href="https://github.com/opencontainers/distribution-spec">repo</a></li>
+</ul>
+<h3 id="cri"><a class="header" href="#cri">CRI</a></h3>
+<ul>
+<li>CRI API v0.37.2：<a href="https://github.com/kubernetes/cri-api/blob/d279f3cbb9d18b653d5fab12e187589914329c77/pkg/apis/runtime/v1/api.proto">api.proto</a></li>
+<li>kubelet CRI client：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/cri-client/pkg/remote_runtime.go">remote_runtime.go</a></li>
+<li>kubelet 运行时管理：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kuberuntime/kuberuntime_manager.go">kuberuntime_manager.go</a></li>
+<li>官方文档：<a href="https://kubernetes.io/docs/concepts/containers/cri/">Container Runtime Interface (CRI)</a> / <a href="https://kubernetes.io/docs/setup/production-environment/container-runtimes/">Container Runtimes</a></li>
+<li>历史：<a href="https://kubernetes.io/blog/2020/12/02/dont-panic-kubernetes-and-docker/">Don’t Panic: Kubernetes and Docker</a> / <a href="https://kubernetes.io/blog/2022/02/17/dockershim-faq/">dockershim FAQ</a> / <a href="https://github.com/kubernetes/enhancements/tree/master/keps/sig-node/2221-remove-dockershim">KEP-2221 Remove dockershim</a></li>
+</ul>
+<h3 id="containerd-与-shim"><a class="header" href="#containerd-与-shim">containerd 与 shim</a></h3>
+<ul>
+<li>containerd v2.4.2：<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/runtime-v2.md">runtime v2 设计文档</a> / <a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/cri/architecture.md">CRI 插件架构</a> / <a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/cri/config.md">CRI 配置</a></li>
+<li>shim 启动：<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/core/runtime/v2/shim_manager.go">shim_manager.go</a> / <a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/pkg/shim/shim.go">pkg/shim</a> / <a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/cmd/containerd-shim-runc-v2/manager/manager_linux.go">runc shim manager</a></li>
+<li>CRI 实现：<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/sandbox_run.go">sandbox_run.go</a> / <a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/container_create.go">container_create.go</a> / <a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/config/config.go">CRI 配置解析</a></li>
+</ul>
+<h3 id="runc"><a class="header" href="#runc">runc</a></h3>
+<ul>
+<li>runc v1.5.3：<a href="https://github.com/opencontainers/runc/blob/46365c62967c76a765a5e347f48f0c7b3b571fe9/create.go">create.go</a> / <a href="https://github.com/opencontainers/runc/blob/46365c62967c76a765a5e347f48f0c7b3b571fe9/utils_linux.go">utils_linux.go</a> / <a href="https://github.com/opencontainers/runc/blob/46365c62967c76a765a5e347f48f0c7b3b571fe9/init.go">init.go</a> / <a href="https://github.com/opencontainers/runc/blob/46365c62967c76a765a5e347f48f0c7b3b571fe9/libcontainer/init_linux.go">libcontainer/init_linux.go</a> / <a href="https://github.com/opencontainers/runc/blob/46365c62967c76a765a5e347f48f0c7b3b571fe9/libcontainer/container_linux.go">libcontainer/container_linux.go</a></li>
+</ul>
+<h3 id="runtimeclass"><a class="header" href="#runtimeclass">RuntimeClass</a></h3>
+<ul>
+<li>API：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/node/v1/types.go">node/v1/types.go</a></li>
+<li>kubelet：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/runtimeclass/runtimeclass_manager.go">runtimeclass_manager.go</a></li>
+<li>admission：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/plugin/pkg/admission/runtimeclass/admission.go">runtimeclass/admission.go</a></li>
+<li>设计：<a href="https://github.com/kubernetes/enhancements/tree/master/keps/sig-node/585-runtime-class">KEP-585 RuntimeClass</a> / <a href="https://github.com/kubernetes/enhancements/tree/master/keps/sig-node/688-pod-overhead">KEP-688 Pod Overhead</a></li>
+<li>官方文档：<a href="https://kubernetes.io/docs/concepts/containers/runtime-class/">RuntimeClass</a> / <a href="https://kubernetes.io/docs/concepts/scheduling-eviction/pod-overhead/">Pod Overhead</a></li>
+</ul>
+<h3 id="生态"><a class="header" href="#生态">生态</a></h3>
+<ul>
+<li><a href="https://github.com/cri-o/cri-o">CRI-O</a>（<a href="https://github.com/cri-o/cri-o/blob/c11d3e70365ab7a671894258601d54091ec384cf/docs/crio.conf.5.md">crio.conf 文档</a>）</li>
+<li><a href="https://gvisor.dev/docs/user_guide/containerd/quick_start/">gVisor / runsc</a></li>
+<li><a href="https://katacontainers.io/">Kata Containers</a></li>
+<li><a href="https://github.com/containerd/runwasi">runwasi（Wasm shim）</a></li>
+</ul>
+<h3 id="本-wiki-相关页面"><a class="header" href="#本-wiki-相关页面">本 wiki 相关页面</a></h3>
+<ul>
+<li><a href="./kubelet原理.html">Kubelet 原理</a></li>
+<li><a href="../../Linux_Container/容器知识备忘录.html">容器知识备忘录</a></li>
+<li><a href="../../Linux_Container/OverlayFS与镜像层.html">OverlayFS 与镜像层</a>（镜像分层与联合挂载的内核机制）</li>
+<li><a href="../../Linux_Container/镜像快照器snapshotter.html">镜像快照器 Snapshotter</a>（containerd 如何把层变成 rootfs）</li>
+<li><a href="../../Linux_Container/镜像懒加载.html">镜像懒加载</a>（stargz / Nydus / SOCI / OverlayBD）</li>
+<li><a href="../Networking/cni详解.html">CNI 详解</a></li>
+<li><a href="../../AI_Infrastructure/Agents/agent-sandbox.html">Agent Sandbox</a>（沙箱运行时与 gVisor/Kata 的实践）</li>
+<li><a href="../../Virtualization/沙箱与虚拟化技术全景.html">沙箱与虚拟化技术全景：KVM、QEMU、Firecracker、Kata、gVisor</a>（本文 runsc/kata 两种 runtimes 的隔离边界、开销与选型）</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../../docs/Cloud_Native/Kubernetes/Node_Runtime/k8s之pleg.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../../scheduling.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../../docs/Cloud_Native/Kubernetes/Node_Runtime/k8s之pleg.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../../scheduling.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../../highlight-abc7f01d.js"></script>
+        <script src="../../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

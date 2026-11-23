@@ -1,0 +1,702 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>训练失败与自愈：首发原因、恢复单元与失败预算 - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../../searchindex-dfe22a86.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../../toc-d9461900.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/AI_Infrastructure/Distributed_Training/failure-self-healing.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="训练失败与自愈首发原因恢复单元与失败预算"><a class="header" href="#训练失败与自愈首发原因恢复单元与失败预算">训练失败与自愈：首发原因、恢复单元与失败预算</a></h1>
+<blockquote>
+<p><strong>结论先行</strong>：训练失败排查的第一步不是「看 NCCL」，而是<strong>确定哪一层先坏、谁是首发</strong>。
+分布式训练里，一个 rank 的退出会让其余 rank 在 collective 上超时，于是所有 rank 都打印同一句
+<code>NCCL timeout</code>；这句话是<strong>症状</strong>，不是原因。恢复单元也不是「重启失败的 Pod」——它由 membership 的粒度决定：
+一个 DDP/FSDP 组通常必须整组重建，LWS 的 group、Volcano 的 Job、MPIJob 的 launcher 各有自己的边界。
+最后，失败预算必须同时覆盖「会计数的失败」和「不计数的不前进」（hang、慢节点、节点失联）。</p>
+</blockquote>
+<p>本页先给故障分层与可观测信号，再给首发归因方法，然后逐框架对照恢复语义，最后落到可执行的预算模型与决策表。</p>
+<blockquote>
+<p>专题导航：<a href="./overview.html">总纲</a> · <a href="./workload-modeling.html">工作负载建模</a> · <a href="../../../Machine_Learning/Distributed_Training/startup-communication.html">启动通信</a> · <a href="./failure-self-healing.html">故障自愈</a> · <a href="./checkpoint-preemption.html">Checkpoint</a> · <a href="./rl-post-training.html">RL</a></p>
+</blockquote>
+<h2 id="一故障分层与可观测信号"><a class="header" href="#一故障分层与可观测信号">一、故障分层与可观测信号</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>层</th><th>典型故障</th><th>强信号（先看）</th><th>弱/易误判信号</th></tr>
+</thead>
+<tbody>
+<tr><td>调度</td><td>配额不足、亲和/拓扑不满足、gang 不齐</td><td>Pod <code>Pending</code> + <code>FailedScheduling</code>；PodGroup <code>Pending</code></td><td>「容器起不来」</td></tr>
+<tr><td>容器启动</td><td>镜像拉取、RBAC/PSA、配置、端口、DNS</td><td><code>ErrImagePull</code>/<code>ImagePullBackOff</code>、<code>CreateContainerConfigError</code>、秒级 exit 1/2</td><td>「训练脚本 bug」</td></tr>
+<tr><td>成员加入</td><td>rendezvous 超时、TCPStore 不可达、rank 缺失</td><td>全体 rank 同时卡在同一行 init；join 600s 到期</td><td>「NCCL 挂了」</td></tr>
+<tr><td>计算/通信</td><td>collective mismatch、单 rank 卡死、慢节点、watchdog</td><td>有 rank 已退出、其余 rank 报 timeout；DDP 静态图不匹配</td><td>「网络抖动」</td></tr>
+<tr><td>进程退出</td><td>OOMKilled 137、CUDA assert 1、SIGSEGV 139、SIGTERM 143</td><td><code>lastState.terminated.exitCode/reason</code>、torchrun 的 <code>exitcode :</code> 行</td><td>只看最后一个 rank 的栈</td></tr>
+<tr><td>节点</td><td>NotReady、kubelet 失联、磁盘满、驱逐</td><td>Node conditions + taint、<code>Evicted</code></td><td>「Pod 被删了」</td></tr>
+<tr><td>设备</td><td>Xid、ECC、掉卡、NVLink/IB 降级、MIG 异常</td><td><code>dmesg</code> 的 <code>NVRM: Xid</code>、<code>nvidia-smi -q</code>、<code>rdma statistic</code></td><td>「NCCL 超时」</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="11-启动失败"><a class="header" href="#11-启动失败">1.1 启动失败</a></h3>
+<ul>
+<li><strong>调度失败</strong>：<code>Pod.status.phase=Pending</code> + <code>FailedScheduling</code> 事件。Volcano 在成员不齐时给出
+<code>Not enough valid tasks for gang-scheduling, valid: %d, min: %d</code>。LWS 的 <code>RecreateGroupAfterStart</code> 对无法放置的组
+不重建，而是报 <code>GroupUnschedulable</code> warning，并把 <code>Progressing</code> 置为 <code>False</code>。</li>
+<li><strong>镜像/权限/配置</strong>：kubelet 侧留 <code>ErrImagePull</code>/<code>ImagePullBackOff</code>；容器秒退但 <code>restartCount</code> 快速增长，
+<code>reason=Error</code>、<code>exitCode=1/2</code>。这类故障适合用 <code>podFailurePolicy</code> 的 <code>Ignore</code> 或直接 <code>FailJob</code> 区分，
+避免和「训练真的跑了一会儿才崩」共用同一预算。</li>
+<li><strong>端口冲突</strong>：torchrun 的 c10d rendezvous 在 <code>--rdzv-endpoint</code> 指定的 <code>host:port</code> 上起 TCPStore，
+未写端口时默认 29400。多租户共用节点/共用 headless Service 时端口冲突表现为「master 起不来、worker 连不上」，
+先看谁先报。</li>
+<li><strong>DNS</strong>：rendezvous 依赖 Pod 可解析。JobSet 默认 <code>publishNotReadyAddresses=true</code>，即不待 Ready 就发布 DNS，
+这正是为了让成员能互相找到；若被显式关掉，会表现为「rendezvous 时好时坏」。</li>
+<li><strong>NCCL/IB 初始化失败</strong>：打开 <code>NCCL_DEBUG=INFO NCCL_DEBUG_SUBSYS=INIT,BOOTSTRAP,NET</code>。初始化期卡住看
+BOOTSTRAP/NET，计算期卡住看 WARN 与 watchdog；两者是不同问题。</li>
+</ul>
+<h3 id="12-成员加入超时"><a class="header" href="#12-成员加入超时">1.2 成员加入超时</a></h3>
+<ul>
+<li><strong>rendezvous 超时</strong>：<code>RendezvousTimeout</code> 四个维度默认值是 join=600s、last_call=30s、close=30s、heartbeat=5s；
+到期抛 <code>RendezvousTimeoutError</code>。它是「整组一起超时」，日志里 N 个 rank 几乎同时失败——这是<strong>症状不是原因</strong>。</li>
+<li><strong>TCPStore 不可达</strong>：master 端口不通、Pod 网络不通、master 自己被重启；表现为 worker 在 init 阶段重试后超时。</li>
+<li><strong>rank 缺失 / Pod Pending</strong>：<code>--nnodes=MIN:MAX</code> 下 rendezvous 只等 <code>MIN</code>，剩余节点进入 wait list；
+已在运行的 agent 每次 monitor 都能看到 <code>num_nodes_waiting()</code>，但这<strong>不会</strong>触发重启。</li>
+<li><strong>慢启动</strong>：镜像大、JIT 编译、数据预热导致某些 rank 迟迟不来；rendezvous 层面只能等。平台侧可用
+Kueue 的 <code>waitForPodsReady.timeout</code> 把「迟迟不就绪」变成一个可计费事件。</li>
+<li><strong>LWS/MPI 的启动顺序</strong>：LWS <code>StartupPolicy</code> 有 <code>LeaderReady</code>（leader Ready 后才建 worker）与 <code>LeaderCreated</code>
+（leader 创建即建 worker）；MPI 侧有 <code>LauncherCreationPolicy=WaitForWorkersReady</code>，让 launcher 在所有 worker
+Ready 后才创建。选错策略的典型症状是「launcher 先起、mpirun 连不上、然后整组被 activeDeadline 杀掉」。</li>
+</ul>
+<h3 id="13-hang"><a class="header" href="#13-hang">1.3 Hang</a></h3>
+<ul>
+<li><strong>collective mismatch</strong>：DDP 在第二次迭代发现上一轮 reduce 没完成，直接报
+<code>Expected to have finished reduction in the prior iteration before starting a new one</code>，并提示是未使用参数导致。
+这类「逻辑层 mismatch」通常伴随 <code>find_unused_parameters</code> 相关栈，而不是 NCCL 错误。</li>
+<li><strong>NCCL watchdog</strong>：只有「已经入队的 collective」才有超时计时；超时文本在本快照为
+<code>Watchdog caught collective operation timeout: NCCL operation timed out</code>。
+torchrun 默认给 worker 注入 <code>TORCH_NCCL_ASYNC_ERROR_HANDLING=1</code>，所以「异步错误 → 进程主动 abort」这条链路是开着的。</li>
+<li><strong>某 rank 卡住 / 慢节点</strong>：没有任何内核级信号。torchrun 的监控只看<strong>本地子进程是否退出</strong>；进程活着就返回
+<code>HEALTHY</code>，因此「训练不动但不报错」不会被 torchrun 发现。</li>
+<li><strong>CPU 侧 hang / D 状态</strong>：唯一内建的兜底是 Linux 不可中断睡眠（D-state）检测，需显式开
+<code>TORCHELASTIC_UNINTERRUPTIBLE_STATE_TIMEOUT</code>；一旦判定就报
+<code>stuck in uninterruptible sleep (D-state) ... marking worker group UNHEALTHY and disabling restarts</code>。
+注意它是「禁用重启」而不是「重启」——卡住的进程还占着 GPU/NIC 内核资源。</li>
+<li><strong>死锁</strong>：应用层（NCCL 集合顺序不一致）通常表现为部分 rank 卡在某个 collective、部分 rank 已经到下一个；
+需要 <code>NCCL_DEBUG=INFO</code> 看每个 rank 最后入队的 op 序号。</li>
+</ul>
+<h3 id="14-单-rank-退出"><a class="header" href="#14-单-rank-退出">1.4 单 rank 退出</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>退出码</th><th>语义</th><th>关键字段</th><th>恢复含义</th></tr>
+</thead>
+<tbody>
+<tr><td>137</td><td><code>OOMKilled</code>（SIGKILL）</td><td><code>reason: OOMKilled</code>（kubelet 判定）</td><td>可重试，但必须同时下调 batch/加内存，否则进入 OOM 循环</td></tr>
+<tr><td>139</td><td>SIGSEGV</td><td>torchrun 写成 <code>exitcode : -11 (SIGSEGV)</code></td><td>多半不可重试（坏指针/驱动 bug）</td></tr>
+<tr><td>143</td><td>SIGTERM</td><td><code>exitcode : -15 (SIGTERM)</code></td><td>通常是<strong>别人杀它</strong>（控制器驱逐、agent 停机），不是首发</td></tr>
+<tr><td>1 / 2</td><td>应用异常 / 用法错误</td><td>栈在 stderr</td><td>需按错误内容判断</td></tr>
+</tbody>
+</table>
+</div>
+<p>Kubeflow legacy v1 的 <code>ExitCode</code> 重启策略把这套经验固化成了规则：永久错误 <code>139/128/127/126/2/1</code>，
+可重试错误 <code>143/137/130/138</code>。torchrun 的失败报告同时给 <code>exitcode</code> 与信号名，且区分「进程自己退出」和
+「被信号杀」；这是区分首发与连锁的第一手材料。</p>
+<h3 id="15-节点故障"><a class="header" href="#15-节点故障">1.5 节点故障</a></h3>
+<ul>
+<li><strong>Node conditions</strong>：<code>Ready/MemoryPressure/DiskPressure/PIDPressure</code>；<code>Ready=False/Unknown</code> 会打
+<code>node.kubernetes.io/not-ready</code> taint。</li>
+<li><strong>判定时延</strong>：node controller 依赖 NodeStatus 与 NodeLease 两种心跳，超时先置 <code>NodeReady=ConditionUnknown</code>；
+默认 <code>NodeMonitorGracePeriod</code> 在本版本是 <strong>50s</strong>。所以「节点挂了」到「Pod 变成 Failed/被删」通常有数分钟延迟，
+训练侧应先表现为 hang/超时。</li>
+<li><strong>Pod 驱逐时延</strong>：默认 toleration 对 <code>not-ready:NoExecute</code>/<code>unreachable:NoExecute</code> 各给 300s。</li>
+<li><strong>驱逐</strong>：<code>Evicted</code> 的 Pod 处于 <code>Failed</code>，默认<strong>会计入</strong> Job 的失败计数；要把它排除，只能用
+<code>podFailurePolicy</code> 匹配 <code>DisruptionTarget</code> 条件后 <code>Ignore</code>。</li>
+<li><strong>磁盘满</strong>：<code>DiskPressure</code> → kubelet 驱逐；同时 checkpoint 写入失败会先以应用错误出现，别只看 K8s 侧。</li>
+</ul>
+<h3 id="16-设备故障"><a class="header" href="#16-设备故障">1.6 设备故障</a></h3>
+<p>NVIDIA 的 Xid 是驱动打到内核日志的错误码，格式（官方文档示例）：
+<code>NVRM: GPU at 0000:03:00: GPU-...</code> 后跟 <code>NVRM: Xid (0000:03:00): 14, Channel 00000001</code>。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Xid</th><th>含义</th><th>处理方向</th></tr>
+</thead>
+<tbody>
+<tr><td>48</td><td>DBE（双位）ECC 错误</td><td>该卡不可信，drain + reset/RMA</td></tr>
+<tr><td>63/64</td><td>ECC page retirement / row remapping</td><td>记录并观察；容量/带宽可能已降级</td></tr>
+<tr><td>74</td><td>NVLink 错误</td><td>整机（含 NVSwitch）排查，非单 Pod</td></tr>
+<tr><td>79</td><td>GPU has fallen off the bus</td><td>节点级故障，必须换节点</td></tr>
+<tr><td>94 / 95</td><td>contained / uncontained ECC error</td><td>94 可能只需重启进程；95 需整卡复位</td></tr>
+<tr><td>119/120</td><td>GSP RPC timeout / GSP error</td><td>常见为掉卡前兆</td></tr>
+</tbody>
+</table>
+</div>
+<p>采集方式：<code>dmesg -T | grep -i xid</code>、<code>nvidia-smi -q</code>（ECC 模式、retired pages、remapped rows）、
+<code>rdma statistic</code>（<code>rnr_nak_retry_err</code>、<code>local_ack_timeout_err</code> 等增长即链路劣化）、
+<code>mlxlink -d &lt;mst_device&gt;</code> 看链路宽度/速率/误码。设备故障的第一手证据永远在节点上，不在 Pod 事件里；
+Pod 侧只会看到 <code>CUDA error</code> 或 NCCL <code>remote process exited</code>。</p>
+<h2 id="二首发-vs-连锁"><a class="header" href="#二首发-vs-连锁">二、首发 vs 连锁</a></h2>
+<p><strong>为什么「所有 rank 都报 NCCL timeout」不等于 NCCL 有问题</strong>：NCCL 自己就把这条错误定义成二义性的。
+<code>ncclGetErrorString(ncclRemoteError)</code> 返回的字面量是 <code>remote process exited or there was a network error</code>，
+<code>ncclUnhandledCudaError</code> 返回 <code>unhandled cuda error (run with NCCL_DEBUG=INFO for details)</code>。
+也就是说：<strong>对端进程先死</strong>与<strong>网络先坏</strong>在 NCCL 看来是同一个错误。剩下 N-1 个 rank 的「timeout」是
+「有人在集合通信里缺席」的必然结果，属于连锁症状。</p>
+<p>三条独立的「谁先」证据链，按可靠性排序：</p>
+<ol>
+<li><strong>退出码与信号</strong>：<code>exitcode : 137/139/1</code> 是进程自己死；<code>-15 (SIGTERM)</code>/<code>-9</code> 是被别人杀
+（torchrun 停机、控制器删除）。有 <code>137/139</code> 的那个 rank 才是首发候选。</li>
+<li><strong>时间戳</strong>：torchrun 的 <code>ChildFailedError</code> 报告按 <code>timestamp</code> 取最早失败者，并明确标注
+<code>Root Cause (first observed failure)</code>。容器场景下这个 timestamp 精度有限，需配
+<code>kubectl logs --timestamps</code> 或日志采集的纳秒时间。</li>
+<li><strong>节点侧</strong>：<code>kubectl describe pod</code> 的 <code>Last State</code>、<code>Events</code>，<code>kubectl get events --sort-by=.lastTimestamp</code>，
+<code>kubectl describe node</code> 的 conditions/taints，<code>dmesg</code> 的 Xid。Xid 79/48 出现时，前面所有 NCCL 报错都不重要。</li>
+</ol>
+<p><strong>诊断顺序（建议固化成 runbook）</strong>：</p>
+<ol>
+<li>定「谁先退出」：按 <code>(exitCode 非 0 且非 -15/-9) ∧ 最早 timestamp</code> 找候选；没有候选说明是 hang。</li>
+<li>定「谁先丢心跳」：<code>kubectl get pods -o wide</code> 看 <code>restartCount</code>、phase 变化时间；Node conditions/lease。</li>
+<li>定「是不是同一个进程反复死」：<code>restartCount</code> 与 <code>TORCHELASTIC_RESTART_COUNT</code> 对照，
+区分「组重启 N 次」与「同一 rank 死 N 次」。</li>
+<li>只有前三步都指向通信层，才看 NCCL：<code>NCCL_DEBUG=INFO</code> + 各 rank 最后入队的 op/seq，
+比较各 rank 的 collective 序列是否一致（不一致 → 应用层 mismatch；一致但缺人 → 有人退出）。</li>
+<li>若 NCCL 报的是 IB 完成错误，按 NCCL 自带的 HINT 分流：
+<code>IBV_WC_RETRY_EXC_ERR</code> → <code>NCCL_IB_TIMEOUT</code> 过短；
+<code>IBV_WC_LOC_PROT_ERR</code> → ACS 打开破坏 GPUDirect RDMA；
+<code>IBV_WC_WR_FLUSH_ERR</code> → 同机 NIC 互不通。</li>
+<li>最后才怀疑「是不是 NCCL 版本/参数」——这一步的证据强度最低。</li>
+</ol>
+<blockquote>
+<p><strong>关键判断</strong>：「所有 rank 同时报同一句 timeout」几乎总是单点退出的连锁反应；
+「各 rank 报不同 op/不同阶段」才更像配置或 mismatch。</p>
+</blockquote>
+<pre class="mermaid">flowchart TB
+    A["训练异常"] --&gt; B{"有 rank 先退出?"}
+    B -- "是" --&gt; C["看 exit code / 时间戳 / 节点事件"]
+    C --&gt; D{"137 OOMKilled?"}
+    D -- "是" --&gt; E["调资源 + 连续 OOM 熔断"]
+    D -- "否" --&gt; F{"139 / CUDA error?"}
+    F -- "是" --&gt; G["隔离节点/设备，整 Job 失败"]
+    F -- "否" --&gt; H{"143 SIGTERM?"}
+    H -- "是" --&gt; I["查驱逐/抢占/控制器来源"]
+    H -- "否" --&gt; J["按应用错误处理，不重试"]
+    B -- "否" --&gt; K{"Node NotReady / Xid?"}
+    K -- "是" --&gt; L["换节点 + 隔离设备"]
+    K -- "否" --&gt; M["hang：查 rendezvous / NCCL / 慢节点"]
+    M --&gt; N["对比各 rank 最后入队的 collective"]
+</pre>
+
+<h2 id="三框架编排的恢复语义"><a class="header" href="#三框架编排的恢复语义">三、框架/编排的恢复语义</a></h2>
+<h3 id="31-torchrun-elastic"><a class="header" href="#31-torchrun-elastic">3.1 torchrun elastic</a></h3>
+<ul>
+<li><strong>恢复单元 = worker group（本机全部 local worker）</strong>。<code>SimpleElasticAgent._invoke_run</code> 的循环：
+<code>UNHEALTHY</code>/<code>FAILED</code> → 若 <code>_remaining_restarts &gt; 0</code> 则 <code>_restart_workers</code>（整组重建），否则停机返回。</li>
+<li><strong>成员变化也会整组重启，但不消耗重试预算</strong>：<code>HEALTHY</code> 时若 <code>num_nodes_waiting() &gt; 0</code> 就重启，
+代码注释明确写 <code>membership changes do not count as retries</code>。这也解释了跨节点传播：某台机器重启后重新
+rendezvous，其它 agent 在下一个 monitor tick 看到 waiting node，随即重启本地 worker。</li>
+<li><strong>预算是 <code>--max-restarts</code>，且 CLI 默认 0</strong>；以代码方式构造 <code>WorkerSpec</code> 时默认是 3。
+「用 torchrun 起、以为有 3 次重试」是非常常见的误判。</li>
+<li><strong>可观测</strong>：worker 环境里注入 <code>TORCHELASTIC_RESTART_COUNT</code>/<code>TORCHELASTIC_MAX_RESTARTS</code>/<code>TORCHELASTIC_RUN_ID</code>
+以及 <code>TORCHELASTIC_RESTART_COUNT</code>（已用次数）。agent 日志里有
+<code>Worker group FAILED. N/M attempts left; will restart worker group</code>。</li>
+<li><strong>没有心跳/进度检测</strong>：进程活着就是 <code>HEALTHY</code>，所以容器级 liveness 与 torchrun 都发现不了 hang；
+必须外部 watchdog（应用自报 step、或 <code>TORCHELASTIC_UNINTERRUPTIBLE_STATE_TIMEOUT</code> 覆盖 D 状态）。</li>
+</ul>
+<h3 id="32-jobset"><a class="header" href="#32-jobset">3.2 JobSet</a></h3>
+<ul>
+<li><strong>失败判定来自子 Job 的 <code>JobFailed</code> condition 的 reason/message</strong>，规则按顺序匹配 <code>onJobFailureReasons</code>
+（如 <code>BackoffLimitExceeded</code>、<code>DeadlineExceeded</code>）与 <code>onJobFailureMessagePatterns</code>（RE2 正则），
+可再按 <code>targetReplicatedJobs</code> 限定。</li>
+<li><strong>五个动作</strong>：<code>FailJobSet</code>、<code>RestartJobSet</code>、<code>RestartJobSetAndIgnoreMaxRestarts</code>、<code>RestartJob</code>、
+<code>RestartJobAndIgnoreMaxRestarts</code>。<code>RestartJob</code> 是「只重建失败的那个 Job」，其余 Job 不动——这是<strong>子组恢复</strong>
+在 JobSet 里的落点。</li>
+<li><strong>默认行为容易踩坑</strong>：没写 <code>failurePolicy</code> → 直接 <code>Failed</code>，不重启；写了 <code>failurePolicy</code> 但没有规则命中 →
+默认 <code>RestartJobSet</code>。</li>
+<li><strong>预算是 <code>maxRestarts</code></strong>，比对的是 <code>restartsCountTowardsMax + Σ jobRestartsCountTowardsMax</code>。
+<code>maxRestarts: 0</code> 等价于「第一条命中规则即失败」。超限时 reason 为 <code>ReachedMaxRestarts</code>，
+message 为 <code>jobset failed due to reaching max number of restarts</code>。</li>
+<li><strong>重启策略</strong> <code>restartStrategy</code>：<code>Recreate</code>（默认，边删边建）、<code>BlockingRecreate</code>（全删再建）、
+<code>InPlaceRestart</code>（原地重启健康 Pod、只在 Job 真失败时回退到 Recreate）。</li>
+<li><strong>SuccessPolicy</strong>：<code>All</code>/<code>Any</code> + <code>targetReplicatedJobs</code>，用于「launcher 成功即整组成功」这类拓扑。</li>
+<li><strong>deadline 会被全局重启重置</strong>：<code>resetStartTimeOnGlobalRestart</code> 会让 <code>activeDeadlineSeconds</code> 变成「每次尝试」的
+上限，而不是总预算；要总 deadline 必须在平台层自己记。</li>
+</ul>
+<h3 id="33-lws"><a class="header" href="#33-lws">3.3 LWS</a></h3>
+<ul>
+<li><code>restartPolicy</code> 默认 <code>RecreateGroupOnPodRestart</code>：<strong>任意一个 Pod 被重建或任意容器重启，整组重建</strong>；
+<code>RecreateGroupAfterStart</code> 是它的「等首轮稳定版」；<code>None</code> 退化为 StatefulSet 语义（只重启出问题的 Pod）。
+所以「单 Pod 重启会不会带走整组」的答案取决于这个字段，默认会。</li>
+<li><strong>预算是可选的</strong>：<code>maxGroupRestarts</code> 未设置时<strong>无限重建</strong>；设置后耗尽即终止该组、保留 leader Pod 等人工处理，
+用 <code>leaderworkerset.sigs.k8s.io/recover=true</code> 重置预算。</li>
+<li><strong>退避也是可选的</strong>：<code>restartBackoff</code> 语义是「组必须存在至少 <code>min(base*2^count, cap)</code> 才允许再重建」，
+base 默认 10s、cap 默认 300s，从 leader 创建时间起算。</li>
+<li><strong>执行点</strong>：<code>count &gt;= *maxGroupRestarts</code> 时 <code>terminateExhaustedGroup</code>。「先算预算再退避」的顺序意味着：
+预算耗尽优先于退避，不会无限退避。</li>
+</ul>
+<h3 id="34-volcano"><a class="header" href="#34-volcano">3.4 Volcano</a></h3>
+<ul>
+<li><strong><code>maxRetry</code> 在 Job 与 Task 两级</strong>，Job 级默认 3。</li>
+<li><strong>重试计数发生在状态机的动作里</strong>：<code>RestartJob/RestartTask/RestartPod/RestartPartition</code> 都会 <code>RetryCount++</code>
+并进入 <code>Restarting</code>；<code>Restarting</code> 状态下 <code>RetryCount &gt;= maxRetry</code> 即 <code>Failed</code>。</li>
+<li><strong>谁来触发重试：<code>lifecyclePolicy</code></strong>。策略可以按 event（<code>PodFailed</code>/<code>PodEvicted</code>/…）或 <strong>exitCode</strong> 指定 action，
+action 默认 <code>None</code>。<strong>不配 policies 时 Volcano 不会因为 Pod Failed 自动重建同名 Pod</strong>——控制器只对
+「不存在的 Pod 名」建 Pod，而失败会累积到 Running 态的终局判定。</li>
+<li><strong>gang 语义</strong>：Job 的 <code>minAvailable</code>（默认等于 tasks 副本和）与 PodGroup 的 <code>minMember</code> 共同定义原子性；
+gang 插件在 <code>valid &lt; minAvailable</code> 时直接不调度并给出事件文案。<strong>推论</strong>：gang 把「部分失败」放大成
+「整组不可调度」，这既是保护也是故障放大器。</li>
+<li>重试是<strong>全量重建</strong>：<code>RestartJob</code> 会按 <code>podRetainPhase</code> 删 Pod，最后一次重试才保留 Failed/Succeeded Pod 供取证。</li>
+</ul>
+<h3 id="35-training-operatorlegacy-v1与-mpijob"><a class="header" href="#35-training-operatorlegacy-v1与-mpijob">3.5 Training Operator（legacy v1）与 MPIJob</a></h3>
+<ul>
+<li><strong>replica 级 <code>restartPolicy</code></strong>：<code>Always/OnFailure/Never/ExitCode</code>，覆盖 PodTemplate 的设置；
+<code>ExitCode</code> 按退出码分流。语义差异决定恢复单元：
+<ul>
+<li><code>ps</code>（parameter server）建议 <code>Always</code>：它本不该退出，重启即可；</li>
+<li><code>chief</code>/<code>worker</code> 建议 <code>OnFailure</code>；<code>chief</code> 负责编排与 checkpoint，chief 掉 = 整个作业语义上要重启；</li>
+<li><code>Never</code> 会把任何非零退出当成<strong>永久失败</strong>，等于放弃自愈。</li>
+</ul>
+</li>
+<li><strong><code>runPolicy</code></strong>：<code>cleanPodPolicy</code>（默认 <code>None</code>）、<code>ttlSecondsAfterFinished</code>、<code>activeDeadlineSeconds</code>、
+<code>backoffLimit</code>。<code>backoffLimit</code> 的判定混了两条路：失败 Pod 计数 + 容器 <code>restartCount</code> 之和
+（仅 OnFailure/Always/ExitCode），并显式混入 <code>WorkQueue.NumRequeues</code> 作为「已重试次数」。</li>
+<li><strong>Trainer V2 换了恢复单元</strong>：<code>TrainJob</code> 只有 <code>activeDeadlineSeconds</code>（超时 → <code>DeadlineExceeded</code>），
+底层用 JobSet 承载；MPI runtime 用 <code>successPolicy: targetReplicatedJobs: [launcher]</code> + <code>dependsOn: status Ready</code>
+表达「launcher 成功即成功、node 先 Ready 再起 launcher」。</li>
+<li><strong>MPIJob 的恢复边界 = launcher 这个 K8s Job</strong>：launcher 以 Job 形式创建，<code>backoffLimit</code>/<code>activeDeadlineSeconds</code>
+直接取自 <code>runPolicy</code>，并设置 <code>podReplacementPolicy: Failed</code>。worker 是<strong>裸 Pod</strong>，只在「不存在」时补建；
+<strong>Failed 的 worker Pod 不会被重建</strong>——launcher 的 mpirun 于是等不到对端而挂住，只能靠
+<code>activeDeadlineSeconds</code> 收场。失败原因从 launcher Job 的 <code>JobFailed</code> condition 反填到 MPIJob。</li>
+</ul>
+<h3 id="36-k8s-job大多数编排器的底座"><a class="header" href="#36-k8s-job大多数编排器的底座">3.6 K8s Job（大多数编排器的底座）</a></h3>
+<ul>
+<li><code>backoffLimit</code> 默认 6；设了 <code>backoffLimitPerIndex</code>（仅 Indexed）时默认变成 2147483647。</li>
+<li><code>podFailurePolicy</code> 需要 <code>restartPolicy: Never</code>（校验强制）；<code>Ignore</code> 不增加 <code>.status.failed</code>，
+<code>Count</code> 才增加。控制器侧只有 <code>countFailed</code> 的 Pod 才进 <code>uncountedStatus.Failed</code>。</li>
+<li><code>backoffLimitPerIndex</code> + <code>maxFailedIndexes</code>：把「重试」从作业级降到 index 级，失败 index 数超限则整 Job 失败；
+每个 index 的失败次数记在 Pod 注解 <code>batch.kubernetes.io/job-index-failure-count</code>。</li>
+<li><code>successPolicy</code> 只对 Indexed Job 生效，满足即终止其余 Pod。</li>
+<li><strong>哪些故障计一次重试</strong>：Pod 进入 <code>Failed</code> 且策略判定 <code>countFailed</code> 时 +1；容器内重启（<code>OnFailure</code>）<strong>不计</strong>；
+被驱逐（<code>Evicted</code>）默认计；<code>activeDeadlineSeconds</code> 到期不是「重试」而是直接失败
+（reason <code>DeadlineExceeded</code>）。</li>
+</ul>
+<h3 id="37-恢复单元对照"><a class="header" href="#37-恢复单元对照">3.7 恢复单元对照</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>编排器</th><th>默认恢复单元</th><th>触发条件</th><th>预算字段</th><th>成员变化是否计费</th></tr>
+</thead>
+<tbody>
+<tr><td>torchrun</td><td>本机 worker group（全体 rank 重建 PG）</td><td>本地 worker 失败 / 新节点加入</td><td><code>--max-restarts</code>（默认 0）</td><td>否</td></tr>
+<tr><td>JobSet</td><td>JobSet 全局 或 单个子 Job</td><td>子 Job <code>JobFailed</code> 命中规则</td><td><code>failurePolicy.maxRestarts</code></td><td>计入同一池</td></tr>
+<tr><td>LWS</td><td>整个 group</td><td>任一 Pod/容器重启</td><td><code>maxGroupRestarts</code>（默认无限）</td><td>不适用</td></tr>
+<tr><td>Volcano</td><td>Job / Task / Pod / Partition</td><td><code>lifecyclePolicy</code> 指定的 event/exitCode</td><td><code>maxRetry</code>（默认 3）</td><td>不适用</td></tr>
+<tr><td>Training Operator v1</td><td>单 replica</td><td><code>restartPolicy</code></td><td><code>backoffLimit</code></td><td>不适用</td></tr>
+<tr><td>MPIJob</td><td>launcher Job</td><td>launcher 容器失败</td><td><code>runPolicy.backoffLimit</code></td><td>不适用</td></tr>
+<tr><td>K8s Job</td><td>单 Pod / 单 index</td><td>Pod <code>Failed</code></td><td><code>backoffLimit</code> / <code>backoffLimitPerIndex</code></td><td>默认计入</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="四失败预算避免无限重试"><a class="header" href="#四失败预算避免无限重试">四、失败预算：避免无限重试</a></h2>
+<h3 id="41-分层预算模型"><a class="header" href="#41-分层预算模型">4.1 分层预算模型</a></h3>
+<p>把预算按「恢复单元」分层，每层只解决自己那一层的循环：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>层</th><th>目的</th><th>机制</th><th>对应 API</th></tr>
+</thead>
+<tbody>
+<tr><td>L0 容器内</td><td>应对单次瞬时崩溃</td><td>原地重启</td><td><code>restartPolicy: OnFailure/Always</code>（<strong>不计数</strong>，只应作为最内层兜底）</td></tr>
+<tr><td>L1 进程/组</td><td>限制「同一组失败几次」</td><td>计数 + 整组重建</td><td>torchrun <code>--max-restarts</code>；Volcano <code>maxRetry</code>；LWS <code>maxGroupRestarts</code></td></tr>
+<tr><td>L2 作业</td><td>限制「重建几次」并加退避</td><td>计数 + 指数退避</td><td>JobSet <code>maxRestarts</code> + <code>restartStrategy</code>；LWS <code>restartBackoff</code></td></tr>
+<tr><td>L3 时间</td><td>给「不失败但也不前进」封顶</td><td>墙钟 deadline</td><td><code>activeDeadlineSeconds</code>（Job/JobSet/TrainJob/MPIJob）</td></tr>
+<tr><td>L4 队列/平台</td><td>限制「反复排队」与占坑</td><td>requeue 计数 + 退避 + 停用</td><td>Kueue <code>requeuingStrategy.backoffLimitCount</code>、<code>maximumExecutionTimeSeconds</code></td></tr>
+<tr><td>L5 人</td><td>熔断后交给人</td><td>标记/隔离/告警</td><td>Volcano <code>AbortJob</code>、LWS <code>recover</code> 注解、JobSet <code>FailJobSet</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>一个可落地的判定式（推荐写进平台默认值）：</p>
+<pre><code class="language-text">允许重启  ⇔  (n_restart &lt; N_max)                     # 单次运行重启次数上限
+          ∧ (window_restarts &lt; R_max)                # 滑动窗口内重启率上限（如 1h 内 ≤3 次）
+          ∧ (now &lt; deadline)                         # 总 deadline，重启不重置
+          ∧ ¬circuit_breaker                         # 熔断：同一 exit code 连续 k 次 / 同节点连续失败 / 出现 Xid
+</code></pre>
+<ul>
+<li><strong>退避</strong>：直接用 LWS <code>restartBackoff</code> 的语义（<code>min(base*2^count, cap)</code>，从创建时间起算）或 Kueue 的
+<code>b*2^(n-1)+Rand</code>（默认 60s 起、上限 3600s）。</li>
+<li><strong>熔断</strong>：出现设备类证据（Xid 79/48/95）时立即停，不进重试循环——这类故障重试只会重复烧预算。</li>
+<li><strong>人工介入阈值</strong>：<code>maxRestarts</code> 耗尽、<code>backoffLimitCount</code> 耗尽（Kueue 会 <code>deactivate</code>）、
+LWS 预算耗尽（保留 leader 等 <code>recover=true</code>）。</li>
+</ul>
+<h3 id="42-常见配置漏洞"><a class="header" href="#42-常见配置漏洞">4.2 常见配置漏洞</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>漏洞</th><th>后果</th><th>修法</th></tr>
+</thead>
+<tbody>
+<tr><td>只设 <code>restartPolicy: Always</code>/<code>OnFailure</code></td><td>kubelet 原地重启容器，<code>Job.status.failed</code> 不增长，<code>backoffLimit</code> 永不触发；OOM/断言循环可以跑到天荒地老</td><td>把 <code>backoffLimit</code>/<code>maxRetries</code> 与 <code>restartPolicy</code> 一起设；OOM 连续 N 次熔断</td></tr>
+<tr><td>只设 <code>backoffLimit</code></td><td>hang 不产生 Pod 失败，预算不消耗；节点故障/驱逐会吃预算；无退避导致重试风暴</td><td>加 <code>activeDeadlineSeconds</code>、退避、<code>podFailurePolicy</code> 排除驱逐</td></tr>
+<tr><td>JobSet 的 deadline 会被全局重启重置</td><td><code>activeDeadlineSeconds</code> 是「每次尝试」上限，不是总预算</td><td>平台层记总 deadline；或限制 <code>maxRestarts</code></td></tr>
+<tr><td>torchrun 默认不重启</td><td><code>--max-restarts</code> 默认 0，「有 JobSet 就有重试」不成立</td><td>显式设 <code>--max-restarts</code>，并与 Job 层预算对齐</td></tr>
+<tr><td>LWS 默认无限重建 + 整组重建</td><td>单 Pod 抖动带走整组，gang 下放大成 N 卡重新排队</td><td>设 <code>maxGroupRestarts</code> + <code>restartBackoff</code></td></tr>
+<tr><td>MPIJob 的 worker 失败不计费</td><td>Failed worker 不重建，launcher hang，预算不增长</td><td>必须配 <code>activeDeadlineSeconds</code>，并监控 launcher</td></tr>
+<tr><td>Volcano 不配 <code>lifecyclePolicy</code></td><td>默认 <code>None</code>，Pod 失败不重建，直接走向终态判定</td><td>显式配 <code>PodFailed → RestartJob</code> 等策略</td></tr>
+<tr><td>Kueue <code>backoffLimitCount</code> 默认 null</td><td>无限 requeue；<code>maximumExecutionTimeSeconds</code> 只对 admitted 后计费</td><td>设 <code>backoffLimitCount</code> 与 <code>maximumExecutionTimeSeconds</code></td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="43-推荐默认值按负载调"><a class="header" href="#43-推荐默认值按负载调">4.3 推荐默认值（按负载调）</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>参数</th><th>小模型/短任务</th><th>大模型/长任务</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td>单组重启上限</td><td>3–5</td><td>2–3</td><td>大模型重启成本高，预算应更小</td></tr>
+<tr><td>时间窗重启率</td><td>1h ≤ 5 次</td><td>24h ≤ 3 次</td><td>防止「重启风暴」</td></tr>
+<tr><td>总 deadline</td><td>数小时</td><td>数天</td><td>必须覆盖「训练不前进」</td></tr>
+<tr><td>退避</td><td>10s→300s</td><td>30s→600s</td><td>与 LWS/Kueue 默认对齐</td></tr>
+<tr><td>熔断条件</td><td>同 exit code 连续 3 次</td><td>同节点/同设备连续 2 次</td><td>Xid/ECC 直接熔断</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="五故障决策表"><a class="header" href="#五故障决策表">五、故障决策表</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>故障类型</th><th>检测信号</th><th>爆炸半径</th><th>推荐恢复单元</th><th>对应 API</th><th>预算注意点</th></tr>
+</thead>
+<tbody>
+<tr><td>调度失败（配额/亲和/gang 不齐）</td><td>Pod <code>Pending</code> + <code>FailedScheduling</code>；PodGroup <code>Pending</code></td><td>整组（gang 下 0 个启动）</td><td><strong>不恢复</strong>，等容量或改队列</td><td>Kueue 队列/配额；Volcano <code>minAvailable</code>/<code>minMember</code></td><td>不计入失败；但需 <code>waitForPodsReady.timeout</code> 防永久排队</td></tr>
+<tr><td>镜像拉取失败</td><td><code>ErrImagePull</code>/<code>ImagePullBackOff</code></td><td>该 Pod → 整组</td><td>换镜像/修 registry（整 Job 重建）</td><td><code>podFailurePolicy: Ignore/FailJob</code>；JobSet <code>onJobFailureReasons</code></td><td>应 <code>FailJobSet</code> 而非重试，否则空转</td></tr>
+<tr><td>配置/权限错误（秒退 exit 1/2）</td><td><code>restartCount</code> 快涨、日志首行即错</td><td>整组</td><td><strong>不自动恢复</strong>，直接失败</td><td><code>podFailurePolicy</code> <code>onExitCodes In [1,2]</code> → <code>FailJob</code></td><td>不能与 OOM 共用预算</td></tr>
+<tr><td>rendezvous/TCPStore 超时</td><td>全体 rank 同时 init 超时（600s）</td><td>整组</td><td>整组（重建 PG）</td><td>torchrun 重启；JobSet <code>RestartJobSet</code></td><td>先确认是否有 rank 根本没被调度，否则重试无用</td></tr>
+<tr><td>单 rank OOMKilled 137</td><td><code>reason: OOMKilled</code>、exitCode 137</td><td>单 rank → 整组</td><td>进程/组（先调资源再重启）</td><td>TFJob <code>ExitCode</code>（137 可重试）；torchrun <code>--max-restarts</code></td><td>连续 137 必须熔断，否则同一预算反复烧</td></tr>
+<tr><td>CUDA assert / illegal access（1/139）</td><td>stderr 的 CUDA error、exitCode 1/139</td><td>单 rank → 整组</td><td>整 Job，且<strong>先隔离节点</strong></td><td><code>podFailurePolicy</code> <code>In [139]</code> → <code>FailJob</code></td><td>视为永久错误，不重试</td></tr>
+<tr><td>被 SIGTERM（143）</td><td>exitCode 143、<code>lastState.reason=Error</code></td><td>可能整组</td><td>先查「谁发的 SIGTERM」</td><td>视来源：驱逐/抢占/滚动更新</td><td>驱逐应 <code>Ignore</code>（<code>DisruptionTarget</code>），不计费</td></tr>
+<tr><td>集合通信 hang（watchdog 超时）</td><td>NCCL watchdog timeout、各 rank 最后 op 不同</td><td>整组</td><td>整组（重建 PG），保留首个失败证据</td><td>torchrun/JobSet 重启；MPI 靠 <code>activeDeadlineSeconds</code></td><td>没有 deadline 的 hang 永远不计费 → 必须补 L3</td></tr>
+<tr><td>慢节点（无报错、吞吐掉）</td><td>step 时间分布、<code>NCCL_DEBUG=INFO</code> 时序</td><td>整组性能</td><td>换节点（不重启进程）</td><td>平台侧 drain/反亲和；无直接 API</td><td>不在任何失败预算内，需专门检测</td></tr>
+<tr><td>Node NotReady / kubelet 失联</td><td>Node conditions + taint；Pod 数分钟后 Failed</td><td>整节点</td><td>换节点，整组重建</td><td>Pod 反亲和/拓扑分布；<code>podFailurePolicy</code> <code>Ignore</code> 驱逐</td><td>默认驱逐计费，坏节点会吃光预算</td></tr>
+<tr><td>设备故障（Xid 79/48/95）</td><td><code>dmesg</code> Xid、<code>nvidia-smi -q</code>、<code>rdma statistic</code></td><td>单卡 → 整机 → 整组</td><td>换节点 + 隔离设备</td><td>GPU Operator/设备插件健康检查；节点 drain</td><td>立即熔断，禁止重试；需人工/RMA 流程</td></tr>
+<tr><td>存储/磁盘满</td><td><code>DiskPressure</code>、写 checkpoint 失败</td><td>整节点</td><td>换节点；清理 PVC</td><td><code>emptyDir</code> sizeLimit、PVC 配额</td><td>与训练失败分开记账</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="六真实错误签名"><a class="header" href="#六真实错误签名">六、真实错误签名</a></h2>
+<p>以下文本均来自本稿核过的源码/官方文档，未做改写；<code>%s</code> 为代码中的格式占位符。</p>
+<ol>
+<li><strong>NCCL 远程对端退出/网络错误</strong>：<code>remote process exited or there was a network error</code>
+—— <code>ncclGetErrorString(ncclRemoteError)</code> 的字面量。</li>
+<li><strong>NCCL CUDA 错误（二义）</strong>：<code>unhandled cuda error (run with NCCL_DEBUG=INFO for details)</code>
+—— <code>ncclUnhandledCudaError</code> 分支。</li>
+<li><strong>collective watchdog 超时</strong>：<code>Watchdog caught collective operation timeout: NCCL operation timed out</code>
+—— <code>WorkNCCL.cpp</code>。</li>
+<li><strong>torchrun 首个失败进程</strong>：<code>failed (exitcode: %s) local_rank: %s (pid: %s) of binary: %s</code>
+—— <code>multiprocessing/api.py</code>。</li>
+<li><strong>torchrun 失败报告头</strong>：<code>Root Cause (first observed failure):</code>
+—— <code>errors/__init__.py</code>。</li>
+<li><strong>DDP 集体通信不匹配</strong>：<code>Expected to have finished reduction in the prior iteration before starting a new one</code>
+—— <code>reducer.cpp</code>。</li>
+<li><strong>IB 完成错误的三条 NCCL HINT</strong>：
+<code>HINT: In many cases this error indicates that NCCL_IB_TIMEOUT is set too short ...</code> /
+<code>... ACS is enabled, which breaks the GPU Direct RDMA protocol.</code> /
+<code>... NICs on the same node cannot talk to each other.</code>
+—— <code>net_ib/common.h</code>。</li>
+<li><strong>Xid 内核日志格式（官方示例）</strong>：<code>NVRM: GPU at 0000:03:00: GPU-...</code> 后接
+<code>NVRM: Xid (0000:03:00): 14, Channel 00000001</code>；Xid 79 的官方描述为「GPU 已从总线脱落」。</li>
+<li><strong>K8s Job 失败原因</strong>：<code>BackoffLimitExceeded</code> / <code>DeadlineExceeded</code> / <code>FailedIndexes</code>
+—— <code>batch/v1 types.go</code>。</li>
+<li><strong>Volcano gang 不可调度事件</strong>：<code>Not enough valid tasks for gang-scheduling, valid: %d, min: %d</code>
+—— <code>gang.go</code>。</li>
+<li><strong>JobSet 预算耗尽</strong>：<code>jobset failed due to reaching max number of restarts</code>
+—— <code>constants.go</code>。</li>
+<li><strong>Legacy v1 backoff 失败消息</strong>：<code>Job %s has failed because it has reached the specified backoff limit</code>
+—— <code>controller.v1/common/job.go</code>。</li>
+<li><strong>OOMKilled</strong>：kubelet 以 <code>status.Reason == "OOMKilled"</code> 识别 OOM 终止，用户侧对应 <code>exitCode: 137</code>。</li>
+</ol>
+<blockquote>
+<p>注意：本快照的 PyTorch 已把 <code>ProcessGroupNCCL</code> 迁到 <code>c10d/nccl2/</code>，旧版本常见的
+<code>Watchdog caught collective operation timeout: WorkNCCL(...) ran for ... milliseconds before timing out</code>
+在该目录中已不存在，故正文只引用现存字符串，避免张冠李戴。</p>
+</blockquote>
+<h2 id="七现场诊断-runbook"><a class="header" href="#七现场诊断-runbook">七、现场诊断 runbook</a></h2>
+<ol>
+<li><strong>冻结现场</strong>：把 Job/JobSet <code>suspend=true</code>（Kueue 已 suspend）；LWS 没有 suspend，只能 scale 到 0 或删 group。
+先避免控制器在你检查时又拉起新 Pod。</li>
+<li><strong>收集三样东西</strong>：<code>kubectl get pods -o wide</code>（含 restartCount/节点）、<code>kubectl get events --sort-by=.lastTimestamp</code>、
+每个 rank 的最后 200 行日志（带时间戳）。</li>
+<li><strong>找首发</strong>：按退出码/时间戳/节点侧证据选出「第一个非 timeout 的失败」；没有就按 hang 处理。</li>
+<li><strong>判定层</strong>：调度/Pending → 容器/镜像 → rendezvous → NCCL → 节点/设备；不要跳层。</li>
+<li><strong>决定恢复单元</strong>：单 Pod 能否恢复？框架是否要求整组？卷是否保留？预算还剩多少？</li>
+<li><strong>恢复并验证</strong>：按 checkpoint runbook 加载、验证、短程续训；把「丢失步数/恢复耗时/首发原因」写进事故记录。</li>
+</ol>
+<h2 id="八证据"><a class="header" href="#八证据">八、证据</a></h2>
+<h3 id="故障信号与首发"><a class="header" href="#故障信号与首发">故障信号与首发</a></h3>
+<ul>
+<li><a href="https://github.com/NVIDIA/nccl/blob/ad2d192c1f279aefcaf340f67e07880b65a1116b/src/init.cc#L4045-L4064">NCCL 错误字符串（remote error / unhandled cuda error）</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/distributed/elastic/multiprocessing/errors/__init__.py#L193-L250">torchrun 的 Root Cause 与最早失败</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/distributed/elastic/multiprocessing/api.py#L1002-L1010">torchrun 的 exitcode 行</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/csrc/distributed/c10d/nccl2/WorkNCCL.cpp#L209-L212">NCCL watchdog 超时文本</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/csrc/distributed/c10d/reducer.cpp#L2205-L2226">DDP 集合通信不匹配</a></li>
+<li><a href="https://github.com/NVIDIA/nccl/blob/ad2d192c1f279aefcaf340f67e07880b65a1116b/src/transport/net_ib/common.h#L755-L780">IB 完成错误的 HINT</a></li>
+<li><a href="https://docs.nvidia.com/deploy/xid-errors/index.html">Xid 错误说明（NVIDIA）</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kuberuntime/helpers.go#L172-L176">OOMKilled 判定</a></li>
+</ul>
+<h3 id="编排框架恢复"><a class="header" href="#编排框架恢复">编排/框架恢复</a></h3>
+<ul>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/distributed/elastic/agent/server/api.py#L945-L976">torchrun 重启循环与「membership changes do not count」</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/distributed/run.py#L552-L558">torchrun <code>--max-restarts</code> 默认 0</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/distributed/elastic/agent/server/local_elastic_agent.py#L624-L670">torchrun 不检测 hang（只监控子进程退出）</a></li>
+<li><a href="https://github.com/kubernetes-sigs/jobset/blob/32c9ea3144095df1fbc778433505c35a53e5acfe/api/jobset/v1alpha2/jobset_types.go#L458-L544">JobSet failurePolicy 动作</a></li>
+<li><a href="https://github.com/kubernetes-sigs/jobset/blob/32c9ea3144095df1fbc778433505c35a53e5acfe/pkg/controllers/failure_policy.go#L48-L70">JobSet 默认无 policy 即 Failed</a></li>
+<li><a href="https://github.com/kubernetes-sigs/jobset/blob/32c9ea3144095df1fbc778433505c35a53e5acfe/pkg/controllers/active_deadline.go#L61-L76">JobSet 全局重启会重置 activeDeadline</a></li>
+<li><a href="https://github.com/kubernetes-sigs/lws/blob/51d7d5ad84f7badeee1466e4a7b846cacfdbc961/api/leaderworkerset/v1/leaderworkerset_types.go#L444-L478">LWS restartPolicy/maxGroupRestarts/restartBackoff</a></li>
+<li><a href="https://github.com/kubernetes-sigs/lws/blob/51d7d5ad84f7badeee1466e4a7b846cacfdbc961/pkg/controllers/pod_controller.go#L713-L724">LWS 预算耗尽终止组</a></li>
+<li><a href="https://github.com/volcano-sh/volcano/blob/2006640ed881e632119eedb9d3fac82819402301/staging/src/volcano.sh/apis/pkg/apis/batch/v1alpha1/job.go#L96-L225">Volcano maxRetry 与 lifecyclePolicy 默认 None</a></li>
+<li><a href="https://github.com/volcano-sh/volcano/blob/2006640ed881e632119eedb9d3fac82819402301/pkg/controllers/job/state/restarting.go#L31-L39">Volcano Restarting → Failed</a></li>
+<li><a href="https://github.com/kubeflow/mpi-operator/blob/a057ca529cb7c3b831207d8bbd37f18136057e0f/pkg/controller/mpi_job_controller.go#L1015-L1022">MPIJob worker 不重建、launcher 中心成败</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/batch/v1/types.go#L332-L378">K8s Job podFailurePolicy 与 backoffLimit</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/core/v1/types.go#L3751-L3753">DisruptionTarget 条件（驱逐可被 Ignore）</a></li>
+<li><a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/apis/config/v1beta2/configuration_types.go#L458-L490">Kueue requeue/execution time</a></li>
+</ul>
+<h2 id="相关页面"><a class="header" href="#相关页面">相关页面</a></h2>
+<ul>
+<li><a href="./overview.html">专题总纲</a></li>
+<li><a href="./workload-modeling.html">工作负载建模</a></li>
+<li><a href="../../../Machine_Learning/Distributed_Training/startup-communication.html">训练启动与通信</a></li>
+<li><a href="./checkpoint-preemption.html">Checkpoint 与抢占恢复</a></li>
+<li><a href="./rl-post-training.html">RL 后训练与业务接入</a></li>
+<li><a href="../../Kubernetes/Control_Plane/控制面事故处理手册.html">Kubernetes 控制面事故处理手册</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../../docs/Cloud_Native/AI_Infrastructure/Distributed_Training/workload-modeling.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../../frameworks.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../../docs/Cloud_Native/AI_Infrastructure/Distributed_Training/workload-modeling.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../../frameworks.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../../highlight-abc7f01d.js"></script>
+        <script src="../../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

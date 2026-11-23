@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-c4cdfd1b.js";
+            window.path_to_searchindex_js = "../../../searchindex-dfe22a86.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-ee3a948c.js"></script>
+        <script src="../../../toc-d9461900.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -367,8 +367,8 @@ for (;;) {
 </ul>
 </li>
 <li><strong>2018：AWS 开源 Firecracker</strong>。把 VMM 裁到只剩 virtio-net/block/vsock + serial，启动时间压到百毫秒级、内存开销压到 MiB 级，用来支撑 Lambda/Fargate 的高密度多租户。2020 年的 NSDI 论文系统总结了这套设计（<a href="https://www.usenix.org/conference/nsdi20/presentation/agache">NSDI’20</a>）。</li>
-<li><strong>2018–2020：Kubernetes 把“选运行时“标准化</strong>。RuntimeClass（1.20 GA）让用户用 <code>runtimeClassName</code> 选择 handler，把 runc / runsc / kata 统一到同一个 Pod API 下（<a href="https://kubernetes.io/docs/concepts/containers/runtime-class/">RuntimeClass 文档</a>；链路细节见 <a href="../Kubernetes/容器运行时.html">容器运行时全链路</a>）。</li>
-<li><strong>2019–至今：组合而不是替代</strong>。Kata 支持 QEMU/Cloud Hypervisor/Firecracker/Dragonball 多个 VMM；Confidential Containers（CoCo）把 Kata + 硬件可信执行环境（TDX/SEV-SNP）组合起来；AI Agent 沙箱（如 <a href="../AI_Infrastructure/agent-sandbox.html">Agent Sandbox</a>、<a href="../AI_Infrastructure/agent-substrate.html">Agent Substrate</a>）同时使用 gVisor 和 Kata microVM。</li>
+<li><strong>2018–2020：Kubernetes 把“选运行时“标准化</strong>。RuntimeClass（1.20 GA）让用户用 <code>runtimeClassName</code> 选择 handler，把 runc / runsc / kata 统一到同一个 Pod API 下（<a href="https://kubernetes.io/docs/concepts/containers/runtime-class/">RuntimeClass 文档</a>；链路细节见 <a href="../Kubernetes/Node_Runtime/容器运行时.html">容器运行时全链路</a>）。</li>
+<li><strong>2019–至今：组合而不是替代</strong>。Kata 支持 QEMU/Cloud Hypervisor/Firecracker/Dragonball 多个 VMM；Confidential Containers（CoCo）把 Kata + 硬件可信执行环境（TDX/SEV-SNP）组合起来；AI Agent 沙箱（如 <a href="../AI_Infrastructure/Agents/agent-sandbox.html">Agent Sandbox</a>、<a href="../AI_Infrastructure/Agents/agent-substrate.html">Agent Substrate</a>）同时使用 gVisor 和 Kata microVM。</li>
 </ol>
 <blockquote>
 <p>说明：上述年份是业界通说；内联链接主要支撑“项目/概念确实存在“，并非逐条考据历史（例如 RuntimeClass 的 GA 版本请以 Kubernetes release note 为准）。</p>
@@ -1278,7 +1278,7 @@ ioctl(5, KVM_RUN, 0)                    = 0
 
 <p>配套建议：</p>
 <ul>
-<li><strong>AI Agent / 不可信代码执行</strong>：优先 gVisor（无需 KVM、进程模型、可 snapshot/restore），或 Kata microVM（需要完整内核时）；两者都常见于 Agent 沙箱平台（见 <a href="../AI_Infrastructure/agent-sandbox.html">Agent Sandbox</a>、<a href="../AI_Infrastructure/agent-substrate.html">Agent Substrate</a>）。</li>
+<li><strong>AI Agent / 不可信代码执行</strong>：优先 gVisor（无需 KVM、进程模型、可 snapshot/restore），或 Kata microVM（需要完整内核时）；两者都常见于 Agent 沙箱平台（见 <a href="../AI_Infrastructure/Agents/agent-sandbox.html">Agent Sandbox</a>、<a href="../AI_Infrastructure/Agents/agent-substrate.html">Agent Substrate</a>）。</li>
 <li><strong>Serverless / 高密度短生命周期</strong>：Firecracker（或 Kata + Firecracker）的启动/密度数字最硬；如果 workload 能用 syscall 子集且不想依赖嵌套虚拟化，gVisor 也是有力选项。</li>
 <li><strong>需要 GPU</strong>：Kata + QEMU（VFIO/GPU 直通）最成熟；gVisor 有 nvproxy，但只支持选定驱动/GPU，且会放宽 host seccomp。</li>
 <li><strong>需要机密计算</strong>：Kata + QEMU + TDX/SEV-SNP（CoCo），不是 gVisor/Firecracker 的原生能力。</li>
@@ -1296,7 +1296,7 @@ ioctl(5, KVM_RUN, 0)                    = 0
     V --&gt; KVM["KVM"]
 </pre>
 
-<p>RuntimeClass 只负责<strong>选 handler</strong>，不提供隔离；handler 指向什么运行时，才决定隔离边界。完整的 CRI/containerd/shim 调用链见 <a href="../Kubernetes/容器运行时.html">容器运行时全链路：OCI、CRI、containerd、shim 与 RuntimeClass</a>。</p>
+<p>RuntimeClass 只负责<strong>选 handler</strong>，不提供隔离；handler 指向什么运行时，才决定隔离边界。完整的 CRI/containerd/shim 调用链见 <a href="../Kubernetes/Node_Runtime/容器运行时.html">容器运行时全链路：OCI、CRI、containerd、shim 与 RuntimeClass</a>。</p>
 <hr>
 <h2 id="9-常见误解合集"><a class="header" href="#9-常见误解合集">9. 常见误解合集</a></h2>
 <p>下面这些问题在讨论中最容易出现，逐条给一句话纠正（细节见对应章节）：</p>
@@ -1450,11 +1450,11 @@ ioctl(5, KVM_RUN, 0)                    = 0
 </ul>
 <h3 id="114-本-wiki-相关页面"><a class="header" href="#114-本-wiki-相关页面">11.4 本 wiki 相关页面</a></h3>
 <ul>
-<li><a href="../Kubernetes/容器运行时.html">容器运行时全链路：OCI、CRI、containerd、shim 与 RuntimeClass</a>——runc/runsc/kata 如何被 kubelet/containerd 选中并拉起；</li>
+<li><a href="../Kubernetes/Node_Runtime/容器运行时.html">容器运行时全链路：OCI、CRI、containerd、shim 与 RuntimeClass</a>——runc/runsc/kata 如何被 kubelet/containerd 选中并拉起；</li>
 <li><a href="../Linux_Container/容器知识备忘录.html">容器知识备忘录</a>——namespace、cgroup、UnionFS 这些“共享内核“隔离的底座；</li>
-<li><a href="../AI_Infrastructure/agent-sandbox.html">Agent Sandbox</a>——gVisor/Kata 作为 Agent 沙箱运行时的实践；</li>
-<li><a href="../AI_Infrastructure/agent-substrate.html">Agent Substrate</a>——gVisor 与 Kata + Cloud Hypervisor microVM 的高密度组合、快照/恢复；</li>
-<li><a href="../Kubernetes/cni详解.html">CNI 详解</a>——容器网络命名空间与 veth/bridge，可与 gVisor netstack、Kata vsock 对照阅读。</li>
+<li><a href="../AI_Infrastructure/Agents/agent-sandbox.html">Agent Sandbox</a>——gVisor/Kata 作为 Agent 沙箱运行时的实践；</li>
+<li><a href="../AI_Infrastructure/Agents/agent-substrate.html">Agent Substrate</a>——gVisor 与 Kata + Cloud Hypervisor microVM 的高密度组合、快照/恢复；</li>
+<li><a href="../Kubernetes/Networking/cni详解.html">CNI 详解</a>——容器网络命名空间与 veth/bridge，可与 gVisor netstack、Kata vsock 对照阅读。</li>
 </ul>
 
                     </main>

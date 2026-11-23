@@ -1,0 +1,767 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>工作负载建模：从 Pod 到可恢复的成员组 - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../../searchindex-dfe22a86.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../../toc-d9461900.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/AI_Infrastructure/Distributed_Training/workload-modeling.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="工作负载建模从-pod-到可恢复的成员组"><a class="header" href="#工作负载建模从-pod-到可恢复的成员组">工作负载建模：从 Pod 到可恢复的成员组</a></h1>
+<blockquote>
+<p><strong>结论先行</strong>：工作负载建模不是「选一个能跑起来的 YAML」，而是把<strong>成员关系、生命周期、失败域</strong>写进 API。
+Kubernetes 原生只建模了「Pod 及其资源」；角色、依赖、训练就绪、作业成功条件、稳定 rank 身份，都要靠上层原语补齐。
+选择原语时，先问「谁拥有 membership，故障时重建哪一层」，再比较功能列表。</p>
+</blockquote>
+<p>本页把分布式训练负载拆成三类，用七个维度检查表达能力，再逐一对 Volcano Job、JobSet、LWS、Kubeflow TrainJob、
+MPIJob 和 K8s 原生 Job / Workload API 做对照。代码引用均指向 2026-11-23 的快照。</p>
+<blockquote>
+<p>专题导航：<a href="./overview.html">总纲</a> · <a href="./workload-modeling.html">工作负载建模</a> · <a href="../../../Machine_Learning/Distributed_Training/startup-communication.html">启动通信</a> · <a href="./failure-self-healing.html">故障自愈</a> · <a href="./checkpoint-preemption.html">Checkpoint</a> · <a href="./rl-post-training.html">RL</a></p>
+</blockquote>
+<h2 id="一先区分三类负载"><a class="header" href="#一先区分三类负载">一、先区分三类负载</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>类型</th><th>生命周期</th><th>「成功」是什么</th><th>成员关系</th><th>典型原语</th><th>失败处理</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>常驻服务</strong></td><td>长期运行，不主动结束</td><td>一直可用（SLO）</td><td>副本彼此独立，可随时替换</td><td>Deployment、StatefulSet</td><td>原地重启/重新调度，滚动更新</td></tr>
+<tr><td><strong>终态任务</strong></td><td>跑到完成或失败</td><td>声明的成功条件</td><td>一组 Pod 共同完成一个 Job</td><td>K8s Job、Volcano Job、JobSet</td><td>重试、重建 Job、<code>backoffLimit</code></td></tr>
+<tr><td><strong>强同步进程组</strong></td><td>组内同生共死</td><td>所有成员完成同一段计算</td><td>全组必须同时在场，collective 才能前进</td><td>LWS、Volcano gang、JobSet + gang、MPIJob</td><td>整组重建（或按策略重建子组）</td></tr>
+</tbody>
+</table>
+</div>
+<p>三者不是互斥的：一个训练作业通常是<strong>终态任务</strong>，内部包含一个<strong>强同步进程组</strong>，同时可能暴露一个<strong>常驻服务</strong>
+（TensorBoard、推理 sidecar、参数服务器）。建模时要分别说明每部分的语义，而不是用一个 <code>restartPolicy</code> 覆盖全部。</p>
+<blockquote>
+<p>参数服务器（PS）是一个特殊角色：它像服务一样长期持有状态，但又是终态任务的一部分。PS 挂掉能否只重启 PS，
+取决于 worker 是否支持重新连接；collective 训练通常没有这个能力，所以现代训练更多用 all-reduce 而非 PS。</p>
+</blockquote>
+<h2 id="二七个建模维度"><a class="header" href="#二七个建模维度">二、七个建模维度</a></h2>
+<h3 id="21-角色不同模板不同身份不同-rank"><a class="header" href="#21-角色不同模板不同身份不同-rank">2.1 角色：不同模板、不同身份、不同 rank</a></h3>
+<p>「角色」在三个层面出现，必须对齐：</p>
+<ul>
+<li><strong>编排角色</strong>：一个 Job 里有几种 Pod 模板（master/worker/ps/launcher/evaluator）。</li>
+<li><strong>框架角色</strong>：TF 的 chief/worker/ps/evaluator；PyTorch 的 rank 0 与 worker；MPI 的 rank。</li>
+<li><strong>失败域角色</strong>：rank 0 / leader / chief / PS 是否是单点。</li>
+</ul>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>原语</th><th>角色表达方式</th><th>能否不同镜像/资源/命令</th><th>是否自动注入 rank</th></tr>
+</thead>
+<tbody>
+<tr><td>K8s Job</td><td>无；所有 Pod 同一模板</td><td>❌（Indexed 只变 index/hostname）</td><td>❌（只有 <code>JOB_COMPLETION_INDEX</code>）</td></tr>
+<tr><td>Volcano Job</td><td><code>spec.tasks[]</code>，每个 Task 一个 Pod 模板</td><td>✅</td><td>插件注入（pytorch/mpi/tf）</td></tr>
+<tr><td>JobSet</td><td><code>spec.replicatedJobs[]</code>，每个 ReplicatedJob 一个 Job 模板</td><td>✅</td><td>❌（模板/框架自己算）</td></tr>
+<tr><td>LWS</td><td><code>leaderWorkerTemplate.leaderTemplate</code> + <code>workerTemplate</code></td><td>✅（leader/worker 可不同）</td><td>半自动（<code>LWS_WORKER_INDEX</code>、<code>LWS_GROUP_SIZE</code>）</td></tr>
+<tr><td>TrainJob</td><td>Runtime 里的 PodSet；<code>spec.trainer</code> 覆盖训练节点</td><td>部分（trainer 覆盖；其他角色在 runtime）</td><td>✅（Torch/MPI 插件注入 <code>PET_*</code>/MPI env）</td></tr>
+<tr><td>MPIJob</td><td><code>launcher</code> + <code>worker</code> 两种 Replica</td><td>✅</td><td>✅（MPI 运行时）</td></tr>
+</tbody>
+</table>
+</div>
+<p>一个常见错位：K8s 把 worker-3 当成可替换副本，但框架把它当成 chief；Pod 重建后名字变了，框架的成员表却没有更新。
+LWS 和 JobSet 的稳定 DNS 就是为这类问题服务的。K8s 原生 Indexed Job 其实也提供了稳定 <strong>hostname</strong>
+（<code>&lt;job&gt;-&lt;index&gt;</code>，见 <code>job_controller.go</code>），但 Pod 名仍带随机后缀，且必须自己建 headless Service/设置 <code>subdomain</code>
+才能把它变成可解析的 DNS；它不提供 rank 0 地址注入或成员发现。</p>
+<h3 id="22-资源gpu-是不可压缩资源"><a class="header" href="#22-资源gpu-是不可压缩资源">2.2 资源：GPU 是不可压缩资源</a></h3>
+<p>训练负载的资源建模有几个特殊点：</p>
+<ul>
+<li><strong>GPU 通常按整卡申请</strong>：<code>nvidia.com/gpu: 1</code>，不能部分分配；MIG/HAMi 的切分是另一层能力，不能假设框架无感。</li>
+<li><strong>CPU/内存/临时盘</strong>：数据加载、checkpoint 暂存、NCCL 共享内存都吃这些；<code>/dev/shm</code> 太小会让 PyTorch DataLoader
+或 NCCL 直接失败（容器默认 64MB，训练镜像通常要挂 <code>emptyDir: medium: Memory</code>）。</li>
+<li><strong>RDMA/IB 设备</strong>：需要 <code>rdma/hca</code> 等扩展资源或 device plugin；NCCL 的 <code>NCCL_IB_HCA</code> 要与实际分配一致。</li>
+<li><strong>DRA</strong>：K8s 1.34+ 的 Dynamic Resource Allocation 可以把 GPU/NIC/拓扑作为一个 claim 表达；TrainJob 2.4 已支持
+<code>resourceClaimsPerNode</code>（alpha），LWS/JobSet 也有 workload-aware scheduling 集成。</li>
+<li><strong>异构角色</strong>：PS 可能只需要 CPU；rollout 需要推理优化镜像；launcher 只需要轻量客户端。原语若只支持一个模板，
+就只能把这些角色拆成多个 Job，再用 JobSet/Argo 串起来。</li>
+</ul>
+<blockquote>
+<p>资源请求与 gang 的关系：gang 保证「要么一起拿到，要么都不拿」，避免 8 个 worker 抢到 7 张卡后互相等待。
+但 gang 不保证「拿到的卡在拓扑上最优」；拓扑感知是调度器的另一层能力（Volcano network-topology-aware、
+Kueue TAS、LWS placementPolicy、DRA）。</p>
+</blockquote>
+<h3 id="23-依赖启动顺序--运行期依赖"><a class="header" href="#23-依赖启动顺序--运行期依赖">2.3 依赖：启动顺序 ≠ 运行期依赖</a></h3>
+<p>需要区分三种依赖：</p>
+<ol>
+<li><strong>启动顺序</strong>：先起 PS 再起 worker，先拉数据再训练。对应 JobSet <code>dependsOn</code>/<code>StartupPolicy</code>、Volcano <code>TaskSpec.DependsOn</code>、
+TrainJob <code>Initializer</code>。</li>
+<li><strong>共同调度</strong>：所有成员必须同时被调度。对应 gang/<code>minAvailable</code>/PodGroup。</li>
+<li><strong>运行期依赖</strong>：worker 要能连通 chief 的端口、要能读到共享存储。对应 Service/DNS、PVC、网络策略。</li>
+</ol>
+<p>很多「启动失败」其实是把三者混为一谈：Pod 被调度了（2 满足），但 chief 还没 listen（3 不满足），worker 的
+<code>wait-for-master</code> init container 超时。Volcano 的 pytorch 插件甚至内建了这个 init container（默认 300s 超时），
+说明「成员可达」是一个需要显式建模的依赖。</p>
+<h3 id="24-就绪与完成k8s-的-ready-不是训练的-ready"><a class="header" href="#24-就绪与完成k8s-的-ready-不是训练的-ready">2.4 就绪与完成：K8s 的 <code>Ready</code> 不是训练的 <code>Ready</code></a></h3>
+<p>三种就绪（详见<a href="./overview.html#二三个容易混淆的就绪与完成">专题总纲</a>）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>就绪</th><th>典型信号</th><th>原语能否表达</th></tr>
+</thead>
+<tbody>
+<tr><td>Pod Ready</td><td>readinessProbe / 容器启动</td><td>所有原语都有，但训练 Pod 常不配 probe</td></tr>
+<tr><td>成员就绪</td><td>rendezvous 返回、所有 rank join</td><td>LWS <code>LeaderReady</code>、Volcano <code>minAvailable</code>、JobSet <code>DependsOn</code> 只能近似</td></tr>
+<tr><td>通信就绪</td><td>首个 collective 成功</td><td>没有 K8s 信号；只能应用层 barrier/指标</td></tr>
+</tbody>
+</table>
+</div>
+<p>完成语义同样分三层：</p>
+<ul>
+<li><strong>进程完成</strong>：容器 exit 0。</li>
+<li><strong>作业完成</strong>：<code>successPolicy</code> / <code>minSuccess</code> / 所有 Job 完成。</li>
+<li><strong>业务完成</strong>：达到目标 step、eval gate 通过。</li>
+</ul>
+<p>K8s Job 的 <code>successPolicy</code> 只在 Indexed Job 上可用，且是「哪些 index 成功即算成功」；Volcano 的 <code>minSuccess</code> 是
+「至少多少个 Pod 成功」；JobSet 的 <code>successPolicy</code> 是「All/Any + 目标 ReplicatedJob」；LWS 没有「完成」概念
+（它是服务型集合，只有 <code>ReadyReplicas</code>）。这些语义差异会直接决定「训练脚本 exit 0 但模型没训完」会不会被当成成功。</p>
+<h3 id="25-服务暴露稳定身份-vs-负载均衡"><a class="header" href="#25-服务暴露稳定身份-vs-负载均衡">2.5 服务暴露：稳定身份 vs 负载均衡</a></h3>
+<p>训练需要的是<strong>稳定身份</strong>（rank 0 的地址、每个 worker 的可达 hostname），不是普通的 ClusterIP Service 负载均衡。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>原语</th><th>稳定 DNS/身份</th><th>实现</th></tr>
+</thead>
+<tbody>
+<tr><td>K8s Job</td><td>⚠️ 默认没有；Indexed 有稳定 hostname</td><td>Pod 名带随机后缀，但 Indexed 的 hostname=<code>&lt;job&gt;-&lt;index&gt;</code>；仍需自建 headless Service + <code>subdomain</code> 才能解析</td></tr>
+<tr><td>Volcano Job</td><td>✅ <code>svc</code> 插件</td><td>设置 <code>hostname=pod name</code>、<code>subdomain=job name</code>，创建 headless Service + hosts ConfigMap</td></tr>
+<tr><td>JobSet</td><td>✅ <code>spec.network.enableDNSHostnames</code></td><td><code>&lt;jobSet&gt;-&lt;replicatedJob&gt;-&lt;jobIndex&gt;-&lt;podIndex&gt;.&lt;subdomain&gt;</code></td></tr>
+<tr><td>LWS</td><td>✅ 每个 group 一个 headless Service</td><td><code>LWS_LEADER_ADDRESS</code>、<code>LWS_GROUP_SIZE</code>、<code>LWS_WORKER_INDEX</code></td></tr>
+<tr><td>TrainJob</td><td>✅ 由 runtime/framework 插件设置</td><td>Torch：<code>PET_MASTER_ADDR=&lt;trainjob&gt;-node-0-0.&lt;trainjob&gt;</code></td></tr>
+<tr><td>MPIJob</td><td>✅ worker 的 SSH 可达地址</td><td>launcher 生成 hostfile，worker 运行 sshd</td></tr>
+</tbody>
+</table>
+</div>
+<p>一个细节：JobSet 的 <code>publishNotReadyAddresses</code> 默认是 <strong>true</strong>，这样 worker 不必等 leader Ready 就能解析到它；
+但这也意味着「DNS 可解析」不等于「进程已 listen」。Volcano 的 <code>publish-not-ready-addresses</code> 是可选参数，默认 false。</p>
+<h3 id="26-卷共享每-rank暂存"><a class="header" href="#26-卷共享每-rank暂存">2.6 卷：共享、每 rank、暂存</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>卷类型</th><th>用途</th><th>注意点</th></tr>
+</thead>
+<tbody>
+<tr><td>共享 PVC（RWX）</td><td>数据集、checkpoint、模型输出</td><td>多 rank 同时写要避免冲突；NFS 延迟会影响 checkpoint</td></tr>
+<tr><td>每 rank PVC（RWO）</td><td>本地缓存、分片 checkpoint</td><td>需要动态供应或 StatefulSet volumeClaimTemplates</td></tr>
+<tr><td><code>emptyDir</code></td><td>scratch、<code>/dev/shm</code></td><td>节点磁盘/内存；Pod 删除即丢</td></tr>
+<tr><td><code>hostPath</code>/local NVMe</td><td>高性能 checkpoint 暂存</td><td>节点绑定；需要 DaemonSet 预热/清理</td></tr>
+<tr><td>对象存储（S3/OSS/GCS）</td><td>长期 checkpoint、数据集</td><td>通过 CSI/init container/sidecar 挂载；带宽是瓶颈</td></tr>
+</tbody>
+</table>
+</div>
+<p>原语差异：Volcano 有 <code>spec.volumes</code>（PVC 模板）；JobSet 有 <code>volumeClaimPolicies</code>（自动为 Pod 加 claim）；
+LWS 有 <code>volumeClaimTemplates</code>；TrainJob 的 runtime 模板里直接写 volumes。<strong>卷的生命周期</strong>（Job 删除后是否保留）
+比「能不能挂」更常被忽略：checkpoint 卷必须是 <code>Retain</code> 或独立 PVC，否则 Job 一删 checkpoint 就没了。</p>
+<h3 id="27-放置从-nodeselector-到拓扑域"><a class="header" href="#27-放置从-nodeselector-到拓扑域">2.7 放置：从 nodeSelector 到拓扑域</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>层次</th><th>手段</th><th>解决的问题</th></tr>
+</thead>
+<tbody>
+<tr><td>节点选择</td><td><code>nodeSelector</code>、<code>affinity</code>、<code>tolerations</code></td><td>GPU 型号、污点、可用区</td></tr>
+<tr><td>副本分布</td><td><code>topologySpreadConstraints</code>、podAntiAffinity</td><td>不要把同一组打散到太多交换机</td></tr>
+<tr><td>组调度</td><td>gang / PodGroup / <code>minAvailable</code></td><td>避免部分成员长期 Pending</td></tr>
+<tr><td>拓扑感知</td><td>Volcano network-topology-aware、Kueue TAS、LWS placementPolicy、DRA</td><td>把通信密集的 rank 放到同一 NVLink/leaf 下</td></tr>
+<tr><td>队列/配额</td><td>Kueue ClusterQueue、Volcano queue</td><td>多租户公平与准入</td></tr>
+</tbody>
+</table>
+</div>
+<p>放置策略必须与<strong>失败域</strong>一起看：把 8 个 rank 放到同一台机器，吞吐最好，但一次节点故障带走整组；
+放到 8 台机器，故障域小，但跨机通信更贵。LWS 的 <code>placementPolicy</code>/<code>subGroupPolicy</code> 和 Volcano 的
+<code>networkTopology</code> 都是在表达这个 trade-off。</p>
+<h2 id="三逐原语对照"><a class="header" href="#三逐原语对照">三、逐原语对照</a></h2>
+<h3 id="31-k8s-job最小可用但只建模同构-pod-的完成"><a class="header" href="#31-k8s-job最小可用但只建模同构-pod-的完成">3.1 K8s Job：最小可用，但只建模「同构 Pod 的完成」</a></h3>
+<p>K8s Job 的核心字段：</p>
+<ul>
+<li><code>completions</code>/<code>parallelism</code>：要完成多少个、并发多少个。</li>
+<li><code>completionMode: Indexed</code>：每个 Pod 有稳定的 <code>batch.kubernetes.io/job-completion-index</code> 和 <code>JOB_COMPLETION_INDEX</code>，
+并且控制器把 Pod <strong>hostname</strong> 设为 <code>&lt;job&gt;-&lt;index&gt;</code>；但 Pod <strong>name</strong> 仍是 <code>&lt;job&gt;-&lt;index&gt;-&lt;random&gt;</code>，要变成可解析 DNS
+还需要 headless Service + <code>subdomain</code>。<code>successPolicy</code> 也只对 Indexed 生效。</li>
+<li><code>backoffLimit</code>（默认 6）、<code>backoffLimitPerIndex</code>、<code>maxFailedIndexes</code>：失败预算。</li>
+<li><code>podFailurePolicy</code>：按 exit code/Pod condition 决定 <code>FailJob</code>/<code>FailIndex</code>/<code>Ignore</code>/<code>Count</code>；
+不能与 <code>restartPolicy: OnFailure</code> 同时使用。</li>
+<li><code>activeDeadlineSeconds</code>、<code>ttlSecondsAfterFinished</code>：时间预算与清理。</li>
+</ul>
+<p><strong>不能表达</strong>：角色、异构模板、默认 gang、rank 0 地址注入、按 rank 的成功条件。1.36+ 的 <code>.spec.scheduling</code>
+（<code>WorkloadWithJob</code> alpha，默认关闭）可以补 gang，但仍是同构模板。所以它适合「单容器/同构 worker 的批处理」，
+不适合直接承载多角色训练。Indexed Job + headless Service 可以凑出「稳定 hostname + 可发现地址」，但仍要自己解决
+rank 0 选举和框架成员发现。</p>
+<h3 id="32-volcano-job任务--gang--插件"><a class="header" href="#32-volcano-job任务--gang--插件">3.2 Volcano Job：任务 + gang + 插件</a></h3>
+<p>Volcano 把 Job 建模成多个 <code>TaskSpec</code>，每个 Task 有自己的副本数、Pod 模板、<code>minAvailable</code>、<code>maxRetry</code>、<code>dependsOn</code>、
+<code>partitionPolicy</code>（子组/拓扑）。Job 级字段包括 <code>minAvailable</code>（gang 的最小可用数）、<code>minSuccess</code>（最小成功数）、
+<code>maxRetry</code>、<code>policies</code>（事件/退出码 → 动作）、<code>plugins</code>、<code>queue</code>、<code>volumes</code>。</p>
+<blockquote>
+<p>两个「门槛」不要混淆：<code>minAvailable</code> 是<strong>调度/运行门槛</strong>（不够就不启动/不继续），<code>minSuccess</code> 是<strong>完成门槛</strong>
+（成功 Pod 数达到它就把 Job 置为 <code>Completed</code>）。后者可以允许「训练 task 成功、常驻服务 task 仍 Running」时
+提前完成并回收服务 Pod。</p>
+</blockquote>
+<pre><code class="language-yaml">apiVersion: batch.volcano.sh/v1alpha1
+kind: Job
+metadata:
+  name: torch-train
+spec:
+  minAvailable: 9          # master + 8 workers 必须同时可调度
+  queue: training
+  maxRetry: 3
+  plugins:
+    svc: ["--publish-not-ready-addresses=true"]
+    pytorch: ["--master=master", "--worker=worker", "--port=23456", "--wait-master-enabled=true"]
+  tasks:
+    - name: master
+      replicas: 1
+      template:
+        spec:
+          containers:
+            - name: trainer
+              image: example/trainer:latest
+              resources: { limits: { nvidia.com/gpu: 1 } }
+    - name: worker
+      replicas: 8
+      template:
+        spec:
+          containers:
+            - name: trainer
+              image: example/trainer:latest
+              resources: { limits: { nvidia.com/gpu: 1 } }
+</code></pre>
+<p>关键机制：</p>
+<ul>
+<li><strong>gang</strong>：<code>gang</code> 插件检查 <code>ValidTaskNum() &lt; MinAvailable</code>，不满足就拒绝整个 Job；抢占时也保证不会把 Job 打到
+<code>MinAvailable</code> 以下。它只表达「可调度」，不表达「进程已 join」。</li>
+<li><strong>svc 插件</strong>：给 Pod 设置 <code>hostname</code>/<code>subdomain</code>，创建 headless Service 和 hosts ConfigMap，可注入每个 task 的
+主机列表环境变量。</li>
+<li><strong>pytorch 插件</strong>：按 master/worker 计算 rank 和 world size（可按 Pod 数或 GPU 数），可选 <code>wait-master</code> init container
+（默认 300s），把「master 可达」变成一个显式启动依赖。</li>
+<li><strong>policies</strong>：可以按事件（如 <code>PodFailed</code>）或退出码触发 <code>Restart</code>/<code>None</code>，比 K8s Job 的单一 <code>backoffLimit</code> 更细。</li>
+</ul>
+<p><strong>不能表达</strong>：跨 Job 的依赖/编排（那是 JobFlow/JobSet 的事）；LWS 那种「leader+worker 整组稳定身份」的内建语义；
+框架无关的 rank 抽象（插件是按框架硬编码的）。</p>
+<h3 id="33-jobset一组-job-的声明式编排"><a class="header" href="#33-jobset一组-job-的声明式编排">3.3 JobSet：一组 Job 的声明式编排</a></h3>
+<p>JobSet 的核心是 <code>replicatedJobs[]</code>：每个 ReplicatedJob 是一个 Job 模板 + 副本数 + <code>dependsOn</code>。它把「多个角色/多个阶段」
+表达成一组 Job，而不是一组 Pod。</p>
+<pre><code class="language-yaml">apiVersion: jobset.x-k8s.io/v1alpha2
+kind: JobSet
+metadata:
+  name: train-and-eval
+spec:
+  network:
+    enableDNSHostnames: true
+    subdomain: train
+  replicatedJobs:
+    - name: leader
+      replicas: 1
+      template:
+        spec:
+          completions: 1
+          template:
+            spec:
+              containers:
+                - name: trainer
+                  image: example/trainer:latest
+    - name: workers
+      replicas: 7
+      dependsOn:
+        - name: leader
+          status: Ready
+      template:
+        spec:
+          completions: 1
+          template:
+            spec:
+              containers:
+                - name: trainer
+                  image: example/trainer:latest
+</code></pre>
+<p>关键机制：</p>
+<ul>
+<li><strong>Network</strong>：开启后 Pod 可用 <code>&lt;jobSet&gt;-&lt;replicatedJob&gt;-&lt;jobIndex&gt;-&lt;podIndex&gt;.&lt;subdomain&gt;</code> 访问；<code>publishNotReadyAddresses</code>
+默认 true。</li>
+<li><strong>Coordinator</strong>：把某个 Pod 标记为协调者，向所有 Job/Pod 注入 <code>jobset.sigs.k8s.io/coordinator=&lt;pod hostname&gt;.&lt;service&gt;</code>。
+这解决了「rank 0 地址怎么让别人知道」的问题，但不改变框架自己的 rank 计算。</li>
+<li><strong>成功/失败条件</strong>：<code>successPolicy</code> 支持 <code>All</code>/<code>Any</code> + 目标 ReplicatedJob；默认是 <code>All</code>。写成 <code>Any</code> 要小心：
+JobSet 一旦判定完成，控制器会删除仍在运行的子 Job——它适合「leader 成功即整体成功、worker 可以陪跑」的场景，
+不适合「所有 worker 都必须跑完」的训练。<code>failurePolicy</code> 支持按 Job 失败原因/消息模式匹配，动作有 <code>FailJobSet</code>、
+<code>RestartJobSet</code>、<code>RestartJob</code> 以及忽略 <code>maxRestarts</code> 的变体。</li>
+<li><strong>重启策略</strong>：<code>Recreate</code>（默认）、<code>BlockingRecreate</code>（等旧 Job 全删完再建）、<code>InPlaceRestart</code>（健康 Pod 原地重启，
+失败 Job 回退到 Recreate）。</li>
+<li><strong>卷</strong>：<code>volumeClaimPolicies</code> 可以自动为 Pod 模板加 claim，并支持保留策略。</li>
+</ul>
+<p><strong>不能表达</strong>：Pod 级 rank/稳定身份（它只有 Job 级副本和 Pod 主机名）；gang 需要额外的 <code>scheduling</code>（Workload-Aware
+Scheduling，alpha）或外部 PodGroup；单个 ReplicatedJob 内部的强同步组重启语义不如 LWS 直接。</p>
+<h3 id="34-lwsleader--worker-的稳定组"><a class="header" href="#34-lwsleader--worker-的稳定组">3.4 LWS：leader + worker 的稳定组</a></h3>
+<p>LWS 把「一个 leader + N-1 个 worker」建模成一个 group，<code>replicas</code> 个 group。它是为「组内强同步、组间可独立」
+的负载设计的（张量并行、推理的多机多卡、PD 分离）。</p>
+<pre><code class="language-yaml">apiVersion: leaderworkerset.x-k8s.io/v1
+kind: LeaderWorkerSet
+metadata:
+  name: tp-inference
+spec:
+  replicas: 2
+  startupPolicy: LeaderReady
+  leaderWorkerTemplate:
+    size: 4
+    restartPolicy: RecreateGroupOnPodRestart
+    maxGroupRestarts: 3
+    restartBackoff:
+      baseSeconds: 10
+      capSeconds: 300
+    leaderTemplate:
+      spec:
+        containers:
+          - name: leader
+            image: example/trainer:latest
+    workerTemplate:
+      spec:
+        containers:
+          - name: worker
+            image: example/trainer:latest
+</code></pre>
+<p>关键机制：</p>
+<ul>
+<li><strong>组身份</strong>：每个 group 有独立 headless Service，leader 地址通过 <code>LWS_LEADER_ADDRESS</code> 注入，组大小通过
+<code>LWS_GROUP_SIZE</code>，成员索引通过 <code>LWS_WORKER_INDEX</code>。框架用这些变量自己算 rank/world size。</li>
+<li><strong>启动策略</strong>：<code>LeaderCreated</code>（默认，leader 创建后立即起 worker）与 <code>LeaderReady</code>（leader Ready 后才起 worker）。
+后者把「leader 可用」变成启动依赖，但 Ready 仍不等于 rendezvous 完成。</li>
+<li><strong>重启策略</strong>：<code>RecreateGroupOnPodRestart</code>（默认，任一 Pod/容器重启 → 整组重建）、<code>RecreateGroupAfterStart</code>
+（等所有 Pod 都启动后才整组重建，避免启动期级联）、<code>None</code>（只重启失败 Pod）。</li>
+<li><strong>失败预算</strong>：<code>maxGroupRestarts</code> 按 group/revision 计；<code>restartBackoff</code> 做指数退避（默认 base 10s/cap 300s）；
+预算耗尽后终止组、保留 Pod 对象并置 <code>Degraded=True</code>，可用注解 <code>leaderworkerset.sigs.k8s.io/recover=true</code> 恢复。</li>
+<li><strong>子组</strong>：<code>subGroupPolicy.subGroupSize</code> 把 group 再切成子组，适合 TP/PP 分层。</li>
+<li><strong>DisaggregatedSet</strong>：LWS 1.0 新增的多角色集合（如 prefill/decode），把「角色 + 缩放 + 放置」提升到更高层。</li>
+</ul>
+<p><strong>不能表达</strong>：作业完成条件（它是服务型集合，不终止）；框架特定的 rank 语义；跨 group 的依赖（用 JobSet/上层编排）。</p>
+<h3 id="35-kubeflow-trainjob运行时--训练节点"><a class="header" href="#35-kubeflow-trainjob运行时--训练节点">3.5 Kubeflow TrainJob：运行时 + 训练节点</a></h3>
+<p>TrainJob v2 把「框架运行时」抽成 <code>ClusterTrainingRuntime</code>/<code>TrainingRuntime</code>，TrainJob 只声明：</p>
+<ul>
+<li><code>runtimeRef</code>：用哪个 runtime（torch-distributed、deepspeed、mpi、jax、xgboost…）。</li>
+<li><code>trainer</code>：镜像/命令/参数/env、<code>numNodes</code>、<code>resourcesPerNode</code>、<code>numProcPerNode</code>、<code>resourceClaimsPerNode</code>。</li>
+<li><code>initializer</code>：数据集/模型从 URI 拉取与预处理。</li>
+<li><code>activeDeadlineSeconds</code>、<code>suspend</code>、<code>managedBy</code>。</li>
+</ul>
+<pre><code class="language-yaml">apiVersion: trainer.kubeflow.org/v1alpha1
+kind: TrainJob
+metadata:
+  name: llama-sft
+spec:
+  runtimeRef:
+    name: torch-distributed
+  trainer:
+    image: example/trainer:latest
+    command: ["torchrun", "train.py"]
+    numNodes: 4
+    numProcPerNode: 8
+    resourcesPerNode:
+      limits:
+        nvidia.com/gpu: 8
+  initializer:
+    model:
+      storageUri: s3://models/llama-3-8b
+</code></pre>
+<p>关键机制：</p>
+<ul>
+<li>TrainJob 在内部生成 <strong>JobSet</strong>（<code>template</code> 字段就是 JobSetSpec），所以它继承了 JobSet 的网络、失败策略和调度能力。</li>
+<li>Torch 插件注入 <code>PET_NNODES</code>、<code>PET_NPROC_PER_NODE</code>、<code>PET_NODE_RANK</code>（来自 Job completion index）、
+<code>PET_MASTER_ADDR=&lt;trainjob&gt;-node-0-0.&lt;trainjob&gt;</code> 和端口 29500，供入口脚本传给 <code>torchrun</code>/torchtune。</li>
+<li>角色建模以「同构训练节点」为主；异构角色（PS、rollout、reward）要么写进 runtime 的多个 PodSet，要么拆成多个
+TrainJob/JobSet。TrainJob 的强项是<strong>复用运行时</strong>，不是表达任意 DAG。</li>
+</ul>
+<blockquote>
+<p>注意：Kubeflow Trainer v2（<code>trainer.kubeflow.org</code>）已不再提供旧版 TFJob/PyTorchJob CRD；旧 API 在
+Training Operator v1.9.x。很多「TrainJob vs PyTorchJob」的对比文章把两者混在一起，实际是两代 API。</p>
+</blockquote>
+<h3 id="36-mpijoblauncher--worker-的静态组"><a class="header" href="#36-mpijoblauncher--worker-的静态组">3.6 MPIJob：launcher + worker 的静态组</a></h3>
+<p>MPIJob 用 <code>launcher</code> 跑 <code>mpirun</code>，用 <code>worker</code> 跑 sshd/MPI 进程；<code>slotsPerWorker</code> 决定每个 worker 的 slot 数，
+<code>runLauncherAsWorker</code> 决定 launcher 是否也参与计算，<code>launcherCreationPolicy: WaitForWorkersReady</code> 让 launcher 等
+worker Ready 后再启动，避免 <code>mpirun</code> 早早失败。</p>
+<pre><code class="language-yaml">apiVersion: kubeflow.org/v2beta1
+kind: MPIJob
+metadata:
+  name: mpi-train
+spec:
+  slotsPerWorker: 8
+  launcherCreationPolicy: WaitForWorkersReady
+  runPolicy:
+    backoffLimit: 3
+    cleanPodPolicy: Running
+  mpiReplicaSpecs:
+    Launcher:
+      replicas: 1
+      template:
+        spec:
+          containers:
+            - name: launcher
+              image: example/mpi:latest
+              command: ["mpirun", "-np", "16", "python", "train.py"]
+    Worker:
+      replicas: 2
+      template:
+        spec:
+          containers:
+            - name: worker
+              image: example/mpi:latest
+</code></pre>
+<p>MPI 的 membership 是<strong>静态</strong>的：<code>mpirun</code> 启动时确定 rank 列表，进程退出后不能像 torchrun 那样重新 rendezvous。
+所以 MPIJob 的恢复单元通常是整个 Job，<code>backoffLimit</code> 只控制 launcher Job 的重试；worker 的单独重启对 MPI 通信组
+没有意义。<strong>MPIJob 的成败也以 launcher 为准</strong>：launcher Job Succeeded → MPIJob Succeeded；launcher Job Failed →
+MPIJob Failed；worker 不直接决定作业成败。这也是 MPI 与 PyTorch elastic 最大的语义差异。</p>
+<h3 id="37-k8s-原生-workload--podgroup137-beta默认关闭"><a class="header" href="#37-k8s-原生-workload--podgroup137-beta默认关闭">3.7 K8s 原生 Workload / PodGroup（1.37 beta，默认关闭）</a></h3>
+<p>Kubernetes 1.35 引入 <code>scheduling.k8s.io</code> 的 Workload/PodGroup，1.37 进入 beta（<code>GenericWorkload</code> 默认 false）。
+它把 gang 从「第三方调度器插件」收进核心 API：</p>
+<ul>
+<li><code>Workload</code> 是静态模板，最多 8 个 <code>PodGroupTemplate</code>，每个模板声明 <code>basic</code> 或 <code>gang</code> 策略；<code>gang.minCount</code> 是最小
+同时可调度数。</li>
+<li><code>PodGroup</code> 是运行时实例，由控制器从模板创建，携带策略和调度状态；支持 <code>priorityClassName</code>、<code>disruptionMode</code>、
+<code>resourceClaims</code>（DRA）、拓扑约束（alpha）。</li>
+<li>Job 控制器可以在 <code>WorkloadWithJob</code>（1.36 alpha）下为设置了 <code>.spec.scheduling</code> 的 Job 创建 Workload/PodGroup。</li>
+<li>LWS/JobSet/TrainJob 也分别有 <code>WorkloadAwareScheduling</code>/<code>scheduling</code> 集成，但都在 feature gate 后面。</li>
+</ul>
+<p>它仍然不是「训练工作负载原语」：Workload 只描述<strong>调度策略模板</strong>，不描述 Pod 模板、角色命令、成功条件或重启语义。
+它的价值是把「gang + 拓扑 + 优先级 + 中断模式」变成所有控制器共享的底座，减少 Volcano/scheduler-plugins 的碎片化。
+短期内，生产环境仍以 Volcano/JobSet/LWS 的成熟语义为主，但新平台应关注这条演进线。</p>
+<h2 id="四横向对比"><a class="header" href="#四横向对比">四、横向对比</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>K8s Job</th><th>Volcano Job</th><th>JobSet</th><th>LWS</th><th>TrainJob</th><th>MPIJob</th></tr>
+</thead>
+<tbody>
+<tr><td>负载单元</td><td>同构 Pod</td><td>多 Task</td><td>多 Job</td><td>leader+worker 组</td><td>运行时 + 节点</td><td>launcher+worker</td></tr>
+<tr><td>角色/异构模板</td><td>❌</td><td>✅ Task</td><td>✅ ReplicatedJob</td><td>✅ leader/worker</td><td>部分（runtime）</td><td>✅ Launcher/Worker</td></tr>
+<tr><td>主副本/组</td><td><code>completions</code></td><td><code>tasks[].replicas</code></td><td><code>replicatedJobs[].replicas</code></td><td><code>replicas × size</code></td><td><code>numNodes</code></td><td>worker replicas</td></tr>
+<tr><td>启动依赖</td><td>无（initContainer 自己写）</td><td><code>dependsOn</code></td><td><code>dependsOn</code>/<code>StartupPolicy</code></td><td><code>startupPolicy</code></td><td>Initializer + runtime</td><td><code>launcherCreationPolicy</code></td></tr>
+<tr><td>gang</td><td>❌（1.36+ alpha <code>.spec.scheduling</code>）</td><td>✅ <code>minAvailable</code></td><td>需 <code>scheduling</code>/外部</td><td>需 <code>scheduling</code>/外部</td><td>runtime 的 PodGroupPolicy</td><td><code>schedulingPolicy</code></td></tr>
+<tr><td>成员就绪</td><td>Pod Ready</td><td>minAvailable + 插件</td><td>Job Ready</td><td>LeaderReady</td><td>JobSet 条件</td><td>Worker Ready</td></tr>
+<tr><td>成功条件</td><td><code>successPolicy</code>（Indexed）</td><td><code>minSuccess</code></td><td><code>successPolicy</code> All/Any</td><td>无（服务型）</td><td>TrainJob 条件</td><td>launcher 成功</td></tr>
+<tr><td>失败/重试</td><td><code>backoffLimit</code>/PodFailurePolicy</td><td><code>maxRetry</code> + policies</td><td><code>failurePolicy</code> + <code>maxRestarts</code></td><td><code>restartPolicy</code> + <code>maxGroupRestarts</code></td><td>继承 JobSet</td><td><code>backoffLimit</code></td></tr>
+<tr><td>稳定 DNS</td><td>需自建（hostname 稳定）</td><td>✅ svc 插件</td><td>✅ Network</td><td>✅ 每组 headless</td><td>✅ runtime 注入</td><td>✅ hostfile</td></tr>
+<tr><td>卷</td><td>Pod 模板</td><td><code>spec.volumes</code></td><td><code>volumeClaimPolicies</code></td><td><code>volumeClaimTemplates</code></td><td>runtime 模板</td><td>Pod 模板</td></tr>
+<tr><td>放置/拓扑</td><td>原生 affinity</td><td>network-topology-aware</td><td>Workload-Aware（alpha）</td><td>placementPolicy/subGroup</td><td>runtime scheduling</td><td>gang policy</td></tr>
+<tr><td>最适合</td><td>简单批处理</td><td>异构 + gang + 队列</td><td>多阶段/多角色 Job</td><td>强同步稳定组</td><td>框架运行时复用</td><td>MPI/HPC</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="五选择决策树"><a class="header" href="#五选择决策树">五、选择决策树</a></h2>
+<pre class="mermaid">flowchart TB
+    S["训练负载"] --&gt; Q1{"长期常驻或对外服务?"}
+    Q1 -- "是" --&gt; D["Deployment / StatefulSet&lt;br/&gt;训练另起 Job"]
+    Q1 -- "否" --&gt; Q2{"需要多角色/多阶段?"}
+    Q2 -- "是" --&gt; Q3{"角色之间是 Job 级&lt;br/&gt;还是 Pod 级强同步?"}
+    Q3 -- "Job 级/有依赖" --&gt; JS["JobSet&lt;br/&gt;(+ gang)"]
+    Q3 -- "Pod 级 leader+worker" --&gt; L["LWS"]
+    Q2 -- "否" --&gt; Q4{"需要 gang / 队列?"}
+    Q4 -- "是" --&gt; V["Volcano Job&lt;br/&gt;+ Kueue"]
+    Q4 -- "否" --&gt; Q5{"框架特定且要复用运行时?"}
+    Q5 -- "是" --&gt; T["TrainJob / MPIJob"]
+    Q5 -- "否" --&gt; J["K8s Job&lt;br/&gt;Indexed + headless Service"]
+</pre>
+
+<blockquote>
+<p>同一套负载可以叠加多层：Kueue 管配额 → Volcano/JobSet/LWS 管成员与恢复 → TrainJob 管框架运行时。
+不要把「调度器」「工作负载控制器」「训练框架」混成一个选型问题。</p>
+</blockquote>
+<h2 id="六建模检查清单"><a class="header" href="#六建模检查清单">六、建模检查清单</a></h2>
+<p>在提交 YAML 前，逐条回答：</p>
+<ol>
+<li><strong>角色</strong>：有几种 Pod 模板？它们的镜像/资源/命令/重启策略是否不同？谁是 leader/rank 0/chief？</li>
+<li><strong>资源</strong>：GPU 是整卡还是切分？<code>/dev/shm</code> 够不够？RDMA/IB 设备怎么声明？checkpoint 暂存盘在哪？</li>
+<li><strong>依赖</strong>：哪些角色必须按顺序启动？哪些只是运行期可达？有没有 wait-for-master/initContainer？</li>
+<li><strong>就绪</strong>：怎么判断「成员到齐」？框架的 rendezvous 超时设多少？K8s 能看到吗？</li>
+<li><strong>完成</strong>：成功条件是「所有 Pod exit 0」还是「达到 step/eval」？谁来判定？失败时是否会被误判成功？</li>
+<li><strong>服务</strong>：rank 0 地址怎么传播？DNS 是否稳定？<code>publishNotReadyAddresses</code> 要不要开？</li>
+<li><strong>卷</strong>：checkpoint/数据集/scratch 分别放哪？Job 删除后是否保留？</li>
+<li><strong>放置</strong>：拓扑约束是什么？故障域多大？队列/配额/优先级怎么设？</li>
+<li><strong>恢复</strong>：最小恢复单元是进程、子组、整组还是整 Job？对应哪个 API 字段？</li>
+<li><strong>预算</strong>：重试上限、时间上限、退避、人工介入阈值分别是什么？</li>
+</ol>
+<h2 id="七证据"><a class="header" href="#七证据">七、证据</a></h2>
+<h3 id="volcano"><a class="header" href="#volcano">Volcano</a></h3>
+<ul>
+<li><a href="https://github.com/volcano-sh/volcano/blob/2006640ed881e632119eedb9d3fac82819402301/staging/src/volcano.sh/apis/pkg/apis/batch/v1alpha1/job.go#L55-L125">JobSpec：minAvailable/minSuccess/maxRetry/policies/plugins/queue</a></li>
+<li><a href="https://github.com/volcano-sh/volcano/blob/2006640ed881e632119eedb9d3fac82819402301/staging/src/volcano.sh/apis/pkg/apis/batch/v1alpha1/job.go#L239-L283">TaskSpec：replicas/minAvailable/policies/maxRetry/dependsOn/partitionPolicy</a></li>
+<li><a href="https://github.com/volcano-sh/volcano/blob/2006640ed881e632119eedb9d3fac82819402301/staging/src/volcano.sh/apis/pkg/apis/batch/v1alpha1/job.go#L307-L330">JobPhase 状态机</a></li>
+<li><a href="https://github.com/volcano-sh/volcano/blob/2006640ed881e632119eedb9d3fac82819402301/pkg/scheduler/plugins/gang/gang.go#L60-L85">gang 插件：ValidTaskNum &lt; MinAvailable 拒绝</a></li>
+<li><a href="https://github.com/volcano-sh/volcano/blob/2006640ed881e632119eedb9d3fac82819402301/pkg/controllers/job/plugins/svc/svc.go#L75-L155">svc 插件：hostname/subdomain/headless Service/hosts ConfigMap</a></li>
+<li><a href="https://github.com/volcano-sh/volcano/blob/2006640ed881e632119eedb9d3fac82819402301/pkg/controllers/job/plugins/distributed-framework/pytorch/pytorch.go#L100-L200">pytorch 插件：rank/world size/wait-for-master</a></li>
+</ul>
+<h3 id="jobset"><a class="header" href="#jobset">JobSet</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes-sigs/jobset/blob/32c9ea3144095df1fbc778433505c35a53e5acfe/api/jobset/v1alpha2/jobset_types.go#L123-L230">JobSetSpec：replicatedJobs/network/success/failure/coordinator/volumeClaimPolicies</a></li>
+<li><a href="https://github.com/kubernetes-sigs/jobset/blob/32c9ea3144095df1fbc778433505c35a53e5acfe/api/jobset/v1alpha2/jobset_types.go#L428-L450">Network：DNS 格式与 publishNotReadyAddresses</a></li>
+<li><a href="https://github.com/kubernetes-sigs/jobset/blob/32c9ea3144095df1fbc778433505c35a53e5acfe/api/jobset/v1alpha2/jobset_types.go#L460-L570">FailurePolicy：动作与 maxRestarts</a></li>
+<li><a href="https://github.com/kubernetes-sigs/jobset/blob/32c9ea3144095df1fbc778433505c35a53e5acfe/api/jobset/v1alpha2/jobset_types.go#L573-L606">SuccessPolicy：All/Any + target</a></li>
+<li><a href="https://github.com/kubernetes-sigs/jobset/blob/32c9ea3144095df1fbc778433505c35a53e5acfe/site/content/en/docs/tasks/failure_policy.md">Failure Policy 文档（含 host maintenance 例子）</a></li>
+</ul>
+<h3 id="lws"><a class="header" href="#lws">LWS</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes-sigs/lws/blob/51d7d5ad84f7badeee1466e4a7b846cacfdbc961/api/leaderworkerset/v1/leaderworkerset_types.go#L205-L260">LeaderWorkerSetSpec：replicas/template/startupPolicy/placementPolicy</a></li>
+<li><a href="https://github.com/kubernetes-sigs/lws/blob/51d7d5ad84f7badeee1466e4a7b846cacfdbc961/api/leaderworkerset/v1/leaderworkerset_types.go#L428-L500">LeaderWorkerTemplate：size/restartPolicy/maxGroupRestarts/restartBackoff/subGroup/volumes</a></li>
+<li><a href="https://github.com/kubernetes-sigs/lws/blob/51d7d5ad84f7badeee1466e4a7b846cacfdbc961/api/leaderworkerset/v1/leaderworkerset_types.go#L719-L757">RestartPolicy 常量</a></li>
+<li><a href="https://github.com/kubernetes-sigs/lws/blob/51d7d5ad84f7badeee1466e4a7b846cacfdbc961/site/content/en/docs/concepts/leaderworkerset/failure-handling/_index.md">Failure Handling 文档</a></li>
+</ul>
+<h3 id="kubeflow-trainer--mpijob"><a class="header" href="#kubeflow-trainer--mpijob">Kubeflow Trainer / MPIJob</a></h3>
+<ul>
+<li><a href="https://github.com/kubeflow/trainer/blob/ae27d3faf401f627af88d451cab7092458083420/pkg/apis/trainer/v1alpha1/trainjob_types.go#L102-L150">TrainJobSpec：runtimeRef/trainer/initializer/activeDeadline</a></li>
+<li><a href="https://github.com/kubeflow/trainer/blob/ae27d3faf401f627af88d451cab7092458083420/pkg/apis/trainer/v1alpha1/trainjob_types.go#L247-L307">Trainer：numNodes/resourcesPerNode/numProcPerNode</a></li>
+<li><a href="https://github.com/kubeflow/trainer/blob/ae27d3faf401f627af88d451cab7092458083420/pkg/runtime/framework/plugins/torch/torch.go#L150-L245">Torch 插件：PET_* 环境注入</a></li>
+<li><a href="https://github.com/kubeflow/trainer/blob/ae27d3faf401f627af88d451cab7092458083420/manifests/base/runtimes/torch_distributed.yaml">torch-distributed runtime</a></li>
+<li><a href="https://github.com/kubeflow/mpi-operator/blob/a057ca529cb7c3b831207d8bbd37f18136057e0f/pkg/apis/kubeflow/v2beta1/types.go#L168-L200">MPIJobSpec：slotsPerWorker/launcherCreationPolicy</a></li>
+<li><a href="https://github.com/kubeflow/mpi-operator/blob/a057ca529cb7c3b831207d8bbd37f18136057e0f/pkg/controller/mpi_job_controller.go#L1121-L1130">MPIJob 以 launcher Job 的成败为准</a></li>
+</ul>
+<h3 id="kubernetes"><a class="header" href="#kubernetes">Kubernetes</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/apis/batch/types.go#L307-L380">JobSpec：completions/parallelism/successPolicy/podFailurePolicy/backoffLimit</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/batch/v1/types.go#L420-L442">Indexed Job 的 completion index 与 hostname 语义</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/controller/job/job_controller.go#L1912-L1922">Indexed Job 设置 Pod hostname=<code>&lt;job&gt;-&lt;index&gt;</code></a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/features/kube_features.go#L2308-L2310">K8s Job 的 alpha gang：<code>.spec.scheduling</code> 与 <code>WorkloadWithJob</code></a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/scheduling/v1beta1/types.go#L93-L230">Workload API v1beta1 类型</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/scheduling/v1beta1/types.go#L567-L660">PodGroup v1beta1 类型</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/features/kube_features.go#L1622-L1625">GenericWorkload feature gate（1.37 beta，默认 false）</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/workloads/workload-api/">Workload API 官方文档</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/workloads/workload-api/policies/">PodGroup 调度策略</a></li>
+</ul>
+<h2 id="相关页面"><a class="header" href="#相关页面">相关页面</a></h2>
+<ul>
+<li><a href="./overview.html">专题总纲</a></li>
+<li><a href="../../../Machine_Learning/Distributed_Training/startup-communication.html">训练启动与通信</a></li>
+<li><a href="./failure-self-healing.html">训练失败与自愈</a></li>
+<li><a href="./checkpoint-preemption.html">Checkpoint 与抢占恢复</a></li>
+<li><a href="./rl-post-training.html">RL 后训练与业务接入</a></li>
+<li><a href="../../Kubernetes/Scheduling/kueue.html">Kueue：作业队列与配额</a></li>
+<li><a href="../../../Machine_Learning/High_Performance_Computing/slurm.html">Slurm</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../../docs/Cloud_Native/AI_Infrastructure/Distributed_Training/overview.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../../docs/Cloud_Native/AI_Infrastructure/Distributed_Training/failure-self-healing.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../../docs/Cloud_Native/AI_Infrastructure/Distributed_Training/overview.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../../docs/Cloud_Native/AI_Infrastructure/Distributed_Training/failure-self-healing.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../../highlight-abc7f01d.js"></script>
+        <script src="../../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

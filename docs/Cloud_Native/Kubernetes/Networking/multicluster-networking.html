@@ -1,0 +1,838 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>多集群网络互联：发现、访问、成员地址与 NAT 穿透 - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../../searchindex-dfe22a86.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../../toc-d9461900.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/Kubernetes/Networking/multicluster-networking.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="多集群网络互联发现访问成员地址与-nat-穿透"><a class="header" href="#多集群网络互联发现访问成员地址与-nat-穿透">多集群网络互联：发现、访问、成员地址与 NAT 穿透</a></h1>
+<p>单集群网络有三个默认假设：<strong>一个控制面、一个地址域、一个 DNS 域</strong>。多集群互联的第一性困难，就是这三个假设同时失效：</p>
+<ul>
+<li>每个集群独立分配 ClusterIP 和 PodCIDR，<strong>地址空间大概率重叠</strong>；</li>
+<li>Service/EndpointSlice 是 namespaced 且不出集群，<strong>没有天然的跨集群服务发现</strong>；</li>
+<li>每个集群的 <code>cluster.local</code> 各自权威，<strong>同名 Service 在不同集群指向不同后端</strong>；</li>
+<li>集群之间通常隔着 NAT/防火墙，<strong>没有可直达的 underlay</strong>。</li>
+</ul>
+<p>本文讨论的是“多个完整 Kubernetes 集群之间如何互相发现和访问“，不是“一个集群多个 namespace“，也不是“多集群调度“（Karmada/MultiKueue 是控制面话题）。单集群全链路见 <a href="./k8s-network-path.html">Kubernetes 网络全链路</a>，Service 规则见 <a href="./6_service相关.html">Service、kube-proxy 与 LoadBalancer</a>。</p>
+<p><strong>版本基线</strong>：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>项目</th><th>版本/commit</th><th>用途</th></tr>
+</thead>
+<tbody>
+<tr><td>Kubernetes</td><td>v1.37.2 <code>c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32</code></td><td>DNS/search、Service CIDR</td></tr>
+<tr><td>MCS-API</td><td><code>a3bfd21f6f3e2eadc10c4602ecf5dcfa87d53be5</code>（v0.5.x，v1beta1 storage）</td><td>ServiceExport/ServiceImport</td></tr>
+<tr><td>Submariner</td><td><code>a920c26efdccec536e73695356bda94cbda19fb6</code></td><td>隧道与 Globalnet</td></tr>
+<tr><td>Gateway API</td><td><code>d04e7458ee15351ca54a201c4b1c43412f917b91</code></td><td>GEP-1748</td></tr>
+<tr><td>CoreDNS</td><td><code>996a30df7f5cca79a3bb34078f8897f673ac74dd</code>（1.15.0-dev）</td><td>multicluster zone</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p>证据分级：<strong>【码】</strong>= 已对照本地 checkout 的源码/CRD，给出 permalink 与行号；<strong>【文档】</strong>= 官方文档明确说明，未在本地源码复核。Cilium/Istio 未 clone 源码，相关结论均为文档级。</p>
+</blockquote>
+<hr>
+<h2 id="1-问题空间四种连通模型"><a class="header" href="#1-问题空间四种连通模型">1. 问题空间：四种连通模型</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>模型</th><th>语义</th><th>典型实现</th><th>解决什么</th><th>不解决什么</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>扁平 L3</strong></td><td>跨集群 Pod IP 可直接路由，无 NAT</td><td>Cilium ClusterMesh native routing、云 VPC peering、Istio 单网络</td><td>Pod↔Pod 直达、保源 IP</td><td>要求 PodCIDR 不重叠；跨云难</td></tr>
+<tr><td><strong>网关/隧道</strong></td><td>每集群选网关，隧道封装，路由注入</td><td>Submariner（IPsec/WireGuard/VXLAN）、Liqo（WireGuard+Geneve）、Istio east-west GW</td><td>私网互通、NAT 穿透</td><td>多一跳、MTU、网关带宽</td></tr>
+<tr><td><strong>Service export/import</strong></td><td>只暴露“服务“层，端点跨集群合并</td><td>MCS-API、Cilium Global Service、Lighthouse</td><td>服务发现与 VIP 语义统一</td><td><strong>自身无数据面</strong></td></tr>
+<tr><td><strong>DNS-only</strong></td><td>只做名字→地址映射/转发</td><td>CoreDNS <code>multicluster</code>、external-dns、Lighthouse</td><td>名字可达</td><td>不解决可达性；解析到不可路由 IP 等于故障</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>最重要的认知</strong>：MCS-API 属于第 3 类，它<strong>不是数据面</strong>；Cilium/Submariner 同时提供第 2/3 类。把 MCS 当成“多集群网络方案“是最常见的误解。</p>
+<hr>
+<h2 id="2-成员集群与成员地址"><a class="header" href="#2-成员集群与成员地址">2. 成员集群与成员地址</a></h2>
+<h3 id="21-定义"><a class="header" href="#21-定义">2.1 定义</a></h3>
+<p><strong>成员集群（member cluster）</strong>：加入某个 ClusterSet/Mesh 的一个完整 Kubernetes 集群，具有独立 apiserver、etcd、Service/Pod CIDR 和 DNS 域。判定它“是成员“的最小信息集是：</p>
+<ol>
+<li>唯一集群标识（cluster name/ID）；</li>
+<li>其他成员可达的 apiserver 端点（用于对象同步/RBAC）；</li>
+<li>该集群的 Pod/Service CIDR（用于路由/冲突检测）。</li>
+</ol>
+<p><strong>成员地址（member address）</strong>：不属于某个 Pod/Service，而属于“成员集群本身“的地址集合，用于<strong>建隧道、注入路由、做身份判定</strong>。至少包含：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>地址/标识</th><th>作用</th><th>谁维护</th></tr>
+</thead>
+<tbody>
+<tr><td>集群名/ID</td><td>隧道命名、DNS label、身份位</td><td>各方案自己的配置/CR</td></tr>
+<tr><td>apiserver 端点</td><td>同步 ServiceImport/EndpointSlice、Broker 访问</td><td>kubeconfig/Cluster CR</td></tr>
+<tr><td>节点 InternalIP/ExternalIP</td><td>underlay 可达性；隧道端点</td><td>Node 对象/Endpoint CR</td></tr>
+<tr><td>网关节点地址</td><td>隧道端点（可能是 nodeIP/LB VIP/浮动 IP）</td><td>Gateway/Endpoint CR</td></tr>
+<tr><td>隧道端点 + 端口</td><td>封装后的实际五元组（可能被 NAT 改写）</td><td>探测后写入</td></tr>
+<tr><td>Pod CIDR / Service CIDR</td><td>路由注入、冲突检测</td><td>Cluster CR/配置</td></tr>
+<tr><td>Globalnet CIDR</td><td>重叠场景下的二次地址空间</td><td>Globalnet 配置</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="22-成员信息存在哪"><a class="header" href="#22-成员信息存在哪">2.2 成员信息存在哪</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>信息</th><th>Submariner</th><th>Cilium ClusterMesh</th><th>MCS-API</th><th>Karmada</th></tr>
+</thead>
+<tbody>
+<tr><td>集群 ID</td><td><code>Cluster.spec.cluster_id</code>（≤63）【码】</td><td><code>cluster.id</code> 1–255 + <code>cluster.name</code> ≤32【文档】</td><td>EndpointSlice 的 <code>multicluster.kubernetes.io/source-cluster</code> 标签【码】</td><td><code>Cluster.spec.id</code>【文档】</td></tr>
+<tr><td>apiserver 端点</td><td>Broker apiserver（broker-info/kubeconfig）【文档】</td><td>各集群 <code>clustermesh-apiserver</code>（etcd 2379/mTLS）【文档】</td><td><strong>不定义</strong></td><td><code>spec.apiEndpoint</code>【文档】</td></tr>
+<tr><td>节点公/私网 IP</td><td><code>Endpoint.private_ip(s)/public_ip(s)</code>【码】</td><td>要求节点 InternalIP 互通【文档】</td><td><strong>不定义</strong></td><td>不定义</td></tr>
+<tr><td>网关/隧道端点</td><td><code>Endpoint</code> + <code>backend_config</code>（udp-port/natt-discovery-port）【码】</td><td>无网关，节点直连【文档】</td><td><strong>不定义</strong></td><td>不定义</td></tr>
+<tr><td>Pod/Service CIDR</td><td><code>Cluster.cluster_cidr/service_cidr</code>；路由用 <code>Endpoint.subnets</code>【码】</td><td>PodCIDR 必须全局唯一【文档】</td><td>由实现决定</td><td>不定义</td></tr>
+<tr><td>Globalnet CIDR</td><td><code>Cluster.global_cidr</code> + <code>ClusterGlobalEgressIP</code>/<code>GlobalIngressIP</code>【码】</td><td>无</td><td>无</td><td>无</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>MCS 的 ClusterSet 是逻辑概念，不是可查询的 CRD</strong>：mcs-api 仓库只有 <code>serviceexports</code> 和 <code>serviceimports</code> 两个 CRD（<a href="https://github.com/kubernetes-sigs/mcs-api/tree/a3bfd21f6f3e2eadc10c4602ecf5dcfa87d53be5/config/crd">config/crd</a>）。所以“MCS 不管成员注册和隧道地址“不是缺陷，而是它的定位：<strong>它只定义服务导出/导入的 API 语义</strong>，成员地址由数据面实现自己维护。</p>
+<h3 id="23-submariner-的字段最完整的一套成员地址模型"><a class="header" href="#23-submariner-的字段最完整的一套成员地址模型">2.3 Submariner 的字段（最完整的一套“成员地址“模型）</a></h3>
+<p><code>Cluster</code> CR（<a href="https://github.com/submariner-io/submariner/blob/a920c26efdccec536e73695356bda94cbda19fb6/pkg/apis/submariner.io/v1/types.go#L34-L48">types.go L34-L48</a>）：</p>
+<pre><code class="language-go">type ClusterSpec struct {
+    ClusterID   string   // ≤63
+    ColorCodes  []string
+    ServiceCIDR []string
+    ClusterCIDR []string
+    GlobalCIDR  []string
+}
+</code></pre>
+<p><code>Endpoint</code> CR（<a href="https://github.com/submariner-io/submariner/blob/a920c26efdccec536e73695356bda94cbda19fb6/pkg/apis/submariner.io/v1/types.go#L68-L96">types.go L68-L96</a>）：</p>
+<pre><code class="language-go">type EndpointSpec struct {
+    ClusterID     string
+    CableName     string
+    HealthCheckIPs []string
+    Hostname      string
+    Subnets       []string   // 真正被注入路由的集合
+    PrivateIPs    []string
+    PublicIPs     []string
+    NATEnabled    bool
+    Backend       string
+    BackendConfig map[string]string
+}
+</code></pre>
+<p><code>Subnets</code> 的构成（<a href="https://github.com/submariner-io/submariner/blob/a920c26efdccec536e73695356bda94cbda19fb6/pkg/endpoint/local_endpoint.go#L152-L178">local_endpoint.go L152-L178</a>）：</p>
+<ul>
+<li>未开 Globalnet：<code>ServiceCIDR + ClusterCIDR</code>；</li>
+<li>开 Globalnet：<code>GlobalCIDR + ServiceCIDR + ClusterCIDR</code>（IPv6 会做子网提取）。</li>
+</ul>
+<p><code>Gateway</code> CR（<strong>每个集群本地</strong>，不在 Broker）记录 <code>haStatus</code>、<code>localEndpoint</code>、<code>connections[].usingIP/usingNAT/latencyRTT</code>（<a href="https://github.com/submariner-io/submariner/blob/a920c26efdccec536e73695356bda94cbda19fb6/pkg/apis/submariner.io/v1/types.go#L138-L185">types.go L138-L185</a>）。这就是“当前隧道实际用的是哪个成员地址、有没有走 NAT、RTT 多少“的直接证据。</p>
+<hr>
+<h2 id="3-地址冲突最容易被低估的问题"><a class="header" href="#3-地址冲突最容易被低估的问题">3. 地址冲突：最容易被低估的问题</a></h2>
+<p>两个集群都用 <code>10.96.0.0/12</code>（Service）和 <code>10.244.0.0/16</code>（Pod）是常态。一旦互联：</p>
+<ul>
+<li>远端 Pod IP 可能正好是本地某个 Pod/Service 的 IP；</li>
+<li>远端 ClusterIP 可能和本地某个 Service 的 VIP 完全相同；</li>
+<li>路由表无法区分“10.244.1.5 是本地还是远端“。</li>
+</ul>
+<p>三种处理策略：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>策略</th><th>代表</th><th>做法</th><th>代价</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>要求不重叠</strong></td><td>Cilium ClusterMesh、Istio 单网络</td><td>规划时给每个集群独立 PodCIDR/ServiceCIDR</td><td>跨组织/跨云几乎不可行</td></tr>
+<tr><td><strong>全局地址重写</strong></td><td>Submariner Globalnet</td><td>每集群分配 GlobalCIDR，网关做 1:1 NAT</td><td>网关成为瓶颈；源 IP 变化</td></tr>
+<tr><td><strong>NAT + IPAM 重映射</strong></td><td>Liqo</td><td>跨集群用 WireGuard，集群内 Geneve，nftables 做 NAT</td><td>复杂度高；应用可见地址变化</td></tr>
+</tbody>
+</table>
+</div>
+<p>Submariner Globalnet 的两个 CRD：</p>
+<ul>
+<li><strong>出口</strong> <code>ClusterGlobalEgressIP</code>：默认 8 个 IP（缓解端口耗尽），只有名为 <code>cluster-egress.submariner.io</code> 的实例被识别；</li>
+<li><strong>入口</strong> <code>GlobalIngressIP</code>：target 支持 <code>ClusterIPService</code>/<code>HeadlessServicePod</code>/<code>HeadlessServiceEndpoints</code>。</li>
+</ul>
+<p>所有地址转换发生在 active gateway；IPAM 用 <code>admiral/pkg/ipam</code> 的 pool；启动时会检查本地/远端 GlobalCIDR 是否重叠。</p>
+<p><strong>结论</strong>：如果两个集群的 CIDR 已经重叠，又不想改网段，就必须选带地址重写/NAT 的方案（Globalnet、Liqo），或者只做 L7 网关（Skupper/Ingress），不要假装“打通 L3“。</p>
+<hr>
+<h2 id="4-mcs-api规范层能做什么不能做什么"><a class="header" href="#4-mcs-api规范层能做什么不能做什么">4. MCS-API：规范层能做什么、不能做什么</a></h2>
+<h3 id="41-两个-crd"><a class="header" href="#41-两个-crd">4.1 两个 CRD</a></h3>
+<p><strong>ServiceExport</strong> 只是“声明同名同 namespace 的 Service 可被消费“，spec 几乎为空（仅可选 exportedLabels/exportedAnnotations），状态由实现填充。</p>
+<p><strong>ServiceImport</strong> 才是“合并后的服务“：</p>
+<pre><code class="language-yaml">apiVersion: multicluster.x-k8s.io/v1beta1
+kind: ServiceImport
+metadata: {name: api, namespace: default}
+spec:
+  type: ClusterSetIP          # 或 Headless
+  ips: ["10.96.0.10"]          # 最多 2 个（双栈）
+  ports: [{name: http, port: 80, protocol: TCP}]
+  sessionAffinity: None
+status:
+  clusters:
+  - cluster: cluster-a
+  - cluster: cluster-b
+  conditions:
+  - type: Ready
+    status: "True"
+</code></pre>
+<p>关键字段（<a href="https://github.com/kubernetes-sigs/mcs-api/blob/a3bfd21f6f3e2eadc10c4602ecf5dcfa87d53be5/pkg/apis/v1beta1/serviceimport.go#L57-L109">serviceimport.go L57-L109</a>）：</p>
+<ul>
+<li><code>type</code> 只能是 <code>ClusterSetIP</code> 或 <code>Headless</code>；</li>
+<li><code>ips</code> 最多 2 个；</li>
+<li>还携带 <code>ports</code>、<code>sessionAffinity</code>、<code>internalTrafficPolicy</code>、<code>trafficDistribution</code>、<code>ipFamilies</code>；</li>
+<li><code>status.endpointSliceObjects</code>（Present/Absent）、<code>status.clusters</code>、<code>status.conditions</code>。</li>
+</ul>
+<p><code>v1beta1</code> 是 storage 版本；CRD release 标注 v0.5.2。</p>
+<h3 id="42-endpointslice-导出约定"><a class="header" href="#42-endpointslice-导出约定">4.2 EndpointSlice 导出约定</a></h3>
+<ul>
+<li>必须带 <code>multicluster.kubernetes.io/service-name</code> 与 <code>multicluster.kubernetes.io/source-cluster</code> 两个标签（<a href="https://github.com/kubernetes-sigs/mcs-api/blob/a3bfd21f6f3e2eadc10c4602ecf5dcfa87d53be5/pkg/apis/v1beta1/well_known_labels.go#L19-L25">well_known_labels.go L19-L25</a>）；</li>
+<li>由 MCS 控制器创建的 EndpointSlice <strong>不得</strong>标记为 <code>endpointslice-controller.k8s.io</code>（K8s 原生 controller），conformance 会检查 <code>endpointslice.kubernetes.io/managed-by</code>；</li>
+<li>参考 controller 的做法是“为 ServiceImport 派生一个 <code>derived-&lt;hash&gt;</code> 的普通 Service，再把 EndpointSlice 的 <code>kubernetes.io/service-name</code> 改指向派生 Service“，并打 <code>multicluster.kubernetes.io/derived-service</code> 注解。</li>
+</ul>
+<h3 id="43-dns-规范"><a class="header" href="#43-dns-规范">4.3 DNS 规范</a></h3>
+<pre><code class="language-text">&lt;service&gt;.&lt;namespace&gt;.svc.clusterset.local
+</code></pre>
+<ul>
+<li>普通 ServiceImport（ClusterSetIP）：返回 ClusterSet VIP；</li>
+<li>Headless：返回多条 A/AAAA（每个端点）；</li>
+<li>单 Pod：<code>&lt;hostname&gt;.&lt;clusterid&gt;.&lt;svc&gt;.&lt;ns&gt;.svc.clusterset.local</code>，<code>clusterid</code> 来自 EndpointSlice 的 <code>source-cluster</code> 标签；</li>
+<li>conformance 默认 <code>--dns-domain=clusterset.local</code>，实现可覆盖（<a href="https://github.com/kubernetes-sigs/mcs-api/blob/a3bfd21f6f3e2eadc10c4602ecf5dcfa87d53be5/conformance/conformance_suite.go#L84-L85">conformance_suite.go L84-L85</a>）。</li>
+</ul>
+<p><strong>关键设计</strong>：即使本地存在同名 Service，消费者也必须显式使用 <code>*.svc.clusterset.local</code>。这是“opt-in 多集群语义“，不改变现有 <code>cluster.local</code> 行为。原因是 <code>cluster.local</code> 必须保持本地权威（split-horizon），否则会出现“解析到远端 VIP 但本地不可路由“或“远端 VIP 正好撞上本地 Service“。</p>
+<h3 id="44-冲突处理"><a class="header" href="#44-冲突处理">4.4 冲突处理</a></h3>
+<p>冲突维度：port、type（headless vs not）、sessionAffinity、ITP、trafficDistribution、labels、annotations、ipFamilies。</p>
+<p>解决规则：<strong>按 <code>ServiceExport.creationTimestamp</code> 从旧到新，最老的赢</strong>；冲突状态翻转不影响在用流量；从 True→False 时 ServiceImport 可能保持不变以避免抖动。<code>ServiceExport</code> 有三个条件组：</p>
+<ul>
+<li><code>Valid</code>：<code>Valid</code>/<code>NoService</code>/<code>InvalidServiceType</code>；</li>
+<li><code>Ready</code>：<code>Exported</code>/<code>Ready</code>/<code>Pending</code>/<code>Failed</code>；</li>
+<li><code>Conflict</code>：多个 reason 可组合。</li>
+</ul>
+<h3 id="45-mcs-不解决什么"><a class="header" href="#45-mcs-不解决什么">4.5 MCS 不解决什么</a></h3>
+<ul>
+<li><strong>不是数据面</strong>：不定义隧道、不转发包、不做 NAT；</li>
+<li><strong>不定义成员注册/ClusterSet 对象</strong>：只有 2 个 CRD；</li>
+<li><strong>不解决地址重叠</strong>：ClusterSetIP 仍是某个地址域里的 VIP；</li>
+<li><strong>不提供健康检查/故障转移</strong>：<code>Ready</code> 语义留给实现；</li>
+<li><strong>不规定 apiserver 端点如何暴露</strong>：Broker/etcd 暴露方式是实现细节；</li>
+<li><strong>不定义跨集群 NetworkPolicy</strong>。</li>
+</ul>
+<p>所以选 MCS 时，必须同时选一个数据面（Submariner Lighthouse、Cilium mcsapi、Istio 等），并确认它通过 <a href="https://github.com/kubernetes-sigs/mcs-api/tree/a3bfd21f6f3e2eadc10c4602ecf5dcfa87d53be5/conformance">MCS conformance suite</a>。conformance 是判断“某实现是否真的 MCS 兼容“的唯一标准工具，不要只看厂商文档。</p>
+<h3 id="46-coredns-原生支持-mcs"><a class="header" href="#46-coredns-原生支持-mcs">4.6 CoreDNS 原生支持 MCS</a></h3>
+<p>CoreDNS 的 <code>kubernetes</code> 插件支持 <code>multicluster</code> 选项（1.12.2 引入）：</p>
+<pre><code class="language-text">kubernetes cluster.local clusterset.local {
+    multicluster clusterset.local
+}
+</code></pre>
+<p>它 watch <code>ServiceImport</code> 与带 <code>mcs.LabelServiceName</code> 的 EndpointSlice，记录 Key 里插入 clusterId；插件必须对所列 zone 权威（<a href="https://github.com/coredns/coredns/blob/996a30df7f5cca79a3bb34078f8897f673ac74dd/plugin/kubernetes/README.md#L118-L121">README.md L118-L121</a>、<a href="https://github.com/coredns/coredns/blob/996a30df7f5cca79a3bb34078f8897f673ac74dd/plugin/kubernetes/setup.go#L239-L240">setup.go L239-L240</a>）。</p>
+<p>这带来一个重要事实：<strong><code>clusterset.local</code> 不一定需要独立的 Lighthouse DNS</strong>。如果数据面已经把 ServiceImport/EndpointSlice 同步到本地集群，CoreDNS 可以直接权威回答。Cilium 的 MCS 实现就可以自动配置这段（<code>corednsAutoConfigure</code>）；Submariner Lighthouse 则是独立 DNS + CoreDNS forward。</p>
+<hr>
+<h2 id="5-submariner先把-l3-打通再在上面做服务发现"><a class="header" href="#5-submariner先把-l3-打通再在上面做服务发现">5. Submariner：先把 L3 打通，再在上面做服务发现</a></h2>
+<h3 id="51-组件与职责"><a class="header" href="#51-组件与职责">5.1 组件与职责</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>组件</th><th>位置</th><th>职责</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Broker</strong></td><td>一个集群的 <code>submariner-k8s-broker</code> namespace</td><td>承载 <code>Cluster</code>/<code>Endpoint</code> 等 CRD + ServiceAccount/RBAC，交换元数据；Broker 挂了不影响已建立的数据面</td></tr>
+<tr><td><strong>Gateway Engine</strong></td><td>每集群 DaemonSet，仅跑在 <code>submariner.io/gateway=true</code> 节点</td><td>建隧道、leader 选举（active/passive）、上报 Endpoint</td></tr>
+<tr><td><strong>Route Agent</strong></td><td>每节点 DaemonSet</td><td>把跨集群流量从各节点导到本集群 active gateway（集群内 VXLAN 4800 或复用 OVN GENEVE）</td></tr>
+<tr><td><strong>Lighthouse</strong></td><td>每集群 agent + DNS</td><td>ServiceImport/EndpointSlice 同步 + <code>clusterset.local</code> 权威解析</td></tr>
+<tr><td><strong>Globalnet</strong></td><td>可选</td><td>重叠 CIDR 的 1:1 全局地址 + SNAT/DNAT</td></tr>
+</tbody>
+</table>
+</div>
+<p>Broker 上安装的 CRD 至少包括 <code>clusters</code>、<code>endpoints</code>、<code>gateways</code>、<code>clusterglobalegressips</code>、<code>globalegressips</code>、<code>globalingressips</code>、<code>gatewayroutes</code>、<code>nongatewayroutes</code>、<code>routeagents</code>（<a href="https://github.com/submariner-io/submariner/tree/a920c26efdccec536e73695356bda94cbda19fb6/deploy/crds">deploy/crds</a>）。哪些放 Broker、哪些只在本集群，由 operator 决定；<code>Gateway</code> 语义上是本地的。</p>
+<h3 id="52-cable-driveripsecwireguardvxlan"><a class="header" href="#52-cable-driveripsecwireguardvxlan">5.2 Cable driver：IPsec、WireGuard、VXLAN</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>driver</th><th>封装</th><th>加密</th><th>NAT 支持</th><th>默认端口</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>libreswan（默认）</strong></td><td>IPsec ESP（可强制 UDP 封装）</td><td>是（PSK 或 cert）</td><td>是（NAT-T）</td><td><strong>4500/udp</strong>（IKE 也走 4500），ESP 是 IP proto 50</td></tr>
+<tr><td><strong>WireGuard</strong></td><td>UDP</td><td>是</td><td>是</td><td>4500/udp（可配）</td></tr>
+<tr><td><strong>VXLAN</strong></td><td>UDP + VXLAN</td><td><strong>否</strong>（明文）</td><td><strong>否</strong></td><td>4500/udp（跨集群）</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>三个常见错误认知，这里一次纠正</strong>：</p>
+<ol>
+<li><strong>跨集群 VXLAN 默认不是 4800</strong>。<code>vxlan.DefaultPort = 4500</code>（<a href="https://github.com/submariner-io/submariner/blob/a920c26efdccec536e73695356bda94cbda19fb6/pkg/cable/vxlan/vxlan.go#L43-L50">cable/vxlan/vxlan.go L43-L50</a>）；<strong>4800 是集群内</strong> route-agent → gateway 的 VXLAN（<code>IntraClusterVxLAN</code>，<a href="https://github.com/submariner-io/submariner/blob/a920c26efdccec536e73695356bda94cbda19fb6/pkg/port/ports.go#L21-L25">ports.go L21-L25</a>）。很多博客把两者混为一谈。</li>
+<li><strong>IPsec 不依赖 500/udp</strong>。libreswan 用 <code>--ikeport</code> 把 IKE 端口显式设为 NATT 端口（默认 4500），所以防火墙只需放行 <strong>4500/udp</strong>（以及 NAT 探测的 4490/udp）。</li>
+<li><strong>没有 8080 的 HTTP 健康检查</strong>。当前实现是 ICMP ping 每个远端 gateway（<code>healthchecker</code> → <code>pinger</code>），RTT 写到 <code>Gateway.status.connections[].latencyRTT</code>；探测目标是 gateway 节点上 CNI 接口的 IP（<code>HealthCheckIP</code>）。因此<strong>网关节点必须允许 ICMP echo</strong>，否则会出现“隧道 up 但 connection error“。</li>
+</ol>
+<p>端口表（默认值）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>用途</th><th>端口/协议</th></tr>
+</thead>
+<tbody>
+<tr><td>NAT 类型/可达性探测</td><td><strong>4490/udp</strong>（可 per-node 改）</td></tr>
+<tr><td>跨集群隧道</td><td><strong>4500/udp</strong>（IPsec IKE/ESP-in-UDP、WireGuard、VXLAN）</td></tr>
+<tr><td>无 NAT 时的 IPsec ESP</td><td><strong>IP proto 50</strong></td></tr>
+<tr><td>集群内 VXLAN（route-agent → gateway）</td><td><strong>4800/udp</strong></td></tr>
+<tr><td>健康检查</td><td><strong>ICMP echo</strong>（无 TCP 端口）</td></tr>
+<tr><td>Broker apiserver</td><td><strong>443/tcp</strong></td></tr>
+<tr><td>Lighthouse DNS</td><td><strong>53/udp,tcp</strong></td></tr>
+</tbody>
+</table>
+</div>
+<p>常量证据：<a href="https://github.com/submariner-io/submariner/blob/a920c26efdccec536e73695356bda94cbda19fb6/pkg/port/ports.go#L21-L25">ports.go L21-L25</a>、<a href="https://github.com/submariner-io/submariner/blob/a920c26efdccec536e73695356bda94cbda19fb6/pkg/cable/libreswan/libreswan.go#L168-L168">libreswan.go L168</a>、<a href="https://github.com/submariner-io/submariner/blob/a920c26efdccec536e73695356bda94cbda19fb6/pkg/cable/wireguard/driver.go#L77-L77">wireguard/driver.go L77</a>。</p>
+<h3 id="53-nat-穿透"><a class="header" href="#53-nat-穿透">5.3 NAT 穿透</a></h3>
+<p>每个 gateway 对远端 <strong>public 与 private IP 都发起探测</strong>，决定最终使用的 IP/NAT 组合，<strong>优先 private</strong>；探测协议默认 4490/udp。<code>PublicIP</code> 解析支持五种 resolver：</p>
+<pre><code class="language-text">api:api.ipify.org          # 通过外部 API 查公网 IP
+lb:external-gw-lb          # 通过 LoadBalancer
+ipv4:1.2.3.4               # 直接指定
+ipv6:FD00::/...            # IPv6
+dns:mygateway.example.com  # DNS 解析
+</code></pre>
+<p>（<a href="https://github.com/submariner-io/submariner/blob/a920c26efdccec536e73695356bda94cbda19fb6/pkg/apis/submariner.io/v1/types.go#L108-L115">types.go L108-L115</a>）</p>
+<p>探测失败时回退到 join 时的 <code>--natt</code> 设置；单侧可直连时用 <code>--preferred-server</code> 形成 client/server 模型（比较 cable name 字典序决定谁当 server）。云上没有公网 IP 时用 <code>--load-balancer</code>，LB 后端只选 <code>gateway.submariner.io/status=active</code> 的 Pod。HA 场景下每个 gateway 必须用独立 UDP 端口并做端口映射。</p>
+<h3 id="54-globalnet"><a class="header" href="#54-globalnet">5.4 Globalnet</a></h3>
+<ul>
+<li>给每个集群分配一段 <code>GlobalCIDR</code>（文档示例 <code>242.0.0.0/8</code>，不是“默认值“）；</li>
+<li>出口用 <code>ClusterGlobalEgressIP</code>（默认 8 个 IP，缓解端口耗尽；只有 <code>cluster-egress.submariner.io</code> 实例被识别）；</li>
+<li>入口用 <code>GlobalIngressIP</code>（target 支持 ClusterIPService/HeadlessServicePod/HeadlessServiceEndpoints）；</li>
+<li>所有地址转换发生在 active gateway；启动时检查本地/远端 GlobalCIDR 是否重叠；</li>
+<li>依赖 <code>externalIPs</code> 的 Service 创建，需要绕开 <code>DenyServiceExternalIPs</code>。</li>
+</ul>
+<h3 id="55-数据路径"><a class="header" href="#55-数据路径">5.5 数据路径</a></h3>
+<p><strong>Pod → 远端 Pod（无 Globalnet）</strong>：</p>
+<pre><code class="language-text">源 Pod
+  → 本节点路由表（route agent 为远端 Endpoint.subnets 注入）
+  → 本集群 active gateway 节点（集群内 VXLAN 4800 或 OVN GENEVE）
+  → IPsec/WireGuard/VXLAN 隧道（4500/udp）
+  → 远端 gateway
+  → 远端节点
+  → 目标 Pod
+</code></pre>
+<p><strong>Pod → 远端 Service</strong>：</p>
+<ol>
+<li>Lighthouse 把导出服务的 ClusterIP 写进 ServiceImport；</li>
+<li>本地 DNS 返回远端 ClusterIP（或 GlobalIP）；</li>
+<li>该 ClusterIP 属于远端 ServiceCIDR，通过隧道到达远端 gateway；</li>
+<li>远端节点上的 kube-proxy 再做 DNAT 到后端 Pod（或在 gateway 完成 Globalnet DNAT/SNAT）。</li>
+</ol>
+<p>文档明确 libreswan 会建 <strong>4 条隧道</strong>（Pod↔Pod、Pod↔Service、Service↔Pod、Service↔Service），所以“为什么有 4 条 SA“不是异常。</p>
+<p><strong>Headless</strong>：Lighthouse 返回各 Pod IP（或 GlobalIP），客户端直连 Pod，需要 Pod CIDR 可路由（或 Globalnet 地址可路由）。</p>
+<h3 id="56-运维与排障"><a class="header" href="#56-运维与排障">5.6 运维与排障</a></h3>
+<pre><code class="language-bash">subctl show all
+subctl show connections
+subctl show endpoints
+subctl show clusters
+subctl diagnose all
+subctl diagnose firewall inter-cluster \
+  --context &lt;local&gt; --remotecontext &lt;remote&gt;
+subctl gather
+</code></pre>
+<p><code>subctl gather</code> 会收集各集群的 CRD、Pod 日志、iptables/ipset/路由、<code>ip xfrm</code> 状态，是 Submariner 问题的首选材料。</p>
+<hr>
+<h2 id="6-cilium-clustermeshebpf-的节点直连"><a class="header" href="#6-cilium-clustermeshebpf-的节点直连">6. Cilium ClusterMesh：eBPF 的节点直连</a></h2>
+<h3 id="61-架构"><a class="header" href="#61-架构">6.1 架构</a></h3>
+<p>每个集群一个 <code>clustermesh-apiserver</code> Pod，内含：</p>
+<ul>
+<li><strong>etcd</strong>：暴露本地 Cilium/K8s 状态，mTLS；</li>
+<li><strong>apiserver</strong>：把本地状态写入 etcd；</li>
+<li><strong>kvstoremesh</strong>：把远端状态同步进本地缓存。</li>
+</ul>
+<p>agent 用 kvstore 客户端读本地缓存；<strong>Pod 到 Pod 是节点间直接转发，不经过任何 proxy/gateway</strong>。已启用 kvstore 模式时复用现有 etcd，不再部署内嵌 etcd。</p>
+<h3 id="62-前置条件决定能不能用"><a class="header" href="#62-前置条件决定能不能用">6.2 前置条件（决定“能不能用“）</a></h3>
+<ul>
+<li>所有集群<strong>同一 datapath 模式</strong>（native routing 或 encapsulation 不能混）；</li>
+<li>Cilium 版本相差 ≤1 个 minor；</li>
+<li><strong>PodCIDR 全局唯一，节点间用 InternalIP 互通</strong>；</li>
+<li>native routing 还需 <code>ipv4-native-routing-cidr</code> 覆盖全部集群的 PodCIDR；</li>
+<li><code>maxConnectedClusters</code>（255 默认 / 511）必须所有集群一致，<strong>安装后不可改</strong>（它影响 numeric identity 的位分配，身份上限会从 65535 降到 32767）。</li>
+</ul>
+<p>因此 <strong>Cilium 不做地址重叠</strong>：它没有 Globalnet 式地址重写。所谓“共享服务“是 VIP 层面的，不是 IP 层面的。</p>
+<h3 id="63-global-service-与策略"><a class="header" href="#63-global-service-与策略">6.3 Global Service 与策略</a></h3>
+<ul>
+<li>两个集群同名同 namespace 的 Service + <code>service.cilium.io/global: "true"</code> 组成 Global Service；</li>
+<li><code>service.cilium.io/shared: "false"</code>：只消费远端，不共享本地；</li>
+<li><code>service.cilium.io/affinity: none|local|remote</code>：就近/远端优先；</li>
+<li>EndpointSlice 同步（beta）：<code>service.cilium.io/global-sync-endpoint-slices</code>，供第三方 controller 发现远端端点；Headless 默认开启；</li>
+<li>跨集群策略用 <code>io.cilium.k8s.policy.cluster: &lt;cluster-name&gt;</code> 选择远端端点；<strong>v1.18 起策略默认只选本地集群</strong>，要显式指定 cluster 或用 <code>Exists</code> 匹配所有集群；</li>
+<li>MCS-API 与 Global Service 是两条并行路径，可同时启用。</li>
+</ul>
+<h3 id="64-可观测与排障"><a class="header" href="#64-可观测与排障">6.4 可观测与排障</a></h3>
+<pre><code class="language-bash">cilium status
+cilium clustermesh status --wait
+cilium connectivity test --multi-cluster
+cilium-dbg troubleshoot clustermesh
+clustermesh-apiserver kvstoremesh-dbg troubleshoot
+</code></pre>
+<p>端口（文档默认值）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>用途</th><th>端口</th></tr>
+</thead>
+<tbody>
+<tr><td>clustermesh etcd（mTLS）</td><td>2379/tcp</td></tr>
+<tr><td>VXLAN overlay</td><td>8472/udp</td></tr>
+<tr><td>Geneve</td><td>6081/udp</td></tr>
+<tr><td>WireGuard</td><td>51871/udp</td></tr>
+<tr><td>cilium-health</td><td>4240/tcp + ICMP</td></tr>
+<tr><td>Hubble</td><td>4244/4245/tcp</td></tr>
+</tbody>
+</table>
+</div>
+<p>注意：Cilium 的<strong>所有互联集群构成单一信任域</strong>（共享 CA/mTLS），跨集群策略对象本身<strong>不会自动分发</strong>，必须在每个集群各建一份。</p>
+<hr>
+<h2 id="7-其他方案与横向对比"><a class="header" href="#7-其他方案与横向对比">7. 其他方案与横向对比</a></h2>
+<h3 id="71-istio-多集群"><a class="header" href="#71-istio-多集群">7.1 Istio 多集群</a></h3>
+<ul>
+<li><code>multi-primary</code> 与 <code>primary-remote</code> 两种拓扑；</li>
+<li>跨网络时部署 <code>istio-eastwestgateway</code>，用 TLS <code>AUTO_PASSTHROUGH</code> 暴露 <code>*.local</code>，端口 <strong>15443</strong>；</li>
+<li>通过 <code>istioctl create-remote-secret</code> 把各集群 apiserver 凭据注入对端，实现端点发现；</li>
+<li>单网络要求 Pod/Service CIDR 不重叠并自行配置路由；要求 apiserver 互达；要求共同根 CA。</li>
+</ul>
+<p>Istio 的强项是 L4–L7 的 mTLS、流量治理、可观测性；它解决的是“服务间通信“而不是“任意 IP 可达“。如果只需要 HTTP/gRPC 跨集群，Istio 往往比 L3 互联更合适。</p>
+<h3 id="72-liqo"><a class="header" href="#72-liqo">7.2 Liqo</a></h3>
+<ul>
+<li>peering + offloading + network fabric；</li>
+<li>跨集群 <strong>WireGuard VPN</strong>，集群内 <strong>Geneve</strong> overlay 把流量导到 gateway；</li>
+<li>用 <strong>nftables 做 NAT</strong> 处理 PodCIDR 冲突，并带 IPAM；</li>
+<li>少数<strong>显式支持地址重叠</strong>的方案。</li>
+</ul>
+<h3 id="73-skupper"><a class="header" href="#73-skupper">7.3 Skupper</a></h3>
+<ul>
+<li>不是 IP 路由，而是“<strong>application network</strong>“：路由器在应用端点之间路由消息；</li>
+<li>支持 anycast/multicast 语义；</li>
+<li>天然不关心 IP 重叠，但<strong>不能承载任意 IP 协议</strong>（适合 HTTP/gRPC/TCP 连接器模式）；</li>
+<li>端口：inter-router 55671/tcp，edge 45671/tcp。</li>
+</ul>
+<h3 id="74-控制面方案不是数据面"><a class="header" href="#74-控制面方案不是数据面">7.4 控制面方案（不是数据面）</a></h3>
+<ul>
+<li><strong>Karmada</strong>：多集群调度/分发/故障迁移，<code>Cluster</code> 对象只存 apiserver 端点与凭据；数据面需另配 CNI/Submariner/Cilium；</li>
+<li><strong>Clusterpedia</strong>：多集群资源检索，纯控制面；</li>
+<li><strong>external-dns</strong>：把 Service/Ingress 同步成外部 DNS 记录，本身不是 DNS server，不参与集群内解析。</li>
+</ul>
+<h3 id="75-对比矩阵"><a class="header" href="#75-对比矩阵">7.5 对比矩阵</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>方案</th><th>数据面</th><th>层次</th><th>地址重叠</th><th>跨集群 DNS</th><th>复杂度</th><th>成熟度</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Submariner</strong></td><td>IPsec/WireGuard/VXLAN 隧道，gateway 集中转发</td><td>L3</td><td>需 Globalnet（1:1 全局 IP + NAT）</td><td>Lighthouse <code>clusterset.local</code></td><td>中高（网关、UDP 端口、MTU）</td><td>CNCF sandbox，生产部署多</td></tr>
+<tr><td><strong>Cilium ClusterMesh</strong></td><td>eBPF，native routing 或 tunnel，节点直连</td><td>L3/L4（L7 需 Envoy）</td><td><strong>不支持</strong>，PodCIDR 必须唯一</td><td>Global Service + MCS <code>clusterset.local</code></td><td>中（同 CNI、同 datapath、非重叠）</td><td>成熟</td></tr>
+<tr><td><strong>MCS-API（单独）</strong></td><td>无</td><td>—</td><td>由实现决定</td><td>规范定义</td><td>低（仅 API）</td><td>v1beta1/Beta</td></tr>
+<tr><td><strong>Istio multi-primary</strong></td><td>sidecar/ztunnel mTLS + east-west GW</td><td>L4–L7</td><td>单网络要求不重叠</td><td>复用 K8s DNS + 端点发现</td><td>高</td><td>成熟</td></tr>
+<tr><td><strong>Liqo</strong></td><td>WireGuard VPN + Geneve + nftables NAT</td><td>L3</td><td><strong>支持</strong></td><td>反射 Service/EndpointSlice</td><td>中</td><td>活跃</td></tr>
+<tr><td><strong>Skupper</strong></td><td>应用层路由器</td><td>L7/应用</td><td>不涉及</td><td>Skupper 服务名</td><td>低</td><td>成熟</td></tr>
+<tr><td><strong>Karmada</strong></td><td>无（需外接）</td><td>控制面</td><td>N/A</td><td>多集群 Service DNS</td><td>中</td><td>活跃</td></tr>
+<tr><td><strong>external-dns</strong></td><td>无</td><td>公网 DNS 记录</td><td>N/A</td><td>公网域名</td><td>低</td><td>成熟</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="8-跨集群-dns"><a class="header" href="#8-跨集群-dns">8. 跨集群 DNS</a></h2>
+<h3 id="81-三条路径"><a class="header" href="#81-三条路径">8.1 三条路径</a></h3>
+<ol>
+<li><strong>独立权威 DNS + 转发</strong>（Submariner Lighthouse）：Lighthouse DNS 拥有 <code>clusterset.local</code>，CoreDNS 配置 <code>clusterset.local:53 { forward . &lt;lighthouse-svc-ip&gt; }</code>；</li>
+<li><strong>CoreDNS 原生 multicluster zone</strong>：<code>kubernetes cluster.local clusterset.local { multicluster clusterset.local }</code>，插件直接权威回答；</li>
+<li><strong>已废弃的 federation</strong>：CoreDNS 1.7.0 移除了 in-tree <code>federation</code> 插件；K8s Federation v1 从未 GA。今天还在维护的 <code>github.com/coredns/federation</code> 只是把 v1 语义外置，<strong>不是 MCS 的替代品</strong>。</li>
+</ol>
+<h3 id="82-search-domain-的坑"><a class="header" href="#82-search-domain-的坑">8.2 search domain 的坑</a></h3>
+<p>Pod 的 search list 只有：</p>
+<pre><code class="language-text">&lt;ns&gt;.svc.cluster.local
+svc.cluster.local
+cluster.local
+&lt;host search...&gt;
+</code></pre>
+<p><strong>不含 <code>clusterset.local</code></strong>，且 <code>ndots:5</code>。<code>api.default.svc.clusterset.local</code> 只有 3 个点 &lt; 5，解析器会先尝试所有 search 后缀（必然 NXDOMAIN），再尝试绝对名。表现是“能解析但慢/日志里一堆 NXDOMAIN“，极端情况下触发 5s 级延迟。</p>
+<p>三个缓解手段：</p>
+<ul>
+<li>应用使用<strong>带尾点的 FQDN</strong>（<code>api.default.svc.clusterset.local.</code>）；</li>
+<li>在 <code>dnsConfig.searches</code> 里显式加入 <code>clusterset.local</code>（会占用 search 数量上限，注意 32/2048 的限制）；</li>
+<li>在 CoreDNS 侧优化（减少 search 往返、NodeLocal 缓存）。</li>
+</ul>
+<h3 id="83-为什么-clusterlocal-不能默认远端解析"><a class="header" href="#83-为什么-clusterlocal-不能默认远端解析">8.3 为什么 <code>cluster.local</code> 不能默认远端解析</a></h3>
+<ul>
+<li>同一个 <code>foo.default.svc.cluster.local</code> 在每个集群解析到<strong>各自集群的 ClusterIP</strong>，这些 VIP 在别的集群不可路由；</li>
+<li>更糟的是 VIP 冲突：两集群都用 <code>10.96.0.0/12</code> 时，远端返回的 ClusterIP 可能正好是本地某个真实服务的 VIP，造成流量串台。</li>
+</ul>
+<p>这正是 MCS 引入独立域 <code>clusterset.local</code> 并要求<strong>显式 opt-in</strong> 的原因。实现上 <code>cluster.local</code> 永远保持本地权威（split-horizon），只有 <code>clusterset.local</code> 被转发/联邦。</p>
+<hr>
+<h2 id="9-安全nat-与-mtu"><a class="header" href="#9-安全nat-与-mtu">9. 安全、NAT 与 MTU</a></h2>
+<h3 id="91-信任模型"><a class="header" href="#91-信任模型">9.1 信任模型</a></h3>
+<ul>
+<li><strong>Submariner</strong>：Broker 的 ServiceAccount + RBAC 控制元数据访问；IPsec 支持 <code>psk</code>（默认）与 <code>cert</code> 两种 AuthMode；隧道活性用 DPD（<code>dpddelay=30s</code>、<code>dpdaction=hold</code>）；</li>
+<li><strong>Cilium</strong>：mTLS + 共享 CA；<code>certgen</code> CronJob 定期重签（默认有效期 1 年）；所有互联集群是<strong>单一信任域</strong>；</li>
+<li><strong>Istio</strong>：共同根 CA 签发各 primary 的中间证书；</li>
+<li><strong>Broker/etcd 不可达</strong>：已建立的数据面通常继续工作，只是学不到新 Endpoint/成员；恢复后自动 resync。</li>
+</ul>
+<h3 id="92-跨集群-networkpolicy"><a class="header" href="#92-跨集群-networkpolicy">9.2 跨集群 NetworkPolicy</a></h3>
+<ul>
+<li>Submariner <strong>不提供</strong>跨集群 NetworkPolicy 语义；由于它保留源 IP，远端策略只能用对端 Pod/Service 的 IP 段（<code>ipBlock</code>）表达；开 Globalnet 后必须改用 Globalnet 地址；</li>
+<li>Cilium 的策略可以按 identity 跨集群生效，但 <strong>Kubernetes NetworkPolicy/CiliumNetworkPolicy 对象本身不会自动分发</strong>，每个集群要各建一份；</li>
+<li><strong>NAT 破坏源 IP 策略</strong>：Globalnet 的 SNAT 让远端看到 GlobalIP；Cilium 若开 masquerade，跨集群流量源地址会变成节点 IP。任何“按源 Pod IP 放行“的策略在这种路径上都会失效。</li>
+</ul>
+<h3 id="93-mtu"><a class="header" href="#93-mtu">9.3 MTU</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>方案</th><th>开销</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td>Submariner VXLAN</td><td><strong>50</strong> 字节</td><td>接口 MTU = 宿主 MTU − 50</td></tr>
+<tr><td>Submariner IPsec</td><td>按 <strong>120</strong> 字节做 MSS clamp</td><td><code>MaxIPSecOverhead=120</code>，可按节点注解 <code>submariner.io/tcp-clamp-mss</code> 覆盖</td></tr>
+<tr><td>Cilium VXLAN</td><td>50</td><td>与普通 VXLAN 相同</td></tr>
+<tr><td>Cilium WireGuard</td><td>60（IPv4）/80（IPv6）</td><td>叠加在 underlay 上</td></tr>
+<tr><td>Istio east-west</td><td>取决于 TLS/HTTP2 封装</td><td>需要按实现调 MTU/MSS</td></tr>
+</tbody>
+</table>
+</div>
+<p>Submariner 的 VXLAN 证据：<a href="https://github.com/submariner-io/submariner/blob/a920c26efdccec536e73695356bda94cbda19fb6/pkg/vxlan/vxlan.go#L52-L52">vxlan.go L52</a>；IPsec MSS clamp：<a href="https://github.com/submariner-io/submariner/blob/a920c26efdccec536e73695356bda94cbda19fb6/pkg/routeagent_driver/handlers/mtu/mtuhandler.go#L49-L50">mtuhandler.go L49-L50</a>。</p>
+<p><strong>跨集群 MTU 要按“最外层 underlay − 所有封装“算</strong>，并且确保 ICMP Fragmentation Needed 能回到源端；否则表现为“小请求正常、大响应卡死“。</p>
+<hr>
+<h2 id="10-全链路示例"><a class="header" href="#10-全链路示例">10. 全链路示例</a></h2>
+<h3 id="101-submariner本地-pod--远端-service"><a class="header" href="#101-submariner本地-pod--远端-service">10.1 Submariner：本地 Pod → 远端 Service</a></h3>
+<pre class="mermaid">sequenceDiagram
+    participant P as 本地 Pod
+    participant D as 本地 CoreDNS/Lighthouse
+    participant N as 本地节点/route-agent
+    participant G1 as 本地 gateway
+    participant G2 as 远端 gateway
+    participant K as 远端 kube-proxy
+    participant S as 远端 Pod
+    P-&gt;&gt;D: api.default.svc.clusterset.local
+    D--&gt;&gt;P: 远端 ClusterIP（或 GlobalIP）
+    P-&gt;&gt;N: dst=远端 ClusterIP
+    N-&gt;&gt;G1: 路由到 active gateway（集群内 VXLAN 4800）
+    G1-&gt;&gt;G2: IPsec/WireGuard 隧道（4500/udp）
+    G2-&gt;&gt;K: 进入远端集群
+    K-&gt;&gt;S: DNAT 到后端 Pod
+    S--&gt;&gt;P: 回程（conntrack 反向）
+</pre>
+
+<p>关键点：</p>
+<ul>
+<li>DNS 返回的是<strong>远端</strong> ClusterIP/GlobalIP，不是本地 VIP；</li>
+<li>本地节点必须有到远端 ServiceCIDR/PodCIDR 的路由（route agent 注入）；</li>
+<li>远端 gateway 必须能把包送进远端集群的 Service 路径（kube-proxy 规则）；</li>
+<li>回程要经过同一对 gateway，否则 conntrack/NAT 对不上。</li>
+</ul>
+<h3 id="102-ciliumglobal-service"><a class="header" href="#102-ciliumglobal-service">10.2 Cilium：Global Service</a></h3>
+<pre><code class="language-text">本地 Pod → 本地节点 eBPF（选择本地或远端 endpoint）
+  → 若选远端：直接路由/隧道到远端节点
+  → 远端节点 eBPF 交付 Pod
+</code></pre>
+<p>没有 gateway 集中转发，源 IP 保留；<code>service.cilium.io/affinity</code> 控制就近/远端优先。前提是 PodCIDR 不重叠、datapath 一致。</p>
+<h3 id="103-mcs查询链路"><a class="header" href="#103-mcs查询链路">10.3 MCS：查询链路</a></h3>
+<pre><code class="language-text">kubectl get serviceexport,serviceimport -A
+kubectl get endpointslice -A -l multicluster.kubernetes.io/service-name=&lt;svc&gt;
+dig @&lt;coredns&gt; api.default.svc.clusterset.local
+</code></pre>
+<p>MCS 只保证“对象/DNS 语义“；包能不能到，取决于背后的数据面。</p>
+<hr>
+<h2 id="11-排障-runbook"><a class="header" href="#11-排障-runbook">11. 排障 Runbook</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>症状</th><th>最可能原因</th><th>命令/检查</th></tr>
+</thead>
+<tbody>
+<tr><td>隧道 down / <code>connection status: error</code></td><td>UDP 端口未放行、NAT 探测失败、ICMP 被禁、DPD 超时</td><td><code>subctl show connections</code>；<code>kubectl -n submariner-operator describe gateway</code>；<code>ip xfrm state</code>；<code>tcpdump -ni any esp or udp port 4500 or udp port 4490</code></td></tr>
+<tr><td>能 ping 通 gateway，ping 不通远端 Pod</td><td><code>Endpoint.subnets</code> 未包含目标 CIDR / route agent 未装路由</td><td><code>subctl show endpoints</code>；<code>ip route show table 100</code>；<code>kubectl -n submariner-operator logs ds/submariner-routeagent</code></td></tr>
+<tr><td><code>clusterset.local</code> NXDOMAIN</td><td>CoreDNS 未转发、Lighthouse 未同步、ServiceExport 未生效</td><td><code>dig @&lt;lighthouse&gt; ...</code>；<code>kubectl -n kube-system describe configmap coredns</code>；<code>kubectl get serviceexport,serviceimport -A</code>；<code>kubectl -n submariner-operator logs deploy/submariner-lighthouse-agent</code></td></tr>
+<tr><td>小包通、大包卡死</td><td>隧道 MTU 超限、ICMP Frag Needed 被过滤</td><td><code>ping -M do -s 1400 &lt;dst&gt;</code>；检查 MSS clamp；<code>tcpdump -ni any icmp</code></td></tr>
+<tr><td>IP 冲突</td><td>未开 Globalnet 或 GlobalCIDR 也重叠</td><td><code>subctl show clusters</code>；<code>kubectl get cluster -n submariner-k8s-broker -o yaml</code>；Globalnet 日志的 “overlaps with remote cluster”</td></tr>
+<tr><td>证书过期</td><td>Cilium CA/cert 过期、Broker 证书不受信</td><td><code>cilium clustermesh status</code>；<code>cilium-dbg troubleshoot clustermesh</code>；<code>subctl verify --check-broker-certificate</code></td></tr>
+<tr><td>Broker 不可达</td><td>Broker apiserver 挂了/网络不通</td><td><code>subctl show brokers</code>；数据面应继续工作，只是学不到新 Endpoint</td></tr>
+<tr><td>Gateway 节点未被调度</td><td>节点未打 <code>submariner.io/gateway=true</code>、taint、资源不足</td><td><code>kubectl get nodes -l submariner.io/gateway=true</code>；<code>kubectl -n submariner-operator get pods -l app=submariner-gateway -o wide</code></td></tr>
+<tr><td>Globalnet 分配失败</td><td><code>DenyServiceExternalIPs</code> 未关、GlobalCIDR 用尽</td><td><code>kubectl get globalingressip -A</code>；<code>kubectl get clusterglobalegressip cluster-egress.submariner.io -o yaml</code></td></tr>
+<tr><td>Cilium 跨集群不通</td><td>datapath 不一致、PodCIDR 重叠、cluster-id 冲突、2379 不通</td><td><code>cilium status</code>；<code>cilium clustermesh status</code>；<code>cilium connectivity test --multi-cluster</code>；<code>cilium-dbg troubleshoot clustermesh</code></td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="12-选型建议"><a class="header" href="#12-选型建议">12. 选型建议</a></h2>
+<p>先回答四个问题，再选方案：</p>
+<ol>
+<li><strong>地址是否重叠？</strong> 重叠 → Submariner Globalnet/Liqo；不重叠 → Cilium/Istio/Submariner 都可以。</li>
+<li><strong>需要 L3 任意协议还是只要 HTTP/gRPC？</strong> 任意协议 → L3 方案；只要 L7 → Istio/Skupper/Ingress。</li>
+<li><strong>能接受网关集中转发吗？</strong> 能 → Submariner（成熟、功能全）；不能/要高吞吐 → Cilium（节点直连，但要求同 CNI、同 datapath、非重叠 CIDR）。</li>
+<li><strong>团队能维护什么？</strong> BGP/隧道/证书/MTU 都是长期成本；MCS 只是 API，不要低估数据面的运维。</li>
+</ol>
+<p>一个常见的组合：</p>
+<ul>
+<li><strong>同云、同 CNI、CIDR 规划良好</strong> → Cilium ClusterMesh；</li>
+<li><strong>跨云/跨组织、CIDR 重叠、需要 L3</strong> → Submariner + Globalnet；</li>
+<li><strong>只需要 HTTP/gRPC 跨集群</strong> → Istio multi-primary 或 Gateway API（GEP-1748 仍 Experimental）；</li>
+<li><strong>只需要资源视角/调度</strong> → Karmada + 任一数据面。</li>
+</ul>
+<hr>
+<h2 id="13-参考"><a class="header" href="#13-参考">13. 参考</a></h2>
+<p><strong>MCS / 规范</strong></p>
+<ul>
+<li><a href="https://github.com/kubernetes-sigs/mcs-api">MCS-API 仓库</a></li>
+<li><a href="https://github.com/kubernetes-sigs/mcs-api/blob/a3bfd21f6f3e2eadc10c4602ecf5dcfa87d53be5/pkg/apis/v1beta1/serviceimport.go">MCS-API ServiceImport 类型</a></li>
+<li><a href="https://github.com/kubernetes-sigs/mcs-api/tree/a3bfd21f6f3e2eadc10c4602ecf5dcfa87d53be5/conformance">MCS conformance suite</a></li>
+<li><a href="https://coredns.io/plugins/kubernetes/">CoreDNS kubernetes 插件（multicluster）</a></li>
+</ul>
+<p><strong>Submariner</strong></p>
+<ul>
+<li><a href="https://submariner.io/getting-started/architecture/">架构总览</a></li>
+<li><a href="https://submariner.io/getting-started/architecture/broker/">Broker</a></li>
+<li><a href="https://submariner.io/getting-started/architecture/gateway-engine/">Gateway Engine</a></li>
+<li><a href="https://submariner.io/getting-started/architecture/route-agent/">Route Agent</a></li>
+<li><a href="https://submariner.io/getting-started/architecture/service-discovery/">Service Discovery / Lighthouse</a></li>
+<li><a href="https://submariner.io/getting-started/architecture/globalnet/">Globalnet</a></li>
+<li><a href="https://submariner.io/operations/nat-traversal/">NAT Traversal</a></li>
+<li><a href="https://submariner.io/operations/troubleshooting/">Troubleshooting</a></li>
+<li>源码：<a href="https://github.com/submariner-io/submariner/blob/a920c26efdccec536e73695356bda94cbda19fb6/pkg/apis/submariner.io/v1/types.go">Submariner API types</a>、<a href="https://github.com/submariner-io/submariner/blob/a920c26efdccec536e73695356bda94cbda19fb6/pkg/port/ports.go">ports.go</a></li>
+</ul>
+<p><strong>Cilium / Istio / 其他</strong></p>
+<ul>
+<li><a href="https://docs.cilium.io/en/stable/network/clustermesh/intro/">Cilium ClusterMesh Intro</a></li>
+<li><a href="https://docs.cilium.io/en/stable/network/clustermesh/setup/">Cilium ClusterMesh Setup</a></li>
+<li><a href="https://docs.cilium.io/en/stable/network/clustermesh/global-services/">Cilium Global Services</a></li>
+<li><a href="https://docs.cilium.io/en/stable/network/clustermesh/mcsapi/">Cilium MCS-API</a></li>
+<li><a href="https://docs.cilium.io/en/stable/network/clustermesh/policy/">Cilium ClusterMesh Policy</a></li>
+<li><a href="https://istio.io/latest/docs/setup/install/multicluster/">Istio 多集群安装</a></li>
+<li><a href="https://docs.liqo.io/en/stable/features/network-fabric.html">Liqo Network Fabric</a></li>
+<li><a href="https://skupper.io/docs/overview/index.html">Skupper Overview</a></li>
+<li><a href="https://github.com/kubernetes-sigs/gateway-api/blob/d04e7458ee15351ca54a201c4b1c43412f917b91/geps/gep-1748/index.md">Gateway API GEP-1748</a></li>
+</ul>
+<p><strong>本 wiki 的配套页面</strong></p>
+<ul>
+<li><a href="./k8s-network-path.html">Kubernetes 网络全链路</a></li>
+<li><a href="./cni详解.html">CNI 详解</a></li>
+<li><a href="./6_service相关.html">Service、kube-proxy 与 LoadBalancer</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../../docs/Cloud_Native/Kubernetes/Networking/6_service相关.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../../node_runtime.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../../docs/Cloud_Native/Kubernetes/Networking/6_service相关.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../../node_runtime.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../../highlight-abc7f01d.js"></script>
+        <script src="../../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-c4cdfd1b.js";
+            window.path_to_searchindex_js = "../../../searchindex-dfe22a86.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-ee3a948c.js"></script>
+        <script src="../../../toc-d9461900.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -541,7 +541,7 @@ container.SnapshotKey = id
 ...
 request.Rootfs = append(request.Rootfs, &amp;types.Mount{Type: m.Type, Source: m.Source, Target: m.Target, Options: m.Options})
 </code></pre>
-<p>shim 收到后建好 bundle 的 <code>rootfs/</code> 目录，用 <code>mount.All(mounts, rootfs)</code> 把 snapshotter 给的参数真正挂上，再交给 runc 执行 <code>pivot_root</code> 之类操作（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/cmd/containerd-shim-runc-v2/runc/container.go#L65-L120">cmd/containerd-shim-runc-v2/runc/container.go#L65-L120</a>）。挂载点、shim、runc 的协作见 <a href="../Kubernetes/容器运行时.html">容器运行时</a>。容器退出后，CRI 删除容器时带 <code>WithSnapshotCleanup</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/container_remove.go#L100-L110">container_remove.go#L100-L110</a>），最终落到 <code>sn.Remove(containerID)</code>，只删容器自己的 upperdir。</p>
+<p>shim 收到后建好 bundle 的 <code>rootfs/</code> 目录，用 <code>mount.All(mounts, rootfs)</code> 把 snapshotter 给的参数真正挂上，再交给 runc 执行 <code>pivot_root</code> 之类操作（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/cmd/containerd-shim-runc-v2/runc/container.go#L65-L120">cmd/containerd-shim-runc-v2/runc/container.go#L65-L120</a>）。挂载点、shim、runc 的协作见 <a href="../Kubernetes/Node_Runtime/容器运行时.html">容器运行时</a>。容器退出后，CRI 删除容器时带 <code>WithSnapshotCleanup</code>（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/container_remove.go#L100-L110">container_remove.go#L100-L110</a>），最终落到 <code>sn.Remove(containerID)</code>，只删容器自己的 upperdir。</p>
 <h3 id="55-view-的实际用途"><a class="header" href="#55-view-的实际用途">5.5 View 的实际用途</a></h3>
 <p><code>View</code> 不是“给只读容器用“的（那仍是 Active + <code>spec.Root.Readonly</code>）。仓库里真正在用的是 diff 计算：<code>rootfs.CreateDiff</code> 先对父快照建一个 View 作为 lower，再对 active 快照或 committed 快照建 View 作为 upper，两个只读视图交给 comparer 算差异（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/pkg/rootfs/diff.go#L33-L67">diff.go#L33-L67</a>）。<code>ctr snapshot view</code> 也是同一条路径（<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/cmd/ctr/commands/snapshots/snapshots.go#L342-L383">snapshots.go#L342-L383</a>）。</p>
 <h3 id="56-ctr-snapshot-ls-的名字从哪来"><a class="header" href="#56-ctr-snapshot-ls-的名字从哪来">5.6 <code>ctr snapshot ls</code> 的名字从哪来</a></h3>
@@ -690,7 +690,7 @@ du -sh /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/&lt;
 <li><a href="./OverlayFS与镜像层.html">OverlayFS 与镜像层</a>：whiteout/opaque、lower/upper 合并的内核机制</li>
 <li><a href="./镜像懒加载.html">镜像懒加载</a>：stargz/nydus/overlaybd 等远程快照器</li>
 <li><a href="./容器知识备忘录.html">容器知识备忘录</a>：UnionFS/CoW 的入门直觉</li>
-<li><a href="../Kubernetes/容器运行时.html">容器运行时全链路</a>：CRI、containerd、shim、runc 的分工</li>
+<li><a href="../Kubernetes/Node_Runtime/容器运行时.html">容器运行时全链路</a>：CRI、containerd、shim、runc 的分工</li>
 </ul>
 
                     </main>

@@ -1,0 +1,922 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Kubernetes 控制面灾备与恢复 - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../../searchindex-dfe22a86.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../../toc-d9461900.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/Kubernetes/Control_Plane/控制面灾备与恢复.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="kubernetes-控制面灾备与恢复"><a class="header" href="#kubernetes-控制面灾备与恢复">Kubernetes 控制面灾备与恢复</a></h1>
+<p>控制面挂了、etcd 数据没了、证书过期了——这时候真正决定“能不能救回来“的不是架构图，而是三件事：<strong>备份了哪些状态、备份是否可验证、恢复流程是否演练过</strong>。本文回答“数据/控制面丢失后怎么找回来“：备份策略、etcd 快照与恢复、quorum 丢失恢复、全集群重建、Velero、多集群 DR、演练与验证。</p>
+<p>不覆盖的内容：怎么设计才不容易挂（见 <a href="./控制面高可用方案.html">控制面高可用方案</a>）；故障发生时值班人员的处置步骤（见 <a href="./控制面事故处理手册.html">控制面事故处理手册</a>）。</p>
+<blockquote>
+<p><strong>引用约定</strong>：代码链接固定到 2026-11 的本地 checkout commit，格式 <code>https://github.com/&lt;org&gt;/&lt;repo&gt;/blob/&lt;40-hex&gt;/&lt;path&gt;#Lx-Ly</code>；文档链接均于 2026-11 逐条 curl 验证为 200。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>项目</th><th>版本</th><th>commit</th></tr>
+</thead>
+<tbody>
+<tr><td>Kubernetes</td><td>v1.37.2（kubeadm 默认 etcd 3.7.0-0）</td><td><code>c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32</code></td></tr>
+<tr><td>etcd</td><td>v3.7.4</td><td><code>2e8a5c99e4982c8d4c521be15364ea4c5c68a489</code></td></tr>
+<tr><td>Velero</td><td>v1.18.4</td><td><code>4ee1e79a7aed367fd9b767b8219ec65bd0c96892</code></td></tr>
+<tr><td>Cluster API</td><td>v1.14.4</td><td><code>4356c154f4a76b8939748ef7ebc2d0793ffe47e8</code></td></tr>
+</tbody>
+</table>
+</div>
+</blockquote>
+<hr>
+<h2 id="1-先分清备份容灾高可用与-rporto"><a class="header" href="#1-先分清备份容灾高可用与-rporto">1. 先分清：备份、容灾、高可用与 RPO/RTO</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>概念</th><th>回答的问题</th><th>典型手段</th><th>本文/他文位置</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>高可用 HA</strong></td><td>坏一台时怎么<strong>不停服</strong></td><td>多副本、quorum、LB/VIP、选主</td><td><a href="./控制面高可用方案.html">控制面高可用方案</a></td></tr>
+<tr><td><strong>备份 Backup</strong></td><td>数据没了，怎么<strong>回到过去的某个点</strong></td><td>etcd 快照、对象存储、Velero</td><td>本文第 3、4、7 节</td></tr>
+<tr><td><strong>容灾 DR</strong></td><td>整个故障域（AZ/region/集群）没了，怎么<strong>恢复服务</strong></td><td>异地备份、多集群、DNS 切换</td><td>本文第 6、8 节</td></tr>
+<tr><td><strong>灾备体系</strong></td><td>上面这些能不能<strong>真的生效</strong></td><td>校验、演练、RTO 测量、game day</td><td>本文第 9 节</td></tr>
+<tr><td><strong>RPO</strong></td><td>最坏能容忍丢多少数据</td><td>由备份频率决定（etcd 快照间隔、Velero schedule）</td><td>第 3 节</td></tr>
+<tr><td><strong>RTO</strong></td><td>最坏要多久恢复服务</td><td>由恢复流程 + 演练熟练度决定，不是由工具决定</td><td>第 9 节</td></tr>
+</tbody>
+</table>
+</div>
+<p>控制面灾备有三个特殊性，决定了它和“备份一个数据库“不一样：</p>
+<ol>
+<li><strong>所有 API 对象只存在于 etcd</strong>。官方文档明确：所有 Kubernetes 对象都存储在 etcd 中，丢失全部控制面节点时快照文件包含全部集群状态与关键信息（<a href="https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/">Operating etcd clusters for Kubernetes</a>）。etcd 是关键路径上唯一的持久状态。</li>
+<li><strong>PKI 不能从数据重建</strong>。<code>kubeadm</code> 生成的 CA 私钥（<code>ca.key</code>、<code>front-proxy-ca.key</code>、<code>etcd/ca.key</code>）和 <code>sa.key</code> 只存在于控制面节点磁盘上；如果丢失，即使 etcd 数据完好，所有组件身份也需要重新签发。CA 与叶子证书的有效期分别是 10 年 / 1 年，见 <code>constants.go</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/constants/constants.go#L47-L50">kubeadm/constants.go#L47-L50</a>）。</li>
+<li><strong>apiserver 是无状态的，所以“重建出来即可“</strong>。真正不可再生的是 etcd 数据 + PKI + 外部依赖配置。这也是为什么“全集群重建“是可行的兜底方案（第 6 节），但<strong>不能</strong>替代 etcd 数据恢复。</li>
+</ol>
+<p>控制面全挂时数据面并不会立刻停：官方文档说明，多数 etcd 成员永久失效时 Kubernetes 无法做变更，“the scheduled pods might continue to run, no new pods can be scheduled”（<a href="https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/">configure-upgrade-etcd</a>）。已调度的 Pod 由 kubelet 继续维持，但没有新的调度与 reconcile。这意味着控制面故障不必然立即造成业务中断，但<strong>控制面 RTO 必须显著小于业务 RTO</strong>——恢复控制面本身会吃掉业务的停机窗口，之后还要留出数据校验与流量回切的时间。</p>
+<h2 id="2-保护对象清单"><a class="header" href="#2-保护对象清单">2. 保护对象清单</a></h2>
+<p>灾备最容易犯的错是“只备份 etcd“，而 etcd 快照只覆盖下表第 5、6 行。逐项确认：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>#</th><th>对象</th><th>存放位置（kubeadm 默认）</th><th>丢失后果</th><th>备份方式</th><th>验证方式</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td><strong>etcd 数据</strong></td><td>各控制面 <code>/var/lib/etcd</code>（<code>DefaultEtcdDataDir</code>，<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/apis/kubeadm/v1beta4/defaults.go#L50-L51">defaults.go#L50-L51</a>）</td><td>所有 API 对象消失，集群等于空集群</td><td><code>etcdctl snapshot save</code> + 异地对象存储；见第 3、4 节</td><td><code>etcdutl snapshot status</code>、定期 restore drill</td></tr>
+<tr><td>2</td><td><strong>PKI：CA 与证书</strong></td><td><code>/etc/kubernetes/pki/</code></td><td>无法签发新证书；CA 私钥丢失则全部组件身份需重建</td><td>离线拷贝 + 加密归档，定期 <code>kubeadm certs check-expiration</code></td><td>时间戳/哈希比对、校验 <code>ca.crt</code> 能验签现有 <code>apiserver.crt</code></td></tr>
+<tr><td>3</td><td><strong><code>sa.key</code> / <code>sa.pub</code></strong></td><td><code>/etc/kubernetes/pki/sa.key</code></td><td>ServiceAccount token 的签名/验证密钥丢失，旧 token 全部失效</td><td>与 PKI 一起离线备份</td><td>恢复后签发一个新 token 并用它访问 apiserver</td></tr>
+<tr><td>4</td><td><strong>加密配置与 KMS 密钥</strong></td><td>apiserver <code>--encryption-provider-config</code> 指向的文件（如 <code>/etc/kubernetes/enc/encryption-config.yaml</code>）</td><td>丢失配置无法解密 etcd 中已加密的 Secret；KMS 主密钥丢失更不可恢复</td><td>配置入库 + KMS 密钥由 KMS/HSM 自身容灾；快照与密钥分开存放</td><td>用恢复出的 etcd 数据 + 配置解密一个 Secret</td></tr>
+<tr><td>5</td><td><strong>Kubernetes 对象（内置 + CRD）</strong></td><td>etcd</td><td>CRD/Namespace/RBAC/工作负载定义全丢</td><td>包含在 etcd 快照中；或 Velero</td><td><code>kubectl get crd</code>、<code>kubectl api-resources</code> 计数比对</td></tr>
+<tr><td>6</td><td><strong>RBAC 对象</strong></td><td>etcd（见 <a href="../Fundamentals/rbac.html">rbac</a>）</td><td>鉴权全失效/权限漂移</td><td>etcd 快照或 Velero</td><td><code>kubectl auth can-i --list</code> 抽查</td></tr>
+<tr><td>7</td><td><strong>kubeconfig</strong></td><td><code>/etc/kubernetes/admin.conf</code>、<code>kubelet.conf</code>、<code>controller-manager.conf</code>、<code>scheduler.conf</code></td><td>管理员与组件无法连接 apiserver</td><td>与 PKI 一起离线备份</td><td>用备份 kubeconfig 访问恢复后的集群</td></tr>
+<tr><td>8</td><td><strong>static pod manifests 与 kubeadm 配置</strong></td><td><code>/etc/kubernetes/manifests/*.yaml</code>；<code>kube-system/kubeadm-config</code> ConfigMap</td><td>无法按原参数重建控制面；<code>kubeadm upgrade</code> 会写回旧 dataDir 等错误配置</td><td>拷贝 manifests 目录 + <code>kubectl get cm -n kube-system kubeadm-config -oyaml</code></td><td>与 <code>kubeadm-config</code> 中的 <code>ClusterConfiguration</code> 交叉比对</td></tr>
+<tr><td>9</td><td><strong>PV 数据</strong></td><td>云盘 / 本地盘 / CSI 存储</td><td>有状态业务数据丢失，且<strong>不在 etcd 快照里</strong></td><td>存储层快照、Velero CSI snapshot 或文件级备份</td><td>恢复后实际读业务数据，而非只看 PVC Bound</td></tr>
+<tr><td>10</td><td><strong>外部依赖</strong></td><td>镜像仓库、私有 Registry 凭据、DNS 记录、LB/VIP 配置、云 IAM、KMS</td><td>集群恢复了也拉不到镜像/解析不了域名/拿不到云资源</td><td>IaC 代码化 + 凭据管理系统</td><td>从零环境重建一次并跑通</td></tr>
+<tr><td>11</td><td><strong>IaC / GitOps 源</strong></td><td>Git 仓库（Terraform/Crossplane/Argo CD/Flux）</td><td>无法重建集群与工作负载</td><td>Git 远端多副本、定期可用性检查</td><td>在空环境执行一次 apply/sync</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p>结论：<strong>etcd 快照是“Kubernetes 对象“的备份，不是“集群“的备份</strong>。快照内容覆盖第 5、6 行；第 1 行是快照机制本身要保护的对象；第 2-4、7-11 行都在 etcd 之外，必须单独覆盖。</p>
+</blockquote>
+<h2 id="3-备份策略从-rpo-倒推"><a class="header" href="#3-备份策略从-rpo-倒推">3. 备份策略：从 RPO 倒推</a></h2>
+<h3 id="31-频率保留与容量"><a class="header" href="#31-频率保留与容量">3.1 频率、保留与容量</a></h3>
+<p>RPO 决定快照间隔，RTO 决定保留与恢复策略。下面是经验值（不是官方硬性要求），需要按集群 etcd 大小与变更率调整：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>RPO 目标</th><th>etcd 快照频率</th><th>保留</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td>24h</td><td>每日 1 次</td><td>30 天</td><td>多数内部平台起点；灾难时平均丢半天数据</td></tr>
+<tr><td>1h</td><td>每小时</td><td>7 天 + 每日 30 天</td><td>变更频繁或承载关键元数据</td></tr>
+<tr><td>5-15min</td><td>每 5-15 分钟</td><td>24-72h 高频 + 长期日备</td><td>快照文件大、上传带宽是瓶颈时慎用</td></tr>
+</tbody>
+</table>
+</div>
+<p>容量与成本：快照大小约等于该成员 bbolt backend 大小，可用 <code>endpoint status</code> 的 <code>DbSize</code> 观察，用 <code>etcdutl snapshot status</code> 的 <code>TOTAL SIZE</code> 验证（<code>Status</code> 结构见 <a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/etcdutl/snapshot/v3_snapshot.go#L106-L115">etcdutl/snapshot/v3_snapshot.go#L106-L115</a>）。etcd 默认空间配额 2GB、官方建议常规环境不超过 8GB（<a href="https://etcd.io/docs/v3.7/faq/">etcd FAQ</a>），所以单成员快照通常在百 MB 级，真正贵的是保留周期与跨区传输。</p>
+<p><strong>全量还是增量</strong>：etcd 只有全量快照语义。<code>etcdctl snapshot save</code> 每次拉取完整的 backend snapshot；不存在“增量快照“。需要增量请用 Velero/存储层快照，二者语义完全不同。</p>
+<h3 id="32-一致性快照里有什么没有什么"><a class="header" href="#32-一致性快照里有什么没有什么">3.2 一致性：快照里有什么、没有什么</a></h3>
+<ul>
+<li><code>etcdctl snapshot save</code> 只允许<strong>一个 endpoint</strong>，因为它请求的是“被选中成员的某一时刻状态“（<a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/client/v3/snapshot/v3_snapshot.go#L49-L53">client/v3/snapshot/v3_snapshot.go#L49-L53</a>）；save 走 <code>Maintenance.Snapshot</code> 流式 RPC，服务端对 bbolt snapshot 计算 SHA256 一并返回（<a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/server/etcdserver/api/v3rpc/maintenance.go#L135-L165">api/v3rpc/maintenance.go#L135-L165</a>）。</li>
+<li>客户端校验文件长度是否为 <code>512n + sha256.Size</code> 并 fsync 后原子 rename 成正式文件（<a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/client/v3/snapshot/v3_snapshot.go#L96-L123">v3_snapshot.go#L96-L123</a>）——所以<strong>不要</strong>手工拷贝正在生成的 <code>.part</code> 文件。</li>
+<li>官方文档提醒：直接复制 <code>member/snap/db</code> 可能丢失尚未落入 snapshot、但已在 WAL 里的数据；并且这样得到的文件没有内置 hash，restore 时必须 <code>--skip-hash-check</code>（<a href="https://etcd.io/docs/v3.7/op-guide/recovery/">etcd Disaster recovery</a>）。<strong>优先用 <code>etcdctl snapshot save</code></strong>。</li>
+<li>快照是“单成员已提交状态“的一致视图，不是跨成员的分布式事务快照；但 Raft 保证已提交状态在各成员上一致，因此任意一个健康成员的快照都可用于恢复。</li>
+<li>常见误解：“快照会阻塞写入”。Kubernetes 文档称创建快照不会影响该成员性能（<a href="https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/">configure-upgrade-etcd</a>）；实际仍会消耗磁盘 IO 与网络带宽，<strong>经验上</strong>放到低峰期并限速更稳妥。</li>
+</ul>
+<h3 id="33-自动化cronjob-只是补充不是主链路"><a class="header" href="#33-自动化cronjob-只是补充不是主链路">3.3 自动化：CronJob 只是补充，不是主链路</a></h3>
+<p>集群内 CronJob 依赖控制面；控制面挂了它就不会跑。<strong>主备份链路应放在集群外</strong>（独立备份机/外部调度器 + 只读 kubeconfig 或直接 SSH/证书访问 etcd）。CronJob 可作为“平时高频短周期“的补充：</p>
+<pre><code class="language-yaml">apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: etcd-snapshot
+  namespace: kube-system
+spec:
+  schedule: "*/30 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          hostNetwork: true          # 访问 127.0.0.1:2379 的 etcd client 端口
+          nodeSelector:
+            node-role.kubernetes.io/control-plane: ""
+          tolerations:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
+              effect: NoSchedule
+          restartPolicy: Never
+          containers:
+            - name: snapshot
+              image: registry.k8s.io/etcd:3.7.0-0
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  etcdctl --endpoints=https://127.0.0.1:2379 \
+                    --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+                    --cert=/etc/kubernetes/pki/etcd/server.crt \
+                    --key=/etc/kubernetes/pki/etcd/server.key \
+                    snapshot save /backup/etcd-$(date +%Y%m%d-%H%M%S).db
+              volumeMounts:
+                - {name: pki, mountPath: /etc/kubernetes/pki, readOnly: true}
+                - {name: out, mountPath: /backup}
+          volumes:
+            - name: pki
+              hostPath: {path: /etc/kubernetes/pki}
+            - name: out
+              hostPath: {path: /var/backups/etcd, type: DirectoryOrCreate}
+</code></pre>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>该 Job 写在控制面节点本地盘（hostPath），<strong>不等于异地备份</strong>。必须再由节点上的 agent/rsync/systemd timer 把文件上传到对象存储（开启版本化/对象锁），并监控“最近一次成功上传时间“。</p>
+</blockquote>
+<h3 id="34-校验没被恢复过的备份等于没有备份"><a class="header" href="#34-校验没被恢复过的备份等于没有备份">3.4 校验：没被恢复过的备份等于没有备份</a></h3>
+<p>最低要求三件套：</p>
+<pre><code class="language-bash"># 1) 快照元数据：revision / keys / size / 完整性
+etcdutl snapshot status /backup/etcd-20261119-0300.db -w table
+
+# 2) 恢复到临时目录（不启动 etcd），验证能成功 restore + db 可打开
+etcdutl snapshot restore /backup/etcd-20261119-0300.db \
+  --data-dir /tmp/restore-check --skip-hash-check=false
+
+# 3) 记录并告警：文件大小、revision 是否只增不减、上传是否成功
+</code></pre>
+<p><code>etcdutl snapshot status</code> 的完整性检查基于 bbolt <code>tx.Check()</code> 与 CRC32，见 <a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/etcdutl/snapshot/v3_snapshot.go#L118-L150">v3_snapshot.go#L118-L150</a>。</p>
+<h3 id="35-加密异地与凭据"><a class="header" href="#35-加密异地与凭据">3.5 加密、异地与凭据</a></h3>
+<ul>
+<li>快照是<strong>明文全量数据库</strong>（未启用 at-rest encryption 时），里面包含所有 Secret、ServiceAccount token、证书私钥相关对象。Kubernetes 文档直接建议加密快照文件（<a href="https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/">configure-upgrade-etcd</a>）。</li>
+<li>如果启用了 etcd 静态加密：快照里存的是<strong>密文</strong>，恢复后必须用<strong>同一份 encryption config + 同一把密钥</strong>才能读出 Secret；KMS 场景下还需要 KMS 后端可用。这就是为什么第 2 节把“加密配置/KMS 密钥“单列为保护对象。</li>
+<li>3-2-1 原则：至少 3 份副本、2 种介质、1 份异地；对象存储开启版本化与 Object Lock/不可变窗口，防止勒索软件或误删把备份一起删掉。</li>
+<li>备份凭据（etcd 客户端证书、对象存储 access key）本身要么短期化、要么由 KMS 托管，<strong>不要</strong>和快照放在同一个桶里。</li>
+</ul>
+<h3 id="36-pki-备份与--upload-certs-不是备份"><a class="header" href="#36-pki-备份与--upload-certs-不是备份">3.6 PKI 备份与“<code>--upload-certs</code> 不是备份“</a></h3>
+<p><code>kubeadm</code> 生成哪些证书由证书清单决定：根 CA、apiserver、kubelet client、front-proxy CA/client、etcd CA/server/peer/healthcheck/apiclient（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/phases/certs/certlist.go#L249-L264">certlist.go#L249-L264</a>）；<code>sa.key</code>/<code>sa.pub</code> 单独生成，见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/phases/certs/certs.go#L76-L106">certs.go#L76-L106</a>。</p>
+<p><code>kubeadm init --upload-certs</code> 把证书加密后放进 <code>kube-system/kubeadm-certs</code> Secret（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/phases/copycerts/copycerts.go#L87-L122">copycerts.go#L87-L122</a>），但这个 Secret 的生命周期绑定在一个<strong>短期 bootstrap token</strong> 上：token 默认 TTL 2 小时（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/constants/constants.go#L271-L273">constants.go#L271-L273</a>），Secret 的 OwnerReference 指向该 token Secret（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/phases/copycerts/copycerts.go#L161-L172">copycerts.go#L161-L172</a>）。它存在集群自己的 etcd 里——<strong>集群没了它也没了</strong>，只是“控制面节点扩容时传证书的通道“，不是备份。</p>
+<p>一个可执行的控制面“离线状态包“：</p>
+<pre><code class="language-bash"># 在任一控制面节点（或从备份系统）执行，输出加密归档
+sudo tar -czf control-plane-state-$(date +%F).tar.gz \
+  /etc/kubernetes/pki \
+  /etc/kubernetes/*.conf \
+  /etc/kubernetes/manifests \
+  /etc/kubernetes/encryption-config.yaml 2&gt;/dev/null
+
+# 集群侧配置：ClusterConfiguration（重建/升级都依赖它）
+kubectl -n kube-system get cm kubeadm-config -oyaml &gt; kubeadm-config.yaml
+kubectl -n kube-system get cm kubelet-config -oyaml &gt; kubelet-config.yaml
+
+# 归档加密后异地保存（示例，密钥由 KMS/离线保管）
+age -r &lt;recipient&gt; -o control-plane-state.tar.gz.age control-plane-state.tar.gz
+</code></pre>
+<p>证书不能等过期才想起来：<code>kubeadm certs check-expiration</code> 会读取本地 PKI 并列出到期时间与剩余天数，源码见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/cmd/certs.go#L430-L484">certs.go#L430-L484</a>；续期后必须重启对应组件（官方文档：<a href="https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/">Certificate Management with kubeadm</a>）。</p>
+<h2 id="4-etcd-快照原理与恢复"><a class="header" href="#4-etcd-快照原理与恢复">4. etcd 快照原理与恢复</a></h2>
+<h3 id="41-从-save-到-restore-的语义"><a class="header" href="#41-从-save-到-restore-的语义">4.1 从 save 到 restore 的语义</a></h3>
+<p><code>etcdctl snapshot save</code> 的代码路径很短：解析单 endpoint、<code>snapshot.SaveWithVersion</code> 流式落盘、打印 <code>Snapshot saved at ...</code>（<a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/etcdctl/ctlv3/command/snapshot_command.go#L61-L98">snapshot_command.go#L61-L98</a>）。注意 v3.7 的 <code>etcdctl snapshot</code> 只剩 <code>save</code> 子命令，<code>status</code> 已由 <code>etcdutl</code> 接管（同一文件只注册了 <code>NewSnapshotSaveCommand</code>，见 <a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/etcdctl/ctlv3/command/snapshot_command.go#L50-L59">snapshot_command.go#L50-L59</a>）。</p>
+<p><code>etcdutl snapshot restore</code> 做的事和“把文件拷回去“完全不同（<a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/etcdutl/snapshot/v3_snapshot.go#L257-L330">v3_snapshot.go#L257-L330</a>）：</p>
+<ol>
+<li>用 <code>--initial-cluster</code> / <code>--initial-cluster-token</code> 构造<strong>一个新的逻辑集群</strong>，<code>--name</code> 与 <code>--initial-advertise-peer-urls</code> 定义本成员身份；</li>
+<li>输出目录必须不存在或为空，否则直接报错（避免误覆盖）；</li>
+<li>把快照 db 复制到新 data dir 的 <code>member/snap/db</code>，并<strong>调用 <code>TrimMembershipFromBackend</code> 清空快照中的成员信息</strong>（<a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/server/storage/schema/membership.go#L124-L150">membership.go#L124-L150</a>），因此恢复后的成员 ID/cluster ID 全部是新的，旧成员无法“错接“进来；</li>
+<li>可选 <code>--bump-revision N --mark-compacted</code> 抬高 revision 并标记已压缩（<a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/etcdutl/snapshot/v3_snapshot.go#L245-L254">RestoreConfig 字段语义</a>）。</li>
+</ol>
+<p><strong>为什么 Kubernetes 场景要 bump revision</strong>：快照是旧时间点，client/informer 的本地缓存可能比快照新。恢复后 revision 回退会让 watch 语义错乱；官方 etcd 文档强烈建议 Kubernetes 场景使用 <code>--bump-revision</code> + <code>--mark-compacted</code>，让所有 watch 终止、客户端重新 list（<a href="https://etcd.io/docs/v3.7/op-guide/recovery/">etcd Disaster recovery</a>）。</p>
+<p><code>--skip-hash-check</code> 只在快照来自“直接复制 data 目录“时使用；<code>snapshot save</code> 生成的快照自带 SHA256，restore 默认校验。版本兼容性：可以从同一 <code>major.minor</code> 的快照恢复，也支持不同 patch 版本之间恢复（<a href="https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/">configure-upgrade-etcd</a>）。</p>
+<h3 id="42-stacked-etcd-恢复多成员完整流程"><a class="header" href="#42-stacked-etcd-恢复多成员完整流程">4.2 stacked etcd 恢复：多成员完整流程</a></h3>
+<p>先明确 kubeadm 的默认布局：etcd 以 static pod 运行，数据目录挂在 <code>/var/lib/etcd</code>，命令行参数由 <code>getEtcdCommand</code> 生成（<code>--data-dir</code>、<code>--initial-cluster</code>、<code>--initial-cluster-state</code> 等，见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/phases/etcd/local.go#L242-L285">local.go#L242-L285</a>）；代码注释还说明 <code>--initial-cluster</code> 只在首次 init 时生效，集群已在运行时无影响（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/phases/etcd/local.go#L54-L57">local.go#L54-L57</a>）。</p>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>恢复前必须<strong>停掉所有 kube-apiserver</strong>（以及 kube-controller-manager/kube-scheduler），否则恢复期间的写入会造成 revision 回退后的持续不一致。官方文档的原话是：stop <strong>all</strong> API server instances → restore state in all etcd instances → restart all API server instances（<a href="https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/">configure-upgrade-etcd</a>）。</p>
+</blockquote>
+<p><strong>步骤 0：准备</strong></p>
+<ul>
+<li>选一个与目标 etcd <code>major.minor</code> 匹配的 <code>etcdutl</code> 二进制（kubeadm 默认 etcd 3.7.0-0，见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/constants/constants.go#L329-L330">constants.go#L329-L330</a>）；容器内使用 <code>registry.k8s.io/etcd:3.7.0-0</code> 自带的 <code>/usr/local/bin/etcdutl</code> 也可以。</li>
+<li>确认快照可用：<code>etcdutl snapshot status &lt;file&gt;</code>。</li>
+<li>记录原集群成员与 peer URL：<code>etcdctl member list -w table</code>（如果集群还能读）。</li>
+<li><strong>尽力保留现场</strong>：<code>sudo mv /var/lib/etcd /var/lib/etcd.broken</code>（别直接删，取证/兜底可能用到）。</li>
+</ul>
+<p><strong>步骤 1：停控制面组件（每台控制面执行）</strong></p>
+<pre><code class="language-bash">sudo mkdir -p /tmp/manifests-backup
+sudo mv /etc/kubernetes/manifests/*.yaml /tmp/manifests-backup/
+# kubelet 感知 manifest 消失后会停止 static pods；确认已退出
+sudo crictl ps | grep -E 'etcd|kube-apiserver|kube-controller-manager|kube-scheduler'
+</code></pre>
+<p><strong>步骤 2：每个成员 restore 同一份快照（在各自节点执行）</strong></p>
+<pre><code class="language-bash"># 以 c1=10.0.0.11 / c2=10.0.0.12 / c3=10.0.0.13 为例
+SNAP=/backup/etcd-20261119-0300.db
+ALL="c1=https://10.0.0.11:2380,c2=https://10.0.0.12:2380,c3=https://10.0.0.13:2380"
+
+# 在 c1 上：
+sudo etcdutl snapshot restore "$SNAP" \
+  --name c1 \
+  --initial-cluster "$ALL" \
+  --initial-cluster-token k8s-etcd-cluster \
+  --initial-advertise-peer-urls https://10.0.0.11:2380 \
+  --bump-revision 1000000000 \
+  --mark-compacted \
+  --data-dir /var/lib/etcd-restored
+
+# 在 c2 / c3 上同理，只改 --name 和 --initial-advertise-peer-urls
+</code></pre>
+<p>要点：</p>
+<ul>
+<li><strong>所有成员必须用同一份快照</strong>，且 <code>--initial-cluster</code> 完全一致、<code>--initial-cluster-token</code> 一致，否则会形成互相不认的集群（<a href="https://etcd.io/docs/v3.7/op-guide/recovery/">etcd Disaster recovery</a>）。</li>
+<li><code>--name</code> 必须等于该节点 static pod 的 <code>--name</code>（kubeadm 用 nodeName）；<code>--initial-advertise-peer-urls</code> 必须等于 manifest 中的 <code>--initial-advertise-peer-urls</code>。恢复后的成员身份以 restore 参数为准，manifest 里旧的 <code>--initial-cluster</code> 在已有 data dir 时不再起作用（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/phases/etcd/local.go#L54-L57">local.go#L54-L57</a>）。</li>
+<li><code>--data-dir</code> 必须为空/不存在。恢复完成后替换：</li>
+</ul>
+<pre><code class="language-bash">sudo mv /var/lib/etcd-restored /var/lib/etcd    # 若步骤 0 保留了 .broken 目录
+</code></pre>
+<p><strong>步骤 3：先只恢复 etcd，再恢复其他控制面组件</strong></p>
+<pre><code class="language-bash"># 只把 etcd.yaml 放回去
+sudo mv /tmp/manifests-backup/etcd.yaml /etc/kubernetes/manifests/
+# 等待所有成员就绪（每台控制面本机验证；也可指定其它成员 endpoint）
+for ep in 10.0.0.11 10.0.0.12 10.0.0.13; do
+  etcdctl --endpoints "https://$ep:2379" \
+    --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+    --cert=/etc/kubernetes/pki/etcd/server.crt \
+    --key=/etc/kubernetes/pki/etcd/server.key \
+    endpoint health
+done
+etcdctl --endpoints https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
+  member list -w table
+</code></pre>
+<p>此时应是 3 个 voting member、都有 leader、revision 已被 bump 过。</p>
+<p><strong>步骤 4：恢复其余 static pods</strong></p>
+<pre><code class="language-bash">sudo mv /tmp/manifests-backup/*.yaml /etc/kubernetes/manifests/
+# 观察 apiserver/controller-manager/scheduler 是否 Ready
+kubectl get pods -n kube-system -o wide
+kubectl get --raw /readyz?verbose
+</code></pre>
+<p><strong>步骤 5：数据面与状态核对</strong></p>
+<ul>
+<li>kubelet 会自动重连 apiserver；Node 对象若在快照之后才注册，kubelet 通常会重新注册（Node 缺失时 kubelet 可自行创建）。</li>
+<li>若快照时间点晚于某些节点注册时间，旧节点可能需要 <code>kubeadm join</code> 重新加入；先看 <code>kubectl get nodes</code>。</li>
+<li>核对：<code>kubectl get ns</code>、<code>kubectl get crd | wc -l</code>、关键 Operator 的 CR、以及业务 Pod 是否仍在运行（restore 不重启数据面容器）。</li>
+</ul>
+<p><strong>kubeadm 特有注意点</strong>：如果你把数据目录换到了新路径，除了改 etcd static pod manifest 的 <code>hostPath</code>，还要同步修改 <code>kube-system/kubeadm-config</code> 里的 <code>etcd.local.dataDir</code>，否则下一次 <code>kubeadm upgrade</code> 会把 manifest 写回旧目录（<a href="https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/">configure-upgrade-etcd</a>）。</p>
+<h3 id="43-external-etcd-的差异"><a class="header" href="#43-external-etcd-的差异">4.3 external etcd 的差异</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>stacked etcd</th><th>external etcd</th></tr>
+</thead>
+<tbody>
+<tr><td>备份对象</td><td>控制面节点上的 <code>/var/lib/etcd</code> 成员</td><td>独立 etcd 集群成员</td></tr>
+<tr><td>恢复时停什么</td><td>全部控制面 static pods + 全部 etcd 成员</td><td>只停 etcd 集群 + 所有 apiserver；控制面其它组件可留</td></tr>
+<tr><td>恢复后 apiserver 配置</td><td>通常不变</td><td>若 endpoints/IP 变化，需改 <code>--etcd-servers</code> 或 LB 配置</td></tr>
+<tr><td>成员管理</td><td>kubeadm 自动 <code>member add</code> + learner promote（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/util/etcd/etcd.go#L438-L444">etcd.go#L438-L444</a>、<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/util/etcd/etcd.go#L580-L620">MemberPromote</a>）</td><td>手工 <code>etcdctl member add/remove</code></td></tr>
+<tr><td>故障耦合</td><td>一台节点同时损失 etcd 成员 + apiserver</td><td>故障域解耦，但主机数翻倍</td></tr>
+</tbody>
+</table>
+</div>
+<p>external etcd 的 restore 命令、快照语义与 4.2 完全一致，只是“在 etcd 节点的数据目录上做“，不涉及 static pod manifests。</p>
+<h3 id="44-澄清v137-的-kubeadm-没有-kubeadm-etcd-restore"><a class="header" href="#44-澄清v137-的-kubeadm-没有-kubeadm-etcd-restore">4.4 澄清：v1.37 的 kubeadm 没有 <code>kubeadm etcd restore</code></a></h3>
+<p>kubeadm 顶层子命令只有 certs/completion/config/init/join/reset/version/token/upgrade/alpha/kubeconfig（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/cmd/cmd.go#L83-L94">cmd.go#L83-L94</a>）。etcd 相关能力是 init 的一个 phase：<code>kubeadm init phase etcd local</code>，只负责生成 etcd static pod manifest（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/cmd/phases/init/etcd.go#L36-L65">phases/init/etcd.go#L36-L65</a>）。<strong>没有</strong> <code>kubeadm etcd</code> 子命令，也没有内置 restore；恢复要靠 <code>etcdctl</code>/<code>etcdutl</code> + 手工编排 static pod manifests，如 4.2。</p>
+<p><code>--skip-phases</code> 是存在的（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/cmd/phases/workflow/runner.go#L426">runner.go#L426</a>），重建时可用 <code>kubeadm init --skip-phases=...</code> 精确控制执行到哪一步，但它不提供“恢复数据“能力。</p>
+<h2 id="5-quorum-丢失恢复"><a class="header" href="#5-quorum-丢失恢复">5. quorum 丢失恢复</a></h2>
+<h3 id="51-确认是否真的丢了-quorum"><a class="header" href="#51-确认是否真的丢了-quorum">5.1 确认是否真的丢了 quorum</a></h3>
+<p>先算清容忍度：n 个成员 quorum 为 <code>(n/2)+1</code>，3 成员容忍 1 台永久故障、5 成员容忍 2 台；偶数成员不增加容错（<a href="https://etcd.io/docs/v3.7/faq/">etcd FAQ</a>）。etcd 恢复文档的表述是 <code>(N-1)/2</code> 永久故障容忍度（<a href="https://etcd.io/docs/v3.7/op-guide/recovery/">etcd Disaster recovery</a>）。</p>
+<pre><code class="language-bash"># 能连上的成员逐个看：有 leader 吗？报 no leader / request timed out 就是疑似 quorum 丢失
+ETCDCTL="etcdctl --endpoints https://10.0.0.11:2379,https://10.0.0.12:2379,https://10.0.0.13:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key"
+$ETCDCTL endpoint status -w table
+$ETCDCTL member list -w table
+
+# 集群健康检查（kubeadm 内部也用它判断成员是否可加入）
+kubectl get --raw /healthz   # apiserver 视角
+</code></pre>
+<p>判据：多数成员永久失效（机器没了/磁盘坏了且无法修复），而不是“网络抖动导致暂时失去多数派“。<strong>网络分区恢复后 etcd 会自动恢复 quorum</strong>（<a href="https://etcd.io/docs/v3.7/faq/">etcd FAQ</a>），不要急着重做集群。</p>
+<h3 id="52-两条恢复路径"><a class="header" href="#52-两条恢复路径">5.2 两条恢复路径</a></h3>
+<p><strong>路径 A：从快照 restore 一个新集群（优先）</strong></p>
+<p>适用：有可用快照；能接受数据回退到快照时间点。流程就是 4.2 的恢复流程——restore 会创建一个全新集群并清空旧成员信息（第 4.1 节），所以它本质上也是“quorum 丢失后的标准恢复“。</p>
+<p><strong>路径 B：<code>--force-new-cluster</code>（保留最新数据，单人重建）</strong></p>
+<p>etcd 仍保留 <code>--force-new-cluster</code> 标志（<a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/server/embed/config.go#L768">server/embed/config.go#L768</a>），语义是“用一个成员的数据强制重建单成员集群“。实现上会丢弃未提交的 Raft entries，并把 commit index 调整为 <code>max(HardState.Commit, consistent_index)</code> 以避免丢失已提交但未落盘索引的条目（<a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/server/etcdserver/bootstrap.go#L586-L640">bootstrap.go#L586-L640</a>）。</p>
+<pre><code class="language-bash"># 前提：其他 etcd 成员和所有 apiserver 已停止
+# 1) 选数据最新的成员，在其 static pod manifest 的 etcd 命令中加 --force-new-cluster
+#    修改 /etc/kubernetes/manifests/etcd.yaml 后 kubelet 会自动重建该 pod
+# 2) 等待其成为单成员集群的 leader
+etcdctl --endpoints https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
+  endpoint health
+etcdctl --endpoints https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
+  member list -w table
+
+# 3) 恢复 3 成员：旧成员先 kubeadm reset 清空本地 etcd 数据与 manifests，
+#    再执行 kubeadm join --control-plane；kubeadm 会先 AddMemberAsLearner 再 promote。
+</code></pre>
+<p><code>kubeadm reset</code> 的 <code>remove-etcd-member</code> phase 会先摘除成员、再删除 etcd data dir（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/cmd/phases/reset/removeetcdmember.go#L54-L91">removeetcdmember.go#L54-L91</a>）——所以在做数据抢救时<strong>不要</strong>随手 reset 一台你还没确认的节点。</p>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>etcd 官方文档明确：<code>--force-new-cluster</code> <strong>strongly discouraged</strong>，如果旧集群其它成员还活着可能 panic（<a href="https://etcd.io/docs/v3.7/op-guide/recovery/">etcd Disaster recovery</a>）。另外 etcd 3.6+ 成员关系以 v3store 为准，历史上（v3.5 及更早）<code>--force-new-cluster</code> 与旧版 <code>etcdctl snapshot restore</code> 都可能留下“僵尸成员“，从老版本数据恢复时要特别核对 <code>member list</code>；细节见 <a href="https://kubernetes.io/blog/2025/12/21/preventing-etcd-zombies/">Avoiding Zombie Cluster Members When Upgrading to etcd v3.6</a>。恢复后务必确认 <code>member list</code> 只有预期成员。</p>
+</blockquote>
+<h3 id="53-两条路径对比"><a class="header" href="#53-两条路径对比">5.3 两条路径对比</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>路径 A：快照 restore</th><th>路径 B：<code>--force-new-cluster</code></th></tr>
+</thead>
+<tbody>
+<tr><td>数据完整性</td><td>回到快照时间点，快照之后的写入<strong>永久丢失</strong></td><td>保留该成员本地最新已提交数据（可能仍少于原集群多数派最新值）</td></tr>
+<tr><td>前提</td><td>有可校验快照；不要求任何原成员存活</td><td>至少一个成员数据目录<strong>完好</strong>；其它成员必须停机</td></tr>
+<tr><td>数据一致性</td><td>由快照保证，干净的新集群</td><td>依赖该成员数据正确；磁盘损坏时不可用</td></tr>
+<tr><td>主要风险</td><td>数据回退；忘停 apiserver 导致缓存/写入混乱</td><td>官方不推荐；旧成员复活可 panic；僵尸成员；revision 回退未处理</td></tr>
+<tr><td>revision 回退处理</td><td>显式 <code>--bump-revision --mark-compacted</code></td><td>无内建处理，需自行评估 client/informer 后果</td></tr>
+<tr><td>后续</td><td>所有成员按 <code>--initial-cluster</code> 一起启动</td><td>单成员先起，再逐个扩容</td></tr>
+<tr><td>适用</td><td>常规灾备、跨机重建</td><td>没有可用快照但单成员磁盘完好时的“抢数据“</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>共同点</strong>：两条路径都要求 apiserver 全部停掉后再启动；路径 A 的 revision 一定回退到快照点（因此要显式 bump），路径 B 的 revision 不回退但数据可能落后于原集群多数派。恢复后都必须重启所有控制面组件（官方还建议重启 kubelet，避免依赖陈旧状态，见 <a href="https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/">configure-upgrade-etcd</a>）。</p>
+<h3 id="54-恢复后让节点与-apiserver-回来"><a class="header" href="#54-恢复后让节点与-apiserver-回来">5.4 恢复后让节点与 apiserver 回来</a></h3>
+<ol>
+<li><strong>apiserver</strong>：static pod 由 kubelet 拉起即可；若原 apiserver 证书/CA 未变，无需重新签发。</li>
+<li><strong>Node</strong>：kubelet 会重连；若 Node 对象在快照中缺失，kubelet 会重新注册 Node。若 kubelet 证书过期或被拒，需要重新签发/重新 join。</li>
+<li><strong>新增/重装控制面节点</strong>：worker 用 <code>kubeadm token create --print-join-command</code>；control-plane 用 <code>kubeadm join --control-plane</code>（带证书或 <code>--certificate-key</code>）。</li>
+<li><strong>旧 etcd 数据目录</strong>：确认新集群稳定后再清理 <code>*.broken</code> 目录，避免误删唯一可取证副本。</li>
+</ol>
+<h2 id="6-全集群重建与迁移"><a class="header" href="#6-全集群重建与迁移">6. 全集群重建与迁移</a></h2>
+<p>当 etcd 快照不可用、或安全事件要求重建、或迁移到新基础设施时，“重建“是兜底方案。重建的前提是第 2 节表格中的 8-11 行（manifests、PV、外部依赖、IaC/GitOps 源）都有备份；若要保留原有身份（不让节点/客户端重新认证），还需要第 2 行的 PKI。</p>
+<h3 id="61-重建-vs-恢复"><a class="header" href="#61-重建-vs-恢复">6.1 重建 vs 恢复</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>场景</th><th>是否需要 etcd 数据</th><th>主要工作</th></tr>
+</thead>
+<tbody>
+<tr><td>控制面节点全损，etcd 数据在</td><td>需要（restore）</td><td>换机器 + restore + 重新 join（第 4 节）</td></tr>
+<tr><td>etcd 数据损坏/被勒索</td><td>不需要（重建）</td><td>新集群 + IaC + GitOps 重新 apply + 恢复 PV</td></tr>
+<tr><td>迁移到新 region/云</td><td>可选</td><td>新集群 + 数据迁移（Velero/存储层复制）</td></tr>
+<tr><td>安全事件（CA 泄露）</td><td>不需要，且必须换 CA</td><td>全新 PKI + 重建</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="62-用-kubeadm-重建控制面"><a class="header" href="#62-用-kubeadm-重建控制面">6.2 用 kubeadm 重建控制面</a></h3>
+<ul>
+<li><strong>保留 PKI 重建</strong>：把备份的 <code>/etc/kubernetes/pki</code> 和 <code>*.conf</code> 放回新节点的 <code>/etc/kubernetes/</code>，kubeadm 检测到已有 CA 就不会覆盖（官方文档：“If a given certificate and private key pair exists before running kubeadm init, kubeadm does not overwrite them”，<a href="https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/">Certificate Management with kubeadm</a>）。</li>
+<li><strong>external etcd 场景</strong>：<code>ClusterConfiguration.etcd.external</code> 指向已恢复的 etcd 集群，kubeadm 不会生成本地 etcd static pod（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/phases/etcd/local.go#L58-L60">local.go#L58-L60</a>），apiserver 直接连上带完整数据的 etcd——这是“重建控制面但保留数据“最干净的路径。</li>
+<li><strong>配置来源</strong>：<code>kube-system/kubeadm-config</code> ConfigMap 由 <code>kubeadm init phase upload-config</code> 写入 ClusterConfiguration（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/phases/uploadconfig/uploadconfig.go#L42-L75">uploadconfig.go#L42-L75</a>）；重建时用备份的 ConfigMap 或自己的 <code>kubeadm.yaml</code>，不要凭记忆手敲参数。</li>
+<li><strong>升级时 kubeadm 会顺手备份，但那不是灾备</strong>：<code>kubeadm upgrade</code> 会在控制面节点生成带时间戳的 <code>kubeadm-backup-etcd-*</code> / <code>kubeadm-backup-manifests-*</code> 目录（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/phases/upgrade/staticpods.go#L99-L115">staticpods.go#L99-L115</a>），只用于升级回滚，既没有异地副本也没有校验，不能替代第 3 节的快照链路。</li>
+<li>用 <code>--skip-phases</code> 可以对“只想重跑某些 phase“的场景做精确控制（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/cmd/phases/workflow/runner.go#L426">runner.go#L426</a>）。</li>
+</ul>
+<h3 id="63-cluster-apiclusterctl-move--pivot"><a class="header" href="#63-cluster-apiclusterctl-move--pivot">6.3 Cluster API：<code>clusterctl move</code> / pivot</a></h3>
+<p>管理集群本身也是控制面：当承载 Cluster API 的管理集群要迁移/重建时，用 <code>clusterctl move</code> 把 Cluster/MachineDeployment 等对象 pivot 到新管理集群（<a href="https://cluster-api.sigs.k8s.io/clusterctl/commands/move.html">clusterctl move 文档</a>）。</p>
+<pre><code class="language-bash">clusterctl move --to-kubeconfig=target-kubeconfig.yaml
+# 也可以先落盘再恢复（不是备份方案，只是同一套 move 逻辑的另一种用法）
+clusterctl move --to-directory /backup/capi-objects
+clusterctl move --from-directory /backup/capi-objects --to-kubeconfig=target-kubeconfig.yaml
+</code></pre>
+<p>实现入口在 <a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/cmd/clusterctl/client/move.go#L56-L104">move.go#L56-L104</a>（校验参数、选择 from/to 目录或 kubeconfig）与 <a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/cmd/clusterctl/client/cluster/mover.go#L75-L105">mover.go#L75-L105</a>（对象图移动）；CLI flags 见 <a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/cmd/clusterctl/cmd/move.go#L77-L96">cmd/move.go#L77-L96</a>。</p>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>官方文档明确 <code>clusterctl move</code> <strong>不是 backup/restore 方案</strong>：它假设 move 期间集群稳定，升级/扩缩容/修复中的竞态从未被验证；而且<strong>所有对象的 Status 子资源都不恢复</strong>。原先的 <code>clusterctl backup/restore</code> 命令已因此被移除（<a href="https://cluster-api.sigs.k8s.io/clusterctl/commands/move.html">clusterctl move 文档</a>）。把 move 当成“管理集群灾备“时要额外备份 Status 可重建性依赖的外部状态。</p>
+</blockquote>
+<h3 id="64-恢复顺序清单"><a class="header" href="#64-恢复顺序清单">6.4 恢复顺序清单</a></h3>
+<p>无论用 Velero 还是 GitOps 重建，顺序错了会出现“CRD 不存在 → CR 被丢弃 → Controller 起不来“的死循环：</p>
+<ol>
+<li><strong>CRD / APIService / 聚合层组件</strong>（先装 CRD，再装依赖它们的 Operator）</li>
+<li><strong>Namespace、ServiceAccount、RBAC、NetworkPolicy、Quota</strong></li>
+<li><strong>Secret/ConfigMap</strong>（含镜像拉取凭据、TLS 证书）</li>
+<li><strong>StorageClass / PV / PVC</strong>（先恢复 PV 数据，再创建工作负载）</li>
+<li><strong>基础组件</strong>：CNI、CoreDNS、Ingress、cert-manager、metrics-server</li>
+<li><strong>业务工作负载</strong>（Deployment/StatefulSet/Job），StatefulSet 要等 PV 数据就绪</li>
+<li><strong>验证</strong>：见第 9 节清单</li>
+</ol>
+<h2 id="7-velero对象级备份与恢复"><a class="header" href="#7-velero对象级备份与恢复">7. Velero：对象级备份与恢复</a></h2>
+<p>Velero 解决的是“Kubernetes 对象 + PV 数据“的备份恢复与迁移，<strong>不是 etcd 级灾备</strong>。两者互补而非替代（对比见 7.5）。</p>
+<h3 id="71-架构"><a class="header" href="#71-架构">7.1 架构</a></h3>
+<pre class="mermaid">flowchart TB
+    CLI["velero CLI / Schedule"]
+    CR["Backup / Restore / Schedule CR&lt;br/&gt;（存在 etcd 中）"]
+    subgraph NS["velero namespace"]
+        S["velero server&lt;br/&gt;backup/restore/schedule/gc controllers"]
+        NA["node-agent DaemonSet&lt;br/&gt;文件级备份 kopia"]
+    end
+    OS[("对象存储&lt;br/&gt;BackupStorageLocation")]
+    PV[("PV 快照 / CSI VolumeSnapshot")]
+
+    CLI --&gt; CR
+    CR --&gt; S
+    S --&gt;|"列出 API 对象、打成 tarball"| OS
+    S --&gt;|"调用云盘/CSI 快照"| PV
+    S --&gt;|"PodVolumeBackup"| NA
+    NA --&gt;|"读节点上的卷数据"| OS
+    OS -.-&gt;|"对象存储是 source of truth&lt;br/&gt;backup-sync controller 反向同步"| S
+</pre>
+
+<p>关键事实：Backup/Restore 本身是 CRD，CR 存在<strong>集群 etcd 里</strong>；但 Velero 把对象存储当作 source of truth，会持续把对象存储里格式正确的备份同步回 Kubernetes API（<a href="https://velero.io/docs/v1.18/how-velero-works/">How Velero Works</a>）。这带来一个重要推论：<strong>集群重建后装回 Velero 并指向同一个 bucket，备份记录会被自动同步回来</strong>，然后就能 restore——这是 Velero 能在“集群全丢“场景工作的原因。</p>
+<h3 id="72-备份与恢复流程源码位置"><a class="header" href="#72-备份与恢复流程源码位置">7.2 备份与恢复流程（源码位置）</a></h3>
+<ol>
+<li>用户创建 <code>Backup</code> CR；<code>backupReconciler.Reconcile</code> 处理 <code>ReadyToStart</code> 阶段（<a href="https://github.com/velero-io/velero/blob/4ee1e79a7aed367fd9b767b8219ec65bd0c96892/pkg/controller/backup_controller.go#L254-L300">backup_controller.go#L254-L300</a>）。</li>
+<li><code>runBackup</code> 设置 plugin manager、检查对象存储中是否已存在同名备份，然后调用 <code>Backupper.BackupWithResolvers</code> 遍历 API 资源（<a href="https://github.com/velero-io/velero/blob/4ee1e79a7aed367fd9b767b8219ec65bd0c96892/pkg/controller/backup_controller.go#L733-L800">backup_controller.go#L733-L800</a>）。</li>
+<li>对象写入 tarball，PV 走云盘快照/CSI snapshot，或由 node-agent 做文件级备份；最后上传对象存储并更新 Backup 状态。</li>
+<li>恢复时 <code>runValidatedRestore</code> 拉取备份、准备 restore actions 与卷快照信息（<a href="https://github.com/velero-io/velero/blob/4ee1e79a7aed367fd9b767b8219ec65bd0c96892/pkg/controller/restore_controller.go#L514-L560">restore_controller.go#L514-L560</a>），随后按资源优先级逐项 restore；资源排序由 <code>getOrderedResources</code> 实现（高优先级在前、其余按字母序，<a href="https://github.com/velero-io/velero/blob/4ee1e79a7aed367fd9b767b8219ec65bd0c96892/pkg/restore/restore.go#L688-L710">restore.go#L688-L710</a>）。</li>
+<li>restore 会重置对象元数据（UID/resourceVersion 等）并<strong>不恢复 Status</strong>（<code>resetMetadata</code>/<code>resetStatus</code>，<a href="https://github.com/velero-io/velero/blob/4ee1e79a7aed367fd9b767b8219ec65bd0c96892/pkg/restore/restore.go#L2416-L2449">restore.go#L2416-L2449</a>）。</li>
+</ol>
+<h3 id="73-pv-数据的两条路"><a class="header" href="#73-pv-数据的两条路">7.3 PV 数据的两条路</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>方式</th><th>机制</th><th>适用</th><th>注意</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>快照</strong></td><td>云盘 native snapshot 或 CSI <code>VolumeSnapshot</code></td><td>云环境、CSI 驱动支持快照</td><td>依赖存储侧；跨云/跨 region 恢复受快照可用区限制</td></tr>
+<tr><td><strong>文件级备份（FSB）</strong></td><td>node-agent 用 kopia 读节点上的卷数据（restic 已进入弃用流程）</td><td>无快照能力、跨云迁移、小文件多</td><td>只能备份<strong>被 Pod 挂载</strong>的卷；<code>hostPath</code> 不支持；孤儿 PVC 需要临时 Pod 挂载（<a href="https://velero.io/docs/v1.18/file-system-backup/">File System Backup</a>）</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>Velero FSB 默认对所有 backup repository 使用<strong>静态公共加密密钥</strong>——能访问你备份存储的人就能解密备份数据（<a href="https://velero.io/docs/v1.18/file-system-backup/">File System Backup 限制</a>）。必须严格限制 bucket 权限，并对敏感数据另做应用层加密。</p>
+</blockquote>
+<h3 id="74-限制清单"><a class="header" href="#74-限制清单">7.4 限制清单</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>限制</th><th>含义</th><th>应对</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>不备份 etcd/控制面自身</strong></td><td>备份通过 apiserver 读对象，控制面挂了 Velero 也挂了；PKI、kubeadm 配置、etcd 自身都不在其范围</td><td>必须另有 etcd 快照 + PKI 备份</td></tr>
+<tr><td><strong>备份非严格原子</strong></td><td>备份期间创建/修改的对象可能漏掉（<a href="https://velero.io/docs/v1.18/how-velero-works/">How Velero Works</a>）</td><td>关键应用配 backup hook（flush/fsync）</td></tr>
+<tr><td><strong>不恢复 Status</strong></td><td>恢复后 Status 为空，由 controller 重建</td><td>确认 Operator 能自行收敛；否则需 restore hook</td></tr>
+<tr><td><strong>API 版本必须存在</strong></td><td>备份使用 server 的 preferred version；目标集群必须有同一 group/version</td><td>先装 CRD/升级目标集群 API</td></tr>
+<tr><td><strong>默认非破坏性恢复</strong></td><td>目标已存在同名对象会跳过（除非 <code>--existing-resource-policy=update</code>）</td><td>多次 restore 时明确策略</td></tr>
+<tr><td><strong>FSB 静态加密密钥</strong></td><td>所有 repository 共用静态密钥，bucket 权限即解密权限</td><td>单独限制 bucket 访问 + 应用层加密</td></tr>
+<tr><td><strong>依赖对象存储与插件</strong></td><td>跨云恢复需要对应 provider 插件</td><td>备份存储与恢复集群解耦</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="75-velero-与-etcd-快照对比"><a class="header" href="#75-velero-与-etcd-快照对比">7.5 Velero 与 etcd 快照对比</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>etcd 快照</th><th>Velero</th></tr>
+</thead>
+<tbody>
+<tr><td>备份对象</td><td>整个集群状态（所有 API 对象 + 元数据 + CRD + RBAC）</td><td>选定的 API 对象（可过滤）+ PV 数据</td></tr>
+<tr><td>粒度</td><td>集群级全量</td><td>namespace/label/资源类型级</td></tr>
+<tr><td>一致性</td><td>单成员已提交状态的一致视图</td><td>非原子，靠 hook 补</td></tr>
+<tr><td>恢复单位</td><td>整个集群（新 logical cluster）</td><td>单个/部分对象，可 namespace remap</td></tr>
+<tr><td>控制面依赖</td><td>恢复时控制面必须停</td><td>依赖目标集群可用</td></tr>
+<tr><td>能否跨集群</td><td>可以（restore 成新集群）</td><td>可以，设计目标之一</td></tr>
+<tr><td>能否恢复 etcd/PKI</td><td>是（数据），PKI 不在内</td><td>否</td></tr>
+<tr><td>典型 RPO</td><td>分钟-小时（快照频率）</td><td>小时-天（schedule）</td></tr>
+<tr><td>典型用途</td><td>控制面灾难恢复、版本回滚</td><td>误删恢复、迁移、合规、应用级备份</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>两者是不同层</strong>：etcd 快照保“集群能不能活“，Velero 保“某个业务对象/卷能不能回来“。</p>
+<h3 id="76-典型场景与命令"><a class="header" href="#76-典型场景与命令">7.6 典型场景与命令</a></h3>
+<pre><code class="language-bash"># 误删 namespace 恢复
+velero restore create --from-backup daily-20261119 --include-namespaces payment
+
+# 集群迁移（灾备集群已就绪，Velero 已指向同一 bucket）
+velero restore create --from-backup daily-20261119 --include-cluster-resources
+
+# 灾难后把 BSL 置为只读，避免恢复期间新建/删除备份
+kubectl patch backupstoragelocation default -n velero --type merge \
+  --patch '{"spec":{"accessMode":"ReadOnly"}}'
+</code></pre>
+<p>只读切换与灾难恢复流程见 <a href="https://velero.io/docs/v1.18/disaster-case/">Velero Disaster recovery</a>；详细字段见 <a href="https://velero.io/docs/v1.18/backup-reference/">Backup Reference</a> 与 <a href="https://velero.io/docs/v1.18/restore-reference/">Restore Reference</a>。</p>
+<h2 id="8-多集群灾备架构"><a class="header" href="#8-多集群灾备架构">8. 多集群灾备架构</a></h2>
+<h3 id="81-模式"><a class="header" href="#81-模式">8.1 模式</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>模式</th><th>说明</th><th>RTO</th><th>RPO</th><th>成本</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Backup &amp; Restore（冷备）</strong></td><td>只有备份，灾难时新建集群 + 恢复</td><td>小时级</td><td>由备份频率决定</td><td>最低</td></tr>
+<tr><td><strong>Pilot Light</strong></td><td>保持最小数据面/基础组件，灾难时扩容</td><td>30min-2h</td><td>分钟-小时</td><td>低</td></tr>
+<tr><td><strong>Warm Standby</strong></td><td>备用集群常驻、数据复制、DNS 未切换</td><td>分钟-30min</td><td>秒-分钟</td><td>中高</td></tr>
+<tr><td><strong>Active-Active</strong></td><td>两个集群同时承载流量</td><td>秒级</td><td>取决于数据层</td><td>最高</td></tr>
+</tbody>
+</table>
+</div>
+<p>控制面有一个硬约束：<strong>同一个逻辑集群不能跨两个独立 etcd 集群双活</strong>。所谓“双活“通常是“两个独立集群 + 数据面/数据层双写或异步复制“，控制面各自独立。多活难点在数据一致性、写入冲突、DNS/流量切换的收敛时间，而不是控制面本身。</p>
+<h3 id="82-rtorpo-矩阵经验值"><a class="header" href="#82-rtorpo-矩阵经验值">8.2 RTO/RPO 矩阵（经验值）</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>场景</th><th>依赖</th><th>典型 RTO</th><th>典型 RPO</th></tr>
+</thead>
+<tbody>
+<tr><td>单控制面节点故障</td><td>HA 机制自动切换</td><td>0（无中断）</td><td>0</td></tr>
+<tr><td>etcd 少一个成员</td><td>剩余成员保持 quorum</td><td>0-分钟</td><td>0</td></tr>
+<tr><td>quorum 丢失 + 有快照</td><td>快照 + restore 流程</td><td>30min-4h</td><td>快照间隔</td></tr>
+<tr><td>控制面全损（数据在）</td><td>新机器/快照/证书</td><td>1-8h</td><td>快照间隔</td></tr>
+<tr><td>整个集群丢失（重建）</td><td>IaC + GitOps + Velero + PV 快照</td><td>数小时-数天</td><td>最近一次对象级备份</td></tr>
+<tr><td>Region 故障（warm standby）</td><td>备用集群 + 数据复制</td><td>分钟-小时</td><td>复制延迟</td></tr>
+</tbody>
+</table>
+</div>
+<p>这些数字<strong>不是</strong>承诺值：真实 RTO 取决于最后一次演练的实测值，没演练过的流程按“数倍于预期“估算。</p>
+<h3 id="83-切换与依赖顺序"><a class="header" href="#83-切换与依赖顺序">8.3 切换与依赖顺序</a></h3>
+<pre class="mermaid">flowchart LR
+    A["灾难发生"] --&gt; B["确认故障域&lt;br/&gt;AZ / region / 集群"]
+    B --&gt; C["冻结变更、保护现场"]
+    C --&gt; D{"数据面能否在备用集群拉起?"}
+    D --&gt;|"能"| E["切换 DNS/GSLB&lt;br/&gt;TTL 提前调小"]
+    D --&gt;|"不能"| F["先恢复数据源&lt;br/&gt;DB / 对象存储 / 消息队列"]
+    E --&gt; G["验证入口、证书、DNS、镜像拉取"]
+    F --&gt; G
+    G --&gt; H["流量回切或宣告完成"]
+</pre>
+
+<p>外部依赖顺序：<strong>数据源 → 控制面 → 工作负载 → 入口（DNS/LB）→ 流量</strong>。提前把 DNS TTL 调到 60s 级别、把证书和镜像仓库做成多 region 可访问，比事后改快得多。</p>
+<h2 id="9-演练与验证"><a class="header" href="#9-演练与验证">9. 演练与验证</a></h2>
+<h3 id="91-演练类型"><a class="header" href="#91-演练类型">9.1 演练类型</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>演练</th><th>频率（建议）</th><th>通过标准</th></tr>
+</thead>
+<tbody>
+<tr><td>快照可恢复性（restore 到临时目录）</td><td>每周/每月</td><td>restore 成功、<code>snapshot status</code> 完整、能读到关键对象</td></tr>
+<tr><td>单成员 etcd 故障</td><td>每季度</td><td>业务无感、quorum 保持、成员自动/手工替换成功</td></tr>
+<tr><td>控制面单节点故障</td><td>每季度</td><td>apiserver 切换、调度恢复、告警正确</td></tr>
+<tr><td>quorum 丢失恢复（隔离环境）</td><td>每半年</td><td>从快照恢复到完整集群，RTO 有实测值</td></tr>
+<tr><td>证书过期模拟</td><td>每半年</td><td>发现→续期→重启组件，全流程 &lt; 1h</td></tr>
+<tr><td>集群重建（IaC+GitOps）</td><td>每年</td><td>空环境重建出等价集群，工作负载与 PV 数据完整</td></tr>
+<tr><td>Region 切换</td><td>每年</td><td>DNS 切换 + 数据校验，RTO/RPO 达标</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="92-rto-测量方法"><a class="header" href="#92-rto-测量方法">9.2 RTO 测量方法</a></h3>
+<ul>
+<li>计时起点：故障被确认（或演练宣布开始）的时刻。</li>
+<li>计时终点：<strong>业务验证通过</strong>的时刻，不是“apiserver Ready“的时刻。</li>
+<li>分段记录：检测时间、决策时间、准备时间、restore 时间、组件启动时间、数据校验时间、流量切入时间。哪一段最长就优化哪一段。</li>
+<li>把每次演练的时间线写入 runbook，形成可对比的基线。</li>
+</ul>
+<h3 id="93-恢复验证清单"><a class="header" href="#93-恢复验证清单">9.3 恢复验证清单</a></h3>
+<ul>
+<li><input disabled="" type="checkbox"> <code>kubectl get --raw /readyz?verbose</code> 全部通过；<code>/livez</code></li>
+<li><input disabled="" type="checkbox"> <code>etcdctl endpoint health</code> 全成员健康，<code>member list</code> 数量正确</li>
+<li><input disabled="" type="checkbox"> <code>kubectl get nodes</code> 全部 Ready；节点数、版本与预期一致</li>
+<li><input disabled="" type="checkbox"> 对象数量比对：Namespace、CRD、Deployment、Service、Secret 数量与备份时基线差异在预期内</li>
+<li><input disabled="" type="checkbox"> RBAC 抽查：<code>kubectl auth can-i --list --as=system:serviceaccount:&lt;ns&gt;:&lt;sa&gt;</code></li>
+<li><input disabled="" type="checkbox"> 关键 Operator/CRD 的 CR 已恢复且 controller 收敛（无 CrashLoop）</li>
+<li><input disabled="" type="checkbox"> PV/PVC 全部 Bound，实际读取业务数据校验（不是只看状态）</li>
+<li><input disabled="" type="checkbox"> Service/DNS/Ingress 可用：从集群内与集群外各访问一次</li>
+<li><input disabled="" type="checkbox"> 证书有效期：<code>kubeadm certs check-expiration</code>（kubeadm 集群）</li>
+<li><input disabled="" type="checkbox"> 加密数据可读：抽查一个启用 at-rest encryption 的 Secret</li>
+<li><input disabled="" type="checkbox"> 审计日志、监控、告警在恢复后重新工作（不要把监控也一起丢了）</li>
+</ul>
+<h3 id="94-混沌与故障注入"><a class="header" href="#94-混沌与故障注入">9.4 混沌与故障注入</a></h3>
+<ul>
+<li>停一个 etcd 成员 / 停一个控制面节点：验证 quorum 与选主。</li>
+<li>网络分区（iptables/tc）：验证“暂时失去多数派会自动恢复“，不要误判为永久故障。</li>
+<li>证书到期模拟：在隔离环境把叶子证书改短，验证 <code>check-expiration</code> 告警与续期流程。</li>
+<li>误删演练：删除测试 namespace 后用 Velero 恢复，验证 hook 与 PV 恢复。</li>
+<li>所有注入必须在<strong>隔离环境或明确变更窗口</strong>内进行，并确保备份链路独立于被注入的集群。</li>
+</ul>
+<h2 id="10-托管-kubernetes-的灾备责任划分"><a class="header" href="#10-托管-kubernetes-的灾备责任划分">10. 托管 Kubernetes 的灾备责任划分</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>层</th><th>谁负责</th><th>用户能做什么</th><th>用户不能做什么</th></tr>
+</thead>
+<tbody>
+<tr><td>控制面（apiserver/etcd/调度器）</td><td>云厂商</td><td>通过 SLA 与状态页感知；设计跨 AZ 的节点池</td><td>访问 etcd、导出控制面快照、恢复控制面数据</td></tr>
+<tr><td>工作负载对象</td><td>用户</td><td>Velero、GitOps、定期导出 YAML</td><td>依赖厂商回滚单个对象</td></tr>
+<tr><td>PV 数据</td><td>用户</td><td>存储快照、Velero FSB、应用级备份</td><td>假设控制面备份包含业务数据</td></tr>
+<tr><td>外部依赖（DNS/LB/镜像仓库/KMS）</td><td>用户</td><td>IaC + 多 region 副本</td><td>假设集群恢复后依赖自动可用</td></tr>
+</tbody>
+</table>
+</div>
+<p>实践要点：</p>
+<ul>
+<li>托管集群的 etcd 通常由厂商托管，<strong>用户拿不到 etcd 快照</strong>，所以对象级备份（Velero）+ GitOps 是主力；PV 必须有独立备份。</li>
+<li>跨 region 重建：用 IaC 新建集群 → 装 Velero 指向原 bucket → restore 对象 → 挂载/恢复 PV → 切 DNS。</li>
+<li>厂商 SLA 通常只承诺控制面可用性，<strong>不承诺你的数据可恢复</strong>；备份责任始终在用户侧（这条是经验判断，具体以各厂商服务条款为准）。</li>
+<li>跨 region 依赖：镜像仓库、KMS、DNS、对象存储都要确认在目标 region 可用，否则恢复会卡在拉镜像或解密。</li>
+</ul>
+<h2 id="11-常见误区检查表"><a class="header" href="#11-常见误区检查表">11. 常见误区检查表</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>#</th><th>误区</th><th>后果</th><th>正确做法</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>只备份 etcd，不备份 PKI</td><td>数据恢复了但 CA 丢失，全部组件身份重建</td><td>把 <code>/etc/kubernetes/pki</code>、<code>*.conf</code>、manifests、<code>kubeadm-config</code> 一起备份</td></tr>
+<tr><td>2</td><td>备份和原集群在同一块盘/同一 AZ</td><td>盘坏/AZ 故障时备份一起没</td><td>3-2-1，异地对象存储 + 版本化/对象锁</td></tr>
+<tr><td>3</td><td>备份从来不校验、不演练</td><td>恢复时才发现快照损坏或流程不通</td><td><code>snapshot status</code> + 定期 restore drill</td></tr>
+<tr><td>4</td><td>以为 <code>--upload-certs</code> 是证书备份</td><td>集群丢了 Secret 也没了</td><td>离线备份 PKI；upload-certs 只是 join 通道</td></tr>
+<tr><td>5</td><td>restore 前没停 apiserver</td><td>revision 回退 + 持续写入，缓存/对象状态混乱</td><td>先停全部 apiserver，再恢复，再重启</td></tr>
+<tr><td>6</td><td>用 <code>--force-new-cluster</code> 当常规恢复手段</td><td>官方不推荐；旧成员活着会 panic；可能产生僵尸成员</td><td>优先快照 restore；它只用于“无快照但单成员数据完好“的抢救</td></tr>
+<tr><td>7</td><td>restore 忘了 <code>--bump-revision --mark-compacted</code></td><td>informer/watch 看到 revision 回退，控制器行为不可预测</td><td>Kubernetes 场景默认加这两个参数</td></tr>
+<tr><td>8</td><td>恢复后忘了改 <code>kubeadm-config</code> 的 <code>etcd.local.dataDir</code></td><td>下一次 <code>kubeadm upgrade</code> 覆盖 manifest，指回旧目录</td><td>换数据目录时同步改 ConfigMap</td></tr>
+<tr><td>9</td><td>以为 Velero 能恢复 etcd/控制面</td><td>控制面已挂时 Velero 也起不来</td><td>etcd 快照 + PKI 备份是另一条独立链路</td></tr>
+<tr><td>10</td><td>快照文件不加密</td><td>快照含全部 Secret/SA token，泄露即集群失守</td><td>备份加密 + bucket 权限最小化</td></tr>
+<tr><td>11</td><td>忘记 KMS 主密钥/encryption config</td><td>恢复出的 etcd 数据是密文，读不出 Secret</td><td>密钥/配置与快照分开备份、定期解密验证</td></tr>
+<tr><td>12</td><td>单节点或 2 成员 etcd 当“高可用“</td><td>无 quorum 容错，等于没有 HA</td><td>奇数成员（3 或 5），跨故障域</td></tr>
+<tr><td>13</td><td>把 PV 数据当成 etcd 快照的一部分</td><td>恢复后 PVC Bound 但数据为空</td><td>PV 单独备份（存储快照/FSB）</td></tr>
+<tr><td>14</td><td>灾难时先恢复业务，后恢复依赖</td><td>卡在镜像/证书/DNS</td><td>按“数据源→控制面→工作负载→入口“顺序</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="参考资料"><a class="header" href="#参考资料">参考资料</a></h2>
+<h3 id="官方文档"><a class="header" href="#官方文档">官方文档</a></h3>
+<ul>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/">Operating etcd clusters for Kubernetes</a>（备份/恢复/defrag/替换成员）</li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/">Certificate Management with kubeadm</a>（证书清单、有效期、续期）</li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/">Encrypting Confidential Data at Rest</a>（encryption config 与 provider 顺序）</li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/">Using a KMS provider for data encryption</a></li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/ha-topology/">High Availability Topology</a>（stacked vs external etcd）</li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/">Upgrading kubeadm clusters</a>（升级流程与升级前备份建议）</li>
+<li>Kubernetes Blog：<a href="https://kubernetes.io/blog/2025/12/21/preventing-etcd-zombies/">Avoiding Zombie Cluster Members When Upgrading to etcd v3.6</a></li>
+<li>Kubernetes Blog：<a href="https://kubernetes.io/blog/2026/07/08/announcing-etcd-3.7/">Announcing etcd v3.7.0</a>（v3.7 从 v3store 引导、移除 v2store 依赖）</li>
+<li>etcd：<a href="https://etcd.io/docs/v3.7/op-guide/recovery/">Disaster recovery</a>（snapshot/restore/revision bump/force-new-cluster 风险）</li>
+<li>etcd：<a href="https://etcd.io/docs/v3.7/op-guide/maintenance/">Maintenance</a>（compaction、defrag、quota）</li>
+<li>etcd：<a href="https://etcd.io/docs/v3.7/faq/">FAQ</a>（quorum、成员数、容量）</li>
+<li>Velero：<a href="https://velero.io/docs/v1.18/how-velero-works/">How Velero Works</a></li>
+<li>Velero：<a href="https://velero.io/docs/v1.18/backup-reference/">Backup Reference</a></li>
+<li>Velero：<a href="https://velero.io/docs/v1.18/restore-reference/">Restore Reference</a></li>
+<li>Velero：<a href="https://velero.io/docs/v1.18/file-system-backup/">File System Backup</a></li>
+<li>Velero：<a href="https://velero.io/docs/v1.18/disaster-case/">Disaster recovery</a></li>
+<li>Velero：<a href="https://velero.io/docs/v1.18/resource-filtering/">Resource Filtering</a></li>
+<li>Cluster API：<a href="https://cluster-api.sigs.k8s.io/clusterctl/commands/move.html">clusterctl move</a></li>
+</ul>
+<h3 id="源码pinned"><a class="header" href="#源码pinned">源码（pinned）</a></h3>
+<ul>
+<li>Kubernetes v1.37.2：<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/phases/etcd/local.go#L194-L285">kubeadm etcd local</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/util/etcd/etcd.go#L365-L460">kubeadm etcd util</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/phases/certs/certlist.go#L249-L276">certs</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/phases/copycerts/copycerts.go#L53-L122">copycerts</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/phases/uploadconfig/uploadconfig.go#L42-L100">uploadconfig</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/server/options/encryptionconfig/config.go#L226-L256">encryptionconfig</a> / <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/apis/apiserver/types_encryption.go#L70-L103">EncryptionConfiguration types</a></li>
+<li>etcd v3.7.4：<a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/etcdctl/ctlv3/command/snapshot_command.go#L50-L98">etcdctl snapshot</a> / <a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/client/v3/snapshot/v3_snapshot.go#L49-L123">client snapshot</a> / <a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/etcdutl/snapshot/v3_snapshot.go#L257-L330">etcdutl restore</a> / <a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/etcdutl/etcdutl/snapshot_command.go#L69-L90">restore flags</a> / <a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/etcdutl/etcdutl/defrag_command.go#L29-L61">defrag</a> / <a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/server/etcdserver/api/v3rpc/maintenance.go#L135-L165">Maintenance RPC</a> / <a href="https://github.com/etcd-io/etcd/blob/2e8a5c99e4982c8d4c521be15364ea4c5c68a489/server/etcdserver/bootstrap.go#L586-L640">force-new-cluster</a></li>
+<li>Velero v1.18.4：<a href="https://github.com/velero-io/velero/blob/4ee1e79a7aed367fd9b767b8219ec65bd0c96892/pkg/controller/backup_controller.go#L254-L300">backup controller</a> / <a href="https://github.com/velero-io/velero/blob/4ee1e79a7aed367fd9b767b8219ec65bd0c96892/pkg/controller/restore_controller.go#L514-L560">restore controller</a> / <a href="https://github.com/velero-io/velero/blob/4ee1e79a7aed367fd9b767b8219ec65bd0c96892/pkg/restore/restore.go#L688-L710">restore ordering</a> / <a href="https://github.com/velero-io/velero/blob/4ee1e79a7aed367fd9b767b8219ec65bd0c96892/pkg/restore/restore.go#L2416-L2449">metadata/status reset</a></li>
+<li>Cluster API v1.14.4：<a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/cmd/clusterctl/client/move.go#L56-L104">clusterctl move client</a> / <a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/cmd/clusterctl/client/cluster/mover.go#L75-L105">object mover</a> / <a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/cmd/clusterctl/cmd/move.go#L77-L96">move CLI</a></li>
+</ul>
+<h3 id="事故复盘与延伸阅读"><a class="header" href="#事故复盘与延伸阅读">事故复盘与延伸阅读</a></h3>
+<ul>
+<li><a href="https://etcd.io/docs/v3.7/op-guide/recovery/">etcd Disaster recovery</a>：revision bump 与 <code>--force-new-cluster</code> 风险的第一手说明</li>
+<li><a href="https://kubernetes.io/blog/2025/12/21/preventing-etcd-zombies/">Avoiding Zombie Cluster Members</a>：v3.5→v3.6 升级与恢复导致成员关系不一致的复盘</li>
+<li><a href="https://velero.io/docs/v1.18/disaster-case/">Velero Disaster recovery</a>：灾难场景下 BSL 只读 + restore 的官方流程</li>
+<li><a href="https://velero.io/docs/v1.18/file-system-backup/">Velero File System Backup 限制</a>：FSB 的静态加密密钥、hostPath、孤儿 PVC 等边界</li>
+</ul>
+<h2 id="本-wiki-相关页面"><a class="header" href="#本-wiki-相关页面">本 wiki 相关页面</a></h2>
+<ul>
+<li><a href="./控制面高可用方案.html">Kubernetes 控制面高可用方案</a>（stacked/external etcd、quorum、LB/VIP、选主与失效域）</li>
+<li><a href="./控制面事故处理手册.html">Kubernetes 控制面事故处理手册</a>（故障检测、决策树、runbook、事故流程）</li>
+<li><a href="./2_kubernetes-api-server.html">kube-apiserver 原理</a>（无状态 apiserver、watch cache 与恢复后的缓存重建）</li>
+<li><a href="../Node_Runtime/kubelet原理.html">kubelet 原理</a>（控制面不可用时数据面为什么还在跑）</li>
+<li><a href="../Fundamentals/rbac.html">RBAC</a>（RBAC 对象存在于 etcd，属于灾备对象的一部分）</li>
+<li><a href="../../Cluster_Lifecycle/cluster-api.html">Cluster API</a>（管理集群的 pivot 与 <code>clusterctl move</code>）</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../../docs/Cloud_Native/Kubernetes/Control_Plane/控制面事故处理手册.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../../docs/Cloud_Native/Kubernetes/Control_Plane/控制面高可用方案.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../../docs/Cloud_Native/Kubernetes/Control_Plane/控制面事故处理手册.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../../docs/Cloud_Native/Kubernetes/Control_Plane/控制面高可用方案.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../../highlight-abc7f01d.js"></script>
+        <script src="../../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

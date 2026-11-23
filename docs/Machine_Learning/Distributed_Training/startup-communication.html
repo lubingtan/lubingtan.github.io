@@ -1,0 +1,629 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>训练启动与通信：rank、rendezvous 与第一个 collective - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../searchindex-dfe22a86.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../toc-d9461900.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Machine_Learning/Distributed_Training/startup-communication.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="训练启动与通信rankrendezvous-与第一个-collective"><a class="header" href="#训练启动与通信rankrendezvous-与第一个-collective">训练启动与通信：rank、rendezvous 与第一个 collective</a></h1>
+<blockquote>
+<p><strong>结论先行</strong>：训练启动不是「容器起来了」，而是三层 membership 依次对齐：Pod 被调度（L1）、进程加入同一个
+rendezvous 并拿到 rank/world size（L2）、NCCL communicator 建好且首个 collective 成功（L3）。
+三层各有独立的超时和失败文本；把「Pod Running」当成「训练已启动」，是误判 MTTR 的主要原因。</p>
+</blockquote>
+<p>本页以 PyTorch/torchrun 为主干（代码级），对照 TensorFlow 的 <code>TF_CONFIG</code> 与 MPI 的静态进程模型，最后下沉到
+NCCL 的 bootstrap/transport/异步错误。所有行号对应 2026-11-23 的快照；PyTorch 当前 main 的 NCCL 后端已重构为
+<code>nccl2/</code>，与 2.4–2.8 的行为有差异，文中会标注。</p>
+<blockquote>
+<p>专题导航：<a href="../../Cloud_Native/AI_Infrastructure/Distributed_Training/overview.html">总纲</a> · <a href="../../Cloud_Native/AI_Infrastructure/Distributed_Training/workload-modeling.html">工作负载建模</a> · <a href="./startup-communication.html">启动通信</a> · <a href="../../Cloud_Native/AI_Infrastructure/Distributed_Training/failure-self-healing.html">故障自愈</a> · <a href="../../Cloud_Native/AI_Infrastructure/Distributed_Training/checkpoint-preemption.html">Checkpoint</a> · <a href="../../Cloud_Native/AI_Infrastructure/Distributed_Training/rl-post-training.html">RL</a></p>
+</blockquote>
+<h2 id="一三种角色模型"><a class="header" href="#一三种角色模型">一、三种角色模型</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>PyTorch / torchrun</th><th>TensorFlow / MWMS</th><th>MPI / MPIJob</th></tr>
+</thead>
+<tbody>
+<tr><td>角色</td><td>单一 <code>WorkerSpec.role</code>；rank 由 agent 分配</td><td><code>chief</code>/<code>worker</code>/<code>ps</code>/<code>evaluator</code></td><td><code>Launcher</code> + <code>Worker</code>，应用层无角色</td></tr>
+<tr><td>leader</td><td>rank 0（同时是 store server）</td><td>chief（显式 <code>Chief</code>，否则 worker 0）</td><td><code>mpirun</code> 的 rank 0；launcher 只是驱动者</td></tr>
+<tr><td>rank 来源</td><td>agent 的 <code>_assign_worker_ranks()</code></td><td>每个 task 自报 <code>TF_CONFIG.task.type/index</code></td><td>hostfile + slots 顺序，进程只被告知 <code>OMPI_COMM_WORLD_RANK</code>/<code>PMI_RANK</code></td></tr>
+<tr><td>membership</td><td>动态 rendezvous（CAS + keep-alive + round）</td><td>静态：所有 task 读同一份 <code>cluster</code></td><td>静态：<code>MPI_Init</code> 时固定 <code>MPI_COMM_WORLD</code></td></tr>
+<tr><td>弹性</td><td><code>--nnodes=MIN:MAX</code>，re-rendezvous 后全员换 rank</td><td>无内建弹性，靠 K8s 重建 Pod/TFJob</td><td>无，扩缩 = 新建 MPIJob</td></tr>
+<tr><td>重启</td><td>agent 重启整个 worker group</td><td>Pod 级重启，集群暂停后重新加入</td><td>Pod 级重启；launcher 的 mpirun 会话断开即整轮失败</td></tr>
+<tr><td>checkpoint owner</td><td>训练脚本自己定（通常 rank 0）</td><td>chief 写正式目录，非 chief 写临时目录</td><td>应用自己定，MPI 层不管</td></tr>
+<tr><td>集合通信</td><td>NCCL（GPU）/Gloo（CPU）</td><td>RING（gRPC）/NCCL</td><td>Open MPI BTL/UCX、Intel/MPICH 各自实现</td></tr>
+</tbody>
+</table>
+</div>
+<p>一个容易忽略的点：<strong>「角色」与「rank」不是同一件事</strong>。TF 的 chief 是应用层角色，MPI 的 rank 0 是运行时分配的，
+PyTorch 的 rank 0 既是运行时 leader、又常被训练脚本当成 checkpoint owner。编排层如果把这三者混为一个字段，
+恢复时就会出错。</p>
+<h2 id="二pytorch-路径"><a class="header" href="#二pytorch-路径">二、PyTorch 路径</a></h2>
+<h3 id="21-torchrun-到底做了什么"><a class="header" href="#21-torchrun-到底做了什么">2.1 torchrun 到底做了什么</a></h3>
+<p><code>torchrun</code> 是一个<strong>进程管理器 + rendezvous 客户端</strong>，不是训练框架的一部分。它做四件事：</p>
+<ol>
+<li>解析 <code>--nnodes</code>、<code>--nproc-per-node</code>、<code>--rdzv-backend</code>、<code>--rdzv-endpoint</code>、<code>--max-restarts</code> 等参数。</li>
+<li>创建 <code>LocalElasticAgent</code>，为每个节点启动一个 agent 进程。</li>
+<li>通过 rendezvous 拿到本轮的 <code>(store, rank, world_size, bootstrap_store_info)</code>。</li>
+<li>为每个 worker 组装环境变量并 fork/spawn；监控 worker 状态，失败或成员变化时重启 worker group。</li>
+</ol>
+<p>关键默认值（代码确认）：</p>
+<ul>
+<li><code>--nnodes</code> 默认 <code>"1:1"</code>，格式是 <code>MIN:MAX</code>；<code>MIN != MAX</code> 即弹性区间。</li>
+<li><code>--nproc-per-node</code> 默认 <code>"1"</code>，可为 <code>auto/cpu/gpu/xpu/int</code>；它决定 <code>LOCAL_WORLD_SIZE</code>，也是唯一被限制为
+「全作业同构」的量。</li>
+<li><code>--rdzv-backend</code> 默认 <code>"static"</code>（用 <code>--master-addr/--master-port/--node-rank</code>，不支持弹性）；
+<code>c10d</code> 是推荐后端；<code>--max-restarts</code> 默认 <strong>0</strong>（不自动重启）。</li>
+<li><code>--standalone</code> 强制 <code>c10d</code> + <code>localhost:0</code> + 随机 UUID，并忽略显式 rdzv 参数；<code>static</code> 且未给 endpoint/master-port
+且 <code>nnodes</code> 上限为 1 时，也会降级到 <code>c10d localhost:0</code>。</li>
+<li><code>MASTER_PORT</code> 的最终兜底是 29500，只对 <code>static</code> 有意义；<code>c10d</code> 的端口在 rdzv endpoint 里。</li>
+</ul>
+<p>Agent 把 rendezvous 结果变成 worker 环境变量：<code>RANK</code>、<code>GROUP_RANK</code>、<code>ROLE_RANK</code>、<code>ROLE_NAME</code>、<code>LOCAL_WORLD_SIZE</code>、
+<code>WORLD_SIZE</code>、<code>GROUP_WORLD_SIZE</code>、<code>ROLE_WORLD_SIZE</code>、<code>MASTER_ADDR</code>、<code>MASTER_PORT</code>、<code>TORCHELASTIC_RESTART_COUNT</code>、
+<code>TORCHELASTIC_MAX_RESTARTS</code>、<code>TORCHELASTIC_RUN_ID</code>、<code>TORCHELASTIC_USE_AGENT_STORE</code>。<code>LOCAL_RANK</code> 单独写：
+<code>virtual_local_rank=True</code> 时每个 worker 只看到自己那张卡（<code>CUDA_VISIBLE_DEVICES</code> 收窄为单卡、<code>LOCAL_RANK=0</code>）。</p>
+<p>两个反直觉点：</p>
+<ul>
+<li><code>TORCHELASTIC_RESTART_COUNT</code> 是<strong>已用掉的次数</strong>，不是剩余次数（<code>restart_count = max_restarts - remaining_restarts</code>）。</li>
+<li>torchrun 会给 worker 注入 <code>TORCH_NCCL_ASYNC_ERROR_HANDLING=1</code>（若用户没设）；而 PyTorch 库层默认是 <strong>3</strong>
+（<code>SkipCleanUp</code>）。这会影响 NCCL 出错时是杀进程还是只清理 communicator，排查时不要假设两者一致。</li>
+</ul>
+<h3 id="22-rendezvous成员协商与-quorum"><a class="header" href="#22-rendezvous成员协商与-quorum">2.2 rendezvous：成员协商与 quorum</a></h3>
+<p>Rendezvous 的接口契约是：<code>next_rendezvous()</code> 阻塞直到本轮成形/被关闭/超时；<code>num_nodes_waiting()</code> 返回「到晚了、
+在等下一轮」的节点数；<code>set_closed()</code> 的传播是最终一致的，不能当同步原语。</p>
+<p><code>RendezvousInfo</code> 携带四样东西：控制面 <code>store</code>、组内 <code>rank</code>、<code>world_size</code>、<code>bootstrap_store_info</code>。
+<code>RendezvousStoreInfo.build()</code> 由 rank 0 选一个空闲端口/地址并写入 store 的 <code>MASTER_ADDR</code>/<code>MASTER_PORT</code> 两个 key，
+其余 rank 从 store 读。这解释了一个常见困惑：<strong><code>--rdzv-endpoint</code> 只指定 rendezvous 服务器，不一定是训练进程的
+master 地址</strong>；后者是 rank 0 在 rendezvous 后写进 store 的。</p>
+<p>c10d 后端的落地细节：</p>
+<ul>
+<li>TCPStore 端点默认端口 <strong>29400</strong>，<code>read_timeout</code> 默认 60s。</li>
+<li>状态 key 是 <code>"torch.rendezvous." + run_id</code>，值是 pickle 后的整份 <code>_RendezvousState</code>。因为 store 的 <code>get</code> 会阻塞，
+实现先 <code>compare_set(key, "", "Y2FuaW1hZGFt")</code> 塞一个哨兵值，读到哨兵即视作 None。</li>
+<li>写入用 <code>compare_set(key, token, new_state)</code> 做 CAS；store 的 <code>compare_set</code> 不返回「是否成功」，实现用
+「本地状态与远端状态逐字节比较」来推断。</li>
+</ul>
+<p>关于 <code>TryCreate</code>/<code>Join</code>：当前 dynamic rendezvous <strong>没有</strong>名为 <code>TryCreate</code> 的函数。create 语义由第一次
+<code>compare_set</code>（从空值到哨兵）承担；join 语义由 <code>_RendezvousJoinOp</code> 返回的 action 表达：
+<code>ADD_TO_PARTICIPANTS</code> → <code>ADD_TO_WAIT_LIST</code>/<code>ADD_TO_REDUNDANCY_LIST</code> → <code>MARK_RENDEZVOUS_COMPLETE</code>。
+<code>try_create_rendezvous()</code> 这个名字只保留在 etcd legacy handler 里。</p>
+<p>轮次完成条件是理解「启动慢」的关键：</p>
+<ul>
+<li>参与数达到 <code>max_nodes</code> → 立即完成。</li>
+<li>否则等到 <code>min_nodes</code> 后再等 <code>last_call</code>（默认 30s）才封轮。</li>
+<li>所以 <code>--nnodes=4:8</code> 在只有 4 个节点时会稳定地多等 30s，这不是 hang。</li>
+<li>keep-alive 默认 5s 一次、最多 3 次失败；约 15s 收不到心跳就把节点从 participants/wait_list 剔除。</li>
+<li>失败表现：连不上 rdzv store → <code>RendezvousConnectionError</code>；等人超时 → <code>RendezvousTimeoutError</code>；
+作业已关闭 → <code>RendezvousClosedError</code>；状态反序列化失败 → <code>RendezvousStateError</code>。</li>
+</ul>
+<p>re-rendezvous 的能力边界：torchrun 的做法是<strong>杀掉全部本地 worker，重新走一次 <code>next_rendezvous()</code>，用新
+rank/world size 重新启动进程</strong>。而训练脚本里的 <code>init_method="env://"</code> 本身是一次性的——<code>_env_rendezvous_handler</code>
+在 yield 之后直接 <code>raise RuntimeError("Unable to perform re-rendezvous using env:// method")</code>。
+<strong>弹性来自 agent，不来自 process group</strong>。这也是为什么「在训练脚本里自己调 init_process_group」无法获得弹性。</p>
+<h3 id="23-init_process_group默认不做全员-barrier"><a class="header" href="#23-init_process_group默认不做全员-barrier">2.3 init_process_group：默认不做全员 barrier</a></h3>
+<p>两种初始化方式：显式 <code>store+rank+world_size</code>，或 <code>init_method</code>（默认 <code>env://</code>）；两者互斥。</p>
+<p><code>env://</code> 硬性要求 <code>RANK</code>、<code>WORLD_SIZE</code>、<code>MASTER_ADDR</code>、<code>MASTER_PORT</code>，缺任何一个都直接抛
+<code>env:// rendezvous: environment variable X expected, but not set</code>；store 由 rank 0 做 server、其余做 client。</p>
+<p>几个关键语义：</p>
+<ul>
+<li><strong>默认 timeout</strong>：非 NCCL 30 分钟（<code>kProcessGroupDefaultTimeout = 30*60*1000ms</code>），NCCL 10 分钟
+（<code>kProcessGroupNCCLDefaultTimeout = 10*60*1000ms</code>）。</li>
+<li><strong>store-based barrier 默认不执行</strong>：只有 <code>TORCH_DIST_INIT_BARRIER=1</code> 时才走 <code>_store_based_barrier</code>。也就是说
+<code>init_process_group</code> 可能在其他 rank 还没到齐时就返回；真正的全员同步发生在第一个 collective 或显式 <code>barrier()</code>。
+这是「初始化看起来很快，但第一个 allreduce 卡住」的常见原因。</li>
+<li><strong>backend 选择</strong>：显式 <code>backend</code> 优先；只给 <code>device_id</code> 则查 <code>Backend.default_device_backend_map</code>
+（cuda→nccl、cpu→gloo、xpu→xccl）；两者都没有则懒初始化。也支持 <code>"cpu:gloo,cuda:nccl"</code> 多后端字符串。</li>
+<li><strong><code>device_id</code> 会立即建 NCCL communicator</strong>（<code>ncclCommInit*</code>，而非懒建），子组尽量用 <code>ncclCommSplit</code>。
+「想尽早暴露 NCCL 初始化错误」正是它的用途。</li>
+<li><strong><code>new_group</code> 的关键约束</strong>：所有 world rank 都必须调用（即使不是成员），且调用顺序必须一致；非成员返回
+<code>NON_GROUP_MEMBER</code>；<code>device_id</code> 同样触发 eager init。</li>
+</ul>
+<p>store 前缀是三层叠加：<code>PrefixStore("default_pg", store)</code> → <code>PrefixStore(f"{group_name}/", ...)</code> →
+<code>PrefixStore(f"{device}/", ...)</code>。所以「同一个 store、多个 group、多个 backend」不会撞 key；排查时 store 里看到的
+key 长成 <code>default_pg/&lt;group&gt;/cuda/...</code>。</p>
+<h3 id="24-nccl-communicator-初始化"><a class="header" href="#24-nccl-communicator-初始化">2.4 NCCL communicator 初始化</a></h3>
+<p>PyTorch 当前 main 的 NCCL 后端已重构到 <code>nccl2/</code>（后端名 <code>nccl</code>，另有 <code>nccl-legacy</code>）。构造时读两个关键开关：
+<code>TORCH_NCCL_ASYNC_ERROR_HANDLING</code>（默认 <code>SkipCleanUp</code>=3）与 <code>TORCH_NCCL_BLOCKING_WAIT</code>（默认 false）。</p>
+<p>uniqueId 的传播（代码确认，取代老的 <code>_broadcastUniqueId</code> 路径）：</p>
+<ol>
+<li><code>NCCLBootstrap</code> 按 <code>TORCH_NCCL_RANKS_PER_ROOT</code>（默认 128）把 rank 分块。</li>
+<li>块首 rank 调 <code>ncclGetUniqueId()</code>，把 128 字节写入 <code>PrefixStore(group_name)</code> 下的 key
+<code>nccl_storekey_&lt;generation&gt;</code>。</li>
+<li>其余 rank <code>store-&gt;wait(keys, timeout)</code> 后 <code>multiGet</code>。</li>
+<li>块数 &gt;1 时走 <code>ncclCommInitRankScalable</code>（多 root 的 uniqueId 数组），否则 <code>ncclCommInitRankConfig</code>。</li>
+</ol>
+<p>这句 <code>store-&gt;wait(keys, timeout_)</code> 的 timeout 就是 process group 的 timeout（NCCL 默认 10 分钟）：
+<strong>root 卡住 → 其他 rank 在 comm init 里静默等 10 分钟</strong>，然后报 <code>Failed to initialize NCCL communicator</code>。
+<code>createNcclComm</code> 失败时还会 <code>commAbort</code> 一次，避免半成品 communicator 泄漏。</p>
+<p>未显式给 device 时，device 由 <code>rank % device_count</code> 推断——多进程共享 GPU 或 <code>CUDA_VISIBLE_DEVICES</code> 配错时，
+这一步会静默把多个 rank 绑到同一张卡上，随后 NCCL 才报错或死锁。</p>
+<p>watchdog：<code>!blocking_wait_</code> 时启动 <code>timeout_thread_</code>；线程每 1s 醒一次，先 <code>checkWorkQueue()</code>（<code>garbageCollect</code>
+判定 work 超时/出错），再 <code>commGetAsyncError()</code> 探测 communicator 级异步错误，命中后 <code>handleWatchdogFailure()</code>
+按 async error 模式决定 abort comm / 杀进程。</p>
+<p><code>TORCH_NCCL_ENABLE_MONITORING</code>（默认 1）与 <code>TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC</code>（默认 480s）在文档里被标为
+<strong>nccl-legacy only</strong>；当前 <code>nccl</code> 后端没有独立 heartbeat 线程，唯一轮询者是上面的 1s watchdog。
+<code>TORCH_NCCL_BLOCKING_WAIT</code> / <code>TORCH_NCCL_ASYNC_ERROR_HANDLING</code> 在本 commit <strong>都没有</strong>标注 deprecated；
+<code>BLOCKING_WAIT</code> 默认 0，<code>ASYNC_ERROR_HANDLING</code> 默认 3、torchrun 注入 1。不同版本行为不同，不要写死。</p>
+<h3 id="25-第一个-step-的时序"><a class="header" href="#25-第一个-step-的时序">2.5 第一个 step 的时序</a></h3>
+<pre class="mermaid">sequenceDiagram
+    autonumber
+    participant S as kube-scheduler
+    participant K as kubelet/container
+    participant A as torchrun agent
+    participant R as rendezvous store
+    participant W as worker process
+    participant N as NCCL
+
+    S-&gt;&gt;K: 绑定 Pod / 分配 GPU
+    K-&gt;&gt;A: 启动容器 entrypoint
+    A-&gt;&gt;R: next_rendezvous（create/join）
+    R--&gt;&gt;A: rank / world_size / bootstrap store
+    A-&gt;&gt;W: spawn，注入 RANK/WORLD_SIZE/MASTER_ADDR
+    W-&gt;&gt;R: init_process_group（store client/server）
+    W-&gt;&gt;N: ncclCommInitRank
+    N--&gt;&gt;W: communicator ready
+    W-&gt;&gt;W: 第一个 allreduce
+    W-&gt;&gt;W: optimizer.step()
+</pre>
+
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>#</th><th>窗口</th><th>发生什么</th><th>典型失败与日志</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>调度</td><td>控制器建 Pod，gang/队列准入，设备插件分配 GPU</td><td><code>Pending</code>、<code>FailedScheduling</code>、镜像拉取失败</td></tr>
+<tr><td>2</td><td>容器启动</td><td>entrypoint 起 torchrun/mpirun/python</td><td>命令拼错、依赖缺失、<code>CUDA_VISIBLE_DEVICES</code> 与 <code>LOCAL_RANK</code> 不一致</td></tr>
+<tr><td>3</td><td>DNS/Service</td><td>worker 通过 headless Service 互相解析</td><td><code>Name or service not known</code>；mpirun <code>ConnectionAttempts=10</code> 后放弃</td></tr>
+<tr><td>4</td><td>rdzv store</td><td>rank 0 的 TCPStore（或 <code>--rdzv-endpoint</code> 指定的节点）被连接</td><td><code>RendezvousConnectionError</code>；端口 29500/29400 被占；endpoint 写错</td></tr>
+<tr><td>5</td><td>rdzv 成形</td><td>节点加入、等 <code>min_nodes</code>、<code>last_call</code> 30s 后封轮、分配 rank/world size</td><td><code>RendezvousTimeoutError</code>（join 默认 600s）；<code>nnodes</code> 上限小于实际 Pod 数 → 多出的节点在 wait_list 空转</td></tr>
+<tr><td>6</td><td>环境注入</td><td><code>RANK/WORLD_SIZE/MASTER_ADDR/MASTER_PORT</code> 写入子进程</td><td>手工 <code>python train.py</code> 绕过 torchrun → <code>env:// rendezvous: environment variable RANK expected, but not set</code></td></tr>
+<tr><td>7</td><td>init_process_group</td><td>建 store client/server、<code>PrefixStore</code>、选 backend、可选 store barrier</td><td>默认无 barrier，故通常很快返回；<code>TORCH_DIST_INIT_BARRIER=1</code> 时缺 rank 报 <code>Timed out initializing process group in store based barrier on rank ...</code></td></tr>
+<tr><td>8</td><td>NCCL comm init</td><td>root 发 uniqueId → store → 各 rank <code>ncclCommInitRank*</code> → bootstrap 环 → proxy 地址 all-gather</td><td>root 卡住则全员等满 PG timeout（NCCL 默认 10min）；<code>Failed to initialize NCCL communicator</code>；<code>NCCL_DEBUG=INFO</code> 卡在 <code>Bootstrap</code>/<code>NET/IB</code></td></tr>
+<tr><td>9</td><td>首个 allreduce</td><td>第一次 <code>all_reduce</code> 入队、建连、kernel 执行、<code>work.wait()</code></td><td>参数/调用次数不匹配 → 有的 rank 在等上一个 op，watchdog 超时后 <code>NCCL operation timed out</code> 并杀进程</td></tr>
+<tr><td>10</td><td>optimizer step</td><td>反传完成 + 梯度 allreduce 完成，第一次 <code>optimizer.step()</code></td><td>前面任一窗口的延迟都表现为「step 0 时间异常长」；NCCL 被 abort 后异常可能在下一处 collective 才抛出</td></tr>
+</tbody>
+</table>
+</div>
+<p>两个容易归因错误的点：</p>
+<ul>
+<li>窗口 8 的「卡住」不是死锁而是 timeout：<code>store-&gt;wait(keys, timeout)</code> 的 timeout 就是 PG timeout，job 会先安静
+10 分钟再统一报错。把 <code>init_process_group(timeout=...)</code> 调小可以显著缩短 MTTR。</li>
+<li>窗口 9 的 mismatch 在 NCCL 层没有「谁错了」的信息：NCCL 只能报本 rank 超时/异步错误，定位要靠
+<code>TORCH_NCCL_TRACE_BUFFER_SIZE</code>/Flight Recorder 或 <code>TORCH_NCCL_DESYNC_DEBUG</code>（nccl-legacy）。</li>
+</ul>
+<h2 id="三tensorflow-路径"><a class="header" href="#三tensorflow-路径">三、TensorFlow 路径</a></h2>
+<p><code>TF_CONFIG</code> 是一个 JSON 字符串，只有两个顶层字段：<code>cluster</code>（全集群一致）与 <code>task</code>（每进程不同）。
+<code>cluster</code> 是 <code>job 名 -&gt; [host:port, ...]</code> 的字典；<code>task</code> 是 <code>{"type": ..., "index": ...}</code>。合法 role 为
+<code>chief</code>/<code>worker</code>/<code>ps</code>/<code>evaluator</code>，只有 ParameterServerStrategy 才应该有 <code>ps</code>。</p>
+<p>职责划分：</p>
+<ul>
+<li><code>worker</code> 干实际训练，worker 0 常常兼任 <code>chief</code>。</li>
+<li><code>chief</code> 额外负责存 checkpoint、写 TensorBoard summary。</li>
+<li><code>ps</code> 只为参数服务器策略提供参数存储。</li>
+<li><code>evaluator</code> 算评估指标。</li>
+<li>「index 0 被指定为 chief」不是约定，而是 <code>tf.distribute.Strategy</code> 的实现方式；如果显式定义了 <code>Chief</code>，
+则以 <code>Chief</code> 为准。</li>
+</ul>
+<p><code>MultiWorkerMirroredStrategy</code> 的建组方式：每个 worker 跑同一份程序，<code>TFConfigClusterResolver</code> 从 <code>TF_CONFIG</code>
+读 <code>task_type</code>/<code>task_id</code> 与各 task 地址；strategy 用 <code>cluster_resolver.num_accelerators()</code> 决定用几张卡，
+所有 worker 的卡数必须一致，否则行为未定义。它有两套集合通信实现：<code>CommunicationImplementation.RING</code>
+（基于 RPC/gRPC，CPU/GPU 都支持）与 <code>CommunicationImplementation.NCCL</code>（仅 GPU）。</p>
+<p>一个反直觉但很重要的点：<strong>所有 <code>tf.distribute</code> 与非 <code>tf.distribute</code> API 都可能内部发起 collective，包括
+checkpoint/save</strong>（读 <code>ON_READ</code> 变量会触发 all-reduce）。因此不能只让一个 task 跑训练循环；官方建议每个 worker
+跑完全相同的程序，并明确说「按 task_type/task_id 分派是 error-prone 的」。这也是 chief checkpoint 的实际做法：
+chief 写到正式 model dir，非 chief 写到临时目录后删除；「只有 chief 那份才是权威」，但所有 worker 都必须参与
+save 的 collective。</p>
+<p>TF 没有 torchrun 式内建弹性：文档描述的是「某个 worker 被打断，整个集群暂停直到它重启，其他 worker 也会重启并
+重新加入集群，然后各自从上次 checkpoint 恢复」。K8s 上这件事由 Training Operator（v1）的 TFJob 承担：
+<code>restartPolicy</code>（Always/OnFailure/ExitCode/Never）按副本类型配置，chief/worker/ps 的退出码决定是否重拉；
+<code>cleanPodPolicy</code> 决定作业结束后删哪些 Pod。官方教程把容错恢复指向 <code>BackupAndRestore</code>，而不是 <code>ModelCheckpoint</code>。</p>
+<p>TFJob（legacy v1）如何把这些角色落到 K8s 对象上：</p>
+<ul>
+<li><code>TFReplicaSpecs</code> 的 key 是 <code>Chief</code>/<code>Worker</code>/<code>PS</code>/<code>Evaluator</code>/<code>Master</code>；<code>Chief</code> 与 <code>Master</code> 语义等价，<code>Master</code>
+只是为兼容旧配置保留。<strong>如果有 <code>Chief</code>，它就是 chief；否则 worker:0 是 chief</strong>。</li>
+<li><code>PS</code> 只在 ParameterServerStrategy 下使用；<code>Evaluator</code> 只做评估，不参与训练循环。</li>
+<li>Operator 按 <code>rtype/index</code> 生成 <code>TF_CONFIG</code>，并只注入名为 <code>tensorflow</code> 的默认容器；<code>cluster</code> 里包含所有角色的地址。
+所以「容器里没有 TF_CONFIG」通常不是 TF 的问题，而是副本类型/容器名不匹配。</li>
+<li>每个 replica 的 <code>restartPolicy</code> 独立：PS 可以 <code>Always</code>，chief/worker 用 <code>OnFailure</code>；<code>successPolicy: AllWorkers</code>
+是 v1 的成功条件（不是 JobSet 的 All/Any），语义是「所有 worker 成功」。</li>
+<li>没有 re-rendezvous：Pod 重启后从 checkpoint 恢复，整个集群会暂停/重启；不要把 torchrun 的 elastic 语义套到 TFJob 上。</li>
+</ul>
+<h2 id="四mpi-路径"><a class="header" href="#四mpi-路径">四、MPI 路径</a></h2>
+<p>MPIJob 的进程模型是 launcher + worker 两组 Pod：</p>
+<ul>
+<li>worker 默认只跑 <code>sshd -De</code>，负责被 rsh 进去起 rank。</li>
+<li>launcher 是一个普通 <code>batchv1.Job</code>，用户在它的 <code>command</code> 里自己写 <code>mpirun</code>/<code>mpiexec</code>。</li>
+<li>hostfile 由 operator 生成：OpenMPI 是 <code>&lt;pod&gt;.&lt;job&gt;.&lt;ns&gt;.svc[.&lt;clusterDomain&gt;] slots=N</code>，Intel MPI/MPICH 是
+<code>&lt;host&gt;:N</code>；每行 slots 取 <code>spec.slotsPerWorker</code>（默认 1）。<code>runLauncherAsWorker=true</code> 时 launcher 自己也会出现在
+hostfile 第一行。</li>
+<li>launcher 侧环境变量决定 mpirun 去哪找 hostfile：OpenMPI 用 <code>OMPI_MCA_orte_default_hostfile</code>、
+<code>OMPI_MCA_orte_keep_fqdn_hostnames=true</code>、<code>OMPI_MCA_plm_rsh_args=-o ConnectionAttempts=10</code>；Intel 用
+<code>I_MPI_HYDRA_HOST_FILE</code>，MPICH 用 <code>HYDRA_HOST_FILE</code>。</li>
+<li><code>-np</code> 不是 operator 注入的：示例里由用户写 <code>mpirun -np 2 ...</code>。rank 总数由 <code>-np</code>（显式）或「所有 slots 之和」
+（隐式）决定，与 <code>Worker.replicas * slotsPerWorker</code> 不一致时，要么少起 rank，要么撞上 oversubscribe 限制。</li>
+<li>rank 相关环境变量来自 MPI 运行时：OpenMPI 提供 <code>OMPI_COMM_WORLD_RANK/SIZE/LOCAL_RANK/LOCAL_SIZE/NODE_RANK</code>；
+MPICH 的 PMI 常见 <code>PMI_RANK</code>/<code>PMI_SIZE</code>，PMIx 体系是 <code>PMIX_RANK</code>。</li>
+</ul>
+<p>为什么 MPI 不能像 torchrun 那样 re-rendezvous：</p>
+<ul>
+<li><code>MPI_Init</code> 的 world model 是「在一个 MPI 进程生命周期内至多初始化一次」，<code>MPI_COMM_WORLD</code> 的成员在 <code>MPI_Init</code>
+时就固定。</li>
+<li>唯一的「加人」途径是 <code>MPI_Comm_spawn</code>：子进程有自己的 <code>MPI_COMM_WORLD</code>，父进程通过 intercommunicator 通信；
+这是「新增一个组」，不是「把现有 <code>MPI_COMM_WORLD</code> 扩容」。</li>
+<li>因此 MPIJob 的「重启」只能是 Kubernetes 语义：launcher Job 失败 → <code>BackoffLimit</code>/<code>restartPolicy</code> 决定重拉；
+worker 挂掉 → 该 Pod 按 <code>restartPolicy</code> 重建，但 launcher 侧的 mpirun 会话已经断了，整轮 rank 映射要重来。</li>
+<li><code>launcherCreationPolicy: WaitForWorkersReady</code> 的存在就是为了先让 worker 全部 Ready 再起 launcher，避免
+「launcher 先到、worker 没 DNS」。</li>
+</ul>
+<h2 id="五nccl-内部bootstrap拓扑与异步错误"><a class="header" href="#五nccl-内部bootstrap拓扑与异步错误">五、NCCL 内部：bootstrap、拓扑与异步错误</a></h2>
+<p>bootstrap 由 uniqueId 承载：<code>ncclBootstrapHandle</code> 只有三个字段——<code>magic</code>、监听地址 <code>addr</code>、<code>nRanks</code>，
+它被塞进 128 字节的 <code>ncclUniqueId</code>。<code>ncclGetUniqueId</code> 在非 <code>NCCL_COMM_ID</code> 模式下随机生成 magic、填入本机
+bootstrap 网卡地址，然后 <code>bootstrapCreateRoot()</code> <strong>当场 listen</strong>（后台线程 accept）。所以 uniqueId 里带的是
+「第一个 root 的 IP:port」。</p>
+<p>bootstrap 的连接建立不是「全员连 root」：每个 rank 先建自己的 listen socket，把自己的联系方式发给所属 root，
+root 回给它「环上的下一个 peer」，随后两两 <code>socketRingConnect</code>；最后通过这个环 all-gather 所有 rank 的 proxy
+地址与 P2P 地址。所以 bootstrap 阶段任何一个 rank 不可达，表现都是「连接 root 超时/收到残缺环」，而不是一条明确的
+「rank N 挂了」。</p>
+<p>拓扑与算法：init 时先 <code>ncclTopoComputePaths</code>，再分别搜索 ring（<code>NCCL_TOPO_PATTERN_RING</code>）与 balanced tree
+（<code>NCCL_TOPO_PATTERN_BALANCED_TREE</code>），可选 collnet/nvls；<code>comm-&gt;nChannels = min(tree, ring)</code>，然后通过
+<code>bootstrapAllGather</code> 把各 rank 的 graph 信息对齐，再按 channel 建连。</p>
+<p>P2P 选择：<code>ncclTopoCheckP2p</code> 先看 <code>hostHash</code>（不同主机直接不 P2P），再看 <code>shmDev</code>（同一个 <code>/dev/shm</code> 才能用
+CUDA IPC/shm 传输）；然后比较 PCI 路径类型与 <code>NCCL_P2P_LEVEL</code>（默认 <code>PATH_PXB</code>），用户可用
+<code>NCCL_P2P_DISABLE</code>/<code>NCCL_P2P_LEVEL</code> 覆盖。跨 Pod 但同机、且没共享 IPC namespace 时，<code>shmDev</code> 不同 →
+<strong>同机流量也会退回网络</strong>，这是 K8s 上「明明同机却只有 socket 带宽」的根因之一。</p>
+<p>传输与 proxy：节点内优先 NVLink/CUDA P2P，其次 shm（POSIX shm + CUDA IPC），节点间走 net 插件（IB verbs /
+socket）；需要网络参与时由 proxy 进度线程推进，proxy 的并发度也是常见调优点。</p>
+<p>collective 的异步语义：<code>ncclAllReduce</code> 这类带 stream 的函数只要把操作「压到 stream 上」就返回 <code>ncclSuccess</code>，
+之后的错误只能通过 <code>ncclCommGetAsyncError</code> 观测；一旦 communicator 出错，已入队操作的完成性和正确性都不再有任何
+保证，正确做法是 <code>ncclCommAbort</code> 后重建。</p>
+<p>常用诊断/调优变量：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>变量</th><th>用途</th></tr>
+</thead>
+<tbody>
+<tr><td><code>NCCL_DEBUG=INFO</code></td><td>打印初始化、拓扑、明确的告警</td></tr>
+<tr><td><code>NCCL_DEBUG_SUBSYS=COLL</code> / <code>GRAPH</code> / <code>NET</code></td><td>逐 collective / 拓扑 / 网络调试</td></tr>
+<tr><td><code>NCCL_SOCKET_IFNAME</code></td><td>bootstrap 网卡不对时最常改的一个</td></tr>
+<tr><td><code>NCCL_IB_DISABLE</code>、<code>NCCL_IB_HCA</code></td><td>禁用 IB / 指定 HCA</td></tr>
+<tr><td><code>NCCL_P2P_DISABLE</code>、<code>NCCL_P2P_LEVEL</code></td><td>禁用/限制 P2P</td></tr>
+<tr><td><code>NCCL_ALGO</code>、<code>NCCL_PROTO</code></td><td>强制算法/协议</td></tr>
+<tr><td><code>NCCL_TOPO_DUMP_FILE</code></td><td>导出拓扑图，供离线分析</td></tr>
+<tr><td><code>TORCH_NCCL_TRACE_BUFFER_SIZE</code></td><td>Flight Recorder，记录 collective 序列</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="六把超时设在正确的层"><a class="header" href="#六把超时设在正确的层">六、把超时设在正确的层</a></h2>
+<p>启动慢/卡住时，先确认「卡在哪一层」，再调对应的超时；只调大 K8s 的 <code>activeDeadlineSeconds</code> 会把问题拖长：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>层</th><th>超时/参数</th><th>默认值</th><th>调小的影响</th></tr>
+</thead>
+<tbody>
+<tr><td>Pod 调度</td><td>Kueue <code>waitForPodsReady</code>、Volcano <code>scheduleTimeoutSeconds</code></td><td>依配置</td><td>更快失败，但可能误杀慢启动</td></tr>
+<tr><td>rendezvous</td><td><code>RendezvousTimeout.join</code>（<code>--rdzv-conf</code>）</td><td>600s</td><td>更快报 <code>RendezvousTimeoutError</code></td></tr>
+<tr><td>rdzv store</td><td>TCPStore <code>read_timeout</code></td><td>60s</td><td>更快暴露网络/端口问题</td></tr>
+<tr><td>process group</td><td><code>init_process_group(timeout=...)</code></td><td>NCCL 10min / 其他 30min</td><td>更快暴露缺 rank/NCCL 初始化失败</td></tr>
+<tr><td>NCCL watchdog</td><td>同上（PG timeout）</td><td>10min</td><td>更快 abort，但可能误杀慢节点</td></tr>
+<tr><td>作业</td><td><code>activeDeadlineSeconds</code></td><td>无</td><td>兜底，不能替代上面几层</td></tr>
+</tbody>
+</table>
+</div>
+<p>一个实用原则：<strong>把「成员到齐」的超时设得比「单次 collective」短</strong>。例如 rendezvous join 2–5 分钟、
+PG/NCCL 10–20 分钟、作业 deadline 数小时。这样缺一个 rank 时，几分钟内就会失败并进入重试，而不是安静地等
+半小时。</p>
+<h2 id="七跨框架对照与失败窗口"><a class="header" href="#七跨框架对照与失败窗口">七、跨框架对照与失败窗口</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>PyTorch / torchrun</th><th>TensorFlow / MWMS + TFJob (v1)</th><th>MPI / MPIJob</th></tr>
+</thead>
+<tbody>
+<tr><td>角色</td><td>单一 role，rank 由 agent 分配</td><td>chief/worker/ps/evaluator</td><td>Launcher + Worker</td></tr>
+<tr><td>leader</td><td>rank 0（store server）</td><td>chief（显式或 worker 0）</td><td>mpirun rank 0</td></tr>
+<tr><td>membership</td><td>动态 rendezvous</td><td>静态 TF_CONFIG</td><td>静态 MPI_COMM_WORLD</td></tr>
+<tr><td>弹性</td><td>支持 <code>nnodes=MIN:MAX</code></td><td>不支持，靠重建 Pod</td><td>不支持</td></tr>
+<tr><td>重启</td><td>agent 重启 worker group</td><td>Pod 级重启，从 checkpoint 恢复</td><td>launcher 会话断开即整轮失败</td></tr>
+<tr><td>checkpoint</td><td>脚本自己定</td><td>chief 写正式目录</td><td>应用自己定</td></tr>
+<tr><td>集合通信</td><td>NCCL/Gloo</td><td>RING/NCCL</td><td>Open MPI/Intel/MPICH</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="八证据"><a class="header" href="#八证据">八、证据</a></h2>
+<h3 id="pytorch--torchrun"><a class="header" href="#pytorch--torchrun">PyTorch / torchrun</a></h3>
+<ul>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/distributed/run.py#L486-L560">torchrun 参数默认值（nnodes/nproc/rdzv/max-restarts）</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/distributed/run.py#L1099-L1128">static 与 c10d 的差异、standalone 降级</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/distributed/elastic/agent/server/api.py#L524-L583">agent 把 rendezvous 结果转成环境变量</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/distributed/elastic/agent/server/local_elastic_agent.py#L435-L545">LOCAL_RANK/virtual_local_rank 与 TORCH_NCCL_ASYNC_ERROR_HANDLING 注入</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/distributed/elastic/agent/server/api.py#L946-L973">监控循环：失败重启 vs 成员变化不计数</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/distributed/elastic/rendezvous/api.py#L145-L231">RendezvousHandler 契约（next_rendezvous/num_nodes_waiting）</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/distributed/elastic/rendezvous/api.py#L63-L145">RendezvousStoreInfo：MASTER_ADDR/PORT 写入 store</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/distributed/elastic/rendezvous/c10d_rendezvous_backend.py#L31-L108">c10d rendezvous store key 与 CAS</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/distributed/elastic/rendezvous/dynamic_rendezvous.py#L768-L772">quorum：max_nodes 立即完成 / min_nodes + last_call</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/distributed/elastic/rendezvous/dynamic_rendezvous.py#L495-L510">keep-alive 5s×3 与节点剔除</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/distributed/rendezvous.py#L290-L297">env:// 不能 re-rendezvous</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/distributed/distributed_c10d.py#L2292-L2360">init_process_group 的两种初始化与 device_id 说明</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/distributed/distributed_c10d.py#L1952-L1957">store-based barrier 默认关闭</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/csrc/distributed/c10d/ProcessGroup.hpp#L25-L26">默认 timeout：PG 30min / NCCL 10min</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/csrc/distributed/c10d/nccl2/NCCLBootstrap.cpp#L58-L90">NCCL uniqueId 经 store 传播（nccl2）</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/csrc/distributed/c10d/nccl2/NCCLBootstrap.cpp#L229-L256">NCCL comm init 的 store-&gt;wait 与失败处理</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/torch/csrc/distributed/c10d/nccl2/ProcessGroupNCCLUtils.cpp#L335-L410">watchdog 线程</a></li>
+<li><a href="https://github.com/pytorch/pytorch/blob/02e06c707ee33f8bbad64652dc8f695729a92766/docs/source/torch_nccl_environment_variables.md">NCCL 环境变量文档（nccl-legacy only 标注）</a></li>
+</ul>
+<h3 id="tensorflow"><a class="header" href="#tensorflow">TensorFlow</a></h3>
+<ul>
+<li><a href="https://www.tensorflow.org/guide/distributed_training#setting_up_the_tf_config_environment_variable">分布式训练指南：TF_CONFIG 与角色</a></li>
+<li><a href="https://github.com/kubeflow/training-operator/blob/4445c12aa62e4345b0c2c6ac9b215a70eca46ed7/pkg/apis/kubeflow.org/v1/tensorflow_types.go#L93-L120">TFJob 角色常量与 chief/worker 0 语义</a></li>
+<li><a href="https://github.com/kubeflow/training-operator/blob/4445c12aa62e4345b0c2c6ac9b215a70eca46ed7/pkg/controller.v1/tensorflow/tensorflow.go#L85-L130">TF_CONFIG 生成（cluster/task）</a></li>
+<li><a href="https://github.com/kubeflow/training-operator/blob/4445c12aa62e4345b0c2c6ac9b215a70eca46ed7/pkg/controller.v1/tensorflow/tfjob_controller.go#L554-L585">TFJob 只向默认容器注入 TF_CONFIG</a></li>
+<li><a href="https://www.tensorflow.org/api_docs/python/tf/distribute/MultiWorkerMirroredStrategy">MultiWorkerMirroredStrategy API：RING/NCCL 与「所有 worker 跑同一程序」</a></li>
+<li><a href="https://www.tensorflow.org/tutorials/distribute/multi_worker_with_keras">Keras 多 worker checkpoint：chief 写正式目录</a></li>
+</ul>
+<h3 id="mpi"><a class="header" href="#mpi">MPI</a></h3>
+<ul>
+<li><a href="https://github.com/kubeflow/mpi-operator/blob/a057ca529cb7c3b831207d8bbd37f18136057e0f/pkg/controller/mpi_job_controller.go#L1532-L1536">MPIJob worker 默认 sshd</a></li>
+<li><a href="https://github.com/kubeflow/mpi-operator/blob/a057ca529cb7c3b831207d8bbd37f18136057e0f/pkg/controller/mpi_job_controller.go#L1558-L1585">launcher 是 batchv1.Job</a></li>
+<li><a href="https://github.com/kubeflow/mpi-operator/blob/a057ca529cb7c3b831207d8bbd37f18136057e0f/pkg/controller/mpi_job_controller.go#L1335-L1379">hostfile 生成与 slots</a></li>
+<li><a href="https://github.com/kubeflow/mpi-operator/blob/a057ca529cb7c3b831207d8bbd37f18136057e0f/pkg/controller/mpi_job_controller.go#L181-L215">launcher 的 hostfile 环境变量</a></li>
+<li><a href="https://github.com/kubeflow/mpi-operator/blob/a057ca529cb7c3b831207d8bbd37f18136057e0f/pkg/apis/kubeflow/v2beta1/types.go#L155-L165">LauncherCreationPolicy</a></li>
+<li><a href="https://docs.open-mpi.org/en/main/man-openmpi/man3/MPI_Init.3.html">Open MPI MPI_Init 手册（world 只初始化一次）</a></li>
+<li><a href="https://docs.open-mpi.org/en/main/man-openmpi/man3/MPI_Comm_spawn.3.html">Open MPI MPI_Comm_spawn 手册</a></li>
+</ul>
+<h3 id="nccl"><a class="header" href="#nccl">NCCL</a></h3>
+<ul>
+<li><a href="https://github.com/NVIDIA/nccl/blob/ad2d192c1f279aefcaf340f67e07880b65a1116b/src/include/bootstrap.h#L14-L20">bootstrap handle 与 uniqueId</a></li>
+<li><a href="https://github.com/NVIDIA/nccl/blob/ad2d192c1f279aefcaf340f67e07880b65a1116b/src/bootstrap.cc#L799-L900">bootstrap root 与环连接</a></li>
+<li><a href="https://github.com/NVIDIA/nccl/blob/ad2d192c1f279aefcaf340f67e07880b65a1116b/src/init.cc#L1481-L1515">拓扑与算法选择</a></li>
+<li><a href="https://github.com/NVIDIA/nccl/blob/ad2d192c1f279aefcaf340f67e07880b65a1116b/src/graph/paths.cc#L320-L400">P2P 的 hostHash/shmDev 约束</a></li>
+<li><a href="https://github.com/NVIDIA/nccl/blob/ad2d192c1f279aefcaf340f67e07880b65a1116b/docs/userguide/source/api/comms.rst#L233-L252">collective 异步错误语义</a></li>
+</ul>
+<h2 id="相关页面"><a class="header" href="#相关页面">相关页面</a></h2>
+<ul>
+<li><a href="../../Cloud_Native/AI_Infrastructure/Distributed_Training/overview.html">专题总纲</a></li>
+<li><a href="../../Cloud_Native/AI_Infrastructure/Distributed_Training/workload-modeling.html">工作负载建模</a></li>
+<li><a href="../../Cloud_Native/AI_Infrastructure/Distributed_Training/failure-self-healing.html">训练失败与自愈</a></li>
+<li><a href="../../Cloud_Native/AI_Infrastructure/Distributed_Training/checkpoint-preemption.html">Checkpoint 与抢占恢复</a></li>
+<li><a href="../../Cloud_Native/AI_Infrastructure/Distributed_Training/rl-post-training.html">RL 后训练与业务接入</a></li>
+<li><a href="../../Machine_Learning/High_Performance_Computing/ompi架构介绍.html">Open MPI 架构</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../distributed_training.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../high_performance_computing.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../distributed_training.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../high_performance_computing.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../highlight-abc7f01d.js"></script>
+        <script src="../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

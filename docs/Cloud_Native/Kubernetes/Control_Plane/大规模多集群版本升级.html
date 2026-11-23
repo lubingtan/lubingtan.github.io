@@ -1,0 +1,606 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>大规模多集群 Kubernetes 版本升级：规划、执行与故障处理 - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../../searchindex-dfe22a86.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../../toc-d9461900.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/Kubernetes/Control_Plane/大规模多集群版本升级.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="大规模多集群-kubernetes-版本升级规划执行与故障处理"><a class="header" href="#大规模多集群-kubernetes-版本升级规划执行与故障处理">大规模多集群 Kubernetes 版本升级：规划、执行与故障处理</a></h1>
+<p>当集群数量从几套涨到几十、几百套，K8s 版本升级就不再是“挑个周末跑 <code>kubeadm upgrade</code>“的事情，而是一个需要<strong>版本策略、依赖矩阵、分波次编排、回滚预案和观测门禁</strong>的持续工程。本文给出一套可复用的规划框架，以及升级过程中高频问题的定位和处置方法。</p>
+<p>版本基线：Kubernetes v1.37.2（2026-11），同时覆盖自建（kubeadm / Cluster API）和托管（EKS / GKE / AKS）两类集群。代码链接固定到 Kubernetes commit <code>c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32</code>、Cluster API commit <code>4356c154f4a76b8939748ef7ebc2d0793ffe47e8</code>。</p>
+<h2 id="1-先理解约束为什么不能一把梭"><a class="header" href="#1-先理解约束为什么不能一把梭">1. 先理解约束：为什么不能“一把梭“</a></h2>
+<h3 id="11-发布节奏与支持窗口"><a class="header" href="#11-发布节奏与支持窗口">1.1 发布节奏与支持窗口</a></h3>
+<p>Kubernetes 每年约 3 个 minor（约每 4 个月一个），项目维护<strong>最近 3 个 minor</strong> 的发布分支，1.19 之后每个 minor 大约有 <strong>1 年 patch 支持</strong>（<a href="https://kubernetes.io/releases/version-skew-policy/">Version Skew Policy</a>）。以当前（2026-11）为例（<a href="https://kubernetes.io/releases/">Releases</a>）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Minor</th><th>状态</th><th>EOL</th></tr>
+</thead>
+<tbody>
+<tr><td>1.37</td><td>最新</td><td>2027-10-28</td></tr>
+<tr><td>1.36</td><td>支持中</td><td>2027-06-28</td></tr>
+<tr><td>1.35</td><td>支持中</td><td>2027-02-28</td></tr>
+<tr><td>1.34</td><td>已 EOL</td><td>2026-10-27</td></tr>
+</tbody>
+</table>
+</div>
+<p>这意味着：<strong>版本规划必须倒排到 EOL 之前</strong>。如果集群还在 1.34，现在就已经拿不到安全补丁了，只能走“紧急追赶“而不是正常升级节奏。</p>
+<h3 id="12-组件版本-skew最容易被忽视的硬约束"><a class="header" href="#12-组件版本-skew最容易被忽视的硬约束">1.2 组件版本 skew（最容易被忽视的硬约束）</a></h3>
+<p>官方允许的 skew（<a href="https://kubernetes.io/releases/version-skew-policy/">Version Skew Policy</a>）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>组件</th><th>允许的 skew</th><th>例子（apiserver=1.37）</th></tr>
+</thead>
+<tbody>
+<tr><td>kube-apiserver（HA 多实例之间）</td><td>新旧最多差 1 个 minor</td><td>1.37 与 1.36 可共存</td></tr>
+<tr><td>kubelet</td><td>不能比 apiserver 新；最多老 3 个 minor</td><td>1.37/1.36/1.35/1.34</td></tr>
+<tr><td>kube-proxy</td><td>不能比 apiserver 新；最多老 3 个 minor；与同节点 kubelet 最多差 3 个 minor</td><td>1.37–1.34</td></tr>
+<tr><td>kube-controller-manager / kube-scheduler / cloud-controller-manager</td><td>不能比 apiserver 新；期望同 minor，最多老 1 个 minor</td><td>1.37/1.36</td></tr>
+<tr><td>kubectl</td><td>与 apiserver 相差不超过 1 个 minor</td><td>1.38/1.37/1.36</td></tr>
+</tbody>
+</table>
+</div>
+<p>kubeadm 把这个策略写进了代码：<code>MinimumControlPlaneVersion = current-1</code>、<code>MinimumKubeletVersion = current-3</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/constants/constants.go#L485-L492">constants.go#L485-L492</a>），升级时会强制执行 skew 检查（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/phases/upgrade/policy.go#L40-L47">policy.go#L40-L47</a>）。</p>
+<p>实际含义：</p>
+<ul>
+<li><strong>kubelet 不能先于 apiserver 升级</strong>；控制面升完之前，worker 的 kubelet 不能越过 apiserver 的版本；</li>
+<li>HA 控制面升级过程中，新旧 apiserver 会短暂共存，但跨度不能超过 1 个 minor；</li>
+<li>升级跨多个 minor 时，<strong>kubelet 可以落后 3 个 minor</strong>，但这只是“能跑“，不是“推荐“——会让排障和兼容性验证长期处在混合版本状态。</li>
+</ul>
+<h3 id="13-不能跳-minor"><a class="header" href="#13-不能跳-minor">1.3 不能跳 minor</a></h3>
+<p>kubeadm 明确“skipping MINOR versions is unsupported“（<a href="https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/">kubeadm upgrade</a>），EKS 也只能一次升一个 minor（<a href="https://docs.aws.amazon.com/eks/latest/userguide/update-cluster.html">EKS update cluster</a>），Cluster API 同样要求逐 minor 升级（<a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/docs/book/src/tasks/upgrading-clusters.md#L5-L16">CAPI upgrading clusters</a>）。所以“多集群版本规划“本质上是给每个集群安排一条 <strong>N → N+1 → N+2 …</strong> 的时间线。</p>
+<h3 id="14-api-的生命周期"><a class="header" href="#14-api-的生命周期">1.4 API 的生命周期</a></h3>
+<p>Kubernetes 的 API 废弃策略：<strong>beta API 在引入后最多 9 个月或 3 个 minor（取较长者）后被废弃，废弃后再过 9 个月/3 个 minor 停止 serve</strong>；alpha 版本可以随时移除；GA 版本不会在同一个 major 内移除（<a href="https://kubernetes.io/docs/reference/using-api/deprecation-policy/">Deprecation Policy</a>）。</p>
+<p>现实案例：<code>flowcontrol.apiserver.k8s.io/v1beta3</code> 在 v1.32 停止 serve，必须迁移到 v1（<a href="https://kubernetes.io/docs/reference/using-api/deprecation-guide/">Deprecated API Migration Guide</a>）。对多集群意味着：<strong>每跨一个 minor 都要做一次“废弃 API + CRD + webhook + operator“兼容性扫描</strong>，而不是最后一起扫。</p>
+<h2 id="2-规划框架七步法"><a class="header" href="#2-规划框架七步法">2. 规划框架：七步法</a></h2>
+<pre class="mermaid">flowchart LR
+    A["1. 盘点舰队&lt;br/&gt;版本/依赖/风险"] --&gt; B["2. 定目标版本&lt;br/&gt;支持窗口/patch"]
+    B --&gt; C["3. 兼容矩阵&lt;br/&gt;CNI/CSI/Operator/API"]
+    C --&gt; D["4. 风险分级&lt;br/&gt;波次与批次"]
+    D --&gt; E["5. 演练 + 回滚预案&lt;br/&gt;canary 集群"]
+    E --&gt; F["6. 分波执行&lt;br/&gt;门禁 + 观测"]
+    F --&gt; G["7. 验收/收尾&lt;br/&gt;版本漂移清零"]
+    G --&gt; A
+</pre>
+
+<h3 id="21-盘点舰队inventory"><a class="header" href="#21-盘点舰队inventory">2.1 盘点舰队（inventory）</a></h3>
+<p>至少采集这些字段，落到一个可持续更新的清单/CMDB（不要用 Excel 手工维护）：</p>
+<ul>
+<li>集群标识：provider、region/AZ、环境（dev/staging/prod）、负责人、SLO 等级；</li>
+<li>版本：控制面、节点池、kubelet、kube-proxy、kubeadm、运行时（containerd/CRI-O）、OS 镜像、内核；</li>
+<li>网络与存储：CNI 及其版本、Service 实现（kube-proxy / eBPF）、CSI 驱动、Ingress、Service Mesh；</li>
+<li>扩展：CRD 数量与版本、admission webhook、aggregated APIService、Operator、Helm chart、client-go 版本；</li>
+<li>负载特征：节点数、Pod 数、API QPS、etcd DB 大小、大 list/watch 客户端；</li>
+<li>风险项：单副本组件、无 PDB 的工作负载、本地盘/StatefulSet、Windows 节点、GPU 节点；</li>
+<li>合规：是否在支持窗口内、证书剩余有效期、备份最近成功时间。</li>
+</ul>
+<p>工具/命令示例：</p>
+<pre><code class="language-bash">kubectl version
+kubectl get nodes -o wide
+kubectl get --raw '/readyz?verbose'
+kubectl get pdb -A
+kubectl get crd
+kubectl get apiservices
+kubectl get --raw '/metrics' | grep apiserver_requested_deprecated_apis
+</code></pre>
+<p><code>apiserver_requested_deprecated_apis</code> 是 apiserver 暴露的“废弃 API 被调用“指标（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/apiserver/pkg/endpoints/metrics/metrics.go#L67">metrics.go#L67</a>），配合审计日志可以定位到底是哪个客户端还在调用待移除的 API。外部工具（如 <code>pluto</code>、<code>kubent</code>）可以做清单扫描，但<strong>以审计日志/指标为准</strong>，因为动态客户端、operator 的调用往往不在 YAML 里。</p>
+<h3 id="22-选目标版本"><a class="header" href="#22-选目标版本">2.2 选目标版本</a></h3>
+<ul>
+<li>选 <strong>N+1 的最新 patch</strong>，不要选刚发布的 <code>.0</code>；patch 版本通常已包含前几个补丁修复；</li>
+<li>确认目标版本仍在支持窗口内，并为下一次升级留出时间（一般每 3–4 个月一个 minor，升级本身要占用 2–6 周）；</li>
+<li>托管集群要看厂商的版本可用时间（GKE 的 Rapid/Regular/Stable/Extended 通道、EKS 的版本支持、AKS 的 preview/GA），不要等自动升级替你决定。</li>
+</ul>
+<h3 id="23-建立依赖兼容矩阵"><a class="header" href="#23-建立依赖兼容矩阵">2.3 建立依赖兼容矩阵</a></h3>
+<p>对每个依赖回答三个问题：<strong>是否支持目标 K8s 版本？升级顺序是什么？不兼容时的降级/替代方案是什么？</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>依赖</th><th>检查点</th><th>典型风险</th></tr>
+</thead>
+<tbody>
+<tr><td>CNI（Calico/Cilium/…）</td><td>目标 K8s 版本支持矩阵、kube-proxy 替换模式</td><td>控制面升级后节点 NotReady、Pod 网络不通</td></tr>
+<tr><td>CSI 驱动 / 存储</td><td>K8s API 版本、VolumeSnapshot、迁移特性</td><td>PVC 挂载失败、卷无法 attach</td></tr>
+<tr><td>Ingress / Service Mesh</td><td>admission webhook 的 API 版本、sidecar 注入</td><td>新 Pod 无法创建、服务中断</td></tr>
+<tr><td>Operator / CRD</td><td>controller-runtime/client-go 版本、conversion webhook</td><td>CR 无法 reconcile、CRD 升级失败</td></tr>
+<tr><td>运行时</td><td>containerd/CRI-O 版本、cgroup v2、systemd driver</td><td>kubelet 启动失败、Pod 无法运行</td></tr>
+<tr><td>OS / 内核</td><td>cgroup v1 是否仍被支持、内核版本</td><td>1.37 起 kubelet 默认 <code>FailCgroupV1=true</code>，老 OS 镜像会直接不兼容</td></tr>
+<tr><td>云厂商</td><td>控制面版本、节点池版本、LB/CSI/CNI 插件</td><td>托管控制面可用但节点无法加入</td></tr>
+<tr><td>升级工具</td><td>kubeadm / Cluster API / kubectl / Helm</td><td>CAPI 版本不支持目标 K8s、Helm chart API 版本不兼容</td></tr>
+</tbody>
+</table>
+</div>
+<p>Cluster API 的兼容矩阵尤其重要：CAPI 只主动支持最近两个 minor（N、N-1），且 KCP/Bootstrap provider 对目标 Kubernetes 版本有明确支持范围（<a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/docs/book/src/reference/versions.md#L49-L70">CAPI versions</a>）。<strong>升级 Kubernetes 之前，可能要先升级 CAPI</strong>。</p>
+<h3 id="24-风险分级与波次"><a class="header" href="#24-风险分级与波次">2.4 风险分级与波次</a></h3>
+<p>把集群按“爆炸半径“分层，而不是按团队偏好：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>波次</th><th>集群</th><th>目的</th><th>soak 时间</th></tr>
+</thead>
+<tbody>
+<tr><td>Wave 0</td><td>开发/测试/共享 sandbox</td><td>验证流程和工具链</td><td>1–3 天</td></tr>
+<tr><td>Wave 1</td><td>预发/低风险生产</td><td>验证业务兼容性</td><td>3–7 天</td></tr>
+<tr><td>Wave 2</td><td>普通生产（按 region/业务分批）</td><td>主力升级</td><td>1–2 周</td></tr>
+<tr><td>Wave 3</td><td>关键业务/大集群/特殊负载（GPU、StatefulSet、Windows）</td><td>最后处理长尾</td><td>1–2 周</td></tr>
+</tbody>
+</table>
+</div>
+<p>同波次内也要限制并发：<strong>同一 region/AZ、同一依赖（同一 etcd/LB/CNI 版本）、同一团队的关键集群不要同时升级</strong>。批次大小通常按“一次升级 1–5 套集群“起步，再根据告警和人工支持能力放大。</p>
+<h3 id="25-回滚止损预案"><a class="header" href="#25-回滚止损预案">2.5 回滚/止损预案</a></h3>
+<p>升级前必须写清楚“什么情况下回滚、回滚到什么程度、谁有权决定“：</p>
+<ul>
+<li><strong>控制面不支持降级</strong>（kubeadm 没有 downgrade；etcd 数据格式升级后旧二进制可能无法读）。所谓回滚通常是“恢复升级前 etcd 快照 + 旧版本二进制 + 重新加入节点“（<a href="./控制面灾备与恢复.html">控制面灾备与恢复</a>）；</li>
+<li><strong>节点可以回滚</strong>：重装旧镜像/重新 join，比控制面回滚便宜得多；</li>
+<li><strong>托管集群</strong>要看厂商能力：EKS 支持把控制面回滚到上一个 minor（<a href="https://docs.aws.amazon.com/eks/latest/userguide/rollback-cluster.html">EKS rollback</a>），node group 也可以回滚版本；GKE 的两步升级在“emulated version upgrade“之前可以回滚；AKS 可以通过 node surge/维护窗口控制节奏，但控制面版本回退能力取决于产品；</li>
+<li><strong>回滚预案必须演练</strong>：至少在一次非生产升级里真的执行一遍快照恢复/节点回滚，否则“有备份“只是心理安慰。</li>
+</ul>
+<h3 id="26-容量与-slo"><a class="header" href="#26-容量与-slo">2.6 容量与 SLO</a></h3>
+<p>升级需要额外的容量来承接 drain/eviction：</p>
+<ul>
+<li>节点升级前确保其他节点有足够资源；用 Cluster Autoscaler 或预留 surge 节点；</li>
+<li>PDB 不能设置成“永远不满足“（例如 <code>minAvailable: 100%</code>），否则 drain 永远卡住；</li>
+<li>托管节点池的 surge 配置（EKS <code>maxUnavailable</code>/<code>maxUnavailablePercentage</code>、GKE surge/blue-green、AKS node surge）要和 PDB、容量一起算；</li>
+<li>给升级窗口定义错误预算和<strong>自动熔断条件</strong>：5xx 比例、apiserver p99、Pod 调度失败率、etcd fsync、节点 NotReady 数的阈值。</li>
+</ul>
+<h3 id="27-变更管理与沟通"><a class="header" href="#27-变更管理与沟通">2.7 变更管理与沟通</a></h3>
+<ul>
+<li>每个波次提前发变更单：范围、时间窗、影响、回滚点、联系人；</li>
+<li>冻结窗口（季度结算、大促、春节等）写进日历；</li>
+<li>升级期间冻结无关变更（尤其是 CNI/Ingress/Operator 的版本变更），避免“两个变量一起动“。</li>
+</ul>
+<h2 id="3-单集群升级顺序自建-kubeadm"><a class="header" href="#3-单集群升级顺序自建-kubeadm">3. 单集群升级顺序（自建 kubeadm）</a></h2>
+<p>官方流程是：<strong>primary control plane → 其他 control plane → worker</strong>（<a href="https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/">kubeadm upgrade</a>）。每一步的“健康门禁“比命令本身更重要。</p>
+<pre class="mermaid">sequenceDiagram
+    participant Ops as 运维
+    participant CP1 as 第一台控制面
+    participant CPn as 其余控制面
+    participant LB as LB/VIP
+    participant W as Worker
+    Ops-&gt;&gt;CP1: 备份 etcd/PKI，kubeadm upgrade plan
+    Ops-&gt;&gt;CP1: kubeadm upgrade apply vX.Y.z
+    CP1--&gt;&gt;Ops: 控制面健康检查通过
+    Ops-&gt;&gt;CPn: 逐台 drain → kubeadm upgrade node → 升级 kubelet → uncordon
+    Ops-&gt;&gt;LB: 确认所有 apiserver ready（addons 升级在最后一台 CP 后）
+    Ops-&gt;&gt;W: 逐批 drain → 升级 kubelet/OS → uncordon
+    Ops-&gt;&gt;Ops: 验证节点/addon/业务 SLO
+</pre>
+
+<h3 id="31-升级前检查pre-flight"><a class="header" href="#31-升级前检查pre-flight">3.1 升级前检查（Pre-flight）</a></h3>
+<pre><code class="language-bash"># 版本与升级路径
+kubeadm upgrade plan
+kubeadm certs check-expiration
+
+# 控制面健康
+kubectl get nodes
+kubectl get --raw '/readyz?verbose'
+kubectl get pods -n kube-system
+
+# etcd
+etcdctl --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
+  endpoint health --cluster
+
+# 废弃 API / webhook / CRD
+kubectl get --raw '/metrics' | grep apiserver_requested_deprecated_apis
+kubectl get validatingwebhookconfigurations,mutatingwebhookconfigurations
+kubectl get crd
+</code></pre>
+<p><strong>必须完成</strong>：etcd 快照 + PKI/kubeconfig/manifests 备份（<a href="./控制面灾备与恢复.html">控制面灾备与恢复</a>）、release notes 阅读、目标版本的 CNI/CSI/Operator 兼容性确认、drain 容量确认。</p>
+<h3 id="32-控制面"><a class="header" href="#32-控制面">3.2 控制面</a></h3>
+<ul>
+<li><strong>第一台控制面</strong>：<code>kubeadm upgrade apply v1.37.x</code>。它会检查 API 可达、节点 Ready、控制面健康、版本 skew，升级静态 Pod，并在需要时升级 etcd；默认还会续期 kubeadm 管理的证书（<a href="https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/">kubeadm upgrade</a>）。</li>
+<li><strong>其余控制面</strong>：先 <code>kubectl drain &lt;node&gt; --ignore-daemonsets</code>，再 <code>kubeadm upgrade node</code>，然后升级 kubelet/kubectl 并重启 kubelet，最后 <code>uncordon</code>。</li>
+<li><strong>绝对不能同时升级两台控制面</strong>（stacked etcd 下会同时丢两个 etcd 成员，quorum 直接丢失）。</li>
+<li><strong>addons 升级时机</strong>：从 v1.28 起，kubeadm 会等所有控制面实例升完才升级 CoreDNS/kube-proxy；因此<strong>最后一台控制面升级完成之前，addons 可能仍是旧版本</strong>，不要此时去改 addon。</li>
+<li><strong>stacked etcd 升级</strong>：etcd 升级会重启 etcd 静态 Pod，期间 apiserver 的在途请求会短暂卡住。官方给出的缓解方式是在 <code>kubeadm upgrade apply</code> 前先优雅停掉本机 apiserver（<code>killall -s SIGTERM kube-apiserver</code>，等 20s 再升级），减少 etcd 不可用窗口（<a href="https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/">kubeadm upgrade</a>）。</li>
+<li><strong>external etcd</strong>：etcd 的升级/备份/恢复在 etcd 侧单独做，kubeadm 不会动；控制面升级与 etcd 滚动升级可以解耦。</li>
+</ul>
+<h3 id="33-worker--kubelet"><a class="header" href="#33-worker--kubelet">3.3 Worker / kubelet</a></h3>
+<pre><code class="language-bash">kubectl drain &lt;node&gt; --ignore-daemonsets --delete-emptydir-data
+# 安装目标版本 kubelet/kubectl，重启 kubelet
+kubectl uncordon &lt;node&gt;
+</code></pre>
+<ul>
+<li>一次只升一个或一小批节点，保证 PDB/容量不被击穿；</li>
+<li>升级节点操作系统镜像时，<strong>先确认 OS 满足目标版本的运行时要求</strong>（例如 1.37 默认只支持 cgroup v2，老镜像可能直接不兼容）；</li>
+<li>升级完检查节点 Ready、kubelet 版本、Pod 重建、CNI/CSI 正常。</li>
+</ul>
+<h3 id="34-托管集群的差异"><a class="header" href="#34-托管集群的差异">3.4 托管集群的差异</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>平台</th><th>控制面</th><th>节点</th><th>特色能力</th></tr>
+</thead>
+<tbody>
+<tr><td>EKS</td><td>一次升一个 minor；控制面升级前要求节点版本不高于控制面</td><td>managed node group 滚动更新（<code>maxUnavailable</code>/百分比）</td><td>upgrade insights、控制面回滚到上一 minor、node group 回滚</td></tr>
+<tr><td>GKE</td><td>通道（Rapid/Regular/Stable/Extended）+ 维护窗口；支持两步升级</td><td>surge / blue-green / autoscaled blue-green</td><td>两步升级可在 soak（6h–7d）内回滚；rollout sequencing 控制多集群顺序</td></tr>
+<tr><td>AKS</td><td>手动/自动升级、维护窗口</td><td>node surge</td><td>Fleet Manager 批量升级；60 天宽限期后平台可能强制升级；预览版可按 API breaking changes 停止升级</td></tr>
+</tbody>
+</table>
+</div>
+<p>EKS 的顺序容易踩坑：<strong>节点版本不能高于控制面</strong>，官方建议先把节点升到当前控制面版本，再把控制面升到下一个 minor（<a href="https://docs.aws.amazon.com/eks/latest/userguide/update-cluster.html">EKS update cluster</a>）。GKE 的“两步升级“则是先升级二进制、保持旧版本 API 行为，在 soak 期间验证，再执行 emulated version upgrade——这是大规模升级时非常值得利用的“灰度窗口“。AKS 要特别注意平台发起的升级：<strong>维护窗口不一定能阻止平台在超出 60 天宽限期后强制升级</strong>。</p>
+<h3 id="35-cluster-api-管理的集群"><a class="header" href="#35-cluster-api-管理的集群">3.5 Cluster API 管理的集群</a></h3>
+<ul>
+<li>修改 <code>KubeadmControlPlane.spec.version</code> 触发控制面滚动升级；KCP 的 <code>maxSurge</code> 只允许 0 或 1，滚动过程会保证控制面副本数足够（<a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/controlplane/kubeadm/reconcilers/kubeadmcontrolplane/update.go#L104-L130">update.go#L104-L130</a>）；</li>
+<li>控制面升级完成后修改 <code>MachineDeployment.spec.template</code>（版本 + 机器镜像）滚 worker；</li>
+<li>机器镜像里的 kubeadm/kubelet 版本必须与目标 K8s 版本匹配；<code>spec.rollout.after</code> 可用于定时触发滚动（例如证书轮换）；</li>
+<li>先确认 CAPI 版本支持目标 K8s 版本，必要时先升 CAPI（<a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/docs/book/src/tasks/upgrading-clusters.md#L5-L16">CAPI upgrading clusters</a>）。</li>
+</ul>
+<h2 id="4-多集群编排与自动化"><a class="header" href="#4-多集群编排与自动化">4. 多集群编排与自动化</a></h2>
+<h3 id="41-版本即代码"><a class="header" href="#41-版本即代码">4.1 版本即代码</a></h3>
+<ul>
+<li>用 GitOps/IaC 管理“集群版本“这个字段（CAPI 的 KCP/MachineDeployment、Terraform、云厂商 fleet API），升级 = 提 PR；</li>
+<li>每个波次一个 PR/分支，带上 preflight 结果、变更单链接、回滚点；</li>
+<li>禁止手工点控制台升级（除了 break-glass），否则事后无法追溯版本状态。</li>
+</ul>
+<h3 id="42-门禁gates"><a class="header" href="#42-门禁gates">4.2 门禁（gates）</a></h3>
+<p>在自动化流水线里串行执行：</p>
+<ol>
+<li><strong>preflight gate</strong>：版本 skew、etcd 健康、证书、备份、废弃 API、PDB、容量；</li>
+<li><strong>canary gate</strong>：Wave 0/1 集群升级后，检查 SLO/错误率/延迟/Pod 调度；</li>
+<li><strong>wave gate</strong>：上一波 soak 达标才允许下一波；</li>
+<li><strong>abort gate</strong>：指标越界自动暂停后续集群（不要自动回滚控制面，先停）。</li>
+</ol>
+<h3 id="43-舰队工具"><a class="header" href="#43-舰队工具">4.3 舰队工具</a></h3>
+<ul>
+<li>自建：Cluster API + GitOps（Flux/Argo CD）是主流组合；CAPI 负责机器滚动，GitOps 负责版本/配置；</li>
+<li>GKE：release channels + maintenance windows + rollout sequencing（自定义 stage，按集群顺序升级）；</li>
+<li>Azure：AKS Fleet Manager 的 update run 可以按 stage/group 批量升级；</li>
+<li>EKS：按集群/node group 编排，结合 upgrade insights 做预检。</li>
+</ul>
+<h3 id="44-版本漂移监控"><a class="header" href="#44-版本漂移监控">4.4 版本漂移监控</a></h3>
+<ul>
+<li>仪表盘：每个集群的控制面/节点/addon 版本、与目标版本的差距、EOL 倒计时；</li>
+<li>告警：集群落后超过 1 个 minor、进入 EOL 前 90 天、升级任务卡住超过阈值；</li>
+<li>目标：<strong>生产集群版本差距不超过 1 个 minor，所有集群在 EOL 前完成升级</strong>。</li>
+</ul>
+<h2 id="5-常见问题与处理"><a class="header" href="#5-常见问题与处理">5. 常见问题与处理</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>#</th><th>现象</th><th>常见原因</th><th>处置</th><th>预防</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>升级后 operator/controller 报 <code>no matches for kind</code>、CR 不生效</td><td>客户端还在用已移除的 API 版本（如 flowcontrol v1beta3、旧 CRD 版本）</td><td>回滚控制面（若刚升级）/用兼容 API 重新部署客户端；<code>kubectl-convert</code> 迁移 manifest</td><td>每跳做废弃 API 扫描（metric + audit），先升客户端再升控制面</td></tr>
+<tr><td>2</td><td>控制面升级卡住或失败</td><td>节点 NotReady、etcd 不健康、镜像拉取失败、manifest 冲突</td><td>看 <code>kubeadm upgrade apply</code> 输出和 static pod 日志；修复后<strong>重跑</strong>（幂等）；必要时 <code>kubeadm upgrade apply --force</code>；用 <code>/etc/kubernetes/tmp/kubeadm-backup-*</code> 恢复</td><td>preflight 健康检查、镜像预热、预留回滚窗口</td></tr>
+<tr><td>3</td><td>etcd 升级期间 apiserver 大量超时</td><td>etcd 静态 Pod 重启导致在途请求卡住</td><td>按官方方式先优雅停 apiserver 再升级；控制面逐台升级，不要并发</td><td>在低峰升级；external etcd 解耦滚动</td></tr>
+<tr><td>4</td><td>升级后核心组件 CrashLoop / apiserver 起不来</td><td>新版本移除了旧 flag/feature gate、配置不兼容、证书/审计配置错误</td><td>看 static pod 日志；回退 manifest（backup 目录）；用 etcd 快照恢复（若已升级 etcd）</td><td>先在 Wave 0 验证；比对 release notes 的 removed flags</td></tr>
+<tr><td>5</td><td><code>kubectl drain</code> 卡住</td><td>PDB 不满足、StatefulSet/本地盘、DaemonSet 未加 <code>--ignore-daemonsets</code>、eviction 被拒绝</td><td>检查 <code>kubectl get pdb -A</code> 和 eviction 事件；临时调整 PDB（有风险）；对本地盘/StatefulSet 用受控停机；必要时 <code>--delete-emptydir-data</code></td><td>提前算 PDB/容量；GKE 注意 PDB 只被尊重最多 1 小时，之后平台会强制删 Pod</td></tr>
+<tr><td>6</td><td>节点升级后大量 Pod Pending</td><td>容量不足、PDB/反亲和、镜像拉取失败、CNI 未就绪</td><td>扩容/加 surge、检查调度事件、确认 CNI/CSI ready</td><td>预留容量；按批升级；监控 Pending</td></tr>
+<tr><td>7</td><td>节点 NotReady / 网络异常</td><td>CNI 与目标 K8s 不兼容；kube-proxy 模式/iptables-nft 变化；conntrack 满</td><td>升级/回滚 CNI 版本；检查 kube-proxy 日志与规则；必要时重启 kube-proxy</td><td>先查 CNI 兼容矩阵；先升 CNI 再升控制面（按厂商建议）</td></tr>
+<tr><td>8</td><td>kubelet 起不来 / Pod 无法运行</td><td>cgroup v1 不再支持、containerd 版本过老、systemd driver 不匹配</td><td>升级 OS/运行时镜像；切 cgroup v2；检查 <code>journalctl -u kubelet</code></td><td>用目标版本支持的基础镜像；把 OS/运行时纳入依赖矩阵</td></tr>
+<tr><td>9</td><td>PVC 无法挂载 / attach 失败</td><td>CSI 驱动不支持新 K8s、存储 API 变化、节点/卷 zone 不匹配</td><td>升级 CSI 驱动；回滚节点/驱动；检查 volume attachment 事件</td><td>CSI 兼容性检查；升级前做存储 smoke test</td></tr>
+<tr><td>10</td><td>控制面升级后部分客户端 401/证书错误</td><td>证书过期、SAN 不匹配、kubeconfig 指向旧 endpoint、kubelet 证书未轮换</td><td><code>kubeadm certs check-expiration</code>；续期/重签；分发新 kubeconfig；重启 kubelet</td><td>升级前检查证书；变更 endpoint 时重签 SAN</td></tr>
+<tr><td>11</td><td>托管集群被平台“强行“升级</td><td>超出厂商支持窗口/宽限期（如 AKS 60 天后平台发起升级）</td><td>提前升级；用维护窗口/停升级开关（如 AKS 预览的 API breaking change 停止）；监控通知</td><td>跟踪厂商版本日历，不等平台动手</td></tr>
+<tr><td>12</td><td>想回滚控制面，发现回不去</td><td>控制面不支持 downgrade；etcd 已升级数据格式</td><td>用升级前 etcd 快照恢复 + 旧二进制（<a href="./控制面灾备与恢复.html">控制面灾备与恢复</a>）；或重建集群</td><td>升级前备份并演练恢复；确认厂商是否支持回滚</td></tr>
+<tr><td>13</td><td>舰队里部分集群升级完成、部分卡住</td><td>自动化中断、权限/配额、依赖版本不一致</td><td>用幂等脚本重跑；按集群状态机修复；不要为了“齐步走“回滚已成功集群</td><td>每个集群独立状态；批次门禁；断点续跑</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="51-控制面升级失败的恢复细节"><a class="header" href="#51-控制面升级失败的恢复细节">5.1 控制面升级失败的恢复细节</a></h3>
+<p>kubeadm 的升级是幂等的：失败后<strong>先修复环境（节点 Ready、etcd 健康、镜像可拉取），再重跑 <code>kubeadm upgrade apply</code></strong>；如果是卡在“版本已写但组件未起“的不一致状态，可以 <code>kubeadm upgrade apply --force</code>（不改变目标版本）。升级过程中 kubeadm 会在 <code>/etc/kubernetes/tmp</code> 下保留：</p>
+<ul>
+<li><code>kubeadm-backup-manifests-&lt;date&gt;-&lt;time&gt;</code>：本节点控制面静态 Pod manifest 的备份；</li>
+<li><code>kubeadm-backup-etcd-&lt;date&gt;-&lt;time&gt;</code>：本节点 etcd 数据备份（external etcd 时为空）。</li>
+</ul>
+<p>自动回滚不生效时可以手工恢复这两个目录（<a href="https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/">kubeadm upgrade: Recovering from a failure state</a>）。</p>
+<h3 id="52-etcd-升级的硬边界"><a class="header" href="#52-etcd-升级的硬边界">5.2 etcd 升级的硬边界</a></h3>
+<ul>
+<li>kubeadm 默认 etcd 版本与 K8s 版本绑定（1.37 默认 3.7.0-0，<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/constants/constants.go#L329-L330">constants.go#L329-L330</a>），跨 minor 升级时 etcd 也会被升级；<strong>etcd 不支持降级</strong>，升级前必须做快照；</li>
+<li>stacked etcd 下，控制面节点就是 etcd 成员：<strong>一次只能动一台</strong>；两台同时不可用会丢 quorum；</li>
+<li>external etcd 要单独规划 etcd 集群的滚动升级，先确认 etcd 版本与目标 K8s 的兼容矩阵（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/cmd/kubeadm/app/constants/constants.go#L494-L516">constants.go#L494-L516</a>）。</li>
+</ul>
+<h3 id="53-pdbdrain-和容量的组合坑"><a class="header" href="#53-pdbdrain-和容量的组合坑">5.3 PDB、drain 和容量的组合坑</a></h3>
+<ul>
+<li>PDB 只保护<strong>自愿驱逐</strong>，不阻止节点故障；它按 <code>minAvailable/maxUnavailable</code> 工作（<a href="https://kubernetes.io/docs/concepts/workloads/pods/disruptions/"> disruptions</a>）；</li>
+<li>如果 PDB 设置的可用副本数等于当前副本数，drain 会永久阻塞；升级前必须审查所有 PDB；</li>
+<li>官方建议给 PDB 配置 <code>unhealthyPodEvictionPolicy: AlwaysAllow</code>，让不健康的 Pod 可以被驱逐，否则 drain 会卡在“等应用健康“上；</li>
+<li>GKE 的节点升级对 PDB 的尊重有 <strong>1 小时上限</strong>，超过后即使 <code>maxUnavailable: 0</code> 也会删 Pod 推进升级——不要假设 PDB 能无限期阻止平台升级。</li>
+</ul>
+<h3 id="54-版本-skew-违规"><a class="header" href="#54-版本-skew-违规">5.4 版本 skew 违规</a></h3>
+<ul>
+<li>典型错误：先升了 worker 的 kubelet（比 apiserver 新）→ kubelet 注册失败/行为异常；</li>
+<li>修复：把 kubelet 回退到 apiserver 同 minor 或更低；或者先把控制面升上去；</li>
+<li>HA 控制面新旧 apiserver 跨了 2 个 minor → 组件间通信/行为不一致，必须按“一次一个 minor“补齐。</li>
+</ul>
+<h3 id="55-托管集群的平台行为"><a class="header" href="#55-托管集群的平台行为">5.5 托管集群的“平台行为“</a></h3>
+<ul>
+<li><strong>EKS</strong>：节点不能高于控制面；控制面升级前把节点调到与控制面同版本，再升控制面到下个 minor；升级前用 upgrade insights 检查废弃 API/插件；</li>
+<li><strong>GKE</strong>：通道决定你什么时候被自动升级；<code>Rapid</code> 最早、<code>Stable</code> 最晚，<code>Extended</code> 拉长支持；两步升级可在 soak 期内回滚；</li>
+<li><strong>AKS</strong>：60 天宽限期后平台可能强制升级；维护窗口只约束“计划内“升级，不能阻止平台在超期后动作；预览特性可按 API breaking changes 自动停止升级。</li>
+</ul>
+<h3 id="56-回滚的边界"><a class="header" href="#56-回滚的边界">5.6 回滚的边界</a></h3>
+<ul>
+<li><strong>控制面</strong>：没有官方 downgrade；只能靠 etcd 快照恢复 + 旧二进制/重建（<a href="./控制面灾备与恢复.html">控制面灾备与恢复</a>）；</li>
+<li><strong>节点</strong>：可以重装/重加入，成本最低；</li>
+<li><strong>托管</strong>：EKS 有控制面回滚（上一 minor）和 node group 回滚；GKE 两步升级在 emulated upgrade 前可回滚；AKS 的回滚能力取决于版本/特性，升级前查文档；</li>
+<li><strong>数据</strong>：etcd 升级后旧版本可能无法读取新数据格式；PVC/CRD 的 schema 变更也可能不可逆。</li>
+</ul>
+<h2 id="6-监控验收与收尾"><a class="header" href="#6-监控验收与收尾">6. 监控、验收与收尾</a></h2>
+<p>每个波次至少盯这些信号：</p>
+<pre><code class="language-promql"># apiserver 5xx/429/延迟
+sum(rate(apiserver_request_total{code=~"5.."}[5m])) by (cluster)
+sum(rate(apiserver_flowcontrol_rejected_requests_total[5m])) by (cluster, reason)
+
+# etcd 健康与写盘
+etcd_server_has_leader
+histogram_quantile(0.99, rate(etcd_disk_wal_fsync_duration_seconds_bucket[5m]))
+
+# 节点/调度
+sum(kube_node_status_condition{condition="Ready",status="true"}) by (cluster)
+sum(kube_pod_status_phase{phase="Pending"}) by (cluster)
+</code></pre>
+<p>再加：PDB 违规、eviction 数、CNI/CSI 错误、Ingress 5xx、关键业务 SLI。</p>
+<p><strong>验收清单（每集群）</strong>：</p>
+<ul>
+<li><input disabled="" type="checkbox"> <code>kubectl get nodes</code> 全部 Ready，版本符合目标；</li>
+<li><input disabled="" type="checkbox"> 控制面组件、CoreDNS、kube-proxy、CNI、CSI、Ingress、Operator 全部健康；</li>
+<li><input disabled="" type="checkbox"> <code>kubectl get --raw '/readyz?verbose'</code> 全绿；</li>
+<li><input disabled="" type="checkbox"> 关键业务 smoke test 通过，SLO 在错误预算内；</li>
+<li><input disabled="" type="checkbox"> 无持续 Pending/Evicted/PDB 违规；</li>
+<li><input disabled="" type="checkbox"> 证书有效期正常，备份任务恢复；</li>
+<li><input disabled="" type="checkbox"> 版本清单/CMDB 已更新，升级记录归档。</li>
+</ul>
+<h2 id="7-检查清单浓缩版"><a class="header" href="#7-检查清单浓缩版">7. 检查清单（浓缩版）</a></h2>
+<p><strong>升级前</strong>：版本/支持窗口、skew、废弃 API、CNI/CSI/Operator 兼容、PDB/容量、etcd+PKI 备份、回滚演练、变更窗口。</p>
+<p><strong>升级中</strong>：控制面逐台、addons 等最后一台 CP、worker 分批、每一步检查 Ready/<code>readyz</code>/节点版本、监控 SLO、达到熔断条件立即暂停后续集群。</p>
+<p><strong>升级后</strong>：节点/addon/业务验收、版本清单更新、清理 <code>/etc/kubernetes/tmp</code> 备份、复盘（耗时、问题、改进项）、更新 runbook。</p>
+<h2 id="8-参考"><a class="header" href="#8-参考">8. 参考</a></h2>
+<ul>
+<li>Kubernetes：<a href="https://kubernetes.io/releases/version-skew-policy/">Version Skew Policy</a> / <a href="https://kubernetes.io/releases/">Releases &amp; EOL</a></li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/">Upgrading kubeadm clusters</a>（含 etcd 升级注意事项、失败恢复）</li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/reference/using-api/deprecation-policy/">Deprecation Policy</a> / <a href="https://kubernetes.io/docs/reference/using-api/deprecation-guide/">Deprecated API Migration Guide</a></li>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/concepts/workloads/pods/disruptions/">Disruptions</a>（PDB/eviction）</li>
+<li>Cluster API：<a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/docs/book/src/tasks/upgrading-clusters.md#L5-L16">Upgrading clusters</a> / <a href="https://github.com/kubernetes-sigs/cluster-api/blob/4356c154f4a76b8939748ef7ebc2d0793ffe47e8/docs/book/src/reference/versions.md#L49-L70">Version support</a></li>
+<li>AWS EKS：<a href="https://docs.aws.amazon.com/eks/latest/userguide/update-cluster.html">Update cluster</a> / <a href="https://docs.aws.amazon.com/eks/latest/userguide/update-managed-node-group.html">Update managed node group</a> / <a href="https://docs.aws.amazon.com/eks/latest/userguide/rollback-cluster.html">Rollback cluster</a></li>
+<li>GKE：<a href="https://cloud.google.com/kubernetes-engine/docs/how-to/upgrading-a-cluster">Upgrade clusters and node pools</a> / <a href="https://cloud.google.com/kubernetes-engine/docs/concepts/release-channels">Release channels</a></li>
+<li>AKS：<a href="https://learn.microsoft.com/en-us/azure/aks/upgrade-cluster">Upgrade an AKS cluster</a></li>
+</ul>
+<h2 id="本-wiki-相关页面"><a class="header" href="#本-wiki-相关页面">本 wiki 相关页面</a></h2>
+<ul>
+<li><a href="./控制面高可用方案.html">Kubernetes 控制面高可用方案</a> —— 升级期间 quorum/LB/滚动顺序的失效分析（§10）</li>
+<li><a href="./控制面灾备与恢复.html">Kubernetes 控制面灾备与恢复</a> —— etcd 快照、恢复、全集群重建（升级失败的最终兜底）</li>
+<li><a href="./控制面事故处理手册.html">Kubernetes 控制面事故处理手册</a> —— 升级失败、证书过期、节点 NotReady 的现场处置（R6/R10/R12）</li>
+<li><a href="../../Cluster_Lifecycle/cluster-api.html">Cluster API</a> —— 声明式集群生命周期与滚动升级</li>
+<li><a href="./flowschema.html">API Priority and Fairness：FlowSchema 与 PriorityLevelConfiguration</a> —— 升级引发的 list/watch 风暴与 API 过载保护</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../../docs/Cloud_Native/Kubernetes/Control_Plane/2_kubernetes-api-server.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../../extensibility.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../../docs/Cloud_Native/Kubernetes/Control_Plane/2_kubernetes-api-server.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../../extensibility.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../../highlight-abc7f01d.js"></script>
+        <script src="../../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>
