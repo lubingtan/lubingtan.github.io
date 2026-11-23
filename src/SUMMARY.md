@@ -59,6 +59,7 @@
 # Machine Learning
 
 - [High Performance Computing]()
+  - [GPU 算力/显存池化：从 CUDA 单卡视角到跨节点透明调度](./docs/Machine_Learning/High_Performance_Computing/gpu-cluster-pooling.md)
   - [Open MPI 架构介绍](./docs/Machine_Learning/High_Performance_Computing/ompi架构介绍.md)
   - [Slurm: HPC 集群工作负载管理器](./docs/Machine_Learning/High_Performance_Computing/slurm.md)
 - [Inference]()

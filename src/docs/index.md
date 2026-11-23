@@ -70,6 +70,7 @@
 
 - [ompi架构介绍](./Machine_Learning/High_Performance_Computing/ompi架构介绍.md) — Open MPI 架构介绍
 - [Slurm](./Machine_Learning/High_Performance_Computing/slurm.md) — HPC 集群工作负载管理器：job/step 概念、job 生命周期、多因子优先级、保守回填、cons_tres 选择、抢占算法
+- [GPU 算力/显存池化：从 CUDA 单卡视角到跨节点透明调度](./Machine_Learning/High_Performance_Computing/gpu-cluster-pooling.md) — 六类「应用视角单卡」方案（UVM/VMM、MNNVL+IMEX+fabric memory、API remoting、显存池化/CXL、库内并行、编排层）、透明性光谱、横向对比矩阵与选型决策树
 
 ### Inference
 

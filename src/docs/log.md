@@ -1,5 +1,14 @@
 # Operation Log
 
+## [2026-11-23] query | CUDA 层跨节点 GPU 算力/显存池化方案调研
+
+回答「应用视角单卡、底层把算力和显存分散到集群 GPU」的可行方案，并归档为 HPC 专题页。
+
+- 新建 `gpu-cluster-pooling.md`：先把「单卡视角」拆成设备枚举/地址空间/容量语义/执行模型/故障域五个契约，指出 CUDA runtime 没有跨卡切分 grid 的 API；再按透明性光谱分六类：单机 UVM/VMM/EGM、机架级 MNNVL+IMEX+`CU_MEM_HANDLE_TYPE_FABRIC`+multicast、API remoting（rCUDA/GVirtuS/Bitfusion/Lupine）、显存池化（EMA/Memory Harvesting/VUGVA/CXL/Beluga）、库内并行（NCCL/NVSHMEM/cuBLASMp/TRT-LLM）、编排层（HAMi/MIG/DRA ComputeDomain/Slurm）。
+- 核心事实：GB200 NVL72 = 18 tray × (2 Grace + 4 Blackwell) = 72 GPU，13.4 TB HBM3e / 576 TB/s / 130 TB/s NVLink，默认单一 72 GPU NVLink Partition；IMEX 用 VA→PA→Fabric Address 映射跨 OS domain 共享显存，管理面 TCP/gRPC、数据面 NVLink，每 Pod 一个 `/dev/nvidia-caps-imex-channels/channelN`；CUDA 12.4 的 fabric handle 是该能力的公开 API。
+- 关键判断：透明的是地址空间/容量，不是算力；给出「透明性/性能/规模」不可能三角、横向对比矩阵、选型决策树，并交叉链接 HAMi/HAMi-core/Slurm/Open MPI。
+- 更新 `index.md`；`SUMMARY.md` 由 `make gen-summary` 重新生成。
+
 ## [2026-11-22] ingest | Kubernetes 网络全链路与多集群互联
 
 以本地源码/文档为主要证据，补齐 Kubernetes 网络专题。基线：`kubernetes@c50e5395`（v1.37.2）、`containerd@b7a25261`（v2.4.2）、CNI spec 1.1.0（`42e11794`）、CNI plugins（`0581b429`）、`coredns@996a30df`、`mcs-api@a3bfd21f`、`submariner@a920c26e`、`metallb@0db4a44c`、`gateway-api@d04e7458`；关键行号均用本地 checkout 核对，并用 `verify-links.py` 校验固定 commit 的 permalink。
