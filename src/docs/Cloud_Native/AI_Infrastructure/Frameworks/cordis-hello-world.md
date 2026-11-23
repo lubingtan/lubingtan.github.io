@@ -191,5 +191,5 @@ await main()
 ## 相关页面
 
 - [Cordis：时空可组合性元框架](./cordis.md) — 概念、架构、Fiber 状态机、HMR 引擎与选型理由
-- [kagent](./kagent.md) — 对比：K8s 声明式编排 vs Cordis 运行时动态组合
-- [Agent Substrate](./agent-substrate.md) / [Agent Sandbox](./agent-sandbox.md) — effect 化资源管理之外的沙箱隔离路线
+- [kagent](../Agents/kagent.md) — 对比：K8s 声明式编排 vs Cordis 运行时动态组合
+- [Agent Substrate](../Agents/agent-substrate.md) / [Agent Sandbox](../Agents/agent-sandbox.md) — effect 化资源管理之外的沙箱隔离路线

@@ -7,7 +7,7 @@
 - **Pod 网络与 CNI 的实现**（netns、veth、bridge、IPAM、overlay、MTU）→ [CNI 详解](./cni详解.md)
 - **Service/kube-proxy/LoadBalancer 的规则生成**（EndpointSlice、iptables/IPVS/nftables、ETP、MetalLB）→ [Service、kube-proxy 与 LoadBalancer](./6_service相关.md)
 - **跨集群发现、访问、成员地址与 NAT 穿透**（MCS、Submariner、ClusterMesh）→ [多集群网络互联](./multicluster-networking.md)
-- 控制面/数据面故障的处置流程 → [控制面事故处理手册](./控制面事故处理手册.md)；控制面全挂时数据面还能做什么 → [控制面高可用方案](./控制面高可用方案.md)
+- 控制面/数据面故障的处置流程 → [控制面事故处理手册](../Control_Plane/控制面事故处理手册.md)；控制面全挂时数据面还能做什么 → [控制面高可用方案](../Control_Plane/控制面高可用方案.md)
 
 **版本基线**（正文中的行为、默认值、源码行号都固定到这些版本）：
 

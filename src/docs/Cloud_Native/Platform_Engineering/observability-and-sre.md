@@ -182,7 +182,7 @@ SLO 应该按**用户旅程**定义，而不是按组件定义。用户关心“
 4. **信号**：指标 → Trace → 日志 → Profile → 事件；
 5. **假设与验证**：每次只验证一个假设，记录证据。
 
-Kubernetes 控制面的事故排查可以参考 [Kubernetes 控制面事故处理手册](../Kubernetes/控制面事故处理手册.md)，里面有症状→层的决策树与分场景 runbook。
+Kubernetes 控制面的事故排查可以参考 [Kubernetes 控制面事故处理手册](../Kubernetes/Control_Plane/控制面事故处理手册.md)，里面有症状→层的决策树与分场景 runbook。
 
 ### 6.2 事故管理
 
@@ -230,7 +230,7 @@ AI 可以加速：告警分诊、日志聚类、变更关联、RCA 假设生成�
 
 - 明确 RTO/RPO，按业务分级；
 - 备份要验证可恢复，定期做 restore drill；
-- Kubernetes 控制面灾备参考 [控制面灾备与恢复](../Kubernetes/控制面灾备与恢复.md)；
+- Kubernetes 控制面灾备参考 [控制面灾备与恢复](../Kubernetes/Control_Plane/控制面灾备与恢复.md)；
 - 多可用区/多地域的切换要有明确的决策权与流量切换流程；
 - 恢复后要核对数据一致性，而不只是“进程起来了”。
 
@@ -251,7 +251,7 @@ AI 可以加速：告警分诊、日志聚类、变更关联、RCA 假设生成�
 
 覆盖范围：
 
-- Kubernetes API 审计（[RBAC](../Kubernetes/rbac.md) 相关变更尤其重要）；
+- Kubernetes API 审计（[RBAC](../Kubernetes/Fundamentals/rbac.md) 相关变更尤其重要）；
 - 云控制面审计（IAM、网络、数据库）；
 - CI/CD 审计（谁触发了什么流水线、改了什么配置）；
 - Agent 审计（身份、输入、工具调用、输出、成本）；
@@ -300,10 +300,10 @@ AI 可以加速：告警分诊、日志聚类、变更关联、RCA 假设生成�
 - [平台工程：把工程能力变成可复用的产品](./platform-as-a-product.md)
 - [CI/CD 与自动化质量保障](./ci-cd-quality-gates.md)
 - [环境即服务](./environment-as-a-service.md)
-- [Kubernetes 控制面高可用方案](../Kubernetes/控制面高可用方案.md)
-- [Kubernetes 控制面灾备与恢复](../Kubernetes/控制面灾备与恢复.md)
-- [Kubernetes 控制面事故处理手册](../Kubernetes/控制面事故处理手册.md)
-- [RBAC](../Kubernetes/rbac.md)
+- [Kubernetes 控制面高可用方案](../Kubernetes/Control_Plane/控制面高可用方案.md)
+- [Kubernetes 控制面灾备与恢复](../Kubernetes/Control_Plane/控制面灾备与恢复.md)
+- [Kubernetes 控制面事故处理手册](../Kubernetes/Control_Plane/控制面事故处理手册.md)
+- [RBAC](../Kubernetes/Fundamentals/rbac.md)
 - [OpenTelemetry GenAI Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/)
 - [Google SRE: SLO / Error Budget](https://sre.google/workbook/implementing-slos/)
 - [incident.io: What is AI SRE](https://incident.io/blog/what-is-ai-sre-complete-guide-2026)

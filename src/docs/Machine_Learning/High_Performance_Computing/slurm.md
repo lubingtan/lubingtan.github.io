@@ -117,7 +117,7 @@ Slurm 通过 **Linux cgroups**（v1 或 v2）限制进程资源，有专门的�
 
 ### 与 Kueue 的对比
 
-Slurm 和 [Kueue](../../Cloud_Native/Kubernetes/kueue.md) 都是作业级调度器，但设计哲学不同：
+Slurm 和 [Kueue](../../Cloud_Native/Kubernetes/Scheduling/kueue.md) 都是作业级调度器，但设计哲学不同：
 
 | | Slurm | Kueue |
 |---|---|---|

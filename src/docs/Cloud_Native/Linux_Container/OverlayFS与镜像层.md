@@ -562,4 +562,4 @@ stat -c '%i %d %n' /tmp/ovl/merged/file   # 同 fs 时 st_ino 通常保持不变
 - [容器知识备忘录](./容器知识备忘录.md) —— UnionFS 概念入门
 - [镜像快照器snapshotter](./镜像快照器snapshotter.md) —— snapshotter 插件协议与实现
 - [镜像懒加载](./镜像懒加载.md) —— stargz/nydus 等 lazy pulling
-- [容器运行时全链路](../Kubernetes/容器运行时.md) —— OCI/CRI/containerd/shim 全景
+- [容器运行时全链路](../Kubernetes/Node_Runtime/容器运行时.md) —— OCI/CRI/containerd/shim 全景

@@ -705,6 +705,6 @@ histogram_quantile(0.99, sum by (operation) (rate(etcd_request_duration_seconds_
 - [Kubernetes 控制面事故处理手册](./控制面事故处理手册.md) —— 429、webhook、证书、etcd 慢、apiserver 延迟升高的现场 runbook。
 - [Kubernetes 控制面灾备与恢复](./控制面灾备与恢复.md) —— etcd 快照/恢复、quorum 丢失，以及 apiserver 重建 cache 的代价。
 - [API Priority and Fairness / FlowSchema](./flowschema.md) —— APF 的分类、份额、排队与借还细节。
-- [client-go list & watch 原理](client-go-list-watch.md) —— 客户端如何 LIST/WATCH、relist 与 resourceVersion。
-- [RBAC](./rbac.md) —— 授权模型与证书签发。
+- [client-go list & watch 原理](../Extensibility/client-go-list-watch.md) —— 客户端如何 LIST/WATCH、relist 与 resourceVersion。
+- [RBAC](../Fundamentals/rbac.md) —— 授权模型与证书签发。
 - [大规模多集群 K8s 版本升级](./大规模多集群版本升级.md) —— 升级窗口、版本 skew 与 API 生命周期。

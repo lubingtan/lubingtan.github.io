@@ -379,7 +379,7 @@ mounts, err := s.Mounts(ctx, r.SnapshotKey)
 request.Rootfs = append(request.Rootfs, &types.Mount{Type: m.Type, Source: m.Source, Target: m.Target, Options: m.Options})
 ```
 
-shim 收到后建好 bundle 的 `rootfs/` 目录，用 `mount.All(mounts, rootfs)` 把 snapshotter 给的参数真正挂上，再交给 runc 执行 `pivot_root` 之类操作（[cmd/containerd-shim-runc-v2/runc/container.go#L65-L120](https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/cmd/containerd-shim-runc-v2/runc/container.go#L65-L120)）。挂载点、shim、runc 的协作见 [容器运行时](../Kubernetes/容器运行时.md)。容器退出后，CRI 删除容器时带 `WithSnapshotCleanup`（[container_remove.go#L100-L110](https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/container_remove.go#L100-L110)），最终落到 `sn.Remove(containerID)`，只删容器自己的 upperdir。
+shim 收到后建好 bundle 的 `rootfs/` 目录，用 `mount.All(mounts, rootfs)` 把 snapshotter 给的参数真正挂上，再交给 runc 执行 `pivot_root` 之类操作（[cmd/containerd-shim-runc-v2/runc/container.go#L65-L120](https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/cmd/containerd-shim-runc-v2/runc/container.go#L65-L120)）。挂载点、shim、runc 的协作见 [容器运行时](../Kubernetes/Node_Runtime/容器运行时.md)。容器退出后，CRI 删除容器时带 `WithSnapshotCleanup`（[container_remove.go#L100-L110](https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/internal/cri/server/container_remove.go#L100-L110)），最终落到 `sn.Remove(containerID)`，只删容器自己的 upperdir。
 
 ### 5.5 View 的实际用途
 
@@ -536,4 +536,4 @@ du -sh /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/<ID>
 - [OverlayFS 与镜像层](./OverlayFS与镜像层.md)：whiteout/opaque、lower/upper 合并的内核机制
 - [镜像懒加载](./镜像懒加载.md)：stargz/nydus/overlaybd 等远程快照器
 - [容器知识备忘录](./容器知识备忘录.md)：UnionFS/CoW 的入门直觉
-- [容器运行时全链路](../Kubernetes/容器运行时.md)：CRI、containerd、shim、runc 的分工
+- [容器运行时全链路](../Kubernetes/Node_Runtime/容器运行时.md)：CRI、containerd、shim、runc 的分工

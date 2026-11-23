@@ -277,4 +277,4 @@ do {
 
 - [HAMi-core 仓库](https://github.com/Project-HAMi/HAMi-core)（本地 `.repos/hami/libvgpu`）· [README](https://github.com/Project-HAMi/HAMi-core/blob/main/README.md)
 - [官方文档：GPU 虚拟化原理](https://project-hami.io/docs/core-concepts/gpu-virtualization)
-- 相关：[HAMi 项目总览](./hami.md) · [kube-scheduler 源码分析](../Kubernetes/4_kube-scheduler源码分析.md)
+- 相关：[HAMi 项目总览](./hami.md) · [kube-scheduler 源码分析](../../Kubernetes/Scheduling/4_kube-scheduler源码分析.md)

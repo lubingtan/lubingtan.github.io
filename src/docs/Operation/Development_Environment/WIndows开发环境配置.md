@@ -86,7 +86,7 @@ hostAddressLoopback=true
 
 找到wsl文件系统路径，应该是ext4.vhdx这个文件
 
-![img](./WIndows开发环境配置.assets\image.png)
+![img](./WIndows开发环境配置.assets/image.png)
 
 然后执行 diskpart 命令，之后会进入一个命令行操作界面，一次执行以下命令
 

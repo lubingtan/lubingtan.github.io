@@ -1723,7 +1723,7 @@ client-go 默认 `QPS=5`、`Burst=10`（[config.go:48-49](https://github.com/kub
 - 监控 `apiserver_request_total`、`apiserver_request_duration_seconds`、`apiserver_flowcontrol_rejected_requests_total`；
 - 大集群控制面要关注 watch cache 内存和 `apiserver_cache_*` 指标。
 
-APF 的机制见本 wiki 的 [API Priority and Fairness：FlowSchema 与 PriorityLevelConfiguration](./flowschema.md)。
+APF 的机制见本 wiki 的 [API Priority and Fairness：FlowSchema 与 PriorityLevelConfiguration](../Control_Plane/flowschema.md)。
 
 ### 10.7 热循环与重试风暴
 
@@ -2113,10 +2113,10 @@ controller-runtime 的指标名见 [metrics.go:28-95](https://github.com/kuberne
 ### 本 wiki 相关页面
 
 - [client-go list & watch 原理](client-go-list-watch.md)：Reflector、watch cache、apiserver watch 的源码级分析
-- [Kubernetes API Server](./2_kubernetes-api-server.md)：kube-apiserver 的认证、TLS 与架构
-- [API Priority and Fairness：FlowSchema 与 PriorityLevelConfiguration](./flowschema.md)：控制器请求的限流与隔离
-- [Kubernetes 控制面高可用方案](./控制面高可用方案.md)：apiserver/etcd/选主的 HA 基础
-- [大规模多集群 Kubernetes 版本升级](./大规模多集群版本升级.md)：集群版本升级与 Operator 升级的边界
-- [Cluster API](../Cluster_Lifecycle/cluster-api.md)：大规模生产 Operator 的参考实现
-- [Kueue](./kueue.md)：Kubernetes 原生作业队列管理器，另一个 controller-runtime 生产案例
-- [容器运行时](./容器运行时.md)：Operator 管理的 Operand 最终如何落到运行时
+- [Kubernetes API Server](../Control_Plane/2_kubernetes-api-server.md)：kube-apiserver 的认证、TLS 与架构
+- [API Priority and Fairness：FlowSchema 与 PriorityLevelConfiguration](../Control_Plane/flowschema.md)：控制器请求的限流与隔离
+- [Kubernetes 控制面高可用方案](../Control_Plane/控制面高可用方案.md)：apiserver/etcd/选主的 HA 基础
+- [大规模多集群 Kubernetes 版本升级](../Control_Plane/大规模多集群版本升级.md)：集群版本升级与 Operator 升级的边界
+- [Cluster API](../../Cluster_Lifecycle/cluster-api.md)：大规模生产 Operator 的参考实现
+- [Kueue](../Scheduling/kueue.md)：Kubernetes 原生作业队列管理器，另一个 controller-runtime 生产案例
+- [容器运行时](../Node_Runtime/容器运行时.md)：Operator 管理的 Operand 最终如何落到运行时

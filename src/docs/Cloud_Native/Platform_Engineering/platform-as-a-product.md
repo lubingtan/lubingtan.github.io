@@ -46,7 +46,7 @@ AI 应用不是“多了一个模型调用”，它引入了一组新的工程�
 | Agent 运行时 | 工具调用、沙箱、长任务 | 隔离、超时、预算、人工审批、审计 |
 | 工具/MCP 注册 | 工具发现、权限、供应链 | 签名、allowlist、scope、版本 |
 | Guardrail | 内容安全、PII、越权 | 策略即代码、命中记录、可解释 |
-| 算力 | GPU 共享、队列、配额 | 与 [Kueue](../Kubernetes/kueue.md)、[HAMi](../AI_Infrastructure/hami.md) 集成 |
+| 算力 | GPU 共享、队列、配额 | 与 [Kueue](../Kubernetes/Scheduling/kueue.md)、[HAMi](../AI_Infrastructure/Accelerators/hami.md) 集成 |
 
 AI 能力的平台化有一个常见误区：为每个团队单独搭一套“模型调用服务”。更合理的做法是提供**共享的模型网关 + 评测基线 + 成本看板**，把差异化留给应用层。
 
@@ -201,7 +201,7 @@ Agent 接入平台后，攻击面从“人点错按钮”扩展到“模型被�
 - [可观测性与稳定性](./observability-and-sre.md)
 - [平台落地：协作、规范与效果评估](./platform-adoption.md)
 - [DevOps 理念与实践](./devops-thinking.md)
-- [Agent Sandbox](../AI_Infrastructure/agent-sandbox.md) / [kagent](../AI_Infrastructure/kagent.md)
+- [Agent Sandbox](../AI_Infrastructure/Agents/agent-sandbox.md) / [kagent](../AI_Infrastructure/Agents/kagent.md)
 - [CNCF Platforms White Paper](https://cloudnativeplatforms.com/whitepapers/platforms/)
 - [Team Topologies](https://teamtopologies.com/)
 - [Backstage](https://backstage.io/) / [Port](https://www.port.io/)

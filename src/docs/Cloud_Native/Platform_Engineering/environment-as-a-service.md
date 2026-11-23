@@ -163,8 +163,8 @@ spec:
 ### 6.4 容量与调度
 
 - 为不同负载设置节点池/优先级：在线服务、批处理、GPU、构建；
-- 批处理与 AI 训练用队列与配额管理（[Kueue](../Kubernetes/kueue.md)），避免挤占在线服务；
-- GPU 共享/隔离用 [HAMi](../AI_Infrastructure/hami.md) 等方案，按显存/算力切分；
+- 批处理与 AI 训练用队列与配额管理（[Kueue](../Kubernetes/Scheduling/kueue.md)），避免挤占在线服务；
+- GPU 共享/隔离用 [HAMi](../AI_Infrastructure/Accelerators/hami.md) 等方案，按显存/算力切分；
 - 预留容量与抢占策略要明确：谁能抢占谁、抢占后如何通知；
 - 集群生命周期用 [Cluster API](../Cluster_Lifecycle/cluster-api.md) 管理，环境集群与业务集群分开治理。
 
@@ -212,9 +212,9 @@ spec:
 - [Agent 时代的 DevOps](./agent-era-devops.md)
 - [平台工程：把工程能力变成可复用的产品](./platform-as-a-product.md)
 - [CI/CD 与自动化质量保障](./ci-cd-quality-gates.md)
-- [Kueue：Kubernetes 原生作业队列管理器](../Kubernetes/kueue.md)
-- [HAMi：Kubernetes 异构 AI 算力虚拟化与调度](../AI_Infrastructure/hami.md)
+- [Kueue：Kubernetes 原生作业队列管理器](../Kubernetes/Scheduling/kueue.md)
+- [HAMi：Kubernetes 异构 AI 算力虚拟化与调度](../AI_Infrastructure/Accelerators/hami.md)
 - [Cluster API：声明式集群生命周期管理](../Cluster_Lifecycle/cluster-api.md)
-- [Agent Sandbox](../AI_Infrastructure/agent-sandbox.md)
+- [Agent Sandbox](../AI_Infrastructure/Agents/agent-sandbox.md)
 - [Crossplane](https://www.crossplane.io/) / [vCluster](https://www.vcluster.com/) / [KubeVela](https://kubevela.io/)
 - [Karpenter](https://karpenter.sh/) / [OpenCost](https://opencost.io/)

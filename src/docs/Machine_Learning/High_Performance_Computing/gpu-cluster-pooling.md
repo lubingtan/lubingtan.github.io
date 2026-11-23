@@ -779,7 +779,7 @@ cuDeviceGetAttribute(&v, CU_DEVICE_ATTRIBUTE_VIRTUAL_MEMORY_MANAGEMENT_SUPPORTED
 
 ## 相关页面
 
-- [HAMi：Kubernetes 异构 AI 算力虚拟化与调度](../../Cloud_Native/AI_Infrastructure/hami.md)
-- [HAMi-core：容器内 CUDA 劫持与资源隔离](../../Cloud_Native/AI_Infrastructure/hami-core.md)
+- [HAMi：Kubernetes 异构 AI 算力虚拟化与调度](../../Cloud_Native/AI_Infrastructure/Accelerators/hami.md)
+- [HAMi-core：容器内 CUDA 劫持与资源隔离](../../Cloud_Native/AI_Infrastructure/Accelerators/hami-core.md)
 - [Slurm](./slurm.md)
 - [Open MPI 架构](./ompi架构介绍.md)

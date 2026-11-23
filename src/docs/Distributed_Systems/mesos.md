@@ -158,7 +158,7 @@ Stage 2 — 尽最大努力分配:
 
 ## 与 Kueue、Slurm 对比
 
-| | Mesos | [Slurm](../Machine_Learning/High_Performance_Computing/slurm.md) | [Kueue](../Cloud_Native/Kubernetes/kueue.md) |
+| | Mesos | [Slurm](../Machine_Learning/High_Performance_Computing/slurm.md) | [Kueue](../Cloud_Native/Kubernetes/Scheduling/kueue.md) |
 |---|---|---|---|
 | **调度模型** | 两级（Master→框架） | 单体（slurmctld） | 两级（K8s→Kueue） |
 | **运行环境** | 裸金属/云 VM | HPC 集群 | Kubernetes |

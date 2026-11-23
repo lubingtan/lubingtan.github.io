@@ -455,5 +455,5 @@ Framework接口的定义位于`pkg/scheduler/framework/interface.go`
 
 典型配置字段：`urlPrefix`、`filterVerb`、`prioritizeVerb`、`bindVerb`、`nodeCacheCapable`、`httpTimeout`、`weight`、`managedResources`。Extender 是**进程外扩展**，因此排队、缓存与超时都由自己负责；`httpTimeout` 必须覆盖内部重试时间。
 
-一个有意思的工程实践是 [HAMi](../AI_Infrastructure/hami.md)：它在 `/filter` 中自己完成设备级 `Fit` 与节点打分，然后**只返回一个节点名**，相当于把选点决策提前到 Filter（因为标准调度器只认识整数卡数，看不到显存/算力/GPU 拓扑）；`/bind` 则负责加节点锁、写入设备分配注解并完成 Binding。这也是 extender 模式「用 Filter 做选择」的典型变体。
+一个有意思的工程实践是 [HAMi](../../AI_Infrastructure/Accelerators/hami.md)：它在 `/filter` 中自己完成设备级 `Fit` 与节点打分，然后**只返回一个节点名**，相当于把选点决策提前到 Filter（因为标准调度器只认识整数卡数，看不到显存/算力/GPU 拓扑）；`/bind` 则负责加节点锁、写入设备分配注解并完成 Binding。这也是 extender 模式「用 Filter 做选择」的典型变体。
 

@@ -4,10 +4,10 @@
 
 [Kueue](https://github.com/kubernetes-sigs/kueue)（发音 "cue-ay"）是一个 Kubernetes 原生的**作业队列管理器**，属于 `kubernetes-sigs` 组织。它作为作业级别的资源管理者，决定：
 
-- 作业**何时被允许启动**（即 [Pod](../Kubernetes/1-1_k8s工作负载.md) 何时被创建），基于可用配额
+- 作业**何时被允许启动**（即 [Pod](../Fundamentals/1-1_k8s工作负载.md) 何时被创建），基于可用配额
 - 作业**何时应停止**（即活跃 Pod 何时被删除）
 
-Kueue 在标准 Kubernetes 调度之上提供公平共享、抢占和多租户资源管理能力，与 [kube-scheduler](../Kubernetes/4_kube-scheduler源码分析.md) 互补：scheduler 负责 Pod 的节点放置，Kueue 负责作业的准入控制与排队。
+Kueue 在标准 Kubernetes 调度之上提供公平共享、抢占和多租户资源管理能力，与 [kube-scheduler](4_kube-scheduler源码分析.md) 互补：scheduler 负责 Pod 的节点放置，Kueue 负责作业的准入控制与排队。
 
 ## 核心概念
 
@@ -92,7 +92,7 @@ Kueue 负责「作业级准入 + 队列配额」，HAMi 负责「Pod 级设备�
 - 通过 Kueue 的 **ResourceTransformation** 把 HAMi 的资源（如 `nvidia.com/gpumem`、`nvidia.com/gpucores`）映射成 Kueue 可配额的名义资源，从而在 ClusterQueue 里对「显存份额」做队列级配额与借用；
 - 作业被 Kueue 准入后，Pod 仍由 HAMi 调度器（extender）完成 GPU 设备选择与绑定，Kueue 不关心具体落在哪张卡。
 
-这与 Kueue + Volcano 的分工类似：队列层只决定「能不能开始」，设备层决定「用哪张卡、切多少」。详见 [HAMi](../AI_Infrastructure/hami.md)。
+这与 Kueue + Volcano 的分工类似：队列层只决定「能不能开始」，设备层决定「用哪张卡、切多少」。详见 [HAMi](../../AI_Infrastructure/Accelerators/hami.md)。
 
 ## 参考
 

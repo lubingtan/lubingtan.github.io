@@ -83,6 +83,6 @@ Sandbox沙箱是一种程序的隔离运行机制，其目的是限制不可信�
 ## 延伸阅读
 
 - [容器运行时全链路：OCI、CRI、containerd、shim 与 RuntimeClass](./容器运行时.md) —— 本文只讲到 `containerRuntime.SyncPod` 这一层；CRI 的 gRPC 接口定义、containerd 如何把 CRI 请求翻译成 OCI spec、shim 如何持有容器进程、RuntimeClass 的 handler 如何一路传到运行时，见该页。
-- [控制面高可用方案](./控制面高可用方案.md) —— 控制面全部不可用时 kubelet 为什么还能维持存量 Pod（static pod 的文件来源、node lease 与 NotReady 时序），见该页的失效域矩阵。
-- [控制面事故处理手册](./控制面事故处理手册.md) —— kubelet 证书过期、节点 NotReady、磁盘压力等现场处置（R6/R10）。
-- [CNI 详解](./cni详解.md) —— 本文的 `createPodSandbox` 讲到 CRI 为止；netns 由 containerd 创建、CNI 插件如何被调用、veth/bridge/路由/NAT 实际发生在哪，见该页。
+- [控制面高可用方案](../Control_Plane/控制面高可用方案.md) —— 控制面全部不可用时 kubelet 为什么还能维持存量 Pod（static pod 的文件来源、node lease 与 NotReady 时序），见该页的失效域矩阵。
+- [控制面事故处理手册](../Control_Plane/控制面事故处理手册.md) —— kubelet 证书过期、节点 NotReady、磁盘压力等现场处置（R6/R10）。
+- [CNI 详解](../Networking/cni详解.md) —— 本文的 `createPodSandbox` 讲到 CRI 为止；netns 由 containerd 创建、CNI 插件如何被调用、veth/bridge/路由/NAT 实际发生在哪，见该页。

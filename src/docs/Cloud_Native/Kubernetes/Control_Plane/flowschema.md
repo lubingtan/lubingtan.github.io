@@ -362,6 +362,6 @@ apiserver_flowcontrol_nominal_limit_seats{priority_level="ci-batch"}
 ## 本 wiki 相关页面
 
 - [Kubernetes API Server](./2_kubernetes-api-server.md)
-- [client-go list & watch 原理](client-go-list-watch.md)
-- [Kubelet 原理](./kubelet原理.md)
-- [RBAC](./rbac.md)
+- [client-go list & watch 原理](../Extensibility/client-go-list-watch.md)
+- [Kubelet 原理](../Node_Runtime/kubelet原理.md)
+- [RBAC](../Fundamentals/rbac.md)

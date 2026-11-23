@@ -478,5 +478,5 @@ spec:
 - [Cluster API 官方文档](https://cluster-api.sigs.k8s.io)
 - [Provider 实现列表](https://cluster-api.sigs.k8s.io/reference/providers)
 - [CAPI 开发者文档：Providers](https://cluster-api.sigs.k8s.io/developer/providers/overview)
-- [控制面灾备与恢复](../Kubernetes/控制面灾备与恢复.md) —— 管理集群的 `clusterctl move`（pivot/迁移）与"它不是 backup/restore"的边界，见该页 §6.3。
-- [控制面高可用方案](../Kubernetes/控制面高可用方案.md) —— hosted control plane 与 Cluster API ControlPlane provider 在控制面 HA 中的位置。
+- [控制面灾备与恢复](../Kubernetes/Control_Plane/控制面灾备与恢复.md) —— 管理集群的 `clusterctl move`（pivot/迁移）与"它不是 backup/restore"的边界，见该页 §6.3。
+- [控制面高可用方案](../Kubernetes/Control_Plane/控制面高可用方案.md) —— hosted control plane 与 Cluster API ControlPlane provider 在控制面 HA 中的位置。

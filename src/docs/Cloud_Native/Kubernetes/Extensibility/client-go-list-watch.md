@@ -648,7 +648,7 @@ _, err := watchtools.UntilWithSync(ctx, lw, &corev1.Pod{}, nil,
 ### 本 wiki 相关页面
 
 - [生产级 Kubernetes Operator](./production-operator.md)：从 CRD 到 Reconcile/升级的完整链路，§5 讲 workqueue，§4 讲 List/Watch 的生产语义
-- [kube-apiserver：原理、生产故障与参数调优](./2_kubernetes-api-server.md)：API Server 内部结构、watch cache、etcd 与参数调优
-- [API Priority and Fairness：FlowSchema 与 PriorityLevelConfiguration](./flowschema.md)：watch/list 过载时的限流与隔离
-- [Kubernetes 控制面高可用方案](./控制面高可用方案.md)：多 apiserver、VIP/LB 与选主
-- [Kubernetes 控制面事故处理手册](./控制面事故处理手册.md)：watch/list 重连风暴、429 与 etcd 压力处置
+- [kube-apiserver：原理、生产故障与参数调优](../Control_Plane/2_kubernetes-api-server.md)：API Server 内部结构、watch cache、etcd 与参数调优
+- [API Priority and Fairness：FlowSchema 与 PriorityLevelConfiguration](../Control_Plane/flowschema.md)：watch/list 过载时的限流与隔离
+- [Kubernetes 控制面高可用方案](../Control_Plane/控制面高可用方案.md)：多 apiserver、VIP/LB 与选主
+- [Kubernetes 控制面事故处理手册](../Control_Plane/控制面事故处理手册.md)：watch/list 重连风暴、429 与 etcd 压力处置

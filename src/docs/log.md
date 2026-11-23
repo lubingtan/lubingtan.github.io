@@ -1,5 +1,37 @@
 # Operation Log
 
+## [2026-11-23] update | Kubernetes / AI Infrastructure 目录归类
+
+把两个平铺的专题目录按职责收成子目录，保持「先选领域、再选主题」的两级导航：
+
+- `Cloud_Native/Kubernetes/` → `Fundamentals/`（概念、工作负载、RBAC）、`Control_Plane/`（apiserver、APF、HA、DR、事故、升级）、`Node_Runtime/`（kubelet、PLEG、容器运行时）、`Scheduling/`（scheduler、Kueue）、`Networking/`（网络全链路、Service、CNI、多集群）、`Extensibility/`（client-go、Operator），共 20 页。
+- `Cloud_Native/AI_Infrastructure/` → `Agents/`（Agent Sandbox/Substrate、kagent）、`Frameworks/`（Cordis、Hello World）、`Accelerators/`（HAMi、HAMi-core）、`Distributed_Training/`（5 页），共 12 页。
+- 页面绑定的 `.assets` 目录随页面一起移动；自动重写 135 条跨目录相对链接（37 个文件），index 改为按子分区列出，`SUMMARY.md` 重新生成。
+- 顺手修复 3 个既有坏链：Model Mesh 的 `images/modelmesh` 相对路径、Windows 环境配置里带反斜杠的资源路径；补齐 `rbac.md` / `k8s之pleg.md` 缺失的 H1，使 TOC 显示 `RBAC` / `PLEG：Pod Lifecycle Event Generator`。
+- 验证：`make build` 通过；全站 411 条相对链接 0 缺失。
+
+
+## [2026-11-23] update | 训练编排专题按「平台 / 框架」拆分
+
+按页面职责把上一节新建的专题拆成两处，避免把「云原生编排」和「训练框架运行时」混在同一个分类里：
+
+- `Cloud_Native/AI_Infrastructure/Distributed_Training/`：`overview.md`、`workload-modeling.md`、`failure-self-healing.md`、`checkpoint-preemption.md`、`rl-post-training.md`，对应平台/编排/稳定性/业务接入。
+- `Machine_Learning/Distributed_Training/startup-communication.md`：rank、rendezvous、process group、NCCL 等框架运行时语义，留在 Machine Learning。
+- 更新跨目录相对链接（总纲、各页导航、Kubernetes/Slurm/Inference 引用），index 在 AI Infrastructure 下新增 `#### Distributed Training` 子分区，Machine Learning 下保留启动通信；`SUMMARY.md` 由 `make gen-summary` 重新生成。
+- 验证：`make build` 通过；相对链接 0 缺失；130 条 commit-pinned GitHub 证据链接仍全部对本地 checkout 校验通过。
+
+## [2026-11-23] update | 云原生分布式训练编排与稳定性专题
+
+以「三层 membership（编排/框架/通信）」为主线，新建 `Machine_Learning/Distributed_Training/` 专题 6 页，把工作负载建模、启动通信、故障自愈、Checkpoint/抢占恢复、RL 后训练串成一条链。证据来自本地 pinned checkout：Kubernetes v1.37.2（`c50e5395`）、Volcano `2006640e`、JobSet `32c9ea31`、LWS v1.0.0（`51d7d5ad`）、Kubeflow Trainer v2.4.0（`ae27d3fa`）、Training Operator v1.9.4（`4445c12a`）、MPI Operator v0.8.2（`a057ca52`）、Kueue `be7dc9d3`、PyTorch `02e06c70`、NCCL v2.32.6（`ad2d192c`）、verl `7b6c9cc0`、torchtitan `692c9bb5`；关键行号用本地源码核对，链接均为 commit-pinned permalink。研究稿见 `raw/RESEARCH-training-workload-modeling.md`、`raw/RESEARCH-training-startup-comm.md`、`raw/RESEARCH-training-failure-recovery.md`、`raw/RESEARCH-training-checkpoint.md`、`raw/RESEARCH-rl-post-training.md`。
+
+- 新建 `overview.md`：给出三层 membership 表、三种就绪/完成/角色、原语选择树、六个常见误区；明确「gang 只保证资源同时到位，不保证进程到齐/通信建好」。
+- 新建 `workload-modeling.md`：七维建模大表（角色/资源/依赖/就绪完成/服务暴露/卷/放置）、K8s Job/Volcano Job/JobSet/LWS/TrainJob/MPIJob 逐一对照与 YAML 骨架；补充 K8s 1.37 原生 Workload/PodGroup（`scheduling.k8s.io/v1beta1`，`GenericWorkload` beta 默认关闭）与 Job 的 alpha gang；指出 Volcano `minAvailable` 是调度门槛、`minSuccess` 是完成门槛，JobSet 默认 `successPolicy=All` 且 `Any` 会提前删除运行中子 Job。
+- 新建 `startup-communication.md`：torchrun 参数/agent/rendezvous/`init_process_group`/NCCL comm init 的代码级时序；quorum（min/max + last_call 30s）、keep-alive 15s、PG 默认 30min/NCCL 10min、`_store_based_barrier` 默认关闭、`env://` 不能 re-rendezvous；TF_CONFIG/MWMS 的 chief/worker/ps 与 RING/NCCL；MPIJob 的 launcher/worker/hostfile/静态 `MPI_COMM_WORLD`；10 个启动失败窗口。
+- 新建 `failure-self-healing.md`：故障分层与信号、首发 vs 连锁（NCCL 的 `remote process exited or there was a network error` 是二义性错误，所有 rank 同时 timeout 通常是单点退出的连锁）、torchrun/JobSet/LWS/Volcano/Training Operator/MPIJob/K8s Job 的恢复单元对照、L0–L5 失败预算模型与 8 类配置漏洞、12 行故障决策表与真实错误签名。
+- 新建 `checkpoint-preemption.md`：六元组恢复点、12 项状态清单、DCP 的 `.metadata` 提交点/无 checksum/`weights_only` 保护不了 metadata、FSDP1 的 0/1 shard 断言、torchtitan 的 interval/keep_latest_k/异步/自动选点/`strict=False`、进度损失 `T_step·I/2`/最坏 `2I`/`I*=sqrt(2MC)`、跨 DP 度恢复与 dataloader 硬约束、K8s 三条终止路径（抢占 30s/API eviction/节点压力 1s）与 SIGTERM checkpoint 的不可行性、7 步恢复 runbook；指出 JobSet `volumeClaimPolicies` 默认 `Delete` 会删 checkpoint 卷。
+- 新建 `rl-post-training.md`：actor/rollout/ref/critic/reward/eval 六角色与 sync-colocated/async-disaggregated 两拓扑、verl V1 的 trainer 模式/资源池/fused worker/九段 step/三条 weight sync/单飞提交、staleness 按版本数（默认 8）、rollout ratio 三层、失败域表（仅 reward 与离线 eval 可局部重启）、eval vs reward、四必答问题与平台能力沉淀决策表。
+- 更新 `index.md` 新增 Distributed Training 分区；`SUMMARY.md` 由 `make gen-summary` 重新生成。
+
 ## [2026-11-23] query | CUDA 层跨节点 GPU 算力/显存池化方案调研
 
 回答「应用视角单卡、底层把算力和显存分散到集群 GPU」的可行方案，并归档为 HPC 专题页。

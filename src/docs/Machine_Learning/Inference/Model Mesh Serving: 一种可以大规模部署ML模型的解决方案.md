@@ -66,11 +66,11 @@ Model Mesh Serving 包含的组件
 
 
 
-![0.2.0-highlevel.png](../images/modelmesh/0.2.0-highlevel.png)
+![0.2.0-highlevel.png](../../images/modelmesh/0.2.0-highlevel.png)
 
 
 
-![rt-builtin.png](../images/modelmesh/rt-builtin.png)
+![rt-builtin.png](../../images/modelmesh/rt-builtin.png)
 
 
 

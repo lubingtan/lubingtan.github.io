@@ -187,9 +187,9 @@ kubectl apply -f examples/nvidia/default_use.yaml
 
 | 项目 | 集成方式 |
 |---|---|
-| vLLM | 以显存上限运行推理，多个模型共享同一张卡（见 [vLLM Production Stack 实战](../../Machine_Learning/Inference/vLLM%20Production%20Stack实战.md)） |
+| vLLM | 以显存上限运行推理，多个模型共享同一张卡（见 [vLLM Production Stack 实战](../../../Machine_Learning/Inference/vLLM%20Production%20Stack实战.md)） |
 | Volcano | gang 调度 + 队列/多级优先级；Volcano 也有自己的 vGPU device plugin，二者择一 |
-| Kueue | 作业级准入与配额；通过 ResourceTransformation 把 HAMi 资源暴露给 Kueue（见 [Kueue](../../Cloud_Native/Kubernetes/kueue.md)） |
+| Kueue | 作业级准入与配额；通过 ResourceTransformation 把 HAMi 资源暴露给 Kueue（见 [Kueue](../../Kubernetes/Scheduling/kueue.md)） |
 | Prometheus / Grafana | 容器级显存与算力指标、调度器分配指标 |
 | NVIDIA GPU Operator | 驱动/Toolkit 由 Operator 管，调度与切分由 HAMi 管 |
 | HAMi-DRA | 基于 Kubernetes DRA 的过渡实现，独立 chart 发布 |
@@ -236,5 +236,5 @@ kubectl apply -f examples/nvidia/default_use.yaml
 - [HAMi 仓库](https://github.com/Project-HAMi/HAMi) · [HAMi-core](https://github.com/Project-HAMi/HAMi-core)
 - [官方文档](https://project-hami.io/docs/) · [v2.10.0 发布说明](https://project-hami.io/zh/blog/hami-v2-10-0-release)
 - [CNCF 晋升公告](https://www.cncf.io/blog/2026/07/15/hami-becomes-a-cncf-incubating-project/)
-- 相关：kube-scheduler 的 [Scheduler Extender](../Kubernetes/4_kube-scheduler源码分析.md#scheduler-extender扩展点)、[Kueue](../Kubernetes/kueue.md)、[HAMi-core](./hami-core.md)
-- 延伸：单卡切分之外的跨节点方案见 [GPU 算力/显存池化：从 CUDA 单卡视角到跨节点透明调度](../../Machine_Learning/High_Performance_Computing/gpu-cluster-pooling.md)
+- 相关：kube-scheduler 的 [Scheduler Extender](../../Kubernetes/Scheduling/4_kube-scheduler源码分析.md#scheduler-extender扩展点)、[Kueue](../../Kubernetes/Scheduling/kueue.md)、[HAMi-core](./hami-core.md)
+- 延伸：单卡切分之外的跨节点方案见 [GPU 算力/显存池化：从 CUDA 单卡视角到跨节点透明调度](../../../Machine_Learning/High_Performance_Computing/gpu-cluster-pooling.md)

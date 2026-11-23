@@ -292,7 +292,7 @@ kubectl ate resume actor <name> -a <atespace>        # 或等下一次请求经 
 
 **一个 worker 多个 actor**：`ateworker --max-actors` 默认 1000；每个 actor 有独立 cgroup、netns、sandbox；Worker 记录 `capacity/allocated`。旧页面"同持仅承载一个 actor"已作废。
 
-> 这里两种沙箱后端（gVisor 用户态内核 vs Kata + Cloud Hypervisor microVM）的隔离原理、启动/内存开销与选型依据，见 [沙箱与虚拟化技术全景](../Virtualization/沙箱与虚拟化技术全景.md)。
+> 这里两种沙箱后端（gVisor 用户态内核 vs Kata + Cloud Hypervisor microVM）的隔离原理、启动/内存开销与选型依据，见 [沙箱与虚拟化技术全景](../../Virtualization/沙箱与虚拟化技术全景.md)。
 
 **绕过 K8s 容器栈（设计未变）**：worker Pod 本身是标准 K8s Pod（runc/containerd 启动，无 `runtimeClassName`）；`ateworker` 在 Pod 内直接 exec `runsc`/Cloud Hypervisor，沙箱完全绕过 kubelet→CRI→containerd→runc 链条。区别是二进制与资产改为运行时从 `SandboxConfig` + objectstore 获取并缓存。
 

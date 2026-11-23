@@ -146,8 +146,8 @@ unload: 先 await 全部受影响依赖者 → await dispose()（LIFO 回收）
 ## 相关页面
 
 - [Cordis Hello World](./cordis-hello-world.md) — 可运行的 ~70 行最小 demo（effect/inject/provide 全部跑一遍，含「函数插件要用箭头函数」等实测踩坑）
-- [kagent](./kagent.md) — K8s 原生 Agent 框架（CNCF），用 CRD/Controller 编排 agent；Cordis 走的是"进程内插件编排 + 事件决策链"的另一条路线，两者对比可看 agent 运行时选型
-- [Agent Substrate](./agent-substrate.md) / [Agent Sandbox](./agent-sandbox.md) — 沙箱执行环境，与 Cordis 的 effect 化资源管理互补
+- [kagent](../Agents/kagent.md) — K8s 原生 Agent 框架（CNCF），用 CRD/Controller 编排 agent；Cordis 走的是"进程内插件编排 + 事件决策链"的另一条路线，两者对比可看 agent 运行时选型
+- [Agent Substrate](../Agents/agent-substrate.md) / [Agent Sandbox](../Agents/agent-sandbox.md) — 沙箱执行环境，与 Cordis 的 effect 化资源管理互补
 
 ## 延伸阅读
 
