@@ -205,6 +205,50 @@ flowchart LR
 | `kubeproxy_sync_proxy_rules_no_local_endpoints_total` | ETP/ITP=Local 但无本地端点 | 持续增长 = 会丢流量 |
 | `kubeproxy_sync_proxy_rules_endpoint_changes_pending` | 待处理端点变更 | 长期 >0 = informer/sync 卡住 |
 
+### 3.5 先分清：netfilter / iptables / nftables / IPVS
+
+这四个词经常被混着说，但它们不是同一层的东西：
+
+```text
+用户态工具：   iptables        nft          ipvsadm
+                 │              │              │
+内核子系统：   ip_tables      nf_tables       ip_vs
+                 └──────┬───────┘              │
+                        ▼                      ▼
+              netfilter hooks + conntrack   （L4 转发/调度）
+                        │
+                      网卡
+```
+
+| | 是什么 | 谁配置 | 主要用途 | K8s 里的角色 |
+|---|---|---|---|---|
+| **netfilter** | Linux 内核的包处理框架（PREROUTING/INPUT/FORWARD/OUTPUT/POSTROUTING + conntrack） | 没有直接 CLI，由 iptables/nftables 等配置 | 过滤、NAT、连接跟踪 | 所有 iptables/nftables 规则的底层 |
+| **iptables** | 传统用户态工具 + `ip_tables` 内核模块（xtables） | `iptables`、`iptables-save` | 过滤/NAT | kube-proxy 默认模式；CNI/NetworkPolicy 也常用 |
+| **nftables** | 新一代内核子系统 `nf_tables` + 用户态 `nft`，取代 `ip_tables/ip6_tables/arptables/ebtables` | `nft` | 过滤/NAT，set/map/单 VM | kube-proxy 的 nftables 模式（1.33 GA） |
+| **IPVS** | 内核 L4 负载均衡器（`ip_vs`），有 virtual server/real server 和调度算法 | `ipvsadm` | L4 LB（NAT/DR/TUN） | kube-proxy 的 IPVS 模式（1.37 弃用） |
+
+几个容易踩的点：
+
+- **netfilter 是框架，iptables/nftables 是前端**：iptables 说“加一条规则”，最终落到 netfilter 的 hook；nftables 是 netfilter 项目里的新分类引擎，不是“另一个 netfilter”。
+- **`iptables` 命令在较新发行版上可能是 `iptables-nft`**：它把 iptables 语法翻译成 nftables 规则；`iptables-legacy` 才走老的 xtables。`iptables-save` 和 `nft list ruleset` 看到的可能是同一批规则的不同视图。
+- **IPVS 不是防火墙**：它只做 L4 转发/负载均衡，SNAT/filter 仍要 iptables/ipset 配合；它也不是 netfilter 的替代品。
+- **eBPF 又不在这一层**：Cilium 用 eBPF 在 socket/TC 做 Service LB，可以绕过 iptables/nftables/IPVS。
+
+#### 为什么有了 netfilter 还要 IPVS？
+
+netfilter 提供的是**通用包处理原语**（filter/NAT/conntrack/hook），它本身不是负载均衡器。用 iptables 也能做“DNAT + 概率分发”（kube-proxy 的 iptables 模式正是如此），但：
+
+- 规则是**线性匹配**：Service/Endpoint 越多，规则数和查找成本越大；
+- 没有 **virtual server/real server** 抽象，也没有 `rr`/`wlc` 等调度算法；
+- 没有 O(1) 的 hash 查找和独立的连接调度表；
+- 会话保持只能靠 `recent` 之类的补丁式实现。
+
+IPVS 是**专用的 L4 LB**：virtual server/real server、调度算法、hash 表、连接表、NAT/DR/TUN。它复用 netfilter 的 hook 把包接进来，但“选哪个后端”由 IPVS 自己负责。健康检查/端点变更由 kube-proxy 等外部组件驱动，IPVS 本身不负责探活。
+
+所以两者不是重复实现，而是“**通用包处理框架**”和“**专用负载均衡器**”的关系。K8s 1.37 弃用 IPVS 也不是因为它没价值，而是 nftables map / eBPF 能在更少运维复杂度下覆盖同类规模；IPVS 的 sysctl、ARP、`conn_reuse_mode` 等坑较多。
+
+> **IPVS 与 netfilter 的精确关系**：IPVS 注册 netfilter hook（`NF_INET_LOCAL_IN`/`LOCAL_OUT`/`FORWARD`，见 [ip_vs_core.c L2330-L2370](https://github.com/torvalds/linux/blob/c03c1a14507dfaf8b856c2608f9ac216021fc222/net/netfilter/ipvs/ip_vs_core.c#L2330-L2370)）来截获包，但**不使用 iptables/nftables 的规则表**；它有自己的 virtual server/real server、连接表和调度器。所以 `iptables -F` 不会清掉 IPVS 的 virtual server，`ipvsadm -C` 也不会清掉 iptables 规则。
+
 ---
 
 ## 4. iptables 模式：链的布局
@@ -271,7 +315,7 @@ KUBE-SEP-AAAA                 # 端点链
 | ETP=Cluster（NodePort/LB） | `KUBE-EXT-XXXX` → `KUBE-SVC-XXXX` | `KUBE-EXT` 整条是 `-j KUBE-MARK-MASQ`，跨节点时 SNAT |
 | ETP=Local（NodePort/LB） | `KUBE-EXT-XXXX` → `KUBE-SVL-XXXX` | 只对 `src-type LOCAL` 打 mark；pod 来源短路到 Cluster 链；其余走 `KUBE-SVL`（本地端点） |
 | `loadBalancerSourceRanges` | `KUBE-FW-XXXX` | 按源 CIDR 放行，链尾落空由 `KUBE-PROXY-FIREWALL` DROP |
-| 无端点 | filter 表 | ClusterIP 路径 REJECT；ETP=Local 外部路径 DROP |
+| 无任何端点 / 仅远端无本地 | filter 表 | 无任何端点：REJECT；ETP=Local 且仅远端无本地：DROP |
 
 源码见 [proxier.go L1091-L1200](https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/iptables/proxier.go#L1091-L1200)。
 
@@ -381,6 +425,25 @@ nftables 的 `masquerade fully-random` 与 iptables 的 `--random-fully` 等价�
 
 ## 7. conntrack：DNAT/SNAT 的状态机
 
+conntrack（`nf_conntrack`）是 **netfilter 的连接跟踪子系统**，不是防火墙、也不是一个“工具”。它维护一张连接表，记录每条流的：
+
+- 原始五元组 + 回复五元组；
+- 状态：`NEW`、`ESTABLISHED`、`RELATED`、`INVALID`、`UNTRACKED`；
+- NAT 映射：DNAT/SNAT 后的地址/端口；
+- 超时、mark、计数器等。
+
+它和前面几个组件的关系：
+
+| 组件 | 关系 |
+|---|---|
+| **netfilter** | conntrack 是 netfilter 的一部分（`nf_conntrack`） |
+| **iptables** | 可 `-m conntrack --ctstate` 匹配；NAT 规则依赖 conntrack 记住映射 |
+| **nftables** | 可 `ct state ...` 匹配；NAT 同样依赖 conntrack |
+| **IPVS** | 有自己的连接表；可选与 conntrack 同步（`net/ipv4/vs/conntrack=1`） |
+| **eBPF/Cilium** | 通常有自己的 BPF conntrack map；不要和内核 conntrack 混为一谈 |
+
+一句话：**NAT 是“首包改写”，conntrack 是“记住改写，让后续包和回包都能还原”。**
+
 ### 7.1 一条连接的两段五元组
 
 DNAT 只对首包生效，后续包和回包都靠 conntrack：
@@ -429,18 +492,53 @@ kube-proxy 会按配置设置（[types.go L88-L115](https://github.com/kubernete
 
 ## 8. 流量策略：ETP、ITP、拓扑、双栈
 
+### 8.0 ETP 与 ITP 是什么
+
+- **ETP = `spec.externalTrafficPolicy`**：管“外部地址”（NodePort / LoadBalancer / ExternalIPs）的流量怎么分。
+  - `Cluster`（默认）：可以发到任意节点的端点；通常 SNAT，源 IP 丢失。
+  - `Local`：只发到**本节点**端点；不 SNAT，保留源 IP；本节点无本地端点（但集群有远端端点）则 **DROP**；完全无端点则 REJECT；需要 `healthCheckNodePort` 让 LB 判断节点资格（仅 LB + Local）。
+- **ITP = `spec.internalTrafficPolicy`**：管 **ClusterIP**（集群内访问）的流量怎么分。
+  - `Cluster`（默认）：任意端点。
+  - `Local`：只发到**本节点**端点；无本地端点（但集群有远端端点）则 **DROP**；完全无端点则 REJECT；没有 HC 端口。
+
+| | ETP | ITP |
+|---|---|---|
+| 作用对象 | NodePort / LoadBalancer / ExternalIP | ClusterIP |
+| 默认值 | `Cluster` | `Cluster` |
+| `Local` 是否保留源 IP | 是（不 SNAT） | 通常不涉及 SNAT（源本来就是 Pod IP） |
+| 无本地端点 | 有远端端点则选远端；完全无端点 REJECT | 有远端端点则 DROP；完全无端点 REJECT |
+| 健康检查 | `healthCheckNodePort`（LB + Local） | 无 |
+| 典型用途 | 保留客户端 IP、审计/限流 | 同节点亲和、边缘/本地缓存 |
+
+一句话：**ETP 决定“外部流量能不能跨节点、源 IP 保不保”；ITP 决定“集群内 ClusterIP 流量能不能跨节点”。**
+
+> **“本节点端点”的准确含义**：指 EndpointSlice 里 `nodeName == 当前节点` 的 endpoint，它的 `addresses` 是 **Pod IP**，`ports` 是解析后的 **targetPort**；不是节点 IP，也不是 ClusterIP。kube-proxy 构建 `EndpointsMap` 时用 `endpoint.NodeName == 本节点名` 标记 `isLocal`（[endpointslicecache.go L209](https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/endpointslicecache.go#L209-L209)、[L255-L256](https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/endpointslicecache.go#L255-L256)）。
+
 ### 8.1 ETP=Local 的四件事
 
 1. **不 SNAT**，源 IP 保留；
 2. **只选本节点端点**；
-3. 无本地端点时 filter 表 **DROP**（超时，不是拒绝）；
+3. **只有远端端点、没有本地端点**时 filter 表 **DROP**（超时）；如果整个 Service 完全没有端点，则是 **REJECT**。
 4. 必须配 `healthCheckNodePort`，kube-proxy 用 200/503 告诉 LB 本节点是否有资格。
+
+> 两个容易误解的点：
+>
+> - **`Cluster` 不是“把包转发给另一个节点”**：入口节点自己做 DNAT，把目的地址改成某个 Pod IP；如果这个 Pod 在别的节点，包再被路由过去。不是把 VIP 包原样转给另一台节点的 kube-proxy。
+> - **`Local` 的 DROP 不是包到达时临时判断**：kube-proxy 根据 EndpointSlice 预先生成规则；只有远端端点、没有本地端点时，filter 表里就是 DROP 规则。
+
+| 本节点情况 | `ETP=Cluster` | `ETP=Local` |
+|---|---|---|
+| 有本地端点 | 可选本地或远端（概率分发） | 只选本地 |
+| 无本地端点，但集群有远端端点 | 选远端，DNAT 后路由过去 | DROP（客户端超时） |
+| 集群完全无端点 | REJECT（`connection refused`） | REJECT |
+
+`Local` 不 SNAT 的根本原因：只选本地端点，回包可以直接从本节点 Pod 回客户端，不需要经过入口节点；`Cluster` 选远端端点时必须 SNAT，保证回包回到入口节点，由 conntrack 还原 VIP。
 
 还有一个容易忽略的语义：**从集群内部访问 ExternalIP/LB IP 时总是 Cluster 语义**，不会保留源 IP（[types.go L6391-L6404](https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/core/v1/types.go#L6391-L6404)）。在 Pod 里 `curl` LB VIP 看到节点 IP 是正常的，不代表外部客户端也这样。
 
 ### 8.2 ITP=Local
 
-`internalTrafficPolicy: Local` 影响 ClusterIP 路径：kube-proxy 只选同节点端点，无本地端点则 DROP。它适合"拓扑本地性优先、宁可失败也不跨节点"的场景（如本地缓存、边缘）。注意它与 ETP 独立：可以 ETP=Cluster + ITP=Local。
+`internalTrafficPolicy: Local` 影响 ClusterIP 路径：kube-proxy 只选同节点端点，无本地端点（但集群有远端端点）则 DROP；完全无端点则 REJECT。它适合"拓扑本地性优先、宁可失败也不跨节点"的场景（如本地缓存、边缘）。注意它与 ETP 独立：可以 ETP=Cluster + ITP=Local。
 
 ### 8.3 双栈
 

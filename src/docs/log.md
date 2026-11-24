@@ -1,5 +1,83 @@
 # Operation Log
 
+## [2026-11-24] update | 审计讨论落盘并统一 ETP/ITP“无端点”表述
+
+- 审计本轮讨论：cni0、L2/L3/L4、overlay/underlay、CNI plugin/实现/方案、veth、ptp/ipvlan/macvlan、netfilter/IPVS/conntrack、ETP/ITP 均已覆盖；补上 CNI main/IPAM/meta 插件清单与 ETP 三行场景表。
+- 修正“无本地端点”与“完全无端点”混用：只有远端端点时 ETP/ITP=Local 为 DROP；完全无端点时 REJECT。同步 `6_service相关.md` §4/§8 与 `k8s-network-path.md` §5.2。
+
+## [2026-11-24] update | 补齐 CNI 插件分类与 ETP 端点场景表
+
+- `cni详解.md` §4：增加 main/IPAM/meta 三类插件清单（`bridge`/`ptp`/…、`host-local`/`dhcp`/`static`、`portmap`/…），说明运行时只执行顶层 `plugins`，IPAM 由 main 插件委托。
+- `6_service相关.md` §8.1：增加“有本地端点 / 只有远端端点 / 完全无端点”三行表；补充 `Cluster` 为何 SNAT、`Local` 为何不 SNAT 的回程原因。
+
+## [2026-11-24] update | 澄清 ETP=Cluster/Local 的转发与丢包语义
+
+- `6_service相关.md` §8.1：`Cluster` 不是把包转给另一节点，而是入口节点 DNAT 到任意 Pod IP，必要时再把包路由到远端节点；`Local` 的 DROP 是 kube-proxy 预先根据 EndpointSlice 生成的 filter 规则，不是包到达时临时判断。
+
+## [2026-11-24] update | 明确“本节点端点”的含义
+
+- `6_service相关.md` §8.0：本节点端点 = EndpointSlice 中 `nodeName == 当前节点` 的 endpoint（`Pod IP + targetPort`），不是节点 IP/ClusterIP。
+- kube-proxy 用 `endpoint.NodeName == 本节点名` 标记 `isLocal`（引 `endpointslicecache.go`）。
+
+## [2026-11-24] update | 补充 ETP/ITP 的定义与对比
+
+- `6_service相关.md` §8.0：ETP = `externalTrafficPolicy`（NodePort/LB/ExternalIP，`Cluster`/`Local`），ITP = `internalTrafficPolicy`（ClusterIP，`Cluster`/`Local`）。
+- 增加对比表：作用对象、默认值、`Local` 是否保留源 IP、无本地端点、健康检查、典型用途；一句话：ETP 管外部流量能否跨节点/保源 IP，ITP 管 ClusterIP 能否跨节点。
+
+## [2026-11-24] update | 补充 conntrack 的定义与组件关系
+
+- `6_service相关.md` §7 开头：conntrack 是 netfilter 的连接跟踪子系统，不是防火墙/工具；记录原始/回复五元组、状态、NAT 映射、超时等。
+- 增加与 netfilter / iptables / nftables / IPVS / eBPF 的关系表；一句话：NAT 是首包改写，conntrack 是记住改写。
+
+## [2026-11-24] update | 澄清 IPVS 与 netfilter 的 hook 关系
+
+- `6_service相关.md` §3.5 补充：IPVS 注册 netfilter hook（`LOCAL_IN`/`LOCAL_OUT`/`FORWARD`）截获包，但**不使用 iptables/nftables 规则表**，有自己的 virtual/real server、连接表和调度器；`iptables -F` 与 `ipvsadm -C` 互不清除。
+- 引用内核 `ip_vs_core.c` 的 `nf_hook_ops` 表作为证据。
+
+## [2026-11-24] update | 补充 netfilter/IPVS 栈图与分工说明
+
+- `6_service相关.md` §3.5 加“用户态工具 / 内核子系统 / netfilter hooks”的栈图。
+- 新增“为什么有了 netfilter 还要 IPVS”：netfilter 是通用包处理原语，IPVS 是专用 L4 LB（virtual/real server、调度算法、hash 表、NAT/DR/TUN），不是重复实现；K8s 弃用 IPVS 是 nftables/eBPF 的工程取舍。
+
+## [2026-11-24] update | 分清 netfilter / iptables / nftables / IPVS
+
+- `6_service相关.md` §3.5：四者不是同一层——netfilter 是内核包处理框架，iptables/nftables 是配置前端，IPVS 是内核 L4 负载均衡器。
+- 补充 `iptables-nft`/`iptables-legacy` 的区别、IPVS 仍需 iptables/ipset 做 SNAT/filter、eBPF 不在这一层。
+
+## [2026-11-24] update | 增加 overlay vs native routing 选型表
+
+- `cni详解.md` §6.1：四个前置问题 + “条件 → 倾向”表（控制底层/跨云/性能/加密/CIDR 重叠/托管 K8s/运维能力）。
+- 补充四个易错点：overlay 不解决地址重叠、underlay ≠ BGP、proxy_arp 不是路由宣告、集群内 native + 跨云 overlay 的混合部署。
+
+## [2026-11-24] update | 补充 ptp/ipvlan/macvlan 的内核机制
+
+- `cni详解.md` §4.6.1：ptp 为何删除容器内直连路由、加 `gw/32` 与 `subnet via gw`，以及 host 端 `gw/32` + `podIP/32` 主机路由，如何用路由模拟 point-to-point；`/32` 主机前缀的含义。
+- §4.6.2：ipvlan 共享父接口 MAC、按目的 IP 解复用；`l2/l3/l3s` 在广播/路由/conntrack 上的差异（引内核 `ipvlan.rst`）。
+- §4.6.3：macvlan 每个子接口独立 MAC、父接口 promisc/多 MAC、`bridge/private/vepa/passthru`、MTU ≤ 父接口、host 与子接口不能直接互访。
+- 增加 ptp/ipvlan/macvlan 对比表。
+
+## [2026-11-24] update | 澄清 veth 是设备不是插件
+
+读者指出 §6 组合表里的 “veth + BGP + native” 容易误解。补充：
+
+- `cni详解.md` §4.6 说明 veth 是 Linux **虚拟以太网对**（kernel 设备），不是 CNI 插件/拓扑；bridge 与 ptp 都创建 veth，区别在 host 端是否接网桥；Calico 也创建 veth，但用自己的 `calico` 插件，host 端不接 bridge（形状类似 ptp，但不是 `ptp`）。
+- §6 组合表把 “veth + BGP” 改为 “point-to-point veth + BGP”，并注明 `veth` 不是插件名。
+
+## [2026-11-24] update | 澄清 CNI 拓扑、封装与数据面不是同一分类轴
+
+针对“ptp/ipvlan/macvlan 与 VXLAN/IPIP/Geneve/WireGuard/BGP/eBPF 是不是同类”的疑问：
+
+- `cni详解.md` §4.6 末尾加“分类轴提醒”：前三个是 **Pod 接口拓扑**（main plugin），后一组是**跨节点传输/封装**，两者可组合。
+- §6 把表头从“方案”改为“传输/转发方式”，并说明 VXLAN/IPIP/Geneve/WireGuard 是封装、BGP/纯路由是原生路由、eBPF 是数据面实现；新增“接口拓扑 + 传输/路由 + 数据面”组合表（flannel/Calico/Cilium/kindnet/OVN 等）。
+
+## [2026-11-24] update | 补充网络分层术语与 CNI 插件模型
+
+根据读者提问，把容易混淆的概念写进正文：
+
+- `k8s-network-path.md` 新增 §2.1：L2/L3/L4/L7 的数据单位、地址、转发依据与 K8s 映射；二层=广播域、三层=IP 路由、四层=TCP/UDP 转发；overlay/underlay 定义、封装示意与 MTU 开销；§3.1 补充 `cni0` 的定位（host netns 的 bridge 默认网桥，不是 Pod 网卡、不是 K8s 对象，非 bridge CNI 可能没有）。
+- `cni详解.md` 新增 §1.1/§1.2：CNI 客户端是 `libcni`/`go-cni` 库（编译进 containerd）、插件是 `/opt/cni/bin` 的可执行文件、完整方案还含 daemon/controller；"定制 CNI"的三层（配置组合/meta/main-IPAM）、自定义插件最小骨架与 DEL 幂等/`prevResult`/capabilities/版本等约束；§4.2 补充 `cni0` 的"是什么/不是什么"与排查命令。
+- `index.md` 同步摘要。
+
 ## [2026-11-23] update | Kubernetes / AI Infrastructure 目录归类
 
 把两个平铺的专题目录按职责收成子目录，保持「先选领域、再选主题」的两级导航：

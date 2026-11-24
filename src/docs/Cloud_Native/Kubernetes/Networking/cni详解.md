@@ -31,6 +31,77 @@ CNI（Container Network Interface）是一个**运行时与网络插件之间的
 - **CNI 不实现 NetworkPolicy**。API 只定义语义，执行靠插件（Calico Felix、Cilium eBPF、kube-router ipset 等）。
 - **CNI 不参与 Service**。ClusterIP 的 DNAT 是 kube-proxy/CNI 的"另一个能力"（很多 CNI 附带 kube-proxy 替代），不在 CNI 规范里。
 
+### 1.1 CNI 是库还是二进制？plugin、实现、方案
+
+"CNI 的实现"要分两侧看，混在一起就会得出"CNI 到底是个 binary 还是个 lib"这种无解的问题：
+
+| 角色 | 形态 | 在哪里 | 例子 |
+|---|---|---|---|
+| CNI 规范 | 协议 | — | `SPEC.md`（1.1.0） |
+| CNI 客户端 | **Go 库** | containerd/CRI-O 进程内 | `libcni`、`go-cni` |
+| CNI 插件 | **可执行文件** | `/opt/cni/bin` | `bridge`、`host-local`、`portmap`、`calico`、`cilium-cni` |
+| CNI 方案 | 分布式系统 | DaemonSet/Deployment + 插件 + 配置 | Calico、Cilium、Antrea |
+| CNI 配置 | JSON | `/etc/cni/net.d` | `10-calico.conflist` |
+
+- **运行时侧是库**：containerd 链接 `go-cni`，`go-cni` 再调用 `libcni`（[cni.go L26](https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/vendor/github.com/containerd/go-cni/cni.go#L26-L26)）。它们是 Go 包，编译进 containerd 二进制，**不是独立进程，也不是 `.so`**。
+- **网络侧是二进制**：运行时最终 `exec /opt/cni/bin/<type>`；插件进程读 stdin、写 stdout，通常执行完就退出；它也可以只是常驻 daemon 的 shim（自身仍是一次性进程，真正的工作在 daemon 里）。
+- **完整方案不是单个 binary**：Calico/Cilium 这类方案 = 插件（入口）+ 每节点 daemon（Felix/cilium-agent）+ controller/operator + IPAM + 策略 + 安装清单。
+
+Kubernetes 文档里的 "Network Plugin" 通常指**方案**，而 CNI 规范里的 "plugin" 指**可执行文件**。两个词粒度不同，这是很多困惑的来源。
+
+### 1.2 "定制 CNI"定制的是什么
+
+在 CNI 契约层面，定制最终一定体现为**一个/一组插件**（或复用现成插件的 conflist 组合）。分三层：
+
+| 层级 | 做法 | 代码量 | 例子 |
+|---|---|---|---|
+| ① 配置组合 | 改 conflist：bridge/MTU/IPAM，加 `portmap`/`bandwidth`/`tuning` | 0 | 大多数"自定义网络" |
+| ② meta 插件 | 读 `prevResult`，委托/改写/聚合 | 小 | Multus、portmap、tuning |
+| ③ main/IPAM 插件 | 建接口、分 IP、配路由/NAT | 完整 | bridge、Calico、Cilium |
+
+但"实现 plugin"不等于"实现完整方案"。生产级方案通常还要：每节点 daemon（异步编程数据面/跨节点状态）、controller/operator（CRD/IPAM/节点初始化）、NetworkPolicy、安装升级、可观测性。
+
+所以更准确的说法是：
+
+> **定制 CNI = 实现 CNI 入口（一个/一组 plugin）+ 决定是否需要配套 daemon/controller。**
+
+- 只要"同节点 veth + 分 IP + hostPort"：`bridge + host-local + portmap` 的 conflist 就够，不用写代码；
+- 需要跨节点路由/eBPF/策略/多网卡：写自己的插件，通常还要 daemon；插件只是 runtime 和 daemon 之间的钩子。
+
+为什么必须有插件？因为运行时的唯一扩展点就是"按 conflist exec 二进制"，没有"注册一个 Go 接口"的机制。即使是 Cilium 这种重方案，也仍然有 `cilium-cni` 这个插件，只是它把工作转交给 agent。
+
+#### 自定义插件的最小骨架
+
+```go
+func main() {
+    skel.PluginMainFuncs(skel.CNIFuncs{
+        Add:   cmdAdd,
+        Del:   cmdDel,
+        Check: cmdCheck,
+    }, version.All, "my-plugin v0.1.0")
+}
+```
+
+几条硬约束：
+
+- 从 stdin 读配置、按 `CNI_COMMAND` 分派；结果写 stdout，错误由 `skel` 转成规范要求的 JSON + 非零退出。
+- 用 `CNI_NETNS` 打开容器 netns（`ns.GetNS`）；插件自身运行在 host netns。
+- `DEL` 必须容忍 netns 已消失、资源已删；`ADD` 失败后 runtime 仍会调 `DEL`。
+- meta 插件要透传/修改 `prevResult`；声明 `capabilities` 才能收到 `runtimeConfig`。
+- 返回的 `cniVersion` 必须与请求一致；支持多版本用 `version.PluginSupports`。
+- 插件以 root 运行在宿主机，注意供应链安全与执行时间（CNI 调用在 Pod 启动关键路径上）。
+
+安装与测试：
+
+```bash
+install -m 0755 my-plugin /opt/cni/bin/my-plugin
+cat >/etc/cni/net.d/10-myplugin.conflist <<'EOF'
+{"cniVersion":"1.0.0","name":"mynet","plugins":[{"type":"my-plugin"}]}
+EOF
+export CNI_PATH=/opt/cni/bin
+cnitool add mynet /var/run/netns/<ns>
+```
+
 ---
 
 ## 2. 一次 Pod 创建：谁在什么时候调用 CNI
@@ -225,6 +296,16 @@ ADD 成功的结果包含（[SPEC.md L573-L601](https://github.com/containernetw
 
 ## 4. 一条典型 bridge 链：每个插件到底做了什么
 
+CNI 插件按职责分三类：
+
+| 类型 | 职责 | 参考插件 |
+|---|---|---|
+| **main / interface** | 创建/配置接口 | `bridge`、`ptp`、`ipvlan`、`macvlan`、`host-device`、`loopback`、`dummy`、`vlan`、`tap` |
+| **IPAM** | 分配/释放 IP | `host-local`、`dhcp`、`static` |
+| **meta** | 在已有结果上加功能 | `portmap`、`bandwidth`、`tuning`、`firewall`、`sbr`、`vrf` |
+
+运行时只执行顶层 `plugins`；IPAM 插件通常由 main 插件委托调用（如 `bridge` 的 `ipam` 字段）。
+
 大多数自建/实验集群的 conflist 长这样：
 
 ```json
@@ -264,6 +345,10 @@ containerd 会合成一个 `cniVersion 0.3.1`、`name=cni-loopback`、`type=loop
 9. 等待 host veth `OperState=Up`，并**重新读取 bridge MAC**——第一个 veth 加入或设置 IP 后 `cni0` 的 MAC 会变，插件必须重新读，否则返回的 result 里 MAC 是旧的（[bridge.go L745-L775](https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/plugins/main/bridge/bridge.go#L745-L775)）。
 
 **为什么 Pod 的默认路由能工作**：`ConfigureIface` 对每条没有 `GW` 的路由，用 IPConfig 的 `gateway` 作为下一跳；而 gateway IP 被配在 `cni0` 上，所以 `cni0` 会以自己的 MAC 应答 ARP，Pod 才能把帧发给网关。反过来，如果 `isGateway=false`，`cni0` 没有这个 IP，Pod 的下一跳不可达——表现为"有 IP、能 ping 自己、出不去"。
+
+> **`cni0` 是什么**：它是 bridge 插件在宿主机上创建的默认网桥（`defaultBrName = "cni0"`，[bridge.go L47](https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/plugins/main/bridge/bridge.go#L47-L47)），是**同节点 Pod 的虚拟二层交换机 + 默认网关**，不是 Pod 里的网卡，也不是 Kubernetes 对象。只有 bridge 型 CNI 才有；Calico 默认 veth + 路由、kind 用 ptp、Cilium 用 eBPF，都可能没有 `cni0`。名字可以在 conflist 的 `"bridge"` 字段里改。
+>
+> 常用检查：`ip -d link show cni0`（类型/MTU/MAC）、`ip addr show cni0`（网关 IP）、`ip link show master cni0`（哪些 veth 是端口）、`ip route | grep cni0`（节点直连路由）、`tcpdump -ni cni0`（同节点流量）。
 
 ### 4.3 host-local：IP 分配的状态在磁盘上
 
@@ -306,7 +391,7 @@ hairpin（源地址属于 Pod 网段）和 localhost（`-s 127.0.0.1`）会先�
 
 | 插件 | 结构 | 特点 | 典型使用者 |
 |---|---|---|---|
-| **bridge** | veth + Linux bridge | 简单、同节点 L2 互通；网关在 bridge 上 | flannel host-gw? 不，flannel 用 bridge；Calico 不用 |
+| **bridge** | veth + Linux bridge | 简单、同节点 L2 互通；网关在 bridge 上 | flannel 默认；Calico 不用 bridge |
 | **ptp** | veth pair，无 bridge | host 端加 `/32` 主机路由，容器内强制所有流量经网关 ARP；kindnet 用它 | kind、部分轻量 CNI |
 | **ipvlan** | 父接口上创建 ipvlan 子接口 | 共享父接口 L2，不建 veth/bridge；`l2/l3/l3s` 模式 | 高性能/underlay 场景 |
 | **macvlan** | 每个 Pod 独立 MAC 的子接口 | 需要父接口支持混杂/多 MAC；MTU 不能超过父接口 | 传统网络/裸金属 |
@@ -314,6 +399,81 @@ hairpin（源地址属于 Pod 网段）和 localhost（`-s 127.0.0.1`）会先�
 **ptp** 的精髓在注释里写得很清楚：veth 不支持 `IFF_POINTOPOINT`，所以先给容器配 `/24`，删掉自动产生的直连路由，再加 `gw/32 dev eth0` 和 `subnet via gw`，**强制所有流量经网关 ARP**（[ptp.go L54-L80](https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/plugins/main/ptp/ptp.go#L54-L80)）。host 侧需要 forwarding。
 
 **ipvlan/macvlan** 不创建 veth，也不建 bridge；它们直接在父接口上派生接口。优点是路径短、性能好；缺点是对父接口/交换机配置有要求（混杂模式、MAC 数量、VLAN），且很多 overlay/NetworkPolicy 方案不兼容。
+
+> **`veth` 是什么**：veth 是 Linux 的**虚拟以太网对**（kernel 设备），不是 CNI 插件，也不是和 bridge/ptp 并列的拓扑。`bridge` 和 `ptp` 都创建 veth：bridge 把 host 端 `LinkSetMaster` 到网桥，ptp 让 host 端保持独立并加 `/32` 路由。Calico 也创建 veth，但用的是自己的 `calico` 插件，host 端不接 bridge——形状类似 ptp，但不是 `ptp` 插件。
+
+> **分类轴提醒**：ptp/ipvlan/macvlan 是 **Pod 接口拓扑**（main plugin），和 §6 的 VXLAN/IPIP/Geneve/WireGuard **不在同一个轴上**——后者是跨节点传输/封装。它们可以组合，例如 bridge + VXLAN（flannel 默认）、point-to-point veth + BGP（Calico，自带插件）、veth + eBPF + native（Cilium）、ptp + 静态路由（kindnet）。
+
+#### 4.6.1 ptp：用 /32 路由模拟 point-to-point
+
+veth 不支持 `IFF_POINTOPOINT`，所以 ptp **用路由把 veth“假装”成点对点链路**（[ptp.go L52-L62](https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/plugins/main/ptp/ptp.go#L52-L62)）。
+
+容器内（[ptp.go L52-L140](https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/plugins/main/ptp/ptp.go#L52-L140)）：
+
+1. IPAM 给出 `podIP/24` 和 `gw`，`ConfigureIface` 先加地址，内核自动产生直连路由 `10.244.1.0/24 dev eth0`；
+2. ptp **删掉**这条直连路由（否则 Pod 会认为同子网都在链路上，直接 ARP 对方）；
+3. 加 `gw/32 dev eth0 scope link`——只有网关是 on-link；
+4. 加 `10.244.1.0/24 via gw dev eth0`——同子网目的地也走网关；
+5. 如果 IPAM 配置里有默认路由，再加 `default via gw`。
+
+host 侧（[ptp.go L149-L180](https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/plugins/main/ptp/ptp.go#L149-L180)）：
+
+- 给 host veth 加 `gw/32`（Pod ARP 网关时由它应答）；
+- 给 host 加 `podIP/32 dev <host-veth>` 的主机路由。
+
+**`/32` 是“单主机前缀”**：`10.244.1.5/32` 只匹配这一个 IP，是最具体的路由。host 因此不需要“整个 /24 都在这个 veth 上”的直连路由，而是每个 Pod 一条 /32 主机路由，精确指向它的 veth。
+
+效果：**同节点 Pod→Pod 也走 host 的 IP 栈**（host 是 L3 路由器），而不是二层桥接。kindnet 用 `ptp + host-local + portmap` + 静态路由，就是这套。
+
+#### 4.6.2 ipvlan：共享父接口 MAC，按 L3 解复用
+
+ipvlan 子接口用 `ParentIndex = eth0` 创建（[ipvlan.go L120-L190](https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/plugins/main/ipvlan/ipvlan.go#L120-L190)），然后移进 Pod netns：
+
+- 父接口留在 host，**所有 ipvlan 子接口共享父接口的 MAC**；交换机只看到一个 MAC，因此不需要父接口 promiscuous 或“多 MAC”。
+- TX：子接口的包经父接口发出；RX：父接口收到后，ipvlan 驱动按**目的 IP** 把包分给对应子接口（不是按 MAC 解复用）。
+- 因此 ipvlan 说“共享父接口 L2”，但复用/解复用是 L3 的。
+
+三种模式（[内核 ipvlan.rst L61-L91](https://github.com/torvalds/linux/blob/c03c1a14507dfaf8b856c2608f9ac216021fc222/Documentation/networking/ipvlan.rst#L61-L91)）：
+
+| 模式 | 广播/组播 | 转发/路由 | 适用 |
+|---|---|---|---|
+| **l2**（CNI 默认） | 子接口可收发 | 子接口 TX 经父接口；共享父接口 L2，ARP 正常 | 同子网、需要 ARP/广播 |
+| **l3** | 不收发 | TX 到 L3 后交给父接口栈，由 host 路由控制 | L3 fabric、host 集中路由 |
+| **l3s** | 不收发 | 同 l3，但 iptables/conntrack 生效（L3-symmetric），略慢 | 需要 NAT/有状态防火墙 |
+
+典型用途：交换机只允许一个 MAC/端口、或 Pod netns 不可信、不想让 Pod 看到 L2 广播。
+
+#### 4.6.3 macvlan：每个 Pod 独立 MAC
+
+macvlan 子接口同样用 `ParentIndex = eth0` 创建（[macvlan.go L202-L280](https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/plugins/main/macvlan/macvlan.go#L202-L280)），但：
+
+- 内核给每个子接口分配**独立 MAC**（或由配置 `mac` 指定），子接口移进 Pod netns；
+- 父接口必须能接收“目的 MAC 不是自己”的帧——通常要 **promiscuous 模式**，或 NIC 支持多个 unicast MAC filter；上游交换机也必须允许该端口学习多个 MAC（port security 不能只允许 1 个）；
+- macvlan 驱动在父接口 RX 时按**目的 MAC** 把帧分给对应子接口。
+
+模式：
+
+| 模式 | 语义 |
+|---|---|
+| **bridge**（默认） | 子接口之间可以通过父接口互访（父接口像网桥） |
+| **private** | 子接口之间隔离 |
+| **vepa** | 把交换交给外部交换机（需要 reflective relay / 802.1Qbg） |
+| **passthru** | 父接口直通给一个子接口（不再多 MAC） |
+
+**MTU 不能超过父接口**：macvlan 不封装，子接口的帧直接走父接口；CNI 插件会显式校验 `n.MTU > masterMTU` 并报错（[macvlan.go L121-L126](https://github.com/containernetworking/plugins/blob/0581b4290fe24a283a78195b1f3ec81a9bc26786/plugins/main/macvlan/macvlan.go#L121-L126)）。
+
+一个常见限制：host 不能通过父接口直接访问自己的 macvlan 子接口（内核不会把包“回环”给子接口），需要额外在 host 上建 macvlan 或走其他路径。
+
+三种拓扑对比：
+
+| | ptp | ipvlan | macvlan |
+|---|---|---|---|
+| Pod 设备 | veth pair | ipvlan 子接口 | macvlan 子接口 |
+| host 侧 | 独立 veth | 父接口 | 父接口 |
+| MAC | Pod 独立 | **共享父 MAC** | **Pod 独立 MAC** |
+| 同节点互通 | 经 host 路由 | l2 共享 L2 / l3 经 host 路由 | bridge 模式经父接口 |
+| 需要 promisc | 否 | 否 | 是（或多 MAC filter） |
+| MTU | 受 underlay | ≤ 父接口 | ≤ 父接口 |
 
 ### 4.7 kindnet：kind 集群里到底跑了什么
 
@@ -365,7 +525,13 @@ PodCIDR 只是"地址池声明"，**K8s 核心不装跨节点路由**（云厂�
 
 ## 6. Overlay vs Underlay：MTU 是怎么少掉的
 
-| 方案 | 封装 | 每包开销（IPv4） | 1500 underlay 下 Pod MTU | 代表 |
+这张表列的是**跨节点传输/转发方式**，不是"Pod 接口拓扑"：
+
+- **VXLAN / IPIP / Geneve / WireGuard**：封装（overlay），决定包怎么套外层；
+- **BGP / 纯路由**：原生路由（underlay / native），BGP 只负责"路由怎么分发"，不改变包格式；
+- **eBPF**：数据面实现技术，既能做 native routing，也能做 tunnel，还能替代 kube-proxy。
+
+| 传输/转发方式 | 封装 | 每包开销（IPv4） | 1500 underlay 下 Pod MTU | 代表 |
 |---|---|---|---|---|
 | VXLAN | 外层 IP + UDP + VXLAN + 内层以太 | 50 | 1450 | flannel、Calico VXLAN |
 | IPIP | 外层 IP | 20 | 1480 | Calico IPIP |
@@ -373,6 +539,18 @@ PodCIDR 只是"地址池声明"，**K8s 核心不装跨节点路由**（云厂�
 | WireGuard | 外层 IP + UDP + WG | 60 | 1440 | flannel/Calico WireGuard |
 | BGP/纯路由 | 无 | 0 | 1500 | Calico、kube-router |
 | eBPF | 原生或 tunnel | 0 或 50 | 1500 或 1450 | Cilium |
+
+这些层可以组合，常见的完整方案是"接口拓扑 + 传输/路由 + 数据面"的组合。下表的 `veth` 指 Linux 虚拟以太网对，不是插件名：
+
+| 组合 | 例子 |
+|---|---|
+| bridge + VXLAN | flannel 默认（`cni0` + `flannel.1`） |
+| point-to-point veth + BGP + native | Calico BGP（自带 `calico` 插件，host 端不接 bridge） |
+| point-to-point veth + IPIP/VXLAN | Calico 的 overlay 模式 |
+| veth + eBPF + native/tunnel | Cilium（veth 是接口，eBPF 是数据面） |
+| ptp + 静态路由 | kindnet |
+| OVS + Geneve | OVN-Kubernetes |
+| macvlan/ipvlan + underlay | 传统网络/高性能场景（通常不做 overlay） |
 
 算术：
 
@@ -392,6 +570,34 @@ ping -M do -s 1450 <peerPodIP>
 ip -d link show vxlan.calico   # 期望 1450
 ip -d link show flannel.1      # 期望 1450
 ```
+
+### 6.1 怎么选：overlay 还是 native routing
+
+先问四个问题：
+
+1. 底层网络能不能路由 PodCIDR？（BGP / 静态路由 / 云 VPC 路由）
+2. 有没有硬性的 MTU / 吞吐 / 延迟要求？
+3. 是否跨 VPC / 跨云 / 跨 NAT，或者地址重叠？
+4. 谁来运维：有网络团队，还是只有 K8s 团队？
+
+| 条件 | 更倾向 | 原因 |
+|---|---|---|
+| 能控制 ToR/VPC 路由，PodCIDR 可规划 | **native / underlay** | 无封装、MTU 1500、排障简单 |
+| 不能改底层网络，或跨云/跨 NAT | **overlay** | 只要 Node IP 可达即可 |
+| 高吞吐/低延迟/AI/RDMA | **native / SR-IOV** | 封装有开销，可能成为瓶颈 |
+| 需要加密 | overlay + WireGuard/IPsec，或 underlay + MACsec/IPsec | 加密与封装可以叠加 |
+| Pod/Service CIDR 重叠 | **两者都不解决** | 需要 NAT/Globalnet/Liqo，或只做 L7 |
+| 托管 K8s | 跟随厂商 native CNI | EKS VPC CNI、GKE VPC-native、AKS Azure CNI |
+| 小集群/实验 | overlay 起步快 | flannel/VXLAN 配置简单 |
+| 有 BGP/网络团队 | native 更可控 | 路由可观测、无 MTU 损失 |
+| 只有 K8s 团队 | overlay 更自助 | 不依赖网络变更 |
+
+几个容易被忽略的点：
+
+- **overlay 不解决地址重叠**：VXLAN 只是封装，内层 Pod IP 仍然要唯一；两个集群都用 `10.244.0.0/16` 时，跨集群路由仍然冲突，需要 Globalnet/Liqo 之类做 NAT 或只走 L7。
+- **underlay 不等于 BGP**：静态路由、云 VPC 路由、connected route 都算 native；BGP 只是分发路由的一种控制面。
+- **proxy_arp 不是路由宣告**：它只是让某台主机代答 ARP；真正的转发仍然靠路由表。不要把它和 BGP 混为一谈。
+- **混合是常见解**：集群内/AZ 内 native，跨 AZ/跨云 overlay；或 Cilium native + ClusterMesh、Submariner 隧道跨集群。
 
 ---
 

@@ -103,6 +103,41 @@ flowchart TB
 
 这个分层不是学术分类，而是排障顺序：**先确认"名字解析对不对"，再确认"VIP 有没有 DNAT 到正确的 Pod"，再确认"这个 Pod IP 能不能被到达"，最后才怀疑 underlay**。反过来从下往上查，经常会在一个明明正常的路由表上浪费半小时。
 
+### 2.1 术语：L2/L3/L4/L7 与 overlay/underlay
+
+"层"不是学术分类，而是"这一层用什么地址、转发什么单位"：
+
+| 层 | 数据单位 | 地址/标识 | 转发依据 | K8s 对应 |
+|---|---|---|---|---|
+| L2 | 帧（frame） | MAC、VLAN ID | 交换机/网桥按 MAC | cni0、veth、VXLAN 段、MetalLB L2 的 ARP |
+| L3 | 包（packet） | IP 地址 | 路由器/主机路由表 | Pod IP、Node IP、BGP/VPC 路由、ClusterIP（虚拟） |
+| L4 | 段（segment） | 端口 + 协议（TCP/UDP/SCTP） | NAT/LB/conntrack 按五元组 | Service port、kube-proxy DNAT、L4 LB、NetworkPolicy 端口 |
+| L7 | 消息 | URL/Host/Path/Header | 代理解析应用协议 | Ingress、Gateway API、CoreDNS |
+
+- **二层网络** = 一个广播域：同一 VLAN/网桥/VXLAN 段内按 MAC 转发，不需要 IP 路由；"二层可达"就是能 ARP 到对方。
+- **三层网络** = IP 路由域：跨子网靠路由表/BGP/VPC 路由；"三层可达"就是 `ping` 能通。
+- **四层网络** 不是标准叫法，通常指"四层转发/四层负载均衡"：只看 IP + 端口 + 协议（五元组），不解析 HTTP；ClusterIP/NodePort/kube-proxy 都在这一层。
+- **L7** 才看 Host/Path/Header，能终止 TLS；Ingress/Gateway 在这一层。
+
+四层不是"谁比谁高级"，而是**各自有独立的失败模式**：L2 通不代表 L3 通，L3 通不代表 L4 端口开，L4 通不代表 L7 路由/证书对。
+
+**overlay 与 underlay**：
+
+- **underlay**：承载节点的底层网络（物理交换机、云 VPC），只负责把 Node IP 连通；
+- **overlay**：在 underlay 之上用隧道封装出来的虚拟网络（VXLAN/IPIP/Geneve/WireGuard），underlay 只看到外层头，内层才是 Pod 包。
+
+```text
+Underlay（native routing）: [IP src=PodA dst=PodB]
+Overlay（VXLAN）:           [IP src=NodeA dst=NodeB][UDP][VXLAN][IP src=PodA dst=PodB]
+                            └──────── underlay 只看到外层 ────────┘
+```
+
+- **underlay 方案 / native routing**：Pod IP 在底层直接可路由，无封装（Calico BGP、kindnet 静态路由、云 VPC 路由）；
+- **overlay 方案**：跨节点用隧道（flannel VXLAN、Calico IPIP/VXLAN、OVN Geneve、Cilium tunnel）；
+- 代价是 MTU：VXLAN 少 50、IPIP 少 20、WireGuard 少 60，详见 [CNI 详解](./cni详解.md) 的 "Overlay vs Underlay" 一节。
+
+一句话：**cni0 是 L2 网桥，VXLAN 是 L2 over L3，Pod IP 是 L3，ClusterIP/NodePort 是 L3+L4，Ingress 是 L7。**
+
 ---
 
 ## 3. Pod → Pod：第一跳
@@ -136,6 +171,8 @@ flowchart LR
 4. 反向同理；**源 IP 全程是 `10.244.1.5`**。
 
 关键点：`cni0` 必须持有网关 IP，否则 Pod 的下一跳不可达，表现为"有 IP、能 ping 自己、出不去"。`net.ipv4.ip_forward=1` 和 `net.bridge.bridge-nf-call-iptables=1` 是节点级前置条件：前者由 CNI 的网关模式设置，后者通常由节点准备脚本/发行版设置（K8s 文档要求网络插件负责，但插件实现并不统一）。bridge-nf 关掉时，iptables 看不到桥接流量，hairpin、portmap、部分 NetworkPolicy 会失效。
+
+> **图里的 `cni0` 是什么**：它是 bridge 型 CNI 在**宿主机**上创建的默认网桥（虚拟二层交换机 + 默认网关），不是 Pod 内的网卡，也不是 Kubernetes 对象。Calico 默认 veth + 路由、kind 用 ptp、Cilium 用 eBPF，都可能没有 `cni0`；此时 Pod→Pod 的路径仍然成立，只是换成路由/隧道/eBPF。名字可在 conflist 的 `"bridge"` 字段改，检查命令见 [CNI 详解](./cni详解.md)。
 
 ### 3.2 跨节点：underlay 路由
 
@@ -262,7 +299,7 @@ sequenceDiagram
 | 情况 | 数据面行为 | 现象 |
 |---|---|---|
 | Service 无任何 ready 端点 | kube-proxy 在 **filter** 表对 ClusterIP `REJECT`（不是 nat 表 DNAT） | `connection refused`（快速失败），而不是超时 |
-| `externalTrafficPolicy: Local` 但本节点无端点 | filter 表 `DROP` | 外部流量超时；集群内访问仍可能走 Cluster 语义 |
+| `externalTrafficPolicy: Local` 但本节点无本地端点（集群有远端端点） | filter 表 `DROP` | 外部流量超时；集群内访问仍可能走 Cluster 语义 |
 | headless（`clusterIP: None`） | `ShouldSkipService` 直接跳过，不生成任何 VIP 规则（[utils.go L56-L70](https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/util/utils.go#L56-L70)） | DNS 直接返回 Pod IP，客户端自己负载均衡 |
 | `ExternalName` | 同样跳过；DNS 返回 CNAME | 客户端解析到外部域名，不经过集群网络 |
 
@@ -356,11 +393,11 @@ flowchart TB
 
 | 路径 | 默认源 IP | 只选本地端点？ | 健康检查 | 无可用端点时 |
 |---|---|---|---|---|
-| ClusterIP（集群内） | Pod IP | 否（可用 `internalTrafficPolicy: Local`） | 无 | 无任何端点 REJECT；ITP=Local 无本地端点 DROP |
+| ClusterIP（集群内） | Pod IP | 否（可用 `internalTrafficPolicy: Local`） | 无 | 无任何端点 REJECT；ITP=Local 且仅远端端点 DROP |
 | NodePort（ETP=Cluster） | 节点 IP（SNAT） | 否 | 无 | 无任何端点 REJECT |
-| NodePort（ETP=Local） | 客户端 IP（不 SNAT） | 是 | 无 | 无本地端点 DROP |
+| NodePort（ETP=Local） | 客户端 IP（不 SNAT） | 是 | 无 | 仅远端端点无本地端点 DROP；完全无端点 REJECT |
 | LoadBalancer（ETP=Cluster） | 节点 IP | 否 | LB → NodePort | 无任何端点 REJECT |
-| LoadBalancer（ETP=Local） | 客户端 IP | 是 | LB → `healthCheckNodePort`（200/503） | 无本地端点 DROP + LB 摘节点 |
+| LoadBalancer（ETP=Local） | 客户端 IP | 是 | LB → `healthCheckNodePort`（200/503） | 仅远端端点无本地端点 DROP + LB 摘节点；完全无端点 REJECT |
 | Ingress | 客户端 IP 在 `X-Forwarded-For`；TCP 层是 controller IP | controller 自己决定 | LB → controller | controller 返回 502/503 |
 | Gateway | 由实现决定，通常在转发头里 | Route 的 backendRefs | 实现相关 | 实现相关 |
 
