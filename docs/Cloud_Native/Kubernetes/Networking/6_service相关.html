@@ -35,7 +35,7 @@
             const path_to_root = "../../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../../searchindex-dfe22a86.js";
+            window.path_to_searchindex_js = "../../../../searchindex-509c2d6f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../../../toc-d9461900.js"></script>
@@ -370,6 +370,50 @@ ready := service.Spec.PublishNotReadyAddresses || (serving &amp;&amp; !terminati
 </tbody>
 </table>
 </div>
+<h3 id="35-先分清netfilter--iptables--nftables--ipvs"><a class="header" href="#35-先分清netfilter--iptables--nftables--ipvs">3.5 先分清：netfilter / iptables / nftables / IPVS</a></h3>
+<p>这四个词经常被混着说，但它们不是同一层的东西：</p>
+<pre><code class="language-text">用户态工具：   iptables        nft          ipvsadm
+                 │              │              │
+内核子系统：   ip_tables      nf_tables       ip_vs
+                 └──────┬───────┘              │
+                        ▼                      ▼
+              netfilter hooks + conntrack   （L4 转发/调度）
+                        │
+                      网卡
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th></th><th>是什么</th><th>谁配置</th><th>主要用途</th><th>K8s 里的角色</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>netfilter</strong></td><td>Linux 内核的包处理框架（PREROUTING/INPUT/FORWARD/OUTPUT/POSTROUTING + conntrack）</td><td>没有直接 CLI，由 iptables/nftables 等配置</td><td>过滤、NAT、连接跟踪</td><td>所有 iptables/nftables 规则的底层</td></tr>
+<tr><td><strong>iptables</strong></td><td>传统用户态工具 + <code>ip_tables</code> 内核模块（xtables）</td><td><code>iptables</code>、<code>iptables-save</code></td><td>过滤/NAT</td><td>kube-proxy 默认模式；CNI/NetworkPolicy 也常用</td></tr>
+<tr><td><strong>nftables</strong></td><td>新一代内核子系统 <code>nf_tables</code> + 用户态 <code>nft</code>，取代 <code>ip_tables/ip6_tables/arptables/ebtables</code></td><td><code>nft</code></td><td>过滤/NAT，set/map/单 VM</td><td>kube-proxy 的 nftables 模式（1.33 GA）</td></tr>
+<tr><td><strong>IPVS</strong></td><td>内核 L4 负载均衡器（<code>ip_vs</code>），有 virtual server/real server 和调度算法</td><td><code>ipvsadm</code></td><td>L4 LB（NAT/DR/TUN）</td><td>kube-proxy 的 IPVS 模式（1.37 弃用）</td></tr>
+</tbody>
+</table>
+</div>
+<p>几个容易踩的点：</p>
+<ul>
+<li><strong>netfilter 是框架，iptables/nftables 是前端</strong>：iptables 说“加一条规则”，最终落到 netfilter 的 hook；nftables 是 netfilter 项目里的新分类引擎，不是“另一个 netfilter”。</li>
+<li><strong><code>iptables</code> 命令在较新发行版上可能是 <code>iptables-nft</code></strong>：它把 iptables 语法翻译成 nftables 规则；<code>iptables-legacy</code> 才走老的 xtables。<code>iptables-save</code> 和 <code>nft list ruleset</code> 看到的可能是同一批规则的不同视图。</li>
+<li><strong>IPVS 不是防火墙</strong>：它只做 L4 转发/负载均衡，SNAT/filter 仍要 iptables/ipset 配合；它也不是 netfilter 的替代品。</li>
+<li><strong>eBPF 又不在这一层</strong>：Cilium 用 eBPF 在 socket/TC 做 Service LB，可以绕过 iptables/nftables/IPVS。</li>
+</ul>
+<h4 id="为什么有了-netfilter-还要-ipvs"><a class="header" href="#为什么有了-netfilter-还要-ipvs">为什么有了 netfilter 还要 IPVS？</a></h4>
+<p>netfilter 提供的是<strong>通用包处理原语</strong>（filter/NAT/conntrack/hook），它本身不是负载均衡器。用 iptables 也能做“DNAT + 概率分发”（kube-proxy 的 iptables 模式正是如此），但：</p>
+<ul>
+<li>规则是<strong>线性匹配</strong>：Service/Endpoint 越多，规则数和查找成本越大；</li>
+<li>没有 <strong>virtual server/real server</strong> 抽象，也没有 <code>rr</code>/<code>wlc</code> 等调度算法；</li>
+<li>没有 O(1) 的 hash 查找和独立的连接调度表；</li>
+<li>会话保持只能靠 <code>recent</code> 之类的补丁式实现。</li>
+</ul>
+<p>IPVS 是<strong>专用的 L4 LB</strong>：virtual server/real server、调度算法、hash 表、连接表、NAT/DR/TUN。它复用 netfilter 的 hook 把包接进来，但“选哪个后端”由 IPVS 自己负责。健康检查/端点变更由 kube-proxy 等外部组件驱动，IPVS 本身不负责探活。</p>
+<p>所以两者不是重复实现，而是“<strong>通用包处理框架</strong>”和“<strong>专用负载均衡器</strong>”的关系。K8s 1.37 弃用 IPVS 也不是因为它没价值，而是 nftables map / eBPF 能在更少运维复杂度下覆盖同类规模；IPVS 的 sysctl、ARP、<code>conn_reuse_mode</code> 等坑较多。</p>
+<blockquote>
+<p><strong>IPVS 与 netfilter 的精确关系</strong>：IPVS 注册 netfilter hook（<code>NF_INET_LOCAL_IN</code>/<code>LOCAL_OUT</code>/<code>FORWARD</code>，见 <a href="https://github.com/torvalds/linux/blob/c03c1a14507dfaf8b856c2608f9ac216021fc222/net/netfilter/ipvs/ip_vs_core.c#L2330-L2370">ip_vs_core.c L2330-L2370</a>）来截获包，但<strong>不使用 iptables/nftables 的规则表</strong>；它有自己的 virtual server/real server、连接表和调度器。所以 <code>iptables -F</code> 不会清掉 IPVS 的 virtual server，<code>ipvsadm -C</code> 也不会清掉 iptables 规则。</p>
+</blockquote>
 <hr>
 <h2 id="4-iptables-模式链的布局"><a class="header" href="#4-iptables-模式链的布局">4. iptables 模式：链的布局</a></h2>
 <h3 id="41-顶层链"><a class="header" href="#41-顶层链">4.1 顶层链</a></h3>
@@ -430,7 +474,7 @@ KUBE-SEP-AAAA                 # 端点链
 <tr><td>ETP=Cluster（NodePort/LB）</td><td><code>KUBE-EXT-XXXX</code> → <code>KUBE-SVC-XXXX</code></td><td><code>KUBE-EXT</code> 整条是 <code>-j KUBE-MARK-MASQ</code>，跨节点时 SNAT</td></tr>
 <tr><td>ETP=Local（NodePort/LB）</td><td><code>KUBE-EXT-XXXX</code> → <code>KUBE-SVL-XXXX</code></td><td>只对 <code>src-type LOCAL</code> 打 mark；pod 来源短路到 Cluster 链；其余走 <code>KUBE-SVL</code>（本地端点）</td></tr>
 <tr><td><code>loadBalancerSourceRanges</code></td><td><code>KUBE-FW-XXXX</code></td><td>按源 CIDR 放行，链尾落空由 <code>KUBE-PROXY-FIREWALL</code> DROP</td></tr>
-<tr><td>无端点</td><td>filter 表</td><td>ClusterIP 路径 REJECT；ETP=Local 外部路径 DROP</td></tr>
+<tr><td>无任何端点 / 仅远端无本地</td><td>filter 表</td><td>无任何端点：REJECT；ETP=Local 且仅远端无本地：DROP</td></tr>
 </tbody>
 </table>
 </div>
@@ -525,6 +569,29 @@ proxier instead.
 <p>nftables 的 <code>masquerade fully-random</code> 与 iptables 的 <code>--random-fully</code> 等价。</p>
 <hr>
 <h2 id="7-conntrackdnatsnat-的状态机"><a class="header" href="#7-conntrackdnatsnat-的状态机">7. conntrack：DNAT/SNAT 的状态机</a></h2>
+<p>conntrack（<code>nf_conntrack</code>）是 <strong>netfilter 的连接跟踪子系统</strong>，不是防火墙、也不是一个“工具”。它维护一张连接表，记录每条流的：</p>
+<ul>
+<li>原始五元组 + 回复五元组；</li>
+<li>状态：<code>NEW</code>、<code>ESTABLISHED</code>、<code>RELATED</code>、<code>INVALID</code>、<code>UNTRACKED</code>；</li>
+<li>NAT 映射：DNAT/SNAT 后的地址/端口；</li>
+<li>超时、mark、计数器等。</li>
+</ul>
+<p>它和前面几个组件的关系：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>组件</th><th>关系</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>netfilter</strong></td><td>conntrack 是 netfilter 的一部分（<code>nf_conntrack</code>）</td></tr>
+<tr><td><strong>iptables</strong></td><td>可 <code>-m conntrack --ctstate</code> 匹配；NAT 规则依赖 conntrack 记住映射</td></tr>
+<tr><td><strong>nftables</strong></td><td>可 <code>ct state ...</code> 匹配；NAT 同样依赖 conntrack</td></tr>
+<tr><td><strong>IPVS</strong></td><td>有自己的连接表；可选与 conntrack 同步（<code>net/ipv4/vs/conntrack=1</code>）</td></tr>
+<tr><td><strong>eBPF/Cilium</strong></td><td>通常有自己的 BPF conntrack map；不要和内核 conntrack 混为一谈</td></tr>
+</tbody>
+</table>
+</div>
+<p>一句话：<strong>NAT 是“首包改写”，conntrack 是“记住改写，让后续包和回包都能还原”。</strong></p>
 <h3 id="71-一条连接的两段五元组"><a class="header" href="#71-一条连接的两段五元组">7.1 一条连接的两段五元组</a></h3>
 <p>DNAT 只对首包生效，后续包和回包都靠 conntrack：</p>
 <pre><code class="language-text">客户端看到：  PodA:34567  -&gt;  10.96.0.10:80      （original）
@@ -560,16 +627,70 @@ proxier instead.
 <p>大规模 NAT/长连接场景要单独评估：<code>nf_conntrack: table full, dropping packet</code> 会表现为随机丢包/超时，而不是明确的错误。</p>
 <hr>
 <h2 id="8-流量策略etpitp拓扑双栈"><a class="header" href="#8-流量策略etpitp拓扑双栈">8. 流量策略：ETP、ITP、拓扑、双栈</a></h2>
+<h3 id="80-etp-与-itp-是什么"><a class="header" href="#80-etp-与-itp-是什么">8.0 ETP 与 ITP 是什么</a></h3>
+<ul>
+<li><strong>ETP = <code>spec.externalTrafficPolicy</code></strong>：管“外部地址”（NodePort / LoadBalancer / ExternalIPs）的流量怎么分。
+<ul>
+<li><code>Cluster</code>（默认）：可以发到任意节点的端点；通常 SNAT，源 IP 丢失。</li>
+<li><code>Local</code>：只发到<strong>本节点</strong>端点；不 SNAT，保留源 IP；本节点无本地端点（但集群有远端端点）则 <strong>DROP</strong>；完全无端点则 REJECT；需要 <code>healthCheckNodePort</code> 让 LB 判断节点资格（仅 LB + Local）。</li>
+</ul>
+</li>
+<li><strong>ITP = <code>spec.internalTrafficPolicy</code></strong>：管 <strong>ClusterIP</strong>（集群内访问）的流量怎么分。
+<ul>
+<li><code>Cluster</code>（默认）：任意端点。</li>
+<li><code>Local</code>：只发到<strong>本节点</strong>端点；无本地端点（但集群有远端端点）则 <strong>DROP</strong>；完全无端点则 REJECT；没有 HC 端口。</li>
+</ul>
+</li>
+</ul>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th></th><th>ETP</th><th>ITP</th></tr>
+</thead>
+<tbody>
+<tr><td>作用对象</td><td>NodePort / LoadBalancer / ExternalIP</td><td>ClusterIP</td></tr>
+<tr><td>默认值</td><td><code>Cluster</code></td><td><code>Cluster</code></td></tr>
+<tr><td><code>Local</code> 是否保留源 IP</td><td>是（不 SNAT）</td><td>通常不涉及 SNAT（源本来就是 Pod IP）</td></tr>
+<tr><td>无本地端点</td><td>有远端端点则选远端；完全无端点 REJECT</td><td>有远端端点则 DROP；完全无端点 REJECT</td></tr>
+<tr><td>健康检查</td><td><code>healthCheckNodePort</code>（LB + Local）</td><td>无</td></tr>
+<tr><td>典型用途</td><td>保留客户端 IP、审计/限流</td><td>同节点亲和、边缘/本地缓存</td></tr>
+</tbody>
+</table>
+</div>
+<p>一句话：<strong>ETP 决定“外部流量能不能跨节点、源 IP 保不保”；ITP 决定“集群内 ClusterIP 流量能不能跨节点”。</strong></p>
+<blockquote>
+<p><strong>“本节点端点”的准确含义</strong>：指 EndpointSlice 里 <code>nodeName == 当前节点</code> 的 endpoint，它的 <code>addresses</code> 是 <strong>Pod IP</strong>，<code>ports</code> 是解析后的 <strong>targetPort</strong>；不是节点 IP，也不是 ClusterIP。kube-proxy 构建 <code>EndpointsMap</code> 时用 <code>endpoint.NodeName == 本节点名</code> 标记 <code>isLocal</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/endpointslicecache.go#L209-L209">endpointslicecache.go L209</a>、<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/endpointslicecache.go#L255-L256">L255-L256</a>）。</p>
+</blockquote>
 <h3 id="81-etplocal-的四件事"><a class="header" href="#81-etplocal-的四件事">8.1 ETP=Local 的四件事</a></h3>
 <ol>
 <li><strong>不 SNAT</strong>，源 IP 保留；</li>
 <li><strong>只选本节点端点</strong>；</li>
-<li>无本地端点时 filter 表 <strong>DROP</strong>（超时，不是拒绝）；</li>
+<li><strong>只有远端端点、没有本地端点</strong>时 filter 表 <strong>DROP</strong>（超时）；如果整个 Service 完全没有端点，则是 <strong>REJECT</strong>。</li>
 <li>必须配 <code>healthCheckNodePort</code>，kube-proxy 用 200/503 告诉 LB 本节点是否有资格。</li>
 </ol>
+<blockquote>
+<p>两个容易误解的点：</p>
+<ul>
+<li><strong><code>Cluster</code> 不是“把包转发给另一个节点”</strong>：入口节点自己做 DNAT，把目的地址改成某个 Pod IP；如果这个 Pod 在别的节点，包再被路由过去。不是把 VIP 包原样转给另一台节点的 kube-proxy。</li>
+<li><strong><code>Local</code> 的 DROP 不是包到达时临时判断</strong>：kube-proxy 根据 EndpointSlice 预先生成规则；只有远端端点、没有本地端点时，filter 表里就是 DROP 规则。</li>
+</ul>
+</blockquote>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>本节点情况</th><th><code>ETP=Cluster</code></th><th><code>ETP=Local</code></th></tr>
+</thead>
+<tbody>
+<tr><td>有本地端点</td><td>可选本地或远端（概率分发）</td><td>只选本地</td></tr>
+<tr><td>无本地端点，但集群有远端端点</td><td>选远端，DNAT 后路由过去</td><td>DROP（客户端超时）</td></tr>
+<tr><td>集群完全无端点</td><td>REJECT（<code>connection refused</code>）</td><td>REJECT</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>Local</code> 不 SNAT 的根本原因：只选本地端点，回包可以直接从本节点 Pod 回客户端，不需要经过入口节点；<code>Cluster</code> 选远端端点时必须 SNAT，保证回包回到入口节点，由 conntrack 还原 VIP。</p>
 <p>还有一个容易忽略的语义：<strong>从集群内部访问 ExternalIP/LB IP 时总是 Cluster 语义</strong>，不会保留源 IP（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/core/v1/types.go#L6391-L6404">types.go L6391-L6404</a>）。在 Pod 里 <code>curl</code> LB VIP 看到节点 IP 是正常的，不代表外部客户端也这样。</p>
 <h3 id="82-itplocal"><a class="header" href="#82-itplocal">8.2 ITP=Local</a></h3>
-<p><code>internalTrafficPolicy: Local</code> 影响 ClusterIP 路径：kube-proxy 只选同节点端点，无本地端点则 DROP。它适合“拓扑本地性优先、宁可失败也不跨节点“的场景（如本地缓存、边缘）。注意它与 ETP 独立：可以 ETP=Cluster + ITP=Local。</p>
+<p><code>internalTrafficPolicy: Local</code> 影响 ClusterIP 路径：kube-proxy 只选同节点端点，无本地端点（但集群有远端端点）则 DROP；完全无端点则 REJECT。它适合“拓扑本地性优先、宁可失败也不跨节点“的场景（如本地缓存、边缘）。注意它与 ETP 独立：可以 ETP=Cluster + ITP=Local。</p>
 <h3 id="83-双栈"><a class="header" href="#83-双栈">8.3 双栈</a></h3>
 <ul>
 <li><code>ipFamilies</code> 最多两个，顺序即 primary；</li>

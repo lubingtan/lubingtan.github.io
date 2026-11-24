@@ -35,7 +35,7 @@
             const path_to_root = "../../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../../searchindex-dfe22a86.js";
+            window.path_to_searchindex_js = "../../../../searchindex-509c2d6f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../../../toc-d9461900.js"></script>
@@ -298,6 +298,43 @@
 </table>
 </div>
 <p>这个分层不是学术分类，而是排障顺序：<strong>先确认“名字解析对不对“，再确认“VIP 有没有 DNAT 到正确的 Pod“，再确认“这个 Pod IP 能不能被到达“，最后才怀疑 underlay</strong>。反过来从下往上查，经常会在一个明明正常的路由表上浪费半小时。</p>
+<h3 id="21-术语l2l3l4l7-与-overlayunderlay"><a class="header" href="#21-术语l2l3l4l7-与-overlayunderlay">2.1 术语：L2/L3/L4/L7 与 overlay/underlay</a></h3>
+<p>“层“不是学术分类，而是“这一层用什么地址、转发什么单位”：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>层</th><th>数据单位</th><th>地址/标识</th><th>转发依据</th><th>K8s 对应</th></tr>
+</thead>
+<tbody>
+<tr><td>L2</td><td>帧（frame）</td><td>MAC、VLAN ID</td><td>交换机/网桥按 MAC</td><td>cni0、veth、VXLAN 段、MetalLB L2 的 ARP</td></tr>
+<tr><td>L3</td><td>包（packet）</td><td>IP 地址</td><td>路由器/主机路由表</td><td>Pod IP、Node IP、BGP/VPC 路由、ClusterIP（虚拟）</td></tr>
+<tr><td>L4</td><td>段（segment）</td><td>端口 + 协议（TCP/UDP/SCTP）</td><td>NAT/LB/conntrack 按五元组</td><td>Service port、kube-proxy DNAT、L4 LB、NetworkPolicy 端口</td></tr>
+<tr><td>L7</td><td>消息</td><td>URL/Host/Path/Header</td><td>代理解析应用协议</td><td>Ingress、Gateway API、CoreDNS</td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li><strong>二层网络</strong> = 一个广播域：同一 VLAN/网桥/VXLAN 段内按 MAC 转发，不需要 IP 路由；“二层可达“就是能 ARP 到对方。</li>
+<li><strong>三层网络</strong> = IP 路由域：跨子网靠路由表/BGP/VPC 路由；“三层可达“就是 <code>ping</code> 能通。</li>
+<li><strong>四层网络</strong> 不是标准叫法，通常指“四层转发/四层负载均衡“：只看 IP + 端口 + 协议（五元组），不解析 HTTP；ClusterIP/NodePort/kube-proxy 都在这一层。</li>
+<li><strong>L7</strong> 才看 Host/Path/Header，能终止 TLS；Ingress/Gateway 在这一层。</li>
+</ul>
+<p>四层不是“谁比谁高级“，而是<strong>各自有独立的失败模式</strong>：L2 通不代表 L3 通，L3 通不代表 L4 端口开，L4 通不代表 L7 路由/证书对。</p>
+<p><strong>overlay 与 underlay</strong>：</p>
+<ul>
+<li><strong>underlay</strong>：承载节点的底层网络（物理交换机、云 VPC），只负责把 Node IP 连通；</li>
+<li><strong>overlay</strong>：在 underlay 之上用隧道封装出来的虚拟网络（VXLAN/IPIP/Geneve/WireGuard），underlay 只看到外层头，内层才是 Pod 包。</li>
+</ul>
+<pre><code class="language-text">Underlay（native routing）: [IP src=PodA dst=PodB]
+Overlay（VXLAN）:           [IP src=NodeA dst=NodeB][UDP][VXLAN][IP src=PodA dst=PodB]
+                            └──────── underlay 只看到外层 ────────┘
+</code></pre>
+<ul>
+<li><strong>underlay 方案 / native routing</strong>：Pod IP 在底层直接可路由，无封装（Calico BGP、kindnet 静态路由、云 VPC 路由）；</li>
+<li><strong>overlay 方案</strong>：跨节点用隧道（flannel VXLAN、Calico IPIP/VXLAN、OVN Geneve、Cilium tunnel）；</li>
+<li>代价是 MTU：VXLAN 少 50、IPIP 少 20、WireGuard 少 60，详见 <a href="./cni详解.html">CNI 详解</a> 的 “Overlay vs Underlay” 一节。</li>
+</ul>
+<p>一句话：<strong>cni0 是 L2 网桥，VXLAN 是 L2 over L3，Pod IP 是 L3，ClusterIP/NodePort 是 L3+L4，Ingress 是 L7。</strong></p>
 <hr>
 <h2 id="3-pod--pod第一跳"><a class="header" href="#3-pod--pod第一跳">3. Pod → Pod：第一跳</a></h2>
 <p>这是最简单也最容易被忽略的一段：<strong>它没有 Service，也没有 NAT</strong>。</p>
@@ -327,6 +364,9 @@
 <li>反向同理；<strong>源 IP 全程是 <code>10.244.1.5</code></strong>。</li>
 </ol>
 <p>关键点：<code>cni0</code> 必须持有网关 IP，否则 Pod 的下一跳不可达，表现为“有 IP、能 ping 自己、出不去“。<code>net.ipv4.ip_forward=1</code> 和 <code>net.bridge.bridge-nf-call-iptables=1</code> 是节点级前置条件：前者由 CNI 的网关模式设置，后者通常由节点准备脚本/发行版设置（K8s 文档要求网络插件负责，但插件实现并不统一）。bridge-nf 关掉时，iptables 看不到桥接流量，hairpin、portmap、部分 NetworkPolicy 会失效。</p>
+<blockquote>
+<p><strong>图里的 <code>cni0</code> 是什么</strong>：它是 bridge 型 CNI 在<strong>宿主机</strong>上创建的默认网桥（虚拟二层交换机 + 默认网关），不是 Pod 内的网卡，也不是 Kubernetes 对象。Calico 默认 veth + 路由、kind 用 ptp、Cilium 用 eBPF，都可能没有 <code>cni0</code>；此时 Pod→Pod 的路径仍然成立，只是换成路由/隧道/eBPF。名字可在 conflist 的 <code>"bridge"</code> 字段改，检查命令见 <a href="./cni详解.html">CNI 详解</a>。</p>
+</blockquote>
 <h3 id="32-跨节点underlay-路由"><a class="header" href="#32-跨节点underlay-路由">3.2 跨节点：underlay 路由</a></h3>
 <p>如果 CNI 选择 native routing（Calico BGP、kube-router、云路由、kindnet 静态路由），节点路由表里会有对端 PodCIDR：</p>
 <pre><code class="language-bash"># 节点 1
@@ -434,7 +474,7 @@ VXLAN: [node1 172.18.0.2] -&gt; UDP:8472 -&gt; [node2 172.18.0.3]
 </thead>
 <tbody>
 <tr><td>Service 无任何 ready 端点</td><td>kube-proxy 在 <strong>filter</strong> 表对 ClusterIP <code>REJECT</code>（不是 nat 表 DNAT）</td><td><code>connection refused</code>（快速失败），而不是超时</td></tr>
-<tr><td><code>externalTrafficPolicy: Local</code> 但本节点无端点</td><td>filter 表 <code>DROP</code></td><td>外部流量超时；集群内访问仍可能走 Cluster 语义</td></tr>
+<tr><td><code>externalTrafficPolicy: Local</code> 但本节点无本地端点（集群有远端端点）</td><td>filter 表 <code>DROP</code></td><td>外部流量超时；集群内访问仍可能走 Cluster 语义</td></tr>
 <tr><td>headless（<code>clusterIP: None</code>）</td><td><code>ShouldSkipService</code> 直接跳过，不生成任何 VIP 规则（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/proxy/util/utils.go#L56-L70">utils.go L56-L70</a>）</td><td>DNS 直接返回 Pod IP，客户端自己负载均衡</td></tr>
 <tr><td><code>ExternalName</code></td><td>同样跳过；DNS 返回 CNAME</td><td>客户端解析到外部域名，不经过集群网络</td></tr>
 </tbody>
@@ -515,11 +555,11 @@ ready := service.Spec.PublishNotReadyAddresses || (serving &amp;&amp; !terminati
 <tr><th>路径</th><th>默认源 IP</th><th>只选本地端点？</th><th>健康检查</th><th>无可用端点时</th></tr>
 </thead>
 <tbody>
-<tr><td>ClusterIP（集群内）</td><td>Pod IP</td><td>否（可用 <code>internalTrafficPolicy: Local</code>）</td><td>无</td><td>无任何端点 REJECT；ITP=Local 无本地端点 DROP</td></tr>
+<tr><td>ClusterIP（集群内）</td><td>Pod IP</td><td>否（可用 <code>internalTrafficPolicy: Local</code>）</td><td>无</td><td>无任何端点 REJECT；ITP=Local 且仅远端端点 DROP</td></tr>
 <tr><td>NodePort（ETP=Cluster）</td><td>节点 IP（SNAT）</td><td>否</td><td>无</td><td>无任何端点 REJECT</td></tr>
-<tr><td>NodePort（ETP=Local）</td><td>客户端 IP（不 SNAT）</td><td>是</td><td>无</td><td>无本地端点 DROP</td></tr>
+<tr><td>NodePort（ETP=Local）</td><td>客户端 IP（不 SNAT）</td><td>是</td><td>无</td><td>仅远端端点无本地端点 DROP；完全无端点 REJECT</td></tr>
 <tr><td>LoadBalancer（ETP=Cluster）</td><td>节点 IP</td><td>否</td><td>LB → NodePort</td><td>无任何端点 REJECT</td></tr>
-<tr><td>LoadBalancer（ETP=Local）</td><td>客户端 IP</td><td>是</td><td>LB → <code>healthCheckNodePort</code>（200/503）</td><td>无本地端点 DROP + LB 摘节点</td></tr>
+<tr><td>LoadBalancer（ETP=Local）</td><td>客户端 IP</td><td>是</td><td>LB → <code>healthCheckNodePort</code>（200/503）</td><td>仅远端端点无本地端点 DROP + LB 摘节点；完全无端点 REJECT</td></tr>
 <tr><td>Ingress</td><td>客户端 IP 在 <code>X-Forwarded-For</code>；TCP 层是 controller IP</td><td>controller 自己决定</td><td>LB → controller</td><td>controller 返回 502/503</td></tr>
 <tr><td>Gateway</td><td>由实现决定，通常在转发头里</td><td>Route 的 backendRefs</td><td>实现相关</td><td>实现相关</td></tr>
 </tbody>
