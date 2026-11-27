@@ -1,0 +1,819 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>GPU 运维与故障处置 - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../../searchindex-883cd035.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../../toc-003a6783.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/gpu-operations.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="gpu-运维与故障处置"><a class="header" href="#gpu-运维与故障处置">GPU 运维与故障处置</a></h1>
+<blockquote>
+<p><strong>结论先行</strong>：GPU 故障处置的第一原则是<strong>先定故障域，再决定动作</strong>。同一个 <code>nvidia-smi</code> 失败，
+可能是驱动没加载、容器没注入、MIG cap 缺失、Xid 79 掉总线，也可能是节点 OOM。
+第二原则是<strong>不要把某个错误码直接等同硬件报废</strong>：Xid 13/31 常是应用越界，Xid 63/64 是行重映射
+过程，Xid 94 是「已遏制」错误，只有 Xid 95/140 等才要求重置/进一步 RMA 评估。</p>
+<p>第三原则是<strong>停止新分配 ≠ 驱逐已有 Pod</strong>。device plugin 标记 unhealthy 只降低 allocatable，
+已分配 Pod 仍留在故障卡上；真正的隔离要靠 cordon/drain、device taint、Kueue stopPolicy
+或直接删除工作负载。</p>
+</blockquote>
+<h2 id="一事故模型症状--层--故障域"><a class="header" href="#一事故模型症状--层--故障域">一、事故模型：症状 → 层 → 故障域</a></h2>
+<pre class="mermaid">flowchart TB
+    S["症状"] --&gt; S1{"nvidia-smi 能跑吗？"}
+    S1 --&gt;|否| L1["驱动/设备节点/权限层"]
+    S1 --&gt;|是| S2{"容器里能看到分配的设备吗？"}
+    S2 --&gt;|否| L2["注入/CDI/runtime/device cgroup"]
+    S2 --&gt;|是| S3{"CUDA 能初始化吗？"}
+    S3 --&gt;|否| L3["驱动版本/CUDA compat/MIG cap/ECC"]
+    S3 --&gt;|是| S4{"训练/推理稳定吗？"}
+    S4 --&gt;|否| L4["Xid/NVLink/带宽/OOM/争用"]
+    L1 --&gt; D{"故障域"}
+    L2 --&gt; D
+    L3 --&gt; D
+    L4 --&gt; D
+    D --&gt; D1["单进程/单容器"]
+    D --&gt; D2["单 GPU"]
+    D --&gt; D3["单节点/多 GPU"]
+    D --&gt; D4["NVLink/IB fabric"]
+</pre>
+
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>故障域</th><th>典型证据</th><th>处置粒度</th></tr>
+</thead>
+<tbody>
+<tr><td>单进程/单容器</td><td>只有某个 rank 报错；其他 rank 正常</td><td>重启进程/容器；修应用</td></tr>
+<tr><td>单 GPU</td><td>同一 UUID/BDF 反复出错；同节点其他卡正常</td><td>隔离该卡；评估 reset/RMA</td></tr>
+<tr><td>单节点/多 GPU</td><td>同节点多卡同时异常；PCIe/NVLink 共同上游</td><td>隔离节点；检查 PCIe/电源/主板</td></tr>
+<tr><td>Fabric</td><td>多节点同时 Xid 74/79；NVSwitch/IB 异常</td><td>停整个 fabric 的新分配；厂商支持</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="二掉卡与设备不可见"><a class="header" href="#二掉卡与设备不可见">二、掉卡与设备不可见</a></h2>
+<h3 id="21-症状"><a class="header" href="#21-症状">2.1 症状</a></h3>
+<ul>
+<li><code>nvidia-smi</code>：<code>No devices were found</code>、<code>Failed to initialize NVML</code>；</li>
+<li><code>lspci</code> 能看到 NVIDIA 设备，但 <code>/dev/nvidia*</code> 不存在；</li>
+<li>Node 上 GPU capacity 变为 0，或 device plugin CrashLoop；</li>
+<li>Pod 卡在 <code>ContainerCreating</code>，事件里有 <code>Allocate failed</code> / <code>failed to get allocate response</code>；</li>
+<li>容器 <code>Running</code>，但 <code>nvidia-smi -L</code> 报 <code>No devices were found</code>。</li>
+</ul>
+<h3 id="22-分层排查"><a class="header" href="#22-分层排查">2.2 分层排查</a></h3>
+<pre><code class="language-bash"># 1) PCIe 层：设备还在不在？
+lspci -Dnn | grep -i nvidia
+lspci -tv | grep -i nvidia
+dmesg -T | grep -i -E 'nvrm|nvidia|pcie|aer' | tail -100
+
+# 2) 驱动层：模块/设备节点/版本
+lsmod | grep nvidia
+cat /proc/driver/nvidia/version
+ls -l /dev/nvidia*
+nvidia-smi -L
+
+# 3) 插件层
+kubectl -n kube-system logs &lt;nvidia-device-plugin-pod&gt; --tail=200
+kubectl get node &lt;node&gt; -o json | jq '.status.capacity, .status.allocatable'
+kubectl get node &lt;node&gt; --show-labels | tr ',' '\n' | grep nvidia
+
+# 4) 容器层
+kubectl exec &lt;pod&gt; -- ls -l /dev/nvidia* 2&gt;&amp;1
+kubectl exec &lt;pod&gt; -- nvidia-smi -L 2&gt;&amp;1
+crictl inspect &lt;container-id&gt; | jq '.info.runtimeSpec.mounts, .info.runtimeSpec.linux.resources.devices'
+</code></pre>
+<h3 id="23-常见原因"><a class="header" href="#23-常见原因">2.3 常见原因</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>现象</th><th>原因</th><th>处置</th></tr>
+</thead>
+<tbody>
+<tr><td><code>lspci</code> 无设备</td><td>卡未插好、PCIe 链路掉、BIOS/电源问题</td><td>关机 reseat；查 BMC/系统日志；RMA</td></tr>
+<tr><td><code>lspci</code> 有设备，<code>/dev/nvidia*</code> 无</td><td>驱动未加载/加载失败</td><td><code>modprobe nvidia</code>；查 dmesg；重装驱动</td></tr>
+<tr><td><code>nvidia-smi</code> 报 <code>Driver/library version mismatch</code></td><td>内核模块与用户态库版本不一致</td><td>reload 模块/重启；统一驱动版本</td></tr>
+<tr><td><code>nvidia-smi</code> 报 <code>GPU access blocked by the operating system</code></td><td>WSL/虚拟化/IOMMU/权限限制</td><td>查虚拟化配置；不是 K8s 问题</td></tr>
+<tr><td>device plugin 没注册</td><td>插件 CrashLoop、socket 不存在、资源名冲突</td><td>看插件日志；修驱动/toolkit；重启插件</td></tr>
+<tr><td>Pod 里无设备</td><td>没走 nvidia RuntimeClass / CDI 未启用 / env 被覆盖</td><td>修 RuntimeClass/CDI；检查 <code>NVIDIA_VISIBLE_DEVICES</code></td></tr>
+<tr><td>Pod 里设备节点存在但打不开</td><td>device cgroup 拒绝 / 权限不足</td><td>检查 OCI devices 规则；CDI hook 的 chmod</td></tr>
+<tr><td>MIG 资源为 0</td><td><code>migStrategy</code> 不匹配；MIG 未配置；GI/CI 未创建</td><td><code>nvidia-smi mig -lgi</code>；对齐插件策略</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="24-xid-79掉总线"><a class="header" href="#24-xid-79掉总线">2.4 Xid 79：掉总线</a></h3>
+<p>Xid 79 的定义是：驱动尝试通过 PCIe 访问 GPU，但 GPU 不可访问。NVIDIA 文档说通常由 PCIe
+链路硬件故障导致，也可能是 GPU 硬件故障或其他驱动问题。</p>
+<p>处置：</p>
+<ol>
+<li><strong>不要反复 reset</strong>。如果是 PCIe 链路问题，reset 不会恢复，反而可能丢证据；</li>
+<li>抓 <code>lspci -vv</code>、<code>dmesg</code>（AER/PCIe）、BMC SEL、GPU BDF/UUID；</li>
+<li>cordon/drain 节点，停止新分配；</li>
+<li>尝试一次冷重启（不是热 reset）；如果仍不出现，走硬件诊断/RMA；</li>
+<li>如果是 NVSwitch/整机，检查同 NVLink 域的 peer GPU 和 switch。</li>
+</ol>
+<h2 id="三xid先分组再决定动作"><a class="header" href="#三xid先分组再决定动作">三、Xid：先分组，再决定动作</a></h2>
+<p>Xid 是 NVIDIA 驱动报告的错误码，不是「硬件坏了」的同义词。NVIDIA 官方把常见 Xid 分成了
+应用错误、ECC、NVLink、GSP、掉总线等类别。下面只列高频且处置差异大的。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Xid</th><th>含义</th><th>常见归因</th><th>建议动作</th><th>是否等同报废</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>13</strong></td><td>GR：SW 通知错误（越界/非法指令等）</td><td>应用 bug；硬件罕见</td><td><code>compute-sanitizer</code>/<code>cuda-gdb</code> 定位；修应用</td><td>❌</td></tr>
+<tr><td><strong>31</strong></td><td>FIFO：MMU 错误（非法地址）</td><td>应用 bug；驱动/硬件罕见</td><td>同上</td><td>❌</td></tr>
+<tr><td><strong>43</strong></td><td>Reset Channel Verification Error（部分工具标签为 <code>GPU stopped processing</code>）；GPU 仍健康</td><td>应用软件故障</td><td>修应用；GPU 无需处置</td><td>❌</td></tr>
+<tr><td><strong>45</strong></td><td>Preemptive cleanup, due to previous errors（常见于 Ctrl-C/SIGKILL 终止 CUDA 进程）</td><td>用户/系统操作</td><td>正常清理；无需处置</td><td>❌</td></tr>
+<tr><td><strong>48</strong></td><td>DBE（双位 ECC，不可纠正）</td><td>显存硬件/瞬态</td><td>GPU reset 或节点重启；查 ECC 计数</td><td>◐</td></tr>
+<tr><td><strong>63/64</strong></td><td>ECC 行重映射成功/失败</td><td>显存退化</td><td>查 <code>ROW_REMAPPER</code>；64 + 失败标志 → 现场诊断/RMA</td><td>◐</td></tr>
+<tr><td><strong>74</strong></td><td>NVLink 错误</td><td>链路、peer GPU、NVSwitch</td><td>reset 两端；查 <code>nvidia-smi nvlink -e</code>；反复出现找厂商</td><td>◐</td></tr>
+<tr><td><strong>79</strong></td><td>GPU 从总线脱落</td><td>PCIe 链路/GPU 硬件</td><td>冷重启/reseat/RMA；不要热 reset 循环</td><td>◐</td></tr>
+<tr><td><strong>94</strong></td><td>受控（contained）ECC 错误</td><td>单应用</td><td>重启该应用；方便时 reset；其他应用不受影响</td><td>❌</td></tr>
+<tr><td><strong>95</strong></td><td>未受控（uncontained）ECC 错误</td><td>多应用</td><td><strong>先 reset GPU</strong>，再重启应用</td><td>◐</td></tr>
+<tr><td><strong>119/120</strong></td><td>GSP RPC 超时/GSP 错误</td><td>固件/驱动/硬件</td><td>reset/断电重启；反复出现按调试指南</td><td>◐</td></tr>
+<tr><td><strong>140</strong></td><td>不可恢复 ECC，无法行重映射/页面下线</td><td>显存硬件</td><td>reset；仍复现 → RMA</td><td>◐</td></tr>
+<tr><td><strong>121</strong></td><td>C2C 链路已纠正错误（Grace）</td><td>可纠正</td><td>无操作影响；维护窗口 reset 重新训练链路</td><td>❌</td></tr>
+<tr><td><strong>137</strong></td><td>NVLink FLA 权限错误</td><td>应用非法 P2P 访问；驱动/硬件罕见</td><td><code>compute-sanitizer</code>；检查 P2P 使用</td><td>❌</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p>「◐」表示「可能是硬件，但需要进一步诊断，不能仅凭这个码报废」。NVIDIA 文档对 79 也明确说
+可能是 GPU 硬件故障<strong>或其他驱动问题</strong>；对 74 说可能是链路本身，也可能是链路远端设备。</p>
+</blockquote>
+<h3 id="31-处置原则"><a class="header" href="#31-处置原则">3.1 处置原则</a></h3>
+<ol>
+<li><strong>先看是否 contained</strong>：94 通常只影响一个应用；95 影响多个应用，必须先 reset。</li>
+<li><strong>区分「应用错误」和「硬件错误」</strong>：13/31/43/45/109/137 优先查应用；不要直接换卡。</li>
+<li><strong>区分「过程」和「结果」</strong>：63/64 是行重映射过程；64 失败才是 RMA 评估信号。</li>
+<li><strong>不要用单一 Xid 做自动化报废</strong>：至少结合 ECC、ROW_REMAPPER、<code>dcgmi diag</code>、复现次数、
+同卡/同节点相关性。</li>
+</ol>
+<h3 id="32-device-plugin-默认忽略哪些-xid"><a class="header" href="#32-device-plugin-默认忽略哪些-xid">3.2 device plugin 默认忽略哪些 Xid</a></h3>
+<p>NVIDIA device plugin 默认把以下 Xid 视为「应用错误，GPU 仍健康」，不标记 unhealthy：</p>
+<pre><code class="language-text">13, 31, 43, 45, 68, 109
+</code></pre>
+<p>见
+<a href="https://github.com/NVIDIA/k8s-device-plugin/blob/17ab9a55d400ecc8d5a6c781a35f2744907fdd60/internal/rm/health.go#L230-L270"><code>health.go</code></a>。</p>
+<p>可以通过环境变量调整：</p>
+<ul>
+<li><code>DP_DISABLE_HEALTHCHECKS=all</code> 或逗号分隔的 Xid 列表：禁用/忽略；</li>
+<li><code>DP_ENABLE_HEALTHCHECKS=&lt;xid&gt;</code>：显式启用某些 Xid；</li>
+<li>注意：这是<strong>节点级</strong>配置，改错会让整批卡的健康检测失效。</li>
+</ul>
+<h2 id="四ecc-与行重映射不要看到一个计数就报废"><a class="header" href="#四ecc-与行重映射不要看到一个计数就报废">四、ECC 与行重映射：不要看到一个计数就报废</a></h2>
+<h3 id="41-基本概念"><a class="header" href="#41-基本概念">4.1 基本概念</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>概念</th><th>含义</th><th>影响</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>SBE</strong>（single-bit ECC）</td><td>可纠正单位错误</td><td>通常不影响运行；持续增长要关注</td></tr>
+<tr><td><strong>DBE</strong>（double-bit ECC）</td><td>不可纠正双位错误</td><td>可能触发 Xid 48/94/95/140；需要 reset/评估</td></tr>
+<tr><td><strong>volatile</strong></td><td>自上次驱动加载以来的计数</td><td>重启后清零</td></tr>
+<tr><td><strong>aggregate</strong></td><td>生命周期累计计数</td><td>用于长期趋势/RMA</td></tr>
+<tr><td><strong>page retirement</strong></td><td>动态页面下线（Ampere 之前/部分场景）</td><td>有问题的页不再分配；可能有软件可见空洞</td></tr>
+<tr><td><strong>row remapping</strong></td><td>Ampere+ 用备用行替换退化行</td><td>需要 reset 生效；不产生地址空洞</td></tr>
+</tbody>
+</table>
+</div>
+<p>NVIDIA 文档强调：动态页面下线让大多数不可纠正 ECC 错误无需 GPU reset 即可恢复；
+行重映射需要 reset 才生效，并且是持久的。见
+<a href="https://docs.nvidia.com/deploy/a100-gpu-mem-error-mgmt/index.html">GPU Memory Error Management</a>。</p>
+<h3 id="42-查什么"><a class="header" href="#42-查什么">4.2 查什么</a></h3>
+<pre><code class="language-bash">nvidia-smi -q -d ECC
+nvidia-smi -q -d ROW_REMAPPER
+nvidia-smi -q -d PAGE_RETIREMENT
+nvidia-smi --query-gpu=uuid,ecc.errors.uncorrected.volatile.total,ecc.errors.uncorrected.aggregate.total --format=csv
+</code></pre>
+<p>DCGM 对应字段：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>字段</th><th>ID</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>DCGM_FI_DEV_ECC_SBE_VOL_TOTAL</code></td><td>310</td><td>易失性 SBE 总数</td></tr>
+<tr><td><code>DCGM_FI_DEV_ECC_DBE_VOL_TOTAL</code></td><td>311</td><td>易失性 DBE 总数</td></tr>
+<tr><td><code>DCGM_FI_DEV_ECC_SBE_AGG_TOTAL</code></td><td>312</td><td>累计 SBE</td></tr>
+<tr><td><code>DCGM_FI_DEV_ECC_DBE_AGG_TOTAL</code></td><td>313</td><td>累计 DBE</td></tr>
+<tr><td><code>DCGM_FI_DEV_ROW_REMAP_UNCORRECTABLE_TOTAL</code></td><td>393</td><td>因不可纠正错误重映射的行数</td></tr>
+<tr><td><code>DCGM_FI_DEV_ROW_REMAP_CORRECTABLE_TOTAL</code></td><td>394</td><td>因可纠正错误重映射的行数</td></tr>
+<tr><td><code>DCGM_FI_DEV_ROW_REMAP_FAILED</code></td><td>395</td><td>行重映射失败标志</td></tr>
+<tr><td><code>DCGM_FI_DEV_ROW_REMAP_PENDING</code></td><td>396</td><td>行重映射待生效</td></tr>
+</tbody>
+</table>
+</div>
+<p>见 <a href="https://github.com/NVIDIA/DCGM/blob/9fae2867e6e5264fa0fca22a07dc898d591baa21/dcgmlib/dcgm_fields.h#L944-L975"><code>dcgm_fields.h</code></a>
+与 <a href="https://github.com/NVIDIA/DCGM/blob/9fae2867e6e5264fa0fca22a07dc898d591baa21/dcgmlib/dcgm_fields.h#L1278-L1309"><code>dcgm_fields.h</code> 的 row remap 段</a>。</p>
+<h3 id="43-rma-判断"><a class="header" href="#43-rma-判断">4.3 RMA 判断</a></h3>
+<p>NVIDIA 的 RMA 策略阈值不是「出现一个 DBE 就换卡」，而是：</p>
+<ul>
+<li>行重映射失败标志被设置，并经现场诊断验证；</li>
+<li>例如同一 bank 上已经重映射了 8 个不可纠正错误行，再尝试重映射会触发失败标志；</li>
+<li>具体阈值和诊断流程以 NVIDIA 现场诊断工具/文档为准。</li>
+</ul>
+<p>见 <a href="https://docs.nvidia.com/deploy/a100-gpu-mem-error-mgmt/index.html#rma-policy-thresholds-for-row-remapping">Row Remapping 的 RMA 策略阈值</a>。</p>
+<p>实务建议：</p>
+<ol>
+<li>记录 <strong>volatile 与 aggregate</strong> 两个维度，不要只看一个；</li>
+<li>记录错误发生在哪个 bank/row/页（如果工具提供）；</li>
+<li>做一次 <code>dcgmi diag -r 2</code>（需要独占 GPU）或厂商现场诊断；</li>
+<li>如果 <code>ROW_REMAP_FAILED=1</code> 或 Xid 95/140 反复出现，再走 RMA；</li>
+<li>单次 SBE、单次 63/64 不应直接报废。</li>
+</ol>
+<h2 id="五驱动--runtime--cuda-版本不匹配"><a class="header" href="#五驱动--runtime--cuda-版本不匹配">五、驱动 / runtime / CUDA 版本不匹配</a></h2>
+<h3 id="51-典型错误"><a class="header" href="#51-典型错误">5.1 典型错误</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>错误</th><th>层</th><th>原因</th></tr>
+</thead>
+<tbody>
+<tr><td><code>NVRM: API mismatch: the client has the version X, but this kernel module has the version Y</code></td><td>内核日志</td><td>用户态驱动与内核模块版本不一致</td></tr>
+<tr><td><code>Failed to initialize NVML: Driver/library version mismatch</code></td><td>NVML</td><td>同上；常见于升级后未重启</td></tr>
+<tr><td><code>CUDA driver version is insufficient for CUDA runtime version</code></td><td>CUDA</td><td>容器内 CUDA runtime 比宿主机 driver 新</td></tr>
+<tr><td><code>nvidia-container-cli: initialization error: nvml error: driver not loaded</code></td><td>toolkit</td><td>宿主机驱动未加载/容器没挂到驱动</td></tr>
+<tr><td><code>unsupported CUDA version</code> / <code>CUDA_ERROR_UNSUPPORTED_DRIVER_VERSION</code></td><td>CUDA</td><td>版本组合不支持</td></tr>
+<tr><td><code>No devices were found</code></td><td>CUDA/NVML</td><td>设备未注入/驱动未加载/MIG 不可见</td></tr>
+<tr><td>device plugin <code>Failed to initialize NVML</code></td><td>插件</td><td>驱动/toolkit 不匹配；插件 CrashLoop</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="52-排查顺序"><a class="header" href="#52-排查顺序">5.2 排查顺序</a></h3>
+<pre><code class="language-bash"># 宿主机
+cat /proc/driver/nvidia/version
+nvidia-smi --query-gpu=driver_version --format=csv,noheader
+nvidia-container-cli --version 2&gt;/dev/null || nvidia-ctk --version
+nvidia-ctk info 2&gt;/dev/null | head -50
+
+# 容器内
+kubectl exec &lt;pod&gt; -- nvidia-smi --query-gpu=driver_version --format=csv,noheader
+kubectl exec &lt;pod&gt; -- ldconfig -p | grep -E 'libcuda|libnvidia-ml'
+kubectl exec &lt;pod&gt; -- env | grep -E 'CUDA|NVIDIA'
+
+# CDI spec 是否过期
+ls -l /etc/cdi /var/run/cdi
+grep -E 'driver|version|libnvidia' /etc/cdi/nvidia.yaml | head
+</code></pre>
+<h3 id="53-处置"><a class="header" href="#53-处置">5.3 处置</a></h3>
+<ul>
+<li><strong>内核模块 vs 用户态</strong>：统一驱动版本；reload 模块或重启节点。不要只重启 device plugin。</li>
+<li><strong>CUDA runtime vs driver</strong>：升级 driver，或在镜像里用匹配的 CUDA 版本/forward compatibility 包；
+注意 forward compatibility 包不是万能的，生产要验证。</li>
+<li><strong>toolkit/CDI 版本</strong>：升级 toolkit 后重新生成 CDI spec；GPU Operator 会自动做，手工安装要手动做。</li>
+<li><strong>MIG 模式</strong>：切换 MIG 后 device plugin 的 <code>migStrategy</code> 要匹配；否则资源名对不上，
+Pod 会 Pending 或拿到错误 profile。</li>
+<li><strong>RuntimeClass</strong>：hook 模式必须有 nvidia runtime；CDI 模式 runtime 必须启用 CDI。</li>
+<li><strong>容器镜像</strong>：不要覆盖 <code>NVIDIA_VISIBLE_DEVICES=all</code>；不要把 <code>NVIDIA_DRIVER_CAPABILITIES</code>
+裁到只剩 <code>utility</code>。</li>
+</ul>
+<h2 id="六gpu-显存-oom-vs-容器-oom-vs-节点-oom"><a class="header" href="#六gpu-显存-oom-vs-容器-oom-vs-节点-oom">六、GPU 显存 OOM vs 容器 OOM vs 节点 OOM</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>GPU 显存 OOM</th><th>容器 cgroup OOM</th><th>节点 OOM</th></tr>
+</thead>
+<tbody>
+<tr><td>触发者</td><td>CUDA/NVML 驱动</td><td>内核 memcg（<code>memory.max</code>）</td><td>内核全局 OOM killer</td></tr>
+<tr><td>典型错误</td><td><code>CUDA out of memory</code>、<code>torch.OutOfMemoryError</code></td><td><code>OOMKilled</code>、exit 137</td><td><code>dmesg: Out of memory: Killed process</code></td></tr>
+<tr><td>Pod 状态</td><td>可能仍 <code>Running</code>，进程崩/重启</td><td>容器重启，<code>Last State: OOMKilled</code></td><td>多个 Pod/进程受影响</td></tr>
+<tr><td>证据</td><td>应用日志、<code>nvidia-smi</code> memory.used</td><td><code>memory.events</code> 的 <code>oom_kill</code>、<code>memory.max</code></td><td>节点 <code>MemoryPressure</code>、dmesg</td></tr>
+<tr><td>常见原因</td><td>batch 太大、KV cache 太大、泄漏、time-slicing 超卖</td><td>limit 太小、泄漏、page cache</td><td>reserved/eviction 不足、节点超卖</td></tr>
+<tr><td>处置</td><td>调 batch/<code>max_num_seqs</code>/KV cache；加卡/切分；查泄漏</td><td>调 limit/request；加 headroom；查泄漏</td><td>修 reserved/eviction；迁移；加内存</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="61-gpu-显存-oom"><a class="header" href="#61-gpu-显存-oom">6.1 GPU 显存 OOM</a></h3>
+<pre><code class="language-bash">kubectl logs &lt;pod&gt; --tail=200 | grep -i -E 'out of memory|oom'
+kubectl exec &lt;pod&gt; -- nvidia-smi --query-gpu=memory.total,memory.used,memory.free --format=csv
+</code></pre>
+<p>常见误区：</p>
+<ul>
+<li>以为 K8s 的 <code>memory</code> limit 能限制 GPU 显存——不能；</li>
+<li>以为 time-slicing 的 replica 有独立显存——没有；</li>
+<li>以为 <code>gpu_memory_utilization</code> 是硬限制——它是应用自己的预算，不是内核/cgroup 强制；</li>
+<li>以为 MIG 一定不会 OOM——MIG 只保证实例的显存容量，模型超过该容量照样 OOM。</li>
+</ul>
+<h3 id="62-容器-oom"><a class="header" href="#62-容器-oom">6.2 容器 OOM</a></h3>
+<pre><code class="language-bash">kubectl describe pod &lt;pod&gt; | grep -A5 'Last State'
+kubectl get pod &lt;pod&gt; -o jsonpath='{.status.containerStatuses[*].lastState.terminated}'
+cat /sys/fs/cgroup/&lt;path&gt;/memory.events
+cat /sys/fs/cgroup/&lt;path&gt;/memory.max
+</code></pre>
+<p><code>OOMKilled</code> + exit 137 是容器 cgroup OOM 的强信号；但要和「进程自己 <code>exit(137)</code>」区分，
+后者不一定是 OOM。</p>
+<h3 id="63-节点-oom"><a class="header" href="#63-节点-oom">6.3 节点 OOM</a></h3>
+<pre><code class="language-bash">dmesg -T | grep -i -E 'out of memory|oom-kill|killed process'
+kubectl describe node &lt;node&gt; | grep -A10 'Conditions'
+</code></pre>
+<p>节点 OOM 的重点不是「哪个容器被杀」，而是「为什么 kubelet 没提前驱逐」：</p>
+<ul>
+<li><code>memory.available</code> 阈值是否太低；</li>
+<li><code>kubeReserved</code>/<code>systemReserved</code> 是否不足；</li>
+<li>是否有短时间暴涨，kubelet 10s 轮询来不及；</li>
+<li>是否开了 <code>kernelMemcgNotification</code>。</li>
+</ul>
+<h2 id="七健康工具按环境选不要迷信单一信号"><a class="header" href="#七健康工具按环境选不要迷信单一信号">七、健康工具：按环境选，不要迷信单一信号</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>工具</th><th>能看到什么</th><th>看不到什么</th><th>适用</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>device plugin health</strong></td><td>NVML Xid critical/DBE/SBE 事件；标记 unhealthy</td><td>不做完整诊断；单向不可恢复；不迁移已分配 Pod</td><td>所有 device plugin 环境</td></tr>
+<tr><td><strong>DRA health</strong></td><td><code>DRAResourceHealth</code>、Pod <code>allocatedResourcesStatus</code>、设备 taint</td><td>需要驱动实现；NVIDIA GPU DRA 仍实验性</td><td>DRA 环境</td></tr>
+<tr><td><strong>DCGM health</strong></td><td>PCIe/NVLink/PMU/MCU/MEM/SM/Inforom/thermal/power/driver 等 watch</td><td>需要 DCGM 运行；某些 watch 需要数据积累；不是所有字段默认导出</td><td>有 DCGM 的节点</td></tr>
+<tr><td><strong>DCGM exporter</strong></td><td>Prometheus 指标；XID 默认导出，ECC/health 需自定义 counters</td><td>默认 counters 不含 ECC/health；指标滞后</td><td>监控/告警</td></tr>
+<tr><td><strong>GPU Operator validator</strong></td><td>driver/toolkit/plugin/CUDA 的部署验证</td><td>不是持续健康检查；不替代诊断</td><td>GPU Operator 环境</td></tr>
+<tr><td><strong>NPD（Node Problem Detector）</strong></td><td>自定义脚本/日志检查，可上报 Node condition</td><td>需要自己写 GPU 检查；容易误报</td><td>有 NPD 的集群</td></tr>
+<tr><td><strong>厂商现场诊断</strong></td><td>深度硬件诊断、RMA 依据</td><td>需要停机/独占</td><td>疑似硬件故障</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="71-device-plugin-health-的实现细节"><a class="header" href="#71-device-plugin-health-的实现细节">7.1 device plugin health 的实现细节</a></h3>
+<p>NVIDIA device plugin 注册 NVML 事件：</p>
+<pre><code class="language-text">EventTypeXidCriticalError | EventTypeDoubleBitEccError | EventTypeSingleBitEccError
+</code></pre>
+<p>收到 Xid critical 后，把设备标为 unhealthy；但默认忽略 13/31/43/45/68/109。
+源码见 <a href="https://github.com/NVIDIA/k8s-device-plugin/blob/17ab9a55d400ecc8d5a6c781a35f2744907fdd60/internal/rm/health.go#L30-L180"><code>health.go</code></a>。</p>
+<p>注意：</p>
+<ul>
+<li>健康事件是<strong>单向</strong>的；恢复要重启插件；</li>
+<li>unhealthy 只降 allocatable，不驱逐已分配 Pod；</li>
+<li>MIG 设备会按 GI/CI 匹配事件，避免把父卡事件误判到所有实例。</li>
+</ul>
+<h3 id="72-dcgm-health-watch"><a class="header" href="#72-dcgm-health-watch">7.2 DCGM health watch</a></h3>
+<p>DCGM 的健康 watch 覆盖：</p>
+<pre><code class="language-text">PCIE, NVLINK, PMU, MCU, MEM, SM, INFOROM, THERMAL, POWER, DRIVER,
+NVSWITCH_NONFATAL, NVSWITCH_FATAL, CONNECTX, IMEX
+</code></pre>
+<p>见 <a href="https://github.com/NVIDIA/DCGM/blob/9fae2867e6e5264fa0fca22a07dc898d591baa21/dcgmlib/dcgm_structs.h#L2429-L2445"><code>dcgm_structs.h</code></a>。</p>
+<pre><code class="language-bash">dcgmi health -c          # 检查当前健康
+dcgmi health -g 0 -c     # 指定 group
+dcgmi diag -r 1          # 短诊断
+dcgmi diag -r 2          # 中等诊断（需要独占）
+dcgmi dmon -e 230,310,311,393,394,395,396
+</code></pre>
+<p>DCGM 内部默认只把 <strong>Xid 119</strong> 当作 fatal Xid（可通过 <code>__DCGM_FATAL_XIDS__</code> 环境变量扩展）。
+这说明 DCGM 自己也不把「所有 Xid」等同 fatal。见
+<a href="https://github.com/NVIDIA/DCGM/blob/9fae2867e6e5264fa0fca22a07dc898d591baa21/dcgmlib/src/DcgmCacheManager.cpp#L8991-L8995"><code>DcgmCacheManager.cpp</code></a>。</p>
+<h3 id="73-dcgm-exporter-的默认-counters"><a class="header" href="#73-dcgm-exporter-的默认-counters">7.3 DCGM exporter 的默认 counters</a></h3>
+<p><code>dcgm-exporter</code> 默认 counters 里：</p>
+<ul>
+<li><code>DCGM_FI_DEV_XID_ERROR</code>、row remap 393–395、NVLink throughput、PCIe throughput 以及部分
+profiling 指标是默认导出的；</li>
+<li>ECC（310–313）、page retirement、NVLink <strong>错误</strong>计数、row remap pending（396）、health status
+默认是注释或缺失的；</li>
+<li>需要自定义 <code>dcgm-metrics.csv</code> / ConfigMap 才能导出这些字段。</li>
+</ul>
+<p>见 <a href="https://github.com/NVIDIA/dcgm-exporter/blob/4e663a526c4624ad0e18ad816f09b7be2c5348a7/etc/default-counters.csv#L80-L145"><code>default-counters.csv</code></a>。</p>
+<blockquote>
+<p>这意味着：只看默认 dashboard，你可能根本看不到 ECC/row remap。不要因为「监控没报错」
+就认为卡健康；要确认关键字段是否被导出。</p>
+</blockquote>
+<h3 id="74-gpu-operator-validator--node-status-exporter"><a class="header" href="#74-gpu-operator-validator--node-status-exporter">7.4 GPU Operator validator / node status exporter</a></h3>
+<p>GPU Operator 的组件（driver、toolkit、device plugin、DCGM、DCGM exporter、GFD、NFD、MIG manager、
+validator、node status exporter）通过 <code>nvidia.com/gpu.deploy.*</code> 标签编排。validator 负责验证
+driver/toolkit/plugin/CUDA 是否就绪；node status exporter 暴露节点状态。</p>
+<p>注意：</p>
+<ul>
+<li>validator 是<strong>部署验证</strong>，不是持续硬件健康；</li>
+<li>node status exporter 使用的 <code>nvidia-validator</code> 也不是完整 DCGM 诊断；</li>
+<li>GPU Operator 的组件版本要与 driver/CUDA 匹配，升级顺序错误会导致整节点不可用。</li>
+</ul>
+<h2 id="八关联-node--gpu--pod--rank"><a class="header" href="#八关联-node--gpu--pod--rank">八、关联 node / GPU / Pod / rank</a></h2>
+<h3 id="81-关联键"><a class="header" href="#81-关联键">8.1 关联键</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>对象</th><th>关键字段</th><th>从哪里拿</th></tr>
+</thead>
+<tbody>
+<tr><td>Node</td><td>node name、<code>nvidia.com/gpu.product</code>、<code>nvidia.com/mig.strategy</code>、zone</td><td><code>kubectl get node --show-labels</code></td></tr>
+<tr><td>GPU</td><td>UUID、PCI BDF、MIG GI/CI、serial</td><td><code>nvidia-smi -q</code>、<code>lspci</code>、DCGM labels</td></tr>
+<tr><td>Pod</td><td>namespace/name、UID、container、claim</td><td><code>kubectl get pod -o yaml</code></td></tr>
+<tr><td>device plugin 分配</td><td>Pod UID、container、device IDs</td><td>kubelet checkpoint</td></tr>
+<tr><td>DRA 分配</td><td>claim name/UID、driver/pool/device</td><td>ResourceClaim <code>status.allocation</code></td></tr>
+<tr><td>rank</td><td><code>RANK</code>、<code>LOCAL_RANK</code>、<code>WORLD_SIZE</code>、<code>LWS_WORKER_INDEX</code>、<code>JOB_COMPLETION_INDEX</code>、hostname</td><td>Pod env、框架日志</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="82-一条命令把链拉起来"><a class="header" href="#82-一条命令把链拉起来">8.2 一条命令把链拉起来</a></h3>
+<pre><code class="language-bash">NODE=&lt;node&gt;; NS=&lt;ns&gt;; POD=&lt;pod&gt;
+
+# Node → GPU
+kubectl get node $NODE -o json | jq '{capacity:.status.capacity,allocatable:.status.allocatable,labels:.metadata.labels}'
+nvidia-smi -L
+nvidia-smi --query-gpu=index,uuid,pci.bus_id,name,memory.total --format=csv
+
+# Pod → device
+kubectl get pod -n $NS $POD -o yaml | yq '{node:.spec.nodeName,uid:.metadata.uid,claims:.spec.resourceClaims,containers:[.spec.containers[]|{name,resources}]}'
+sudo cat /var/lib/kubelet/device-plugins/kubelet_internal_checkpoint | jq --arg uid "&lt;pod-uid&gt;" '.Data.PodDeviceEntries[] | select(.PodUID==$uid)'
+
+# DRA
+kubectl get resourceclaim -n $NS -o yaml | yq '.items[] | select(.status.allocation != null) | {name:.metadata.name,alloc:.status.allocation}'
+
+# 容器内
+kubectl exec -n $NS $POD -- nvidia-smi -L
+kubectl exec -n $NS $POD -- nvidia-smi --query-gpu=uuid,pci.bus_id --format=csv
+</code></pre>
+<h3 id="83-日志源"><a class="header" href="#83-日志源">8.3 日志源</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>源</th><th>命令</th><th>用途</th></tr>
+</thead>
+<tbody>
+<tr><td>内核</td><td><code>dmesg -T</code>、<code>journalctl -k</code></td><td>NVRM、Xid、PCIe AER、OOM</td></tr>
+<tr><td>kubelet</td><td><code>journalctl -u kubelet</code></td><td>device plugin 注册、Allocate、eviction、DRA prepare</td></tr>
+<tr><td>device plugin</td><td><code>kubectl -n kube-system logs &lt;pod&gt;</code></td><td>ListAndWatch、Xid、NVML 初始化</td></tr>
+<tr><td>containerd</td><td><code>journalctl -u containerd</code></td><td>CDI、runtime、device cgroup</td></tr>
+<tr><td>DCGM exporter</td><td><code>kubectl -n gpu-operator logs &lt;pod&gt;</code></td><td>指标采集、字段错误</td></tr>
+<tr><td>应用</td><td><code>kubectl logs &lt;pod&gt;</code></td><td>CUDA OOM、NCCL、rank 退出</td></tr>
+<tr><td>训练框架</td><td>torchrun/elastic 日志</td><td>rank/rendezvous/checkpoint</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="九处置-runbook停止新分配--隔离--重试--升级"><a class="header" href="#九处置-runbook停止新分配--隔离--重试--升级">九、处置 runbook：停止新分配 → 隔离 → 重试 → 升级</a></h2>
+<h3 id="91-停止新分配"><a class="header" href="#91-停止新分配">9.1 停止新分配</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>手段</th><th>命令/对象</th><th>影响</th></tr>
+</thead>
+<tbody>
+<tr><td>cordon</td><td><code>kubectl cordon &lt;node&gt;</code></td><td>阻止新 Pod 调度；不驱逐已有</td></tr>
+<tr><td>自定义 taint</td><td><code>kubectl taint node &lt;node&gt; nvidia.com/gpu.maintenance=true:NoSchedule</code></td><td>需要 Pod 容忍；适合计划维护</td></tr>
+<tr><td>DRA DeviceTaintRule</td><td><code>DeviceTaintRule</code> + <code>NoSchedule</code>/<code>NoExecute</code></td><td>精确到设备/池；NoExecute 会驱逐</td></tr>
+<tr><td>Kueue stopPolicy</td><td><code>Hold</code> / <code>HoldAndDrain</code></td><td>停止新 admission；drain 会驱逐已准入</td></tr>
+<tr><td>缩容/删除</td><td><code>kubectl scale</code> / <code>delete pod</code></td><td>直接减少负载</td></tr>
+<tr><td>关队列</td><td>Kueue <code>ClusterQueue</code> 停用/配额置 0</td><td>影响整个队列</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p>cordon 只影响调度，不影响已经在跑的 Pod；如果卡已经故障，必须配合 drain/delete 才能把
+工作负载移走。device plugin 的 unhealthy <strong>不会</strong>替你驱逐。</p>
+</blockquote>
+<h3 id="92-隔离"><a class="header" href="#92-隔离">9.2 隔离</a></h3>
+<pre><code class="language-bash"># 节点级
+kubectl cordon &lt;node&gt;
+kubectl drain &lt;node&gt; --ignore-daemonsets --delete-emptydir-data --force
+
+# DRA 设备级
+kubectl apply -f - &lt;&lt;'EOF'
+apiVersion: resource.k8s.io/v1
+kind: DeviceTaintRule
+metadata:
+  name: isolate-gpu
+spec:
+  deviceSelector:
+    driver: gpu.nvidia.com
+    pool: &lt;node-name&gt;
+    device: gpu-3
+  taint:
+    key: gpu.nvidia.com/unhealthy
+    value: "true"
+    effect: NoExecute
+EOF
+</code></pre>
+<p>注意：</p>
+<ul>
+<li><code>NoExecute</code> 会删除使用该设备的 Pod；对训练作业要确认 checkpoint 已保存；</li>
+<li>不要在有运行中进程时 <code>nvidia-smi -r</code> 或切换 MIG 模式；</li>
+<li>NVSwitch/整机故障时，隔离单卡可能不够，要停整个 NVLink 域/fabric；</li>
+<li>如果是 IB/RoCE 问题，先隔离网络端口/交换机，不要只重启 GPU。</li>
+</ul>
+<h3 id="93-重试"><a class="header" href="#93-重试">9.3 重试</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>场景</th><th>动作</th><th>注意</th></tr>
+</thead>
+<tbody>
+<tr><td>Xid 94（contained）</td><td>重启应用/容器；方便时 reset</td><td>其他应用可能不受影响</td></tr>
+<tr><td>Xid 95/140（uncontained）</td><td><strong>先 reset GPU</strong>，再重启应用</td><td>不 reset 直接重试可能再次失败</td></tr>
+<tr><td>Xid 48（DBE）</td><td>reset GPU 或节点重启</td><td>查 ECC/row remap</td></tr>
+<tr><td>Xid 74（NVLink）</td><td>reset 两端 GPU；查 peer/switch</td><td>可能是远端 GPU 故障</td></tr>
+<tr><td>Xid 79（掉总线）</td><td>冷重启/reseat；不要热 reset 循环</td><td>抓 PCIe/BMC 日志</td></tr>
+<tr><td>Xid 119/120（GSP）</td><td>reset/断电重启</td><td>反复出现按调试指南</td></tr>
+<tr><td>驱动不匹配</td><td>统一驱动/重启节点</td><td>不要只重启插件</td></tr>
+<tr><td>Pod OOM</td><td>调 limit/request、batch、KV cache</td><td>区分容器/GPU/节点 OOM</td></tr>
+</tbody>
+</table>
+</div>
+<p>训练作业的重试要和 checkpoint 结合：</p>
+<ul>
+<li>先确认 checkpoint 已落盘/可加载；</li>
+<li>再删 Pod/重启 Job；</li>
+<li>避免调度回同一张故障卡（taint/cordon/device taint）；</li>
+<li>记录失败 rank、GPU UUID、Xid、时间，供后续归因。</li>
+</ul>
+<h3 id="94-升级"><a class="header" href="#94-升级">9.4 升级</a></h3>
+<p>升级到厂商/RMA 的信号：</p>
+<ul>
+<li>同一 GPU 反复 Xid 79/95/140；</li>
+<li><code>ROW_REMAP_FAILED=1</code> 且现场诊断确认；</li>
+<li>ECC DBE 持续增长，reset 后仍复现；</li>
+<li>NVLink 错误反复出现，reset 两端/更换 switch 端口后仍复现；</li>
+<li>PCIe AER 持续报错，reseat/换槽位后仍复现；</li>
+<li>多张卡/多节点同时出现，怀疑主板/电源/背板。</li>
+</ul>
+<p>升级前准备：</p>
+<ul>
+<li>GPU UUID、BDF、serial、driver/firmware 版本；</li>
+<li><code>nvidia-smi -q</code>、<code>dcgmi diag</code>、dmesg、BMC SEL；</li>
+<li>复现步骤/频率/影响范围；</li>
+<li>是否已尝试 reset/reboot/reseat；</li>
+<li>同节点其他卡是否正常。</li>
+</ul>
+<h2 id="十证据保留清单"><a class="header" href="#十证据保留清单">十、证据保留清单</a></h2>
+<p>故障现场最容易丢的是证据。至少保存：</p>
+<ul>
+<li><input disabled="" type="checkbox"> <code>nvidia-smi -q</code>（完整输出，含 ECC、PCI、NVLink、MIG）；</li>
+<li><input disabled="" type="checkbox"> <code>nvidia-smi -L</code>、<code>nvidia-smi topo -m</code>；</li>
+<li><input disabled="" type="checkbox"> <code>dmesg -T</code>（NVRM、Xid、PCIe AER、OOM）；</li>
+<li><input disabled="" type="checkbox"> <code>lspci -vv</code>（BDF、LnkCap/LnkSta、AER）；</li>
+<li><input disabled="" type="checkbox"> <code>dcgmi diag -r 2</code>（如果条件允许）；</li>
+<li><input disabled="" type="checkbox"> DCGM/exporter 指标（Xid、ECC、row remap、温度、功耗、NVLink）；</li>
+<li><input disabled="" type="checkbox"> Pod YAML、container status、<code>allocatedResourcesStatus</code>；</li>
+<li><input disabled="" type="checkbox"> device plugin checkpoint / ResourceClaim allocation；</li>
+<li><input disabled="" type="checkbox"> 训练 rank 日志、checkpoint 时间点；</li>
+<li><input disabled="" type="checkbox"> 变更记录（驱动升级、MIG 切换、节点维护）。</li>
+</ul>
+<h2 id="十一检查清单"><a class="header" href="#十一检查清单">十一、检查清单</a></h2>
+<ul>
+<li><input disabled="" type="checkbox"> 故障域是单进程、单卡、单节点还是 fabric？</li>
+<li><input disabled="" type="checkbox"> 是 reported / allocated / prepared / usable 哪一层？</li>
+<li><input disabled="" type="checkbox"> <code>nvidia-smi</code> 是否能看到卡？容器里看到的是不是分配的那张？</li>
+<li><input disabled="" type="checkbox"> 是否区分了 Xid 的应用错误/contained/uncontained/ECC/fabric？</li>
+<li><input disabled="" type="checkbox"> 是否查了 ECC 的 volatile 与 aggregate、row remap pending/failed？</li>
+<li><input disabled="" type="checkbox"> 是否确认驱动/内核模块/toolkit/CDI/CUDA 版本一致？</li>
+<li><input disabled="" type="checkbox"> 是 GPU 显存 OOM、容器 OOM 还是节点 OOM？</li>
+<li><input disabled="" type="checkbox"> 停止新分配后，是否真的隔离了已分配 Pod？</li>
+<li><input disabled="" type="checkbox"> 重试前是否 reset 了需要 reset 的 GPU？是否保存了 checkpoint？</li>
+<li><input disabled="" type="checkbox"> 是否保留了足够的证据再升级/RMA？</li>
+</ul>
+<h2 id="参考与证据"><a class="header" href="#参考与证据">参考与证据</a></h2>
+<p><strong>NVIDIA 文档</strong></p>
+<ul>
+<li><a href="https://docs.nvidia.com/deploy/xid-errors/index.html">Xid Errors</a></li>
+<li><a href="https://docs.nvidia.com/deploy/a100-gpu-mem-error-mgmt/index.html">GPU Memory Error Management</a></li>
+<li><a href="https://docs.nvidia.com/datacenter/tesla/mig-user-guide/index.html">MIG User Guide</a></li>
+<li><a href="https://docs.nvidia.com/datacenter/dcgm/latest/user-guide/index.html">DCGM User Guide</a></li>
+<li><a href="https://docs.nvidia.com/deploy/nvidia-smi/index.html">nvidia-smi Documentation</a></li>
+<li><a href="https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/index.html">GPU Operator Documentation</a></li>
+</ul>
+<p><strong>Kubernetes 文档</strong></p>
+<ul>
+<li><a href="https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/device-plugins/#device-plugin-and-unhealthy-devices">Device plugin and unhealthy devices</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/scheduling-eviction/node-pressure-eviction/">Node-pressure Eviction</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/resource-management/dynamic-resource-allocation/device-taints/">Device Taints and Tolerations</a></li>
+</ul>
+<p><strong>源码</strong></p>
+<ul>
+<li><a href="https://github.com/NVIDIA/k8s-device-plugin/blob/17ab9a55d400ecc8d5a6c781a35f2744907fdd60/internal/rm/health.go#L30-L270">device plugin health</a></li>
+<li><a href="https://github.com/NVIDIA/k8s-device-plugin/blob/17ab9a55d400ecc8d5a6c781a35f2744907fdd60/internal/plugin/server.go#L266-L281">device plugin ListAndWatch</a></li>
+<li><a href="https://github.com/NVIDIA/DCGM/blob/9fae2867e6e5264fa0fca22a07dc898d591baa21/dcgmlib/dcgm_fields.h#L823">DCGM Xid/ECC 字段</a></li>
+<li><a href="https://github.com/NVIDIA/DCGM/blob/9fae2867e6e5264fa0fca22a07dc898d591baa21/dcgmlib/dcgm_structs.h#L2429-L2445">DCGM health watch</a></li>
+<li><a href="https://github.com/NVIDIA/DCGM/blob/9fae2867e6e5264fa0fca22a07dc898d591baa21/dcgmlib/src/DcgmCacheManager.cpp#L8991-L8995">DCGM fatal Xid 默认值</a></li>
+<li><a href="https://github.com/NVIDIA/dcgm-exporter/blob/4e663a526c4624ad0e18ad816f09b7be2c5348a7/etc/default-counters.csv#L80-L110">dcgm-exporter 默认 counters</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/cm/devicemanager/checkpoint/checkpoint.go#L35-L55">device plugin checkpoint</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/resource/v1/types.go#L945-L1019">DRA health/taints</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../../docs/Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/gpu-access-chain.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../../docs/Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/sharing-isolation-topology.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../../docs/Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/gpu-access-chain.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../../docs/Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/sharing-isolation-topology.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../../highlight-abc7f01d.js"></script>
+        <script src="../../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

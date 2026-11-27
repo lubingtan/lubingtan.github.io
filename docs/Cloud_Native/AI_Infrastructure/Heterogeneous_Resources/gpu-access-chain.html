@@ -1,0 +1,836 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>GPU 软件栈与接入链路 - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../../searchindex-883cd035.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../../toc-003a6783.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/gpu-access-chain.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="gpu-软件栈与接入链路"><a class="header" href="#gpu-软件栈与接入链路">GPU 软件栈与接入链路</a></h1>
+<blockquote>
+<p><strong>结论先行</strong>：一张 GPU 从「插在 PCIe 槽上」到「容器里的 CUDA 进程能用」，要穿过
+<strong>内核驱动 → 设备节点 → NVML → 编排层（device plugin / DRA）→ kubelet → CRI runtime →
+CDI/OCI hook → 容器 cgroup</strong>。任何一层断了，表现都可能是「Pod Running 但看不到卡」。</p>
+<p>DRA 并没有取代这条链路，它改变的是**「谁来决定分配、谁来描述设备、谁来准备节点」<strong>：
+device plugin 用整数 extended resource + kubelet checkpoint；DRA 用 ResourceSlice +
+ResourceClaim + 调度器结构化分配 + 节点侧 <code>NodePrepareResources</code> + CDI。
+无论哪种，</strong>「已上报」「已分配」「已注入」「真可用」仍然是四个独立状态**。</p>
+</blockquote>
+<h2 id="一全链路"><a class="header" href="#一全链路">一、全链路</a></h2>
+<pre class="mermaid">flowchart LR
+    PCI["PCIe 设备&lt;br/&gt;lspci / sysfs"] --&gt; KMD["NVIDIA 内核模块&lt;br/&gt;nvidia / nvidia_uvm / nvidia_modeset"]
+    KMD --&gt; DEV["设备节点&lt;br/&gt;/dev/nvidia* /dev/nvidia-caps"]
+    DEV --&gt; NVML["用户态驱动 + NVML&lt;br/&gt;libnvidia-ml.so.1"]
+    NVML --&gt; DISC["设备发现&lt;br/&gt;device plugin ListAndWatch / DRA ResourceSlice"]
+    DISC --&gt; SCHED["调度&lt;br/&gt;extended resource / ResourceClaim"]
+    SCHED --&gt; KUBELET["kubelet&lt;br/&gt;device manager / DRA manager"]
+    KUBELET --&gt; PREP["准备&lt;br/&gt;Allocate / NodePrepareResources"]
+    PREP --&gt; RUNTIME["CRI runtime&lt;br/&gt;containerd / CRI-O"]
+    RUNTIME --&gt; INJECT["注入&lt;br/&gt;NVIDIA runtime hook 或 CDI"]
+    INJECT --&gt; CGROUP["device cgroup + 容器进程"]
+    CGROUP --&gt; APP["CUDA 应用&lt;br/&gt;nvidia-smi / cuInit / NCCL"]
+</pre>
+
+<p>每一层都有独立的「健康」和「版本」：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>层</th><th>关键版本</th><th>失配的典型后果</th></tr>
+</thead>
+<tbody>
+<tr><td>内核模块</td><td><code>nvidia.ko</code> 版本</td><td>与用户态 NVML 不匹配：<code>Failed to initialize NVML: Driver/library version mismatch</code></td></tr>
+<tr><td>用户态驱动/NVML</td><td><code>libnvidia-ml.so.1</code></td><td><code>nvidia-smi</code> 失败；device plugin 起不来</td></tr>
+<tr><td>CUDA runtime</td><td>容器内 <code>libcudart</code></td><td><code>CUDA driver version is insufficient for CUDA runtime version</code></td></tr>
+<tr><td>container toolkit</td><td><code>nvidia-container-toolkit</code> / <code>libnvidia-container</code></td><td>注入失败、CDI spec 过期、<code>nvidia-container-cli</code> 报错</td></tr>
+<tr><td>CRI runtime</td><td>containerd/CRI-O</td><td>CDI 未启用、RuntimeClass 配错、device cgroup 拒绝</td></tr>
+<tr><td>编排层</td><td>kubelet/device plugin/DRA driver</td><td>资源上报为 0、Allocate 失败、claim 不分配</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="二gpu-在-linux-里的表示"><a class="header" href="#二gpu-在-linux-里的表示">二、GPU 在 Linux 里的表示</a></h2>
+<h3 id="21-pcie-设备与-bdf"><a class="header" href="#21-pcie-设备与-bdf">2.1 PCIe 设备与 BDF</a></h3>
+<p>GPU 首先是一个 PCIe 设备。常用枚举：</p>
+<pre><code class="language-bash">lspci -Dnn | grep -i -E 'nvidia|3d controller|vga'
+# 0000:3b:00.0 3D controller [0302]: NVIDIA Corporation H100 PCIe [10de:2331] (rev a1)
+lspci -tv | grep -i nvidia
+ls -l /sys/bus/pci/devices/0000:3b:00.0/
+cat /sys/bus/pci/devices/0000:3b:00.0/numa_node
+</code></pre>
+<ul>
+<li><code>10de</code> 是 NVIDIA 的 PCI vendor ID；</li>
+<li>class <code>0300</code> 是 VGA，<code>0302</code> 是 3D controller（很多 datacenter GPU 是后者）；</li>
+<li>BDF（<code>domain:bus:device.function</code>）是和 <code>nvidia-smi</code> 的 PCI Bus ID、DCGM、dmesg 关联的关键；</li>
+<li><code>numa_node</code> 是 GPU 的 NUMA 亲和，<code>-1</code> 表示没有亲和信息。</li>
+</ul>
+<blockquote>
+<p><strong>BDF 是跨工具关联的主键</strong>。GPU UUID 在驱动/NVML 层更常用；BDF 在内核/PCIe/DCGM/NIC
+拓扑层更常用。排障时两个都要抓。</p>
+</blockquote>
+<h3 id="22-内核模块与设备节点"><a class="header" href="#22-内核模块与设备节点">2.2 内核模块与设备节点</a></h3>
+<p>NVIDIA 驱动加载后通常有：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>模块/节点</th><th>作用</th><th>缺失/异常的表现</th></tr>
+</thead>
+<tbody>
+<tr><td><code>nvidia</code></td><td>核心 GPU 驱动</td><td>没有 <code>/dev/nvidiactl</code>、<code>/dev/nvidia0</code>；<code>nvidia-smi</code> 失败</td></tr>
+<tr><td><code>nvidia_uvm</code></td><td>Unified Virtual Memory</td><td>CUDA 进程创建 context 失败；<code>/dev/nvidia-uvm</code> 缺失</td></tr>
+<tr><td><code>nvidia_modeset</code> / <code>nvidia_drm</code></td><td>显示/DRM（部分场景）</td><td>图形/EGL 相关失败；计算通常不依赖</td></tr>
+<tr><td><code>/dev/nvidiactl</code></td><td>控制设备</td><td>容器内无法初始化驱动</td></tr>
+<tr><td><code>/dev/nvidia0…N</code></td><td>每张 GPU 的字符设备</td><td>容器内看不到对应卡</td></tr>
+<tr><td><code>/dev/nvidia-uvm</code>、<code>/dev/nvidia-uvm-tools</code></td><td>UVM</td><td>CUDA context/UVM 失败</td></tr>
+<tr><td><code>/dev/nvidia-caps/</code></td><td>MIG capability 设备</td><td>MIG 实例可见但无法使用</td></tr>
+<tr><td><code>/proc/driver/nvidia/version</code></td><td>内核模块版本</td><td>与用户态版本对比</td></tr>
+<tr><td><code>/proc/driver/nvidia/gpus/&lt;BDF&gt;/information</code></td><td>GPU 信息</td><td>确认驱动认到卡</td></tr>
+</tbody>
+</table>
+</div>
+<pre><code class="language-bash">lsmod | grep nvidia
+cat /proc/driver/nvidia/version
+nvidia-smi -q | head -40
+nvidia-smi -L
+</code></pre>
+<p><code>nvidia-smi -L</code> 会列出 GPU 的 UUID 和 MIG 实例；<code>nvidia-smi -q</code> 里的 <code>Driver Version</code>、
+<code>CUDA Version</code>、<code>GPU UUID</code>、<code>PCI Bus ID</code> 是排障四件套。</p>
+<h3 id="23-nvml-与-cuda-的版本关系"><a class="header" href="#23-nvml-与-cuda-的版本关系">2.3 NVML 与 CUDA 的版本关系</a></h3>
+<ul>
+<li><strong>NVML</strong>（<code>libnvidia-ml.so.1</code>）是管理/监控接口，<code>nvidia-smi</code>、DCGM、device plugin 都用它；</li>
+<li><strong>CUDA Driver API</strong>（<code>libcuda.so.1</code>）是计算接口；</li>
+<li><strong>CUDA Runtime</strong>（容器内的 <code>libcudart.so</code>）构建在 Driver API 上。</li>
+</ul>
+<p>版本兼容的粗略规则：</p>
+<ul>
+<li>CUDA runtime 需要 <strong>至少</strong>某个版本的 driver（minor version compatibility 允许一定范围内的低版本 driver）；</li>
+<li>driver 通常向后兼容旧 CUDA runtime，但不保证所有新特性；</li>
+<li>容器镜像里的 CUDA compat 包可以在较旧 driver 上提供部分新 runtime 支持，但<strong>不能替代驱动升级</strong>；</li>
+<li>驱动升级后，<strong>用户态 NVML 与内核模块必须一起更新</strong>，否则就是经典的
+<code>Driver/library version mismatch</code>。</li>
+</ul>
+<blockquote>
+<p>容器里 <code>nvidia-smi</code> 报 <code>Driver/library version mismatch</code>，通常不是容器问题，而是宿主机
+内核模块和用户态库版本不一致（常见于 apt/yum 升级后没重启或没 reload 模块）。这时重启
+device plugin 也没用，必须修宿主机驱动。</p>
+</blockquote>
+<h2 id="三容器-runtime两种注入方式"><a class="header" href="#三容器-runtime两种注入方式">三、容器 runtime：两种注入方式</a></h2>
+<h3 id="31-方式-anvidia-runtime-hook传统路径"><a class="header" href="#31-方式-anvidia-runtime-hook传统路径">3.1 方式 A：NVIDIA runtime hook（传统路径）</a></h3>
+<p><code>nvidia-container-runtime</code> 是一个 runc 的包装器：它在 OCI prestart 阶段调用
+<code>nvidia-container-runtime-hook</code>，后者再调用 <code>nvidia-container-cli</code>，根据环境变量
+（<code>NVIDIA_VISIBLE_DEVICES</code>、<code>NVIDIA_DRIVER_CAPABILITIES</code> 等）修改 OCI spec：</p>
+<ul>
+<li>挂载 <code>/dev/nvidia*</code> 设备节点；</li>
+<li>挂载 driver 库（<code>libcuda</code>、<code>libnvidia-ml</code> 等）；</li>
+<li>设置 <code>LD_LIBRARY_PATH</code>；</li>
+<li>可能的 hooks（<code>update-ldcache</code>、<code>create-symlinks</code>、<code>chmod</code> 等）。</li>
+</ul>
+<p>containerd 配置大致是：</p>
+<pre><code class="language-toml"># containerd 2.x（2.4 的配置版本为 3）
+version = 3
+[plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.nvidia]
+  runtime_type = "io.containerd.runc.v2"
+  [plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.nvidia.options]
+    BinaryName = "/usr/bin/nvidia-container-runtime"
+</code></pre>
+<p>containerd 2.x 的配置版本是 3，插件路径是 <code>io.containerd.cri.v1.runtime</code>；1.x 的
+<code>io.containerd.grpc.v1.cri</code> 在 2.4 中不会注册 runtime。见
+<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/cri/config.md#L30-L45">containerd CRI 配置</a>。</p>
+<p>然后 Pod 指定：</p>
+<pre><code class="language-yaml">spec:
+  runtimeClassName: nvidia
+  containers:
+  - name: cuda
+    image: nvidia/cuda:12.4.0-base-ubuntu22.04
+    resources:
+      limits:
+        nvidia.com/gpu: 1
+</code></pre>
+<p><strong>常见坑</strong>：只设了 <code>NVIDIA_VISIBLE_DEVICES</code> 环境变量，但 Pod 没有走 <code>nvidia</code> RuntimeClass，
+runtime 仍是默认 runc。环境变量在容器里可见，但没有任何 hook 去挂设备节点，于是
+<code>nvidia-smi</code> 报 <code>No devices were found</code> / <code>CUDA_ERROR_NO_DEVICE</code>。</p>
+<h3 id="32-方式-bcdicontainer-device-interface"><a class="header" href="#32-方式-bcdicontainer-device-interface">3.2 方式 B：CDI（Container Device Interface）</a></h3>
+<p>CDI 把「设备需要哪些节点、库、hook」写成一个 YAML spec，由 runtime 在创建容器时解析。
+NVIDIA 的 spec 由 <code>nvidia-ctk cdi generate</code> 生成：</p>
+<pre><code class="language-bash">sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+</code></pre>
+<p>生成的 device 名称包括：</p>
+<ul>
+<li><code>nvidia.com/gpu=gpu0</code>、<code>nvidia.com/gpu=gpu1</code> …（整卡，按 index）；</li>
+<li><code>nvidia.com/gpu=mig&lt;GPU_INDEX&gt;:&lt;MIG_INDEX&gt;</code>（MIG 实例）；</li>
+<li><code>nvidia.com/gpu=all</code>（所有设备）。</li>
+</ul>
+<p>Pod 里可以显式请求：</p>
+<pre><code class="language-yaml">resources:
+  limits:
+    nvidia.com/gpu: 1
+</code></pre>
+<p>device plugin 在 <code>Allocate</code> 时返回 fully-qualified CDI device name（<code>cdi-cri</code> 策略）或
+CDI annotation（<code>cdi-annotations</code> 策略），kubelet 把它交给 CRI runtime。containerd 2.x 默认启用
+CDI，2.4 起 <code>enable_cdi</code> 选项被移除、始终启用；spec 目录默认 <code>/etc/cdi</code>、<code>/var/run/cdi</code>。见
+<a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/RELEASES.md#L641">containerd RELEASES</a>
+和 <a href="https://github.com/containerd/containerd/blob/b7a25261e029d68978bbf290df0a62fc819b3c51/docs/cri/config.md#L448-L451">containerd CRI 配置</a>。</p>
+<p>CDI 的好处：</p>
+<ul>
+<li>不再要求 NVIDIA runtime 作为默认 runtime，只要 runtime 支持 CDI；</li>
+<li>设备注入的「内容」和「选择」解耦，便于审计和复现；</li>
+<li>解决容器更新后丢失设备（<code>NVML: Unknown error</code>）这类问题。</li>
+</ul>
+<p><strong>CDI 的坑</strong>：</p>
+<ul>
+<li>spec 是<strong>生成物</strong>。驱动升级后，旧 spec 里的库路径/版本可能过期，必须重新生成；
+GPU Operator 会自动做，手工安装的不会。</li>
+<li>runtime 必须启用 CDI；老版本 containerd 需要显式 <code>enable_cdi = true</code>。</li>
+<li>CDI 只负责「注入什么」，不负责「设备是否健康」「MIG 配置是否匹配」。</li>
+</ul>
+<h3 id="33-nvidia_visible_devices-与-capabilities"><a class="header" href="#33-nvidia_visible_devices-与-capabilities">3.3 <code>NVIDIA_VISIBLE_DEVICES</code> 与 capabilities</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>值</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td>未设置 / 空</td><td>传统镜像默认 <code>all</code>；非传统镜像可能不注入</td></tr>
+<tr><td><code>all</code></td><td>注入所有 GPU</td></tr>
+<tr><td><code>none</code></td><td>注入空集合（不报错）</td></tr>
+<tr><td><code>void</code></td><td>特殊值：跳过设备注入，通常用于「这个容器不需要 GPU」的 sidecar/validator</td></tr>
+<tr><td><code>GPU-&lt;uuid&gt;</code> / index</td><td>注入指定 GPU</td></tr>
+<tr><td><code>MIG-GPU-&lt;uuid&gt;/&lt;gi&gt;/&lt;ci&gt;</code></td><td>注入指定 MIG 实例</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>NVIDIA_DRIVER_CAPABILITIES</code> 控制注入哪些驱动库，默认 <code>utility,compute</code>：</p>
+<ul>
+<li><code>utility</code>：<code>nvidia-smi</code>、NVML；</li>
+<li><code>compute</code>：<code>libcuda</code>、CUDA；</li>
+<li><code>video</code>、<code>graphics</code>、<code>display</code>、<code>compat32</code>、<code>ngx</code>：按需。</li>
+</ul>
+<p>如果镜像里覆盖成 <code>utility</code> 而漏了 <code>compute</code>，会出现「<code>nvidia-smi</code> 能跑，但 CUDA 初始化失败」。
+源码定义见
+<a href="https://github.com/NVIDIA/nvidia-container-toolkit/blob/adbd28c39b60f8eb7e03115b5ac61e58703f0ce7/internal/config/image/capabilities.go#L30-L48"><code>capabilities.go</code></a>。</p>
+<h3 id="34-device-cgroup最后一厘米"><a class="header" href="#34-device-cgroup最后一厘米">3.4 device cgroup：最后一厘米</a></h3>
+<p>即使 CDI/hook 把 <code>/dev/nvidia0</code> 挂进容器，<strong>device cgroup 仍可能拒绝访问</strong>。runc 会根据
+OCI spec 的 <code>linux.resources.devices</code> 允许/拒绝设备；如果设备节点存在但 cgroup 规则不允许，
+<code>open("/dev/nvidia0")</code> 会得到 <code>Operation not permitted</code>。</p>
+<p>排查：</p>
+<pre><code class="language-bash">crictl inspect &lt;container-id&gt; | jq '.info.runtimeSpec.linux.resources.devices'
+crictl inspect &lt;container-id&gt; | jq '.info.runtimeSpec.mounts[] | select(.destination|test("nvidia"))'
+kubectl exec &lt;pod&gt; -- ls -l /dev/nvidia*
+kubectl exec &lt;pod&gt; -- nvidia-smi -L
+</code></pre>
+<p>这类问题的典型特征是：<code>ls</code> 能看到设备节点，但一打开就失败；或者 <code>nvidia-smi</code> 报
+<code>Failed to initialize NVML: Insufficient Permissions</code>。</p>
+<h2 id="四device-plugin整数资源的经典路径"><a class="header" href="#四device-plugin整数资源的经典路径">四、device plugin：整数资源的经典路径</a></h2>
+<h3 id="41-注册与上报"><a class="header" href="#41-注册与上报">4.1 注册与上报</a></h3>
+<p>device plugin 是一个 DaemonSet，通过 Unix socket 向 kubelet 注册：</p>
+<ul>
+<li>kubelet 注册 socket：<code>/var/lib/kubelet/device-plugins/kubelet.sock</code>（路径硬编码）；</li>
+<li>插件自己监听：<code>/var/lib/kubelet/device-plugins/nvidia-&lt;resource&gt;.sock</code>；</li>
+<li><code>RegisterRequest</code> 包含 version、endpoint、resource name、options。</li>
+</ul>
+<p>注册成功后：</p>
+<ul>
+<li><code>ListAndWatch</code> 持续推送设备列表（ID、health、TopologyInfo）；</li>
+<li>kubelet 把 resource name 作为 <strong>extended resource</strong> 放进 Node 的 capacity/allocatable；</li>
+<li>调度器只看到整数数量，不做设备级选择。</li>
+</ul>
+<p>协议定义见
+<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1/api.proto#L20-L110"><code>api.proto</code></a>。</p>
+<h3 id="42-allocate真正把设备交给容器"><a class="header" href="#42-allocate真正把设备交给容器">4.2 Allocate：真正把设备交给容器</a></h3>
+<p><code>Allocate</code> 在容器创建时被调用，插件返回：</p>
+<ul>
+<li>环境变量（如 <code>NVIDIA_VISIBLE_DEVICES</code>）；</li>
+<li>mounts；</li>
+<li>annotations；</li>
+<li>device specs；</li>
+<li>fully-qualified CDI device names。</li>
+</ul>
+<p>kubelet 把这些合入 CRI 的 <code>ContainerConfig</code>。源码见
+<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/cm/devicemanager/manager.go#L861-L955"><code>allocateContainerResources</code></a>。</p>
+<h3 id="43-checkpoint分配账本"><a class="header" href="#43-checkpoint分配账本">4.3 checkpoint：分配账本</a></h3>
+<p>kubelet 把「哪个 Pod 的哪个容器用了哪些 device ID」写进：</p>
+<pre><code class="language-text">/var/lib/kubelet/device-plugins/kubelet_internal_checkpoint
+</code></pre>
+<p>结构包含 <code>PodUID</code>、<code>ContainerName</code>、<code>ResourceName</code>、<code>DeviceIDs</code>（按 NUMA 分组）、<code>AllocResp</code>。
+见
+<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/cm/devicemanager/checkpoint/checkpoint.go#L35-L55"><code>checkpoint.go</code></a>。</p>
+<p>这个文件是排障「kubelet 到底把哪张卡分给了哪个容器」的第一手证据（注意：device plugin 路径下，设备是 kubelet 的 device manager 选的，不是 kube-scheduler 选的）：</p>
+<pre><code class="language-bash">sudo cat /var/lib/kubelet/device-plugins/kubelet_internal_checkpoint | jq .
+</code></pre>
+<h3 id="44-健康只降-allocatable不迁移-pod"><a class="header" href="#44-健康只降-allocatable不迁移-pod">4.4 健康：只降 allocatable，不迁移 Pod</a></h3>
+<p>device plugin 的 <code>ListAndWatch</code> 可以推送 <code>Unhealthy</code>。kubelet 的处理：</p>
+<ul>
+<li>从 <strong>allocatable</strong> 中扣除该设备；</li>
+<li><strong>capacity 不变</strong>；</li>
+<li>已经分配到该设备的 Pod <strong>不会被迁移</strong>，继续留在故障卡上；</li>
+<li>新 Pod 不会再调度到该设备。</li>
+</ul>
+<p>文档与源码：</p>
+<ul>
+<li><a href="https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/device-plugins/#device-plugin-and-unhealthy-devices">Device plugin and unhealthy devices</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/cm/devicemanager/manager.go#L472-L510"><code>manager.go</code> 的 <code>GetCapacity</code></a></li>
+</ul>
+<p>NVIDIA device plugin 还有一个实现细节：健康事件是<strong>单向</strong>的。源码里明确写着
+<code>FIXME: there is no way to recover from the Unhealthy state</code>——设备一旦被标记 unhealthy，
+插件进程不重启就不会重新变 healthy。见
+<a href="https://github.com/NVIDIA/k8s-device-plugin/blob/17ab9a55d400ecc8d5a6c781a35f2744907fdd60/internal/plugin/server.go#L266-L281"><code>server.go</code></a>。</p>
+<blockquote>
+<p>这意味着「卡恢复了」不等于「Kubernetes 会重新用它」。很多「节点上明明有卡，但 allocatable 一直是 0
+（capacity 仍是卡数）」的场景，需要重启 device plugin（或 GPU Operator 对应组件）才会重新上报。</p>
+</blockquote>
+<h3 id="45-topologyinfo只有-numa"><a class="header" href="#45-topologyinfo只有-numa">4.5 TopologyInfo：只有 NUMA</a></h3>
+<p>device plugin 的 <code>Device.TopologyInfo</code> 只有 <code>NUMANode.ID</code>。kubelet 用它给 Topology Manager
+生成 hint，但<strong>没有 NVLink/PCIe 距离</strong>。所以 device plugin 路径下，Topology Manager 只能做
+NUMA 对齐，不能做「优先选同一 NVLink 域」的放置。</p>
+<p>源码见
+<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/cm/devicemanager/topology_hints.go#L30-L90"><code>topology_hints.go</code></a>。</p>
+<h3 id="46-节点标签与发现nfd--gfd--gpu-operator"><a class="header" href="#46-节点标签与发现nfd--gfd--gpu-operator">4.6 节点标签与发现：NFD / GFD / GPU Operator</a></h3>
+<p>设备发现不只有 device plugin 的 <code>ListAndWatch</code>，还有节点标签这条线：</p>
+<ul>
+<li><strong>NFD</strong>（Node Feature Discovery）从 sysfs 读取 PCI 信息，默认按 <code>class</code> + <code>vendor</code> 生成标签，
+例如 <code>feature.node.kubernetes.io/pci-0302_10de.present=true</code>（NVIDIA 3D controller）；
+配置 <code>deviceLabelFields</code> 可加入 <code>device</code>，变成
+<code>feature.node.kubernetes.io/pci-0302_10de_2331.present=true</code>。见
+<a href="https://github.com/kubernetes-sigs/node-feature-discovery/blob/848df700cb6438122b0ede644b4ca6bf2ac4234f/docs/reference/worker-configuration-reference.md#L450-L480">NFD worker 配置</a>。</li>
+<li><strong>GFD</strong>（GPU Feature Discovery）在 device plugin 仓库里，补充 GPU 语义标签：
+<code>nvidia.com/gpu.product</code>、<code>nvidia.com/gpu.memory</code>、<code>nvidia.com/gpu.present</code>、
+<code>nvidia.com/mig.capable</code>、<code>nvidia.com/mig.strategy</code>、<code>nvidia.com/cuda.driver-version.full</code> 等。
+完整列表见 <a href="https://github.com/NVIDIA/k8s-device-plugin/blob/17ab9a55d400ecc8d5a6c781a35f2744907fdd60/docs/gpu-feature-discovery/README.md#L200-L235">GFD 标签说明</a>。</li>
+<li><strong>GPU Operator</strong> 用 <code>nvidia.com/gpu.deploy.*</code> 标签决定在哪些节点部署 driver/toolkit/device plugin/
+DCGM/validator 等组件；这些标签是<strong>组件编排标签</strong>，不是资源分配结果。组件清单见
+<a href="https://github.com/NVIDIA/gpu-operator/blob/dd9e4347feefa8e46622c78b8bd799820710bf10/api/nvidia/v1/clusterpolicy_types.go#L42-L100"><code>ClusterPolicySpec</code></a>。</li>
+</ul>
+<p>节点标签适合做「节点池/机型选择」，不适合做「设备级分配」：标签是节点级的，无法表达
+「这张卡是 MIG 1g.5gb、那张是整卡」。设备级选择仍然要靠 device plugin 资源名或 DRA 属性。</p>
+<h2 id="五dra把设备描述和设备分配变成-api-对象"><a class="header" href="#五dra把设备描述和设备分配变成-api-对象">五、DRA：把「设备描述」和「设备分配」变成 API 对象</a></h2>
+<h3 id="51-四个核心对象"><a class="header" href="#51-四个核心对象">5.1 四个核心对象</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>对象</th><th>作用</th><th>谁创建</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>DeviceClass</strong></td><td>设备类别 + 可选配置 schema（如 <code>gpu.nvidia.com</code>）</td><td>驱动或管理员</td></tr>
+<tr><td><strong>ResourceSlice</strong></td><td>驱动发布的一批设备：pool、node、attributes、capacity、taints</td><td>DRA driver</td></tr>
+<tr><td><strong>ResourceClaim</strong></td><td>工作负载的一次设备请求；调度后写入 <code>status.allocation</code></td><td>用户/控制器</td></tr>
+<tr><td><strong>ResourceClaimTemplate</strong></td><td>为每个 Pod 生成 ResourceClaim 的模板</td><td>用户</td></tr>
+</tbody>
+</table>
+</div>
+<p>Kubernetes 1.34 DRA GA，1.35 锁定 feature gate；1.37 的 DRA 还包含 DeviceTaintRules、
+partitionable devices 等。见
+<a href="https://kubernetes.io/docs/concepts/resource-management/dynamic-resource-allocation/">Dynamic Resource Allocation</a>。</p>
+<h3 id="52-一次-dra-分配的全流程"><a class="header" href="#52-一次-dra-分配的全流程">5.2 一次 DRA 分配的全流程</a></h3>
+<pre class="mermaid">sequenceDiagram
+    participant U as 用户/控制器
+    participant D as DRA driver
+    participant API as kube-apiserver
+    participant S as kube-scheduler
+    participant K as kubelet
+    participant R as CRI runtime
+    participant C as 容器
+
+    D-&gt;&gt;API: 创建/更新 ResourceSlice（设备、容量、属性、健康）
+    U-&gt;&gt;API: 创建 ResourceClaim / Template
+    S-&gt;&gt;API: 读取 ResourceSlice，按 CEL 过滤，first-fit 选设备
+    S-&gt;&gt;API: 写 ResourceClaim.status.allocation
+    S-&gt;&gt;API: 绑定 Pod 到节点
+    K-&gt;&gt;D: NodePrepareResources(claims)
+    D-&gt;&gt;D: 配置设备（MIG/MPS/time-slicing）+ 生成/选择 CDI
+    D--&gt;&gt;K: 返回 CDI device IDs
+    K-&gt;&gt;R: 创建容器，传入 CDI devices
+    R-&gt;&gt;C: 注入设备节点/库，启动进程
+    C--&gt;&gt;K: 退出
+    K-&gt;&gt;D: NodeUnprepareResources(claims)
+</pre>
+
+<p>关键点：</p>
+<ul>
+<li><strong>调度器做分配</strong>（structured parameters），不是驱动做分配；驱动只发布设备和配置。</li>
+<li><strong>驱动做节点准备</strong>：<code>NodePrepareResources</code> 可以创建 MIG 实例、启动 MPS daemon、设置
+time-slicing、生成 CDI spec。</li>
+<li><strong>kubelet 把 CDI device IDs 传给 runtime</strong>；runtime 负责实际注入。</li>
+<li>驱动可以在 <code>ResourceSlice.spec.skipNodeOperations</code> 里声明跳过 <code>NodePrepareResources</code> /
+<code>NodeUnprepareResources</code>（1.37 中该字段是 alpha，<code>DRAOptionalNodeOperations</code> 默认关闭，
+且依赖 <code>NodeDeclaredFeatures</code>）；<code>SkipNodeOperationNodePrepareResources</code> 只是对应的内部常量。
+不需要节点侧准备的设备可以跳过 gRPC，但不代表设备不需要 CDI/驱动配置。</li>
+</ul>
+<p>Kubernetes 文档把驱动职责写得很清楚：创建/更新 ResourceSlice、按 claim 配置设备并通过 CDI
+挂载、可选地创建 DeviceClass。见
+<a href="https://kubernetes.io/docs/concepts/resource-management/dynamic-resource-allocation/how-dra-works/">How DRA Works</a>。</p>
+<h3 id="53-dra-设备侧到底负责什么"><a class="header" href="#53-dra-设备侧到底负责什么">5.3 DRA 设备侧到底负责什么</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>职责</th><th>具体内容</th><th>不负责</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>描述</strong></td><td>ResourceSlice 的 pool/node、attributes（UUID、型号、PCI BDF、MIG profile、驱动版本）、capacity（memory、SM、copy engine…）</td><td>不负责调度决策</td></tr>
+<tr><td><strong>配置</strong></td><td>按 claim 的 <code>config</code>（如 NVIDIA <code>GpuConfig</code>）设置 MPS/time-slicing/MIG</td><td>不负责安装驱动/toolkit</td></tr>
+<tr><td><strong>准备</strong></td><td><code>NodePrepareResources</code> 创建实例、生成 CDI、返回 device IDs</td><td>不负责容器内应用能否初始化 CUDA</td></tr>
+<tr><td><strong>健康</strong></td><td>更新 ResourceSlice（移除/taint）、实现 <code>DRAResourceHealth</code></td><td>不负责自动修复硬件</td></tr>
+<tr><td><strong>清理</strong></td><td><code>NodeUnprepareResources</code> 释放实例/daemon</td><td>不负责 Pod 重启策略</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="54-nvidia-dra-driver-的现状"><a class="header" href="#54-nvidia-dra-driver-的现状">5.4 NVIDIA DRA Driver 的现状</a></h3>
+<p>截至 <code>v25.12.0</code>：</p>
+<ul>
+<li><strong>ComputeDomain</strong>（MNNVL/IMEX）是正式支持的；</li>
+<li><strong>GPU allocation</strong> 还是实验性，Helm 默认<strong>不启用</strong> GPU kubelet plugin；</li>
+<li>GPU 设备属性包括 <code>type</code>、<code>uuid</code>、<code>productName</code>、<code>brand</code>、<code>architecture</code>、
+<code>cudaComputeCapability</code>、<code>driverVersion</code>、<code>cudaDriverVersion</code>、<code>pciBusID</code>；</li>
+<li>MIG 设备额外有 <code>parentUUID</code>、<code>profile</code>、<code>multiprocessors</code>、<code>copyEngines</code>、<code>memory</code> 等 capacity；</li>
+<li>支持 per-claim 的 <code>GpuConfig</code>：<code>TimeSlicing</code> / <code>MPS</code>，MPS 可设
+<code>defaultActiveThreadPercentage</code>、<code>defaultPinnedDeviceMemoryLimit</code>；</li>
+<li><strong>没有 NVLink 拓扑属性</strong>，也没有 <code>numa</code> 属性（整卡），所以 DRA 目前不能直接表达
+「优先同一 NVLink 域」；需要靠 <code>pciBusID</code>、自定义 DeviceClass/驱动扩展或上层调度器。</li>
+</ul>
+<p>证据：</p>
+<ul>
+<li><a href="https://github.com/NVIDIA/k8s-dra-driver-gpu/blob/0882da8720c28763137e0987778ec476ec4cf8df/README.md">README</a></li>
+<li><a href="https://github.com/NVIDIA/k8s-dra-driver-gpu/blob/0882da8720c28763137e0987778ec476ec4cf8df/cmd/gpu-kubelet-plugin/partitions.go#L35-L66">GPU device 属性</a></li>
+<li><a href="https://github.com/NVIDIA/k8s-dra-driver-gpu/blob/0882da8720c28763137e0987778ec476ec4cf8df/cmd/gpu-kubelet-plugin/deviceinfo.go#L174-L260">MIG device 属性/容量</a></li>
+<li><a href="https://github.com/NVIDIA/k8s-dra-driver-gpu/blob/0882da8720c28763137e0987778ec476ec4cf8df/api/nvidia.com/resource/v1beta1/gpuconfig.go#L28-L70">GpuConfig</a></li>
+<li><a href="https://github.com/NVIDIA/k8s-dra-driver-gpu/blob/0882da8720c28763137e0987778ec476ec4cf8df/api/nvidia.com/resource/v1beta1/sharing.go#L62-L89">MpsConfig</a></li>
+</ul>
+<h3 id="55-dra-的健康与设备-taint"><a class="header" href="#55-dra-的健康与设备-taint">5.5 DRA 的健康与设备 taint</a></h3>
+<p>DRA driver 可以在 ResourceSlice 里给设备加 taint；管理员也可以用 <code>DeviceTaintRule</code> 直接给
+匹配的设备加 taint，不需要驱动配合：</p>
+<ul>
+<li><code>NoSchedule</code>：阻止新 Pod 调度到该设备；</li>
+<li><code>NoExecute</code>：还会驱逐已经使用该设备的 Pod（由 kube-controller-manager 的 device taint
+eviction controller 删除 Pod）；</li>
+<li><code>None</code>：仅信息。</li>
+</ul>
+<p>Device taints 在 1.37 GA。见
+<a href="https://kubernetes.io/docs/concepts/resource-management/dynamic-resource-allocation/device-taints/">Device Taints and Tolerations</a>。</p>
+<p>NVIDIA DRA driver 当前的实现是：检测到 unhealthy 后，<strong>从 ResourceSlice 中移除该设备</strong>，
+而不是加 taint；注释里明确说「没有修复循环，驱动需要重启才能重新发布」。见
+<a href="https://github.com/NVIDIA/k8s-dra-driver-gpu/blob/0882da8720c28763137e0987778ec476ec4cf8df/cmd/gpu-kubelet-plugin/driver.go#L430-L500"><code>driver.go</code></a>。
+这比 device plugin 的「标记 unhealthy」更彻底（新 Pod 看不到设备），但同样不会自动恢复。</p>
+<h3 id="56-dra-的边界"><a class="header" href="#56-dra-的边界">5.6 DRA 的边界</a></h3>
+<ul>
+<li><strong>不安装驱动/toolkit</strong>：那是 GPU Operator 或节点镜像的职责。</li>
+<li><strong>不做抢占</strong>：Kubernetes 文档明确写「scheduler doesn’t support preemption for DRA resources」；
+高优先级 Pod 只能等设备释放。要回收，用 Kueue 等上层机制。</li>
+<li><strong>不保证隔离</strong>：DRA 分配的是设备；time-slicing/MPS/MIG 的隔离语义由设备配置决定。</li>
+<li><strong>不是所有资源都能表达</strong>：NVLink 域、NUMA 距离、NIC 亲和需要驱动把它建模成属性，
+否则调度器看不见。</li>
+</ul>
+<h2 id="六四段状态的观测手册"><a class="header" href="#六四段状态的观测手册">六、四段状态的观测手册</a></h2>
+<h3 id="61-reported已上报"><a class="header" href="#61-reported已上报">6.1 reported（已上报）</a></h3>
+<pre><code class="language-bash">kubectl get node &lt;node&gt; -o json | jq '.status.capacity, .status.allocatable'
+kubectl describe node &lt;node&gt; | grep -A20 'Allocatable'
+kubectl get resourceslices -o wide
+kubectl get resourceslice &lt;name&gt; -o yaml
+kubectl get node &lt;node&gt; --show-labels | tr ',' '\n' | grep nvidia
+</code></pre>
+<ul>
+<li>device plugin：capacity/allocatable 里出现 <code>nvidia.com/gpu: 8</code>；</li>
+<li>DRA：<code>ResourceSlice</code> 里出现设备；Node capacity 里<strong>不一定</strong>有 <code>nvidia.com/gpu</code>
+（DRA 资源不走 extended resource，除非启用 DRAExtendedResource 兼容）；</li>
+<li>GPU Operator：节点有 <code>nvidia.com/gpu.present=true</code>、<code>nvidia.com/gpu.product=...</code>。</li>
+</ul>
+<h3 id="62-allocated已分配"><a class="header" href="#62-allocated已分配">6.2 allocated（已分配）</a></h3>
+<pre><code class="language-bash"># device plugin
+sudo cat /var/lib/kubelet/device-plugins/kubelet_internal_checkpoint | jq .
+kubectl get pod &lt;pod&gt; -o jsonpath='{.spec.nodeName}{"\n"}'
+
+# DRA
+kubectl get resourceclaim &lt;claim&gt; -o yaml | yq '.status.allocation'
+kubectl get pod &lt;pod&gt; -o yaml | yq '.spec.resourceClaims'
+</code></pre>
+<ul>
+<li>device plugin：checkpoint 里有 Pod UID、容器名、device IDs；</li>
+<li>DRA：<code>status.allocation.devices.results[]</code> 有 driver/pool/device/request；</li>
+<li>如果 Pod <code>Pending</code>，看 scheduler events 和 ResourceClaim 是否 <code>Unallocated</code>。</li>
+</ul>
+<h3 id="63-prepared已准备可见"><a class="header" href="#63-prepared已准备可见">6.3 prepared（已准备/可见）</a></h3>
+<pre><code class="language-bash">kubectl exec &lt;pod&gt; -- nvidia-smi -L
+kubectl exec &lt;pod&gt; -- ls -l /dev/nvidia* /dev/nvidia-caps 2&gt;/dev/null
+kubectl exec &lt;pod&gt; -- env | grep -E 'NVIDIA|CUDA'
+crictl inspect &lt;container-id&gt; | jq '.info.runtimeSpec.mounts, .info.runtimeSpec.linux.resources.devices'
+crictl inspect &lt;container-id&gt; | jq '.info.runtimeSpec.annotations'
+</code></pre>
+<ul>
+<li>容器里应看到与分配一致的 UUID/BDF/MIG；</li>
+<li><code>NVIDIA_VISIBLE_DEVICES</code> 应该只包含分配的卡，不是 <code>all</code>；</li>
+<li>CDI 模式下，<code>crictl inspect</code> 的 annotations 或 <code>CDI_devices</code> 字段应包含 device name；</li>
+<li><code>nvidia-smi -L</code> 看到 8 张卡但只分配了 1 张，说明注入范围错了（常见于镜像自带
+<code>NVIDIA_VISIBLE_DEVICES=all</code> 覆盖）。</li>
+</ul>
+<h3 id="64-usable真可用健康"><a class="header" href="#64-usable真可用健康">6.4 usable（真可用/健康）</a></h3>
+<pre><code class="language-bash">kubectl exec &lt;pod&gt; -- nvidia-smi -q -d ECC,ROW_REMAPPER
+kubectl exec &lt;pod&gt; -- nvidia-smi --query-gpu=uuid,name,memory.total,memory.used --format=csv
+kubectl get pod &lt;pod&gt; -o yaml | yq '.status.containerStatuses[].allocatedResourcesStatus'
+dcgmi health -c  # 宿主机，需 DCGM
+</code></pre>
+<ul>
+<li><code>allocatedResourcesStatus</code> 是 1.36 Beta / 1.37 默认开启的字段，报告每个设备的健康；</li>
+<li>DRA 的 <code>DRAResourceHealth</code> 服务会上报设备健康，kubelet 汇总到 Pod status；</li>
+<li>device plugin 的 health 只反映插件检测到的事件，不等于完整硬件诊断。</li>
+</ul>
+<h2 id="七状态迁移失败矩阵"><a class="header" href="#七状态迁移失败矩阵">七、状态迁移失败矩阵</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>迁移</th><th>失败表现</th><th>常见原因</th><th>首查</th></tr>
+</thead>
+<tbody>
+<tr><td>reported → allocated</td><td>Pod Pending，事件 <code>Insufficient nvidia.com/gpu</code></td><td>插件没注册；allocatable=0；MIG 策略不匹配；ResourceSlice 缺失</td><td>Node allocatable、插件日志、ResourceSlice</td></tr>
+<tr><td>allocated → prepared</td><td>容器 <code>Running</code>，<code>nvidia-smi</code> 失败</td><td>没走 nvidia RuntimeClass；CDI 未启用；注入环境变量被覆盖；device cgroup 拒绝</td><td><code>crictl inspect</code>、runtime 配置、<code>/dev/nvidia*</code></td></tr>
+<tr><td>prepared → usable</td><td><code>nvidia-smi</code> 能跑，CUDA 初始化失败</td><td>driver/library mismatch；CUDA compat 缺失；MIG cap 缺失；GPU 被 Xid 打挂</td><td><code>nvidia-smi -q</code>、dmesg、DCGM</td></tr>
+<tr><td>usable → healthy</td><td>训练 hang/性能塌陷</td><td>ECC、NVLink 降级、Xid 74/79、MPS server FAULT、time-slicing 争用</td><td>dmesg、<code>nvidia-smi nvlink</code>、DCGM</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="八最小可用示例"><a class="header" href="#八最小可用示例">八、最小可用示例</a></h2>
+<h3 id="81-device-plugin--runtimeclass"><a class="header" href="#81-device-plugin--runtimeclass">8.1 device plugin + RuntimeClass</a></h3>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: gpu-smoke
+spec:
+  runtimeClassName: nvidia
+  restartPolicy: Never
+  containers:
+  - name: cuda
+    image: nvidia/cuda:12.4.0-base-ubuntu22.04
+    command: ["bash", "-lc", "nvidia-smi -L &amp;&amp; sleep 3600"]
+    resources:
+      limits:
+        nvidia.com/gpu: 1
+</code></pre>
+<h3 id="82-dra-claim"><a class="header" href="#82-dra-claim">8.2 DRA claim</a></h3>
+<pre><code class="language-yaml">apiVersion: resource.k8s.io/v1
+kind: ResourceClaimTemplate
+metadata:
+  name: gpu-claim
+spec:
+  spec:
+    devices:
+      requests:
+      - name: gpu
+        exactly:
+          deviceClassName: gpu.nvidia.com
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: gpu-dra-smoke
+spec:
+  resourceClaims:
+  - name: gpu
+    resourceClaimTemplateName: gpu-claim
+  containers:
+  - name: cuda
+    image: nvidia/cuda:12.4.0-base-ubuntu22.04
+    command: ["bash", "-lc", "nvidia-smi -L &amp;&amp; sleep 3600"]
+    resources:
+      claims:
+      - name: gpu
+</code></pre>
+<h3 id="83-dra-per-claim-mps-配置节选"><a class="header" href="#83-dra-per-claim-mps-配置节选">8.3 DRA per-claim MPS 配置（节选）</a></h3>
+<pre><code class="language-yaml">kind: ResourceClaimTemplate
+spec:
+  spec:
+    devices:
+      requests:
+      - name: mps-gpu
+        exactly:
+          deviceClassName: gpu.nvidia.com
+      config:
+      - requests: ["mps-gpu"]
+        opaque:
+          driver: gpu.nvidia.com
+          parameters:
+            apiVersion: resource.nvidia.com/v1beta1
+            kind: GpuConfig
+            sharing:
+              strategy: MPS
+              mpsConfig:
+                defaultActiveThreadPercentage: 50
+                defaultPinnedDeviceMemoryLimit: 10Gi
+</code></pre>
+<p>完整示例见
+<a href="https://github.com/NVIDIA/k8s-dra-driver-gpu/blob/0882da8720c28763137e0987778ec476ec4cf8df/demo/specs/quickstart/v1/gpu-test5.yaml#L24-L50"><code>gpu-test5.yaml</code></a>。</p>
+<h2 id="九检查清单"><a class="header" href="#九检查清单">九、检查清单</a></h2>
+<ul>
+<li><input disabled="" type="checkbox"> 节点上 <code>lspci</code>、<code>nvidia-smi -L</code>、<code>/dev/nvidia*</code> 是否一致？</li>
+<li><input disabled="" type="checkbox"> 内核模块版本与用户态 NVML 版本是否一致？</li>
+<li><input disabled="" type="checkbox"> Pod 是否指定了正确的 RuntimeClass（hook 模式）或 runtime 是否启用 CDI？</li>
+<li><input disabled="" type="checkbox"> CDI spec 是否在驱动升级后重新生成？</li>
+<li><input disabled="" type="checkbox"> <code>NVIDIA_VISIBLE_DEVICES</code> 是否只包含分配的卡？是否被镜像默认值覆盖？</li>
+<li><input disabled="" type="checkbox"> <code>NVIDIA_DRIVER_CAPABILITIES</code> 是否包含 <code>compute</code>（CUDA）和 <code>utility</code>（NVML）？</li>
+<li><input disabled="" type="checkbox"> device cgroup 是否允许 <code>/dev/nvidia*</code>？</li>
+<li><input disabled="" type="checkbox"> device plugin 的 checkpoint / DRA 的 claim 是否与容器里看到的一致？</li>
+<li><input disabled="" type="checkbox"> 设备健康是否被单独验证（ECC、Xid、MIG cap、DCGM）？</li>
+</ul>
+<h2 id="参考与证据"><a class="header" href="#参考与证据">参考与证据</a></h2>
+<p><strong>Kubernetes 文档</strong></p>
+<ul>
+<li><a href="https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/device-plugins/">Device Plugins</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/resource-management/dynamic-resource-allocation/">Dynamic Resource Allocation</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/resource-management/dynamic-resource-allocation/how-dra-works/">How DRA Works</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/resource-management/dynamic-resource-allocation/dra-observability/">DRA Observability</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/resource-management/dynamic-resource-allocation/device-taints/">Device Taints and Tolerations</a></li>
+</ul>
+<p><strong>Kubernetes 源码（v1.37.2，c50e5395）</strong></p>
+<ul>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1/api.proto#L20-L110">device plugin API</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/cm/devicemanager/manager.go#L861-L955">device manager Allocate</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/cm/devicemanager/manager.go#L472-L510">device manager health/capacity</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/cm/devicemanager/checkpoint/checkpoint.go#L35-L55">device plugin checkpoint</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/cm/dra/manager.go#L236-L470">DRA NodePrepareResources</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/cm/dra/manager.go#L522-L602">DRA CDI devices</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/resource/v1/types.go#L95-L180">ResourceSlice/Device API</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/resource/v1/types.go#L945-L1019">Device taint effects</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/resource/v1/types.go#L232-L266">ResourceSlice.spec.skipNodeOperations</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/cri-api/pkg/apis/runtime/v1/api.proto#L1247-L1320">CRI CDI devices</a></li>
+</ul>
+<p><strong>NVIDIA 源码/文档</strong></p>
+<ul>
+<li><a href="https://github.com/NVIDIA/k8s-device-plugin/blob/17ab9a55d400ecc8d5a6c781a35f2744907fdd60/internal/plugin/server.go#L266-L380">device plugin server</a></li>
+<li><a href="https://github.com/NVIDIA/k8s-device-plugin/blob/17ab9a55d400ecc8d5a6c781a35f2744907fdd60/internal/rm/health.go#L30-L180">device plugin health</a></li>
+<li><a href="https://github.com/NVIDIA/k8s-device-plugin/blob/17ab9a55d400ecc8d5a6c781a35f2744907fdd60/api/config/v1/sharing.go#L20-L50">device plugin sharing config</a></li>
+<li><a href="https://github.com/NVIDIA/k8s-device-plugin/blob/17ab9a55d400ecc8d5a6c781a35f2744907fdd60/docs/cdi.md">CDI 使用说明</a></li>
+<li><a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/cdi-support.html">NVIDIA Container Toolkit CDI</a></li>
+<li><a href="https://github.com/NVIDIA/gpu-operator/blob/dd9e4347feefa8e46622c78b8bd799820710bf10/api/nvidia/v1/clusterpolicy_types.go#L42-L100">GPU Operator 组件</a></li>
+<li><a href="https://github.com/NVIDIA/k8s-dra-driver-gpu/blob/0882da8720c28763137e0987778ec476ec4cf8df/README.md">NVIDIA DRA Driver</a></li>
+<li><a href="https://docs.nvidia.com/deploy/nvidia-smi/index.html">nvidia-smi 文档</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../../docs/Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/cpu-memory-node.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../../docs/Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/gpu-operations.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../../docs/Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/cpu-memory-node.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../../docs/Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/gpu-operations.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../../highlight-abc7f01d.js"></script>
+        <script src="../../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

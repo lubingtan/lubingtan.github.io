@@ -1,0 +1,697 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>CPU、内存与节点资源基础 - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../../searchindex-883cd035.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../../toc-003a6783.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/cpu-memory-node.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="cpu内存与节点资源基础"><a class="header" href="#cpu内存与节点资源基础">CPU、内存与节点资源基础</a></h1>
+<blockquote>
+<p><strong>结论先行</strong>：Kubernetes 的 <code>requests</code> 和 <code>limits</code> 不是同一件事。<strong>request 主要影响调度、QoS 和
+保护水位；limit 才由内核通过 cgroup 强制执行</strong>。CPU 是「可压缩」资源，超限表现为 throttling；
+内存是「不可压缩」资源，超限表现为 reclaim/OOM。把二者当成同一种「配额」来配，是节点抖动、
+容器被 throttle、Pod 被 OOMKilled 的最常见来源。</p>
+<p>这一篇先把 L0 讲清楚：cgroup v1/v2 的字段映射、CPU quota 与 cpuset、内存压力与 eviction、
+以及 CPU Manager / Memory Manager / Topology Manager 的真实作用与边界。后面 GPU 的
+NUMA 对齐、MIG 切片、训推混部，都是建立在这些语义之上的。</p>
+</blockquote>
+<h2 id="一requests--limits-到底分别由谁执行"><a class="header" href="#一requests--limits-到底分别由谁执行">一、requests / limits 到底分别由谁执行</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th><code>requests</code></th><th><code>limits</code></th></tr>
+</thead>
+<tbody>
+<tr><td>主要作用</td><td>调度器选节点；QoS 分类；kubelet 计算保护水位/OOM score</td><td>内核 cgroup 强制执行上限</td></tr>
+<tr><td>CPU</td><td>转成 <code>cpu.weight</code>（v2）或 <code>cpu.shares</code>（v1）；只决定「竞争时的相对份额」</td><td>转成 <code>cpu.max</code>（v2）或 <code>cfs_quota_us</code>+<code>cfs_period_us</code>（v1）；超限被 throttle</td></tr>
+<tr><td>内存</td><td>默认<strong>不</strong>在 cgroup 里预留；只影响调度和 OOM score。开启 MemoryQoS 的 <code>TieredReservation</code> 后才写 <code>memory.min</code>/<code>memory.low</code></td><td>转成 <code>memory.max</code>；超限触发 cgroup 内 OOM kill</td></tr>
+<tr><td>超卖</td><td>可以超卖（节点 request 总和 ≤ allocatable 是调度约束，不是内核约束）</td><td>不可超卖；limit 是硬上限</td></tr>
+<tr><td>典型误解</td><td>「request 小一点没关系，反正 limit 大」</td><td>「limit 设了就不会 OOM」——内存 limit 是<strong>反应式</strong>的，只有内核检测到压力才杀</td></tr>
+</tbody>
+</table>
+</div>
+<p>Kubernetes 文档对二者的区别有一个很准确的表述：CPU limit 由 <strong>CPU throttling</strong> 强制执行，是硬限制；
+memory limit 由 <strong>OOM kill</strong> 强制执行，是反应式的，容器可能先超过 limit，然后在内存压力下被杀。
+见 <a href="https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/">Resource Management for Pods and Containers</a>。</p>
+<p>kubelet 把 API 里的 quantity 翻译成 runtime 资源结构的关键代码在
+<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kuberuntime/kuberuntime_container_linux.go#L354-L400"><code>calculateLinuxResources</code></a>：
+CPU request → <code>CpuShares</code>，CPU limit → <code>CpuQuota</code>/<code>CpuPeriod</code>，memory limit → <code>MemoryLimitInBytes</code>。
+真正的 cgroup 写入由 runtime（containerd + runc）完成。</p>
+<blockquote>
+<p>一个容易忽略的点：如果只写 limit 不写 request，API server 会把 request 默认成 limit
+（除非有 LimitRange 等准入机制另设）。所以「只设 limit」通常等价于「request = limit」，
+会直接改变 QoS 和调度结果。</p>
+</blockquote>
+<h2 id="二qos不是标签是调度与驱逐的输入"><a class="header" href="#二qos不是标签是调度与驱逐的输入">二、QoS：不是标签，是调度与驱逐的输入</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>QoS</th><th>判定条件</th><th>CPU 行为</th><th>内存行为</th><th>驱逐/OOM 优先级</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Guaranteed</strong></td><td>每个容器（或 Pod 级 resources）CPU、memory 的 request 都等于 limit，且都 &gt; 0</td><td>整数 CPU 可被 static CPU Manager 独占</td><td>最不容易被驱逐；OOM score 最低</td><td>最后</td></tr>
+<tr><td><strong>Burstable</strong></td><td>不满足 Guaranteed，但至少一个容器/Pod 有 CPU 或 memory 的 request/limit</td><td>共享池；有 limit 时受 CFS quota</td><td>有 limit 时受 <code>memory.max</code>；OOM score 按 request 比例</td><td>中间</td></tr>
+<tr><td><strong>BestEffort</strong></td><td>所有容器/Pod 都没有 CPU、memory 的 request/limit</td><td>共享池，无 quota</td><td>无 limit；最容易 OOM</td><td>最先</td></tr>
+</tbody>
+</table>
+</div>
+<p>判定与驱逐顺序见 <a href="https://kubernetes.io/docs/concepts/workloads/pods/pod-qos/">Pod QoS Classes</a>。
+注意：<strong>QoS 不直接决定 kubelet 的驱逐顺序</strong>。kubelet 的排序是「是否超过 request → Priority →
+超过 request 的程度」；QoS 只是让你预判谁更可能超过 request。文档明确写了
+<code>The kubelet does not use the pod's QoS class to determine the eviction order.</code></p>
+<h3 id="21-pod-级-resources-与-effective-request"><a class="header" href="#21-pod-级-resources-与-effective-request">2.1 Pod 级 resources 与 effective request</a></h3>
+<p>从 1.34 起 Pod 级 <code>spec.resources</code> 是 Beta 默认开启；1.37 中 Pod 级 <strong>resource managers</strong>
+（CPU/Memory/Topology 使用 Pod 级 resources）还是 Beta 但<strong>默认关闭</strong>。两者不要混为一谈。</p>
+<p>Pod 的 effective request 不是简单把容器加起来：</p>
+<pre><code class="language-text">effective_init = max over init 容器 i ( request(i) + 它之前已启动的 sidecar 的 request )
+effective_steady = sum(所有非 init 容器，即 app + sidecar)
+effective = max(effective_init, effective_steady) + pod overhead
+</code></pre>
+<p>原因：init 容器逐个运行，sidecar 在 init 阶段就已经常驻。调度按 effective request 预留，
+所以「init 容器申请很大」会抬高整个 Pod 的调度请求，即使稳态用不到。详见
+<a href="https://kubernetes.io/docs/concepts/resource-management/effective-pod-requests-limits/">Effective Pod requests and limits</a>。</p>
+<blockquote>
+<p>GPU 训练/推理里的 sidecar（日志、监控、模型加载、KV cache 预热）很容易把 effective request
+抬高一个档位；如果节点只按「稳态」估算容量，就会出现调度不上或节点实际超卖。</p>
+</blockquote>
+<h2 id="三cgroup-v1-与-v2同一语义不同字段"><a class="header" href="#三cgroup-v1-与-v2同一语义不同字段">三、cgroup v1 与 v2：同一语义，不同字段</a></h2>
+<p>Kubernetes 同时支持 cgroup v1 和 v2。v2 是统一层级（unified hierarchy），CPU/内存/IO 控制器挂在
+同一棵树上；v1 是每个控制器一棵树。字段映射如下（以 kubelet 实际写入为准）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>语义</th><th>cgroup v1</th><th>cgroup v2</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td>CPU 相对份额</td><td><code>cpu.shares</code></td><td><code>cpu.weight</code></td><td>v2 权重范围 1–10000，默认 100；kubelet 在两者间做近似换算</td></tr>
+<tr><td>CPU 带宽上限</td><td><code>cpu.cfs_quota_us</code> + <code>cpu.cfs_period_us</code></td><td><code>cpu.max</code>（<code>$MAX $PERIOD</code>）</td><td>默认 period 100ms；<code>max</code> 表示不限</td></tr>
+<tr><td>CPU 统计</td><td><code>cpu.stat</code></td><td><code>cpu.stat</code> / <code>cpu.stat.local</code></td><td>都有 <code>nr_periods</code>、<code>nr_throttled</code>、<code>throttled_usec</code></td></tr>
+<tr><td>CPU 压力</td><td>无统一接口</td><td><code>cpu.pressure</code></td><td>PSI，见后文</td></tr>
+<tr><td>CPU 亲和</td><td><code>cpuset.cpus</code></td><td><code>cpuset.cpus</code> / <code>cpuset.cpus.effective</code></td><td>CPU Manager 写的是前者</td></tr>
+<tr><td>内存 NUMA 亲和</td><td><code>cpuset.mems</code></td><td><code>cpuset.mems</code> / <code>cpuset.mems.effective</code></td><td>Memory Manager 写的是前者</td></tr>
+<tr><td>内存硬上限</td><td><code>memory.limit_in_bytes</code></td><td><code>memory.max</code></td><td>超限触发 cgroup 内 OOM</td></tr>
+<tr><td>内存软限制</td><td><code>memory.soft_limit_in_bytes</code></td><td><code>memory.low</code></td><td>v2 的语义更明确：best-effort 保护</td></tr>
+<tr><td>内存硬保护</td><td>无</td><td><code>memory.min</code></td><td>内核在保护范围内不回收；过度保护会导致 OOM</td></tr>
+<tr><td>内存节流</td><td>无</td><td><code>memory.high</code></td><td>超过后节流 + 强回收，但<strong>不</strong>触发 OOM</td></tr>
+<tr><td>内存事件</td><td><code>memory.failcnt</code> 等</td><td><code>memory.events</code></td><td><code>low/high/max/oom/oom_kill</code> 计数</td></tr>
+<tr><td>OOM 整组杀</td><td>无</td><td><code>memory.oom.group</code></td><td>1 表示 cgroup 内进程整组杀</td></tr>
+<tr><td>PID 上限</td><td><code>pids.max</code></td><td><code>pids.max</code></td><td>防 fork bomb</td></tr>
+</tbody>
+</table>
+</div>
+<p>内核语义以 <a href="https://github.com/torvalds/linux/blob/c03c1a14507dfaf8b856c2608f9ac216021fc222/Documentation/admin-guide/cgroup-v2.rst#L1331-L1509">cgroup v2 文档</a>
+为准。几个关键定义：</p>
+<ul>
+<li><strong><code>memory.min</code>（硬保护）</strong>：使用量在 min 以内时，内核<strong>不会</strong>回收该 cgroup 的内存；
+如果系统没有可回收的无保护内存，就触发 OOM。把超过实际可用的内存设成 min，会导致持续 OOM。</li>
+<li><strong><code>memory.low</code>（软保护）</strong>：使用量在 low 以内时，只有在没有无保护内存可回收时才回收；
+是「尽量不回收」，不是「绝不回收」。</li>
+<li><strong><code>memory.high</code>（节流）</strong>：超过后进程被节流并承受强回收压力；<strong>永远不会</strong>触发 OOM，
+极端情况下可以被突破。适合「先降速、别杀」的场景。</li>
+<li><strong><code>memory.max</code>（硬上限）</strong>：主要限制手段；达到后无法回收就在 cgroup 内触发 OOM。</li>
+<li><strong><code>memory.events</code></strong>：观察 <code>high</code>、<code>max</code>、<code>oom</code>、<code>oom_kill</code> 的第一手证据。</li>
+</ul>
+<h2 id="四cpuquotathrottling-与-cpuset"><a class="header" href="#四cpuquotathrottling-与-cpuset">四、CPU：quota、throttling 与 cpuset</a></h2>
+<h3 id="41-cpu-limit-如何变成-throttling"><a class="header" href="#41-cpu-limit-如何变成-throttling">4.1 CPU limit 如何变成 throttling</a></h3>
+<p>假设容器 <code>limits.cpu = 200m</code>，默认 period 100ms，则 quota = 20ms/100ms。容器内多线程在
+一个 period 的前 20ms 把配额跑完，剩余 80ms 就会被内核挂起，直到下一个 period。
+这就是为什么：</p>
+<ul>
+<li>平均 CPU 使用率只有 20% 的容器，也可能出现严重 throttling；</li>
+<li>延迟敏感服务（推理、网关、tokenizer）的 p99 会在 quota 边界上跳变；</li>
+<li>把 <code>limits.cpu</code> 设得太低，比不设 limit 更容易造成尾延迟。</li>
+</ul>
+<p>诊断：</p>
+<pre><code class="language-bash"># 找到容器 cgroup（cgroup v2）
+crictl inspect &lt;container-id&gt; | jq '.info.runtimeSpec.linux.cgroupsPath'
+# 读取节流统计
+cat /sys/fs/cgroup/&lt;path&gt;/cpu.stat
+#   nr_periods 12345
+#   nr_throttled 678
+#   throttled_usec 45678901
+cat /sys/fs/cgroup/&lt;path&gt;/cpu.max
+#   20000 100000
+
+# 节点/容器级 PSI
+cat /sys/fs/cgroup/&lt;path&gt;/cpu.pressure
+</code></pre>
+<p><code>nr_throttled / nr_periods</code> 是「有多少个 period 被节流」；<code>throttled_usec</code> 是累计被压住的时间。
+两者都要看趋势，不要只看单点。</p>
+<h3 id="42-cpu-managerstatic-策略"><a class="header" href="#42-cpu-managerstatic-策略">4.2 CPU Manager：static 策略</a></h3>
+<p>默认 <code>none</code> 策略：所有容器共享 CPU 池，靠 CFS 调度和 quota。<code>static</code> 策略则把
+<strong>Guaranteed Pod 中整数 CPU request 的容器</strong>放到独占 cpuset：</p>
+<p>条件（源码注释写得最清楚）：</p>
+<ol>
+<li>Pod QoS 是 Guaranteed；</li>
+<li>CPU request 是正整数；</li>
+<li>容器不在共享池里（BestEffort/Burstable/小数 CPU 的 Guaranteed 仍在共享池）。</li>
+</ol>
+<p><code>static</code> 策略要求节点有大于 0 的 CPU 预留（<code>--kube-reserved</code>/<code>--system-reserved</code> 或 <code>--reserved-cpus</code>），否则共享池会被独占分配吃空。CPU 池被分成三块：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>池</th><th>内容</th><th>谁用</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>SHARED</strong></td><td>初始为节点所有 CPU（<strong>包含</strong> RESERVED；启用 <code>strict-cpu-reservation</code> 时先移除 RESERVED）</td><td>BestEffort、Burstable、小数 CPU 的 Guaranteed</td></tr>
+<tr><td><strong>RESERVED</strong></td><td><code>ceil(system-reserved.cpu + kube-reserved.cpu)</code>，或 <code>--reserved-cpus</code> 显式列表</td><td>系统守护进程、kubelet、runtime</td></tr>
+<tr><td><strong>ASSIGNABLE</strong></td><td>总 CPU − RESERVED（从 SHARED 扣除 RESERVED；strict 时 SHARED 已先移除 RESERVED）</td><td>只给独占容器分配</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p>默认（未启用 <code>strict-cpu-reservation</code>）RESERVED 仍留在 SHARED 里，BestEffort/Burstable 可以运行；
+<code>strict-cpu-reservation</code> 才把它们从共享池彻底移除。</p>
+</blockquote>
+<p>源码见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/cm/cpumanager/policy_static.go#L78-L110"><code>policy_static.go</code></a>，
+CPU 亲和写入 cgroup 的路径见
+<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/cm/internal_container_lifecycle_linux.go#L33-L51"><code>internal_container_lifecycle_linux.go</code></a>。</p>
+<p>常用 policy options（1.37 基线）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>选项</th><th>成熟度</th><th>作用</th><th>代价/边界</th></tr>
+</thead>
+<tbody>
+<tr><td><code>full-pcpus-only</code></td><td>GA</td><td>只分配完整物理核，避免 SMT 兄弟核被不同容器占用</td><td>可能降低可分配密度</td></tr>
+<tr><td><code>distribute-cpus-across-numa</code></td><td>Beta</td><td>需要跨 NUMA 时，把 CPU 均匀分散到多个 NUMA</td><td>与 <code>full-pcpus-only</code> 可叠加</td></tr>
+<tr><td><code>align-by-socket</code></td><td>Alpha</td><td>按 socket 边界对齐，而不是 NUMA 边界</td><td>需要开启 Alpha options gate</td></tr>
+<tr><td><code>distribute-cpus-across-cores</code></td><td>Alpha</td><td>把 SMT 线程分散到不同物理核</td><td>与 <code>full-pcpus-only</code> 互斥</td></tr>
+<tr><td><code>strict-cpu-reservation</code></td><td>GA</td><td>把 reserved CPUs 从共享池中彻底移除</td><td>共享池变小；需删 state 文件重启</td></tr>
+<tr><td><code>prefer-align-cpus-by-uncorecache</code></td><td>GA</td><td>尽量按 uncore cache 边界对齐</td><td>尽力而为，不保证</td></tr>
+</tbody>
+</table>
+</div>
+<p>几个必须知道的边界：</p>
+<ul>
+<li><strong>独占只对 Pod 之间生效</strong>。文档明确写：kubelet、runtime 等系统服务仍可能运行在这些
+exclusive CPUs 上；CPU Manager 不是 <code>isolcpus</code>，也没有设置 <code>cpuset.cpus.partition=isolated</code>。
+要更强的隔离，需要内核启动参数（<code>isolcpus</code>、<code>nohz_full</code>、<code>rcu_nocbs</code>）+ IRQ 亲和 + 实际验证。</li>
+<li><strong>1.37 中 exclusive CPUs 不再受 CFS quota 限制</strong>。<code>DisableCPUQuotaWithExclusiveCPUs</code>
+已锁定为 true（1.36 Deprecated，1.37 LockToDefault），所以整数 CPU 的 Guaranteed 容器
+不会因为 quota 被 throttle；但共享池容器仍然会。</li>
+<li><strong>state 文件是硬约束</strong>。<code>/var/lib/kubelet/cpu_manager_state</code> 记录分配；切换策略（none→static）
+或修改 reserved 后不删 state，kubelet 会拒绝启动并提示 drain + 删除 state 文件。</li>
+<li><strong>reconcile 有窗口</strong>。CPU Manager 周期性 reconcile（默认 10s），刚分配的容器在窗口内
+可能仍与共享池有短暂重叠；对延迟极端敏感的场景要考虑这个窗口。</li>
+<li><strong>不支持 CPU 热插拔</strong>。文档明确写了 CPU Manager 不支持运行时 offline/online CPU。</li>
+</ul>
+<h3 id="43-cpuset-不是全部隔离"><a class="header" href="#43-cpuset-不是全部隔离">4.3 cpuset 不是全部隔离</a></h3>
+<p>即使容器被 pin 到 CPU 0-3，仍可能受到：</p>
+<ul>
+<li>系统守护进程、IRQ、内核线程在同一 CPU 上运行；</li>
+<li>同 physical core 的 SMT 兄弟线程（如果没开 <code>full-pcpus-only</code>）被另一个容器占用；</li>
+<li>共享 LLC/uncore cache、内存带宽、NUMA 互连；</li>
+<li>CPU 频率/功耗管理（turbo、C-state）带来的抖动。</li>
+</ul>
+<p>所以「CPU 独占」是<strong>调度域隔离</strong>，不是「性能隔离保证」。真正做低延迟，需要把
+cpuset、IRQ、NUMA、内存带宽、SMT 和频率策略一起考虑。</p>
+<h2 id="五内存保护节流硬上限与压力"><a class="header" href="#五内存保护节流硬上限与压力">五、内存：保护、节流、硬上限与压力</a></h2>
+<h3 id="51-cgroup-v2-的四个水位"><a class="header" href="#51-cgroup-v2-的四个水位">5.1 cgroup v2 的四个水位</a></h3>
+<pre><code class="language-text">memory.min   ── 硬保护：不回收；过度保护 → OOM
+memory.low   ── 软保护：尽量不回收
+memory.high  ── 节流：降速 + 强回收；不杀
+memory.max   ── 硬上限：回收不了就 OOM
+</code></pre>
+<p>Kubernetes 的默认行为很重要：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>配置</th><th>默认</th><th>效果</th></tr>
+</thead>
+<tbody>
+<tr><td><code>memory.max</code></td><td>由 limit 设置</td><td>容器的硬上限</td></tr>
+<tr><td><code>memory.high</code></td><td><code>memoryThrottlingFactor</code> 默认 <strong>nil</strong></td><td>默认<strong>不设置</strong> <code>memory.high</code>，即不节流</td></tr>
+<tr><td><code>memory.min</code> / <code>memory.low</code></td><td><code>memoryReservationPolicy</code> 默认 <strong>None</strong></td><td>默认<strong>不设置</strong>保护</td></tr>
+<tr><td><code>memory.oom.group</code></td><td>cgroup v2 上默认设为 <code>1</code>（<code>SingleProcessOOMKill</code> 未配置时 kubelet 取 false）；cgroup v1 无此文件</td><td>cgroup v2 默认<strong>整组杀</strong>，避免容器内只死一个进程留下坏状态；显式设 <code>SingleProcessOOMKill=true</code> 可恢复单进程行为</td></tr>
+</tbody>
+</table>
+</div>
+<p>MemoryQoS 在 1.37 是 Beta 且默认开启，但它只是「允许使用」这些机制；要真正生效，必须显式配置
+<code>memoryThrottlingFactor</code> 和/或 <code>memoryReservationPolicy: TieredReservation</code>。文档写得很清楚：
+<code>The default kubelet configuration does not enable memory throttling or memory protection.</code></p>
+<h3 id="52-memoryqos-的两个旋钮"><a class="header" href="#52-memoryqos-的两个旋钮">5.2 MemoryQoS 的两个旋钮</a></h3>
+<p><strong>节流</strong>（<code>memoryThrottlingFactor</code>，0 &lt; f ≤ 1）：</p>
+<pre><code class="language-text">memory.high = floor[(request + f × (limit - request)) / pageSize] × pageSize
+</code></pre>
+<p>如果 Burstable 容器没有 memory limit，则用 node allocatable 替代 limit。Guaranteed 容器
+request == limit，不设 <code>memory.high</code>。例如 request 256Mi、limit 1Gi、f=0.9，
+<code>memory.high ≈ 947Mi</code>。</p>
+<p><strong>分层保护</strong>（<code>memoryReservationPolicy: TieredReservation</code>）：</p>
+<ul>
+<li>Guaranteed Pod：<code>memory.min = request</code>（硬保护）；</li>
+<li>Burstable Pod：<code>memory.low = request</code>（软保护）；</li>
+<li>BestEffort：不设保护；</li>
+<li>同时给 <code>kubeps.slice</code> 等祖先 cgroup 设置聚合保护，否则子 cgroup 的保护无效。</li>
+</ul>
+<p>源码见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kuberuntime/kuberuntime_container_linux.go#L218-L267"><code>kuberuntime_container_linux.go</code></a>
+和 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/cm/qos_container_manager_linux.go#L333-L370"><code>qos_container_manager_linux.go</code></a>。</p>
+<blockquote>
+<p><strong>重要警告</strong>：Guaranteed 的 request == limit，所以 <code>memory.min == memory.max</code>。
+如果工作负载有大量 page cache，内核可能来不及回收就到 <code>memory.max</code>，反而更容易 OOM。
+文档专门提示：limit 要给 page cache 留余量。见
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/pod-qos/#configuring-memory-reservation">Memory QoS 的 Caution</a>。</p>
+</blockquote>
+<h3 id="53-怎么读内存压力"><a class="header" href="#53-怎么读内存压力">5.3 怎么读内存压力</a></h3>
+<p>优先级从高到低：</p>
+<ol>
+<li><strong><code>memory.events</code></strong>：<code>high</code> 增多说明在节流；<code>max</code> 增多说明摸到硬上限；<code>oom_kill</code> 是实际被杀。</li>
+<li><strong><code>memory.current</code> / <code>memory.peak</code></strong>：当前/峰值使用量；<code>memory.peak</code> 可 reset。</li>
+<li><strong>PSI <code>memory.pressure</code></strong>：<code>some avg10/60/300</code> 表示有任务因内存停顿的时间比例；
+<code>full</code> 表示所有可运行任务都停顿。比「使用率」更接近「用户体验」。</li>
+<li><strong><code>memory.stat</code></strong>：<code>anon</code>、<code>file</code>、<code>inactive_file</code>、<code>active_file</code>、<code>slab</code> 等，用于判断
+是匿名内存涨还是 page cache 涨。</li>
+<li><strong>节点 <code>memory.available</code></strong>：kubelet 的驱逐信号，不等于 <code>free</code>。</li>
+</ol>
+<pre><code class="language-bash">cat /sys/fs/cgroup/&lt;path&gt;/memory.current
+cat /sys/fs/cgroup/&lt;path&gt;/memory.peak
+cat /sys/fs/cgroup/&lt;path&gt;/memory.events
+cat /sys/fs/cgroup/&lt;path&gt;/memory.pressure
+grep -E '^(anon|file|inactive_file|active_file|slab) ' /sys/fs/cgroup/&lt;path&gt;/memory.stat
+</code></pre>
+<p><code>memory.available</code> 的计算（Linux）：<code>node.status.capacity[memory] - node.stats.memory.workingSet</code>，
+其中 workingSet 会排除 <code>inactive_file</code>。这意味着 page cache 很多时，<code>free</code> 很低但
+<code>memory.available</code> 可能仍然健康；反过来，<code>active_file</code> 会被当作不可回收，可能误触发压力。
+详见 <a href="https://kubernetes.io/docs/concepts/scheduling-eviction/node-pressure-eviction/">Node-pressure Eviction</a>。</p>
+<h3 id="54-节点可分配量与-eviction"><a class="header" href="#54-节点可分配量与-eviction">5.4 节点可分配量与 eviction</a></h3>
+<pre><code class="language-text">Node Allocatable = Node Capacity
+                 - kubeReserved
+                 - systemReserved
+                 - evictionHard thresholds
+                 (内存还要减去预分配的 hugepages)
+</code></pre>
+<p><code>Capacity</code> 来自 <code>/proc/meminfo</code> 的 <code>MemTotal</code>，不是物理内存条容量；内核/固件在启动时保留的内存
+不算。见 <a href="https://kubernetes.io/docs/tasks/administer-cluster/reserve-compute-resources/">Reserve Compute Resources</a>。</p>
+<p>默认硬驱逐阈值（Linux）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>信号</th><th>默认阈值</th></tr>
+</thead>
+<tbody>
+<tr><td><code>memory.available</code></td><td>100Mi</td></tr>
+<tr><td><code>nodefs.available</code></td><td>10%</td></tr>
+<tr><td><code>nodefs.inodesFree</code></td><td>5%</td></tr>
+<tr><td><code>imagefs.available</code></td><td>15%</td></tr>
+<tr><td><code>imagefs.inodesFree</code></td><td>5%</td></tr>
+</tbody>
+</table>
+</div>
+<p>源码见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/eviction/defaults_linux.go#L21-L28"><code>defaults_linux.go</code></a>。</p>
+<ul>
+<li><strong>硬驱逐</strong>：无 grace period，立即杀 Pod；</li>
+<li><strong>软驱逐</strong>：<code>evictionSoft</code> + <code>evictionSoftGracePeriod</code>，超过阈值持续一段时间才驱逐；</li>
+<li><code>evictionPressureTransitionPeriod</code> 默认 5m，防止节点条件抖动；</li>
+<li>kubelet 默认每 10s 评估一次；短时间暴涨可能来不及，直接触发内核 OOM；</li>
+<li><code>kernelMemcgNotification</code> 可以更早收到 memcg 阈值通知。</li>
+</ul>
+<p>驱逐排序（不是按 QoS）：</p>
+<ol>
+<li>BestEffort 或 Burstable 中<strong>超过 request</strong> 的 Pod；</li>
+<li>按 Priority、再按超过 request 的程度；</li>
+<li>Guaranteed 和未超过 request 的 Burstable 最后，按 Priority。</li>
+</ol>
+<h3 id="55-三种-oom-必须分清"><a class="header" href="#55-三种-oom-必须分清">5.5 三种 OOM 必须分清</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>类型</th><th>触发者</th><th>典型信号</th><th>影响范围</th><th>处理方向</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>容器 cgroup OOM</strong></td><td>内核 memcg（<code>memory.max</code>）</td><td><code>OOMKilled</code>、exit 137、<code>memory.events oom_kill</code></td><td>单容器/单 Pod</td><td>调 limit/request、查泄漏、加 headroom</td></tr>
+<tr><td><strong>节点 OOM</strong></td><td>内核全局 OOM killer</td><td><code>dmesg</code> 的 <code>Out of memory: Killed process</code>、节点 <code>MemoryPressure</code></td><td>节点上多个进程</td><td>修 reserved/eviction、迁移负载、加内存</td></tr>
+<tr><td><strong>GPU 显存 OOM</strong></td><td>CUDA/NVML 驱动</td><td><code>CUDA out of memory</code>、<code>torch.OutOfMemoryError</code></td><td>单进程/单容器</td><td>调 batch/KV cache、查泄漏、隔离</td></tr>
+</tbody>
+</table>
+</div>
+<p>三者的关键区别：<strong>GPU 显存 OOM 不会让 kernel OOM killer 杀容器</strong>，Pod 可能仍然是 <code>Running</code>，
+只是训练进程崩了；反过来，容器 <code>OOMKilled</code> 也不是 GPU 显存不够。把它们混为一谈会导致
+「加内存 limit」这种完全无效的处置。</p>
+<p>kubelet 给容器设置的 <code>oom_score_adj</code>：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>QoS</th><th>oom_score_adj</th></tr>
+</thead>
+<tbody>
+<tr><td>Guaranteed / system-node-critical</td><td>-997</td></tr>
+<tr><td>BestEffort</td><td>1000</td></tr>
+<tr><td>Burstable</td><td><code>min(max(2, 1000 - 1000 × request / capacity), 999)</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>源码见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/qos/policy.go#L34-L59"><code>qos/policy.go</code></a>。
+注意这是<strong>启发式</strong>：很多小进程的容器，OOM score 可能不准。</p>
+<h2 id="六memory-manager-与-topology-manager只做-numa-对齐"><a class="header" href="#六memory-manager-与-topology-manager只做-numa-对齐">六、Memory Manager 与 Topology Manager：只做 NUMA 对齐</a></h2>
+<h3 id="61-memory-manager-的真实职责"><a class="header" href="#61-memory-manager-的真实职责">6.1 Memory Manager 的真实职责</a></h3>
+<p><code>--memory-manager-policy=Static</code> 只对 <strong>Guaranteed Pod</strong> 生效，做两件事：</p>
+<ol>
+<li>按 NUMA 节点分配 memory/hugepages 的「块」，给 Topology Manager 提供 hint；</li>
+<li>把分配结果写成容器的 <code>cpuset.mems</code>，把内存访问限制在指定 NUMA 节点。</li>
+</ol>
+<p>它<strong>不</strong>设置 <code>memory.max</code>，<strong>不</strong>限制内存用量，<strong>不</strong>保证内存带宽。真正的用量上限仍然是 cgroup。
+源码见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/cm/memorymanager/policy_static.go#L193-L260"><code>policy_static.go</code></a>
+和 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/cm/internal_container_lifecycle_linux.go#L40-L51"><code>internal_container_lifecycle_linux.go</code></a>。</p>
+<p>启用 Static 必须配 <code>--reserved-memory</code>，且满足：</p>
+<pre><code class="language-text">Σ reservedMemory[i] = kubeReserved.memory + systemReserved.memory + evictionHard.memory.available
+</code></pre>
+<p>不满足 kubelet 会启动失败。默认 <code>evictionHard</code> 的 100Mi 也要算进去，这是最常见的配置错误。
+详见 <a href="https://kubernetes.io/docs/tasks/administer-cluster/memory-manager/">Memory Manager</a>。</p>
+<h3 id="62-topology-managerhint-的协调者不是放置执行者"><a class="header" href="#62-topology-managerhint-的协调者不是放置执行者">6.2 Topology Manager：hint 的协调者，不是放置执行者</a></h3>
+<p>Topology Manager 不直接分配 CPU/内存/设备；它收集各 Hint Provider（CPU Manager、Memory Manager、
+Device Manager）的 NUMA hint，按 policy 合并，决定「是否允许这个 Pod 在这台节点上启动」。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Policy</th><th>行为</th><th>失败表现</th></tr>
+</thead>
+<tbody>
+<tr><td><code>none</code></td><td>不做对齐</td><td>无</td></tr>
+<tr><td><code>best-effort</code></td><td>选择最优 hint，但不满足也允许</td><td>可能跨 NUMA，性能下降</td></tr>
+<tr><td><code>restricted</code></td><td>hint 必须是 preferred，否则拒绝</td><td>Pod 被 kubelet 拒绝，进入 Terminated/Failed，调度器不会自动重调度</td></tr>
+<tr><td><code>single-numa-node</code></td><td>必须落在单个 NUMA 节点，否则拒绝</td><td>同上</td></tr>
+</tbody>
+</table>
+</div>
+<p>Scope：</p>
+<ul>
+<li><strong>container</strong>（默认）：每个容器单独对齐；</li>
+<li><strong>pod</strong>：整个 Pod 的所有容器对齐到同一组 NUMA 节点，适合 gang/紧耦合负载。</li>
+</ul>
+<p>关键边界：</p>
+<ul>
+<li><strong>Topology Manager 只看 hint provider 提供的信息</strong>。device plugin 的 <code>TopologyInfo</code> 只有
+<code>NUMANode.ID</code>，没有 NVLink/PCIe 距离；所以 Topology Manager <strong>不会</strong>因为两张卡在同一
+NVLink 域而优先选择它们。GPU 间的 NVLink 拓扑要靠 DRA 属性/自定义调度器/应用自己处理。</li>
+<li><strong>它只做准入，不做迁移</strong>。<code>restricted</code>/<code>single-numa-node</code> 拒绝后，Pod 会进入失败状态，
+调度器不会自动换节点；需要用 Deployment/Job 重建，或外部控制器处理。</li>
+<li><strong>它不保证带宽</strong>。NUMA 对齐减少跨 socket 访存，但不隔离内存带宽、LLC、PCIe 带宽。</li>
+<li><strong>NUMA 距离默认不感知</strong>。多 socket/多 NUMA 系统上，跨 NUMA 的「最优」可能很差；
+<code>prefer-closest-numa-nodes=true</code> 才会优先选择距离近的节点组合（1.32 GA）。</li>
+<li><strong><code>max-allowable-numa-nodes</code> 默认 8</strong>。NUMA 节点数超过该值时 Topology Manager 会拒绝；
+可以用 policy option 提高该值（必须 ≥ 8，超过 8 只告警），所以不是永久硬上限。源码
+<code>defaultMaxAllowableNUMANodes = 8</code>，但 <code>NewPolicyOptions</code> 允许调大。</li>
+</ul>
+<h2 id="七一张表定位问题"><a class="header" href="#七一张表定位问题">七、一张表定位问题</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>症状</th><th>首先看</th><th>可能原因</th><th>处置</th></tr>
+</thead>
+<tbody>
+<tr><td>容器 CPU 用不上去，p99 抖动</td><td><code>cpu.stat</code> 的 <code>nr_throttled</code>、<code>throttled_usec</code></td><td>CPU limit 太低；quota period 内突发</td><td>提高 limit 或去掉 limit；调 period；拆线程</td></tr>
+<tr><td>容器 CPU 被限制在固定核，但仍被干扰</td><td><code>cpuset.cpus</code>、<code>/proc/interrupts</code>、SMT 兄弟</td><td>IRQ/系统进程/SMT 共享</td><td><code>reserved-cpus</code>、IRQ 亲和、<code>full-pcpus-only</code>、<code>isolcpus</code></td></tr>
+<tr><td>容器内存没超 limit 却被杀</td><td><code>memory.events</code>、<code>memory.max</code>、<code>dmesg</code></td><td>page cache/匿名内存突增；节点 OOM</td><td>加 headroom；查泄漏；调 eviction/reserved</td></tr>
+<tr><td>节点 <code>free</code> 很低但 Pod 没被驱逐</td><td><code>memory.available</code>、<code>memory.stat</code> 的 <code>inactive_file</code></td><td>page cache 被算作可用</td><td>正常；看 PSI/<code>memory.events</code> 而不是 <code>free</code></td></tr>
+<tr><td>Pod 被 kubelet 拒绝，事件 <code>Topology Affinity Error</code></td><td>Topology Manager 日志、hint</td><td><code>restricted</code>/<code>single-numa-node</code> 无法满足</td><td>放宽 policy；调整 CPU/内存/设备请求；重建 Pod</td></tr>
+<tr><td>GPU 分配了但跨 NUMA</td><td><code>nvidia-smi topo -M</code>、<code>cpuset.mems</code></td><td>没开 Topology Manager/Memory Manager；device plugin 无 topology</td><td>开 static policy + reserved-memory；用 DRA 属性选择</td></tr>
+<tr><td>内存 limit 设了但容器还是被节点 OOM 杀</td><td><code>oom_score_adj</code>、节点 <code>dmesg</code></td><td>节点整体内存不足，不是 cgroup 超限</td><td>修 reserved/eviction；迁移；加节点</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="八设计检查清单"><a class="header" href="#八设计检查清单">八、设计检查清单</a></h2>
+<ul>
+<li><input disabled="" type="checkbox"> 每个容器都有 request；延迟敏感服务不要用「只设 limit」的写法。</li>
+<li><input disabled="" type="checkbox"> CPU limit 是否真的必要？如果设置，是否验证过 p99 和 <code>nr_throttled</code>？</li>
+<li><input disabled="" type="checkbox"> 内存 limit 是否给 page cache/allocator 留了 headroom？是否开了 MemoryQoS？开了之后是否验证过 <code>memory.events</code>？</li>
+<li><input disabled="" type="checkbox"> 节点是否配置了 <code>kubeReserved</code>/<code>systemReserved</code>/<code>evictionHard</code>？三者和是否与 <code>reservedMemory</code> 一致？</li>
+<li><input disabled="" type="checkbox"> 是否需要 CPU 独占？如果需要，<code>reserved-cpus</code>/<code>strict-cpu-reservation</code>/<code>full-pcpus-only</code> 是否配套？</li>
+<li><input disabled="" type="checkbox"> 是否需要 NUMA 对齐？<code>topologyManagerPolicy</code> 与 <code>memoryManagerPolicy</code> 是否同时配置？<code>reservedMemory</code> 公式是否满足？</li>
+<li><input disabled="" type="checkbox"> 是否误以为 Topology Manager 会按 NVLink/PCIe 放置？如果是，改用 DRA 属性或应用级拓扑。</li>
+<li><input disabled="" type="checkbox"> 是否把 <code>free</code> 当作可用内存？是否用 <code>memory.available</code>/PSI/<code>memory.events</code> 做过验证？</li>
+<li><input disabled="" type="checkbox"> OOM 告警是否能区分容器 OOM、节点 OOM、GPU 显存 OOM？</li>
+</ul>
+<h2 id="参考与证据"><a class="header" href="#参考与证据">参考与证据</a></h2>
+<p><strong>Kubernetes 文档</strong></p>
+<ul>
+<li><a href="https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/">Resource Management for Pods and Containers</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/workloads/pods/pod-qos/">Pod QoS Classes</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/resource-management/effective-pod-requests-limits/">Effective Pod requests and limits</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/resource-management/resource-managers/">Resource managers</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/resource-management/pod-level-resource-managers/">Pod-level resource managers</a></li>
+<li><a href="https://kubernetes.io/docs/tasks/administer-cluster/cpu-management-policies/">Control CPU Management Policies</a></li>
+<li><a href="https://kubernetes.io/docs/tasks/administer-cluster/memory-manager/">Control Memory Management Policies</a></li>
+<li><a href="https://kubernetes.io/docs/tasks/administer-cluster/topology-manager/">Control Topology Management Policies</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/scheduling-eviction/node-pressure-eviction/">Node-pressure Eviction</a></li>
+<li><a href="https://kubernetes.io/docs/tasks/administer-cluster/reserve-compute-resources/">Reserve Compute Resources for System Daemons</a></li>
+</ul>
+<p><strong>Kubernetes 源码（v1.37.2，commit c50e5395）</strong></p>
+<ul>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kuberuntime/kuberuntime_container_linux.go#L354-L400"><code>pkg/kubelet/kuberuntime/kuberuntime_container_linux.go</code></a>：CPU shares/quota、memory limit 的翻译</li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kuberuntime/kuberuntime_container_linux.go#L218-L267"><code>pkg/kubelet/kuberuntime/kuberuntime_container_linux.go</code></a>：<code>memory.high</code> 公式</li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/cm/cpumanager/policy_static.go#L78-L110"><code>pkg/kubelet/cm/cpumanager/policy_static.go</code></a>：static policy 的分配条件</li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/cm/cpumanager/policy_options.go#L31-L52"><code>pkg/kubelet/cm/cpumanager/policy_options.go</code></a>：policy options 与成熟度</li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/cm/memorymanager/policy_static.go#L193-L260"><code>pkg/kubelet/cm/memorymanager/policy_static.go</code></a>：Memory Manager Static 的分配</li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/cm/topologymanager/policy.go#L24-L30"><code>pkg/kubelet/cm/topologymanager/policy.go</code></a>：<code>IsAlignmentGuaranteed</code></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/cm/internal_container_lifecycle_linux.go#L33-L51"><code>pkg/kubelet/cm/internal_container_lifecycle_linux.go</code></a>：<code>cpuset.cpus</code>/<code>cpuset.mems</code> 写入</li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/eviction/defaults_linux.go#L21-L28"><code>pkg/kubelet/eviction/defaults_linux.go</code></a>：默认驱逐阈值</li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/qos/policy.go#L34-L59"><code>pkg/kubelet/qos/policy.go</code></a>：OOM score 计算</li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/features/kube_features.go#L1566-L1570"><code>pkg/features/kube_features.go</code></a>：<code>DisableCPUQuotaWithExclusiveCPUs</code></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/features/kube_features.go#L1845-L1848"><code>pkg/features/kube_features.go</code></a>：<code>MemoryQoS</code> 默认值</li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/apis/config/types.go#L500-L520"><code>pkg/kubelet/apis/config/types.go</code></a>：<code>memoryThrottlingFactor</code> / <code>memoryReservationPolicy</code></li>
+<li><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kubelet.go#L775-L785"><code>pkg/kubelet/kubelet.go</code></a>：cgroup v2 下 <code>SingleProcessOOMKill</code> 的默认逻辑</li>
+</ul>
+<p><strong>内核文档</strong></p>
+<ul>
+<li><a href="https://github.com/torvalds/linux/blob/c03c1a14507dfaf8b856c2608f9ac216021fc222/Documentation/admin-guide/cgroup-v2.rst#L1331-L1509">cgroup v2: Memory Interface Files</a></li>
+<li><a href="https://github.com/torvalds/linux/blob/c03c1a14507dfaf8b856c2608f9ac216021fc222/Documentation/admin-guide/cgroup-v2.rst#L1143-L1240">cgroup v2: CPU Interface Files</a></li>
+<li><a href="https://github.com/torvalds/linux/blob/c03c1a14507dfaf8b856c2608f9ac216021fc222/Documentation/admin-guide/cgroup-v2.rst#L2513-L2680">cgroup v2: cpuset</a></li>
+<li><a href="https://github.com/torvalds/linux/blob/c03c1a14507dfaf8b856c2608f9ac216021fc222/Documentation/accounting/psi.rst">PSI</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../../docs/Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/overview.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../../docs/Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/gpu-access-chain.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../../docs/Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/overview.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../../docs/Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/gpu-access-chain.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../../highlight-abc7f01d.js"></script>
+        <script src="../../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

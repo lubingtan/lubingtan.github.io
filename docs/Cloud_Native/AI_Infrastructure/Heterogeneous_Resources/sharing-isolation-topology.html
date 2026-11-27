@@ -1,0 +1,764 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>共享、隔离与拓扑 - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../../searchindex-883cd035.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../../toc-003a6783.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/sharing-isolation-topology.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="共享隔离与拓扑"><a class="header" href="#共享隔离与拓扑">共享、隔离与拓扑</a></h1>
+<blockquote>
+<p><strong>结论先行</strong>：讨论「GPU 共享」时，必须同时问三个问题：
+<strong>共享的是什么资源？隔离的是哪个维度？故障域是否仍然共享？</strong>
+只回答「一张卡分给了几个 Pod」是不够的。</p>
+<p>按隔离强度排序：<strong>MIG（硬件分区）&gt; MPS（SM/内存限制，但错误不隔离）≈ 整卡独占（单租户）
+time-slicing（时间复用，无内存/故障隔离）&gt; 约定式软共享（完全靠应用自律）</strong>。
+HAMi 这类显存/算力配额属于「调度 + 限流」的软共享，不是硬件隔离。
+把 replica 数或显存配额当作「隔离保证」，是训推混部尾延迟和 OOM 反复出现的根因。</p>
+</blockquote>
+<h2 id="一先把隔离拆成维度"><a class="header" href="#一先把隔离拆成维度">一、先把「隔离」拆成维度</a></h2>
+<p>「隔离」不是一个布尔值。至少要看下面这些维度：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>含义</th><th>谁最容易破坏它</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>显存容量</strong></td><td>一个租户最多能分配多少 HBM</td><td>time-slicing/软共享：没有硬上限</td></tr>
+<tr><td><strong>显存带宽</strong></td><td>租户能否互相抢 DRAM 带宽</td><td>除 MIG 外基本都共享</td></tr>
+<tr><td><strong>SM/算力</strong></td><td>租户能否互相抢 SM、Tensor Core</td><td>time-slicing 共享；MPS 按百分比限；MIG 硬分区</td></tr>
+<tr><td><strong>L2/缓存</strong></td><td>L2 slice、TLB、copy engine 是否独占</td><td>MIG 独占 L2/部分引擎；MPS/time-slicing 共享</td></tr>
+<tr><td><strong>故障域</strong></td><td>一个租户的非法访问/崩溃是否影响别人</td><td>只有 MIG 提供硬件故障隔离</td></tr>
+<tr><td><strong>P2P/NVLink</strong></td><td>租户之间能否 P2P；MIG 实例能否用 NVLink</td><td>MIG 不支持 GPU-GPU P2P</td></tr>
+<tr><td><strong>地址空间</strong></td><td>进程能否读写别人的显存</td><td>Volta+ MPS 有独立地址空间；CUDA stream 没有</td></tr>
+<tr><td><strong>调度可表达性</strong></td><td>调度器能否知道「这张卡被切成了什么」</td><td>device plugin 只知道整数；DRA 可以表达属性</td></tr>
+</tbody>
+</table>
+</div>
+<p>后面的比较表都按这些维度打分：✅ 有保证，◐ 部分/尽力，❌ 不保证。</p>
+<h2 id="二整卡独占"><a class="header" href="#二整卡独占">二、整卡独占</a></h2>
+<h3 id="21-语义"><a class="header" href="#21-语义">2.1 语义</a></h3>
+<p><code>nvidia.com/gpu: 1</code> 在 device plugin 路径下就是「一整张物理 GPU」。调度器按整数计数，
+kubelet checkpoint 记录 UUID，容器里 <code>NVIDIA_VISIBLE_DEVICES</code> 只包含这张卡。</p>
+<p>隔离效果：</p>
+<ul>
+<li>显存容量、显存带宽、SM、L2、copy engine 都归一个容器（只要没有别的容器绕过调度器挤进来）；</li>
+<li>故障域基本独立：一个容器的 CUDA 错误通常不会影响另一个容器；</li>
+<li>但<strong>同一张卡上仍可能有多个进程</strong>（容器内多进程、sidecar、监控 agent），它们共享同一张卡；</li>
+<li><strong>不提供 QoS</strong>：一个进程把 SM 打满，同容器内其他进程仍然受影响。</li>
+</ul>
+<h3 id="22-边界"><a class="header" href="#22-边界">2.2 边界</a></h3>
+<ul>
+<li><strong>独占是编排层语义，不是硬件分区</strong>。如果有人在节点上手动 <code>docker run --gpus all</code>，
+或者用 <code>NVIDIA_VISIBLE_DEVICES=all</code> 绕过调度器，独占就被打破。</li>
+<li><strong>整卡独占不保证 NUMA/NVLink 最优</strong>。调度器只按整数选节点；NUMA 对齐要靠 Topology Manager
+（只到 NUMA），NVLink 域要靠 DRA 属性/自定义调度/应用自己选。</li>
+<li><strong>整卡独占不保证健康</strong>。卡被 Xid 打挂、ECC 行重映射、NVLink 降级，仍然可能发生在「独占」的卡上。</li>
+</ul>
+<p>适用：训练、单模型推理、需要完整 NVLink 带宽的 TP/EP、对故障隔离要求高的多租户。</p>
+<h2 id="三历史约定式软共享"><a class="header" href="#三历史约定式软共享">三、历史约定式软共享</a></h2>
+<p>在 time-slicing/MIG 普及之前，常见做法是：</p>
+<ol>
+<li>多个 Pod 的 <code>NVIDIA_VISIBLE_DEVICES</code> 指向同一张 GPU；</li>
+<li>调度器只按 <code>nvidia.com/gpu</code> 计数，或者干脆不申请 GPU；</li>
+<li>团队之间靠「约定」谁用哪张卡、用多少显存；</li>
+<li>应用自己设 <code>gpu_memory_utilization</code> / batch size，避免把卡打爆。</li>
+</ol>
+<p>这套做法的问题是<strong>没有任何强制</strong>：</p>
+<ul>
+<li>没有显存上限：一个进程可以吃掉整张卡，其他进程 <code>CUDA out of memory</code>；</li>
+<li>没有算力上限：一个训练进程可以把 SM 打满，推理 p99 直接崩；</li>
+<li>没有故障隔离：一个进程的非法访问可能触发 Xid，影响同卡所有进程；</li>
+<li>没有调度账本：平台不知道谁用了多少，无法计费/容量规划。</li>
+</ul>
+<p>今天的 time-slicing replica、MPS、HAMi 都是对这套「约定」的不同程度的制度化，但只有 MIG
+把隔离做进了硬件。<strong>「约定式共享」不是贬义，它在开发/测试/批处理场景仍然合理；问题是不能
+把它当成生产多租户隔离。</strong></p>
+<h2 id="四time-slicing把一张卡变成-n-个调度槽"><a class="header" href="#四time-slicing把一张卡变成-n-个调度槽">四、time-slicing：把一张卡变成 N 个调度槽</a></h2>
+<h3 id="41-机制"><a class="header" href="#41-机制">4.1 机制</a></h3>
+<p>NVIDIA device plugin 的 <code>sharing.timeSlicing</code> 配置：</p>
+<pre><code class="language-yaml">version: v1
+sharing:
+  timeSlicing:
+    renameByDefault: false
+    failRequestsGreaterThanOne: true
+    resources:
+    - name: nvidia.com/gpu
+      replicas: 4
+</code></pre>
+<p>效果：</p>
+<ul>
+<li>节点上每张物理 GPU 被复制成 4 个「虚拟设备」，Node 的 <code>nvidia.com/gpu</code> capacity 变成
+<code>物理卡数 × 4</code>；</li>
+<li>调度器把这 4 个槽位当作独立资源分配；</li>
+<li>容器启动时，多个容器被注入同一个物理 GPU；</li>
+<li>CUDA 在时间上复用 GPU：一个进程的 kernel 执行完，另一个进程的 kernel 再上。</li>
+</ul>
+<p>配置解析见
+<a href="https://github.com/NVIDIA/k8s-device-plugin/blob/17ab9a55d400ecc8d5a6c781a35f2744907fdd60/api/config/v1/sharing.go#L20-L50"><code>sharing.go</code></a>，
+replica 展开见
+<a href="https://github.com/NVIDIA/k8s-device-plugin/blob/17ab9a55d400ecc8d5a6c781a35f2744907fdd60/internal/rm/device_map.go#L284-L345"><code>device_map.go</code></a>。</p>
+<h3 id="42-隔离语义"><a class="header" href="#42-隔离语义">4.2 隔离语义</a></h3>
+<p>NVIDIA 文档写得很直接：</p>
+<blockquote>
+<p>time-slicing 下，<strong>nothing special is done to isolate workloads</strong>；每个 workload 都可以访问
+GPU 内存，并且和所有其他 workload 在同一个 fault-domain 里（一个崩溃，全部受影响）。</p>
+</blockquote>
+<p>见 <a href="https://github.com/NVIDIA/k8s-device-plugin/blob/17ab9a55d400ecc8d5a6c781a35f2744907fdd60/README.md#L358-L372">k8s-device-plugin: Shared Access to GPUs</a>
+与 <a href="https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/gpu-sharing.html">GPU Operator: GPU Sharing</a>。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>time-slicing</th></tr>
+</thead>
+<tbody>
+<tr><td>显存容量</td><td>❌ 无上限；所有容器共享整张卡的 HBM</td></tr>
+<tr><td>显存带宽</td><td>❌ 共享</td></tr>
+<tr><td>SM/算力</td><td>❌ 时间复用，没有配额</td></tr>
+<tr><td>故障域</td><td>❌ 共享；一个进程崩可能带走同卡其他进程</td></tr>
+<tr><td>调度可表达性</td><td>✅ replica 数可被调度器看到</td></tr>
+<tr><td>适用</td><td>开发、测试、批处理、低优先级任务；<strong>不适合</strong>有 SLO 的多租户推理</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="43-什么时候可以接受"><a class="header" href="#43-什么时候可以接受">4.3 什么时候可以接受</a></h3>
+<ul>
+<li>开发/调试：一个人一张卡太浪费，time-slicing 2–4 路足够；</li>
+<li>离线批处理：任务可以重试，OOM/崩溃可接受；</li>
+<li>推理的「低优先级溢出」：有独立的高优先级池，time-slicing 只接 best-effort 流量；</li>
+<li><strong>不接受</strong>：在线推理的 p99 SLO、训练的关键路径、需要故障隔离的多租户。</li>
+</ul>
+<h3 id="44-两个实用开关"><a class="header" href="#44-两个实用开关">4.4 两个实用开关</a></h3>
+<ul>
+<li><code>renameByDefault: true</code>：把资源名改成 <code>nvidia.com/gpu.shared</code>，避免应用误以为拿到独占卡；</li>
+<li><code>failRequestsGreaterThanOne: true</code>：容器请求超过 1 个 shared 资源时直接失败，避免
+「我申请了 4 个 replica，就应该有 4 倍算力」的误解。</li>
+</ul>
+<h2 id="五mpssm-百分比--内存上限但不是故障隔离"><a class="header" href="#五mpssm-百分比--内存上限但不是故障隔离">五、MPS：SM 百分比 + 内存上限，但不是故障隔离</a></h2>
+<h3 id="51-架构"><a class="header" href="#51-架构">5.1 架构</a></h3>
+<p>MPS（Multi-Process Service）由三部分组成：</p>
+<ul>
+<li><code>nvidia-cuda-mps-control</code>：控制守护进程；</li>
+<li><code>nvidia-cuda-mps-server</code>：每张 GPU 一个 server，持有 GPU 调度资源；</li>
+<li><code>libcuda.so</code> 内的 client runtime：应用透明使用。</li>
+</ul>
+<p>多个 client 连接到同一个 server，共享 GPU 上下文/调度资源，但各自有独立的地址空间（Volta+）。</p>
+<h3 id="52-能限制什么"><a class="header" href="#52-能限制什么">5.2 能限制什么</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>MPS</th></tr>
+</thead>
+<tbody>
+<tr><td>SM/算力</td><td>◐ 可按 <code>CUDA_MPS_ACTIVE_THREAD_PERCENTAGE</code> 限制每个 client 的 SM 百分比；不是硬分区</td></tr>
+<tr><td>显存容量</td><td>◐ Volta+ 支持 per-client device memory limit；超过返回 CUDA OOM</td></tr>
+<tr><td>显存带宽</td><td>❌ 共享，没有 QoS</td></tr>
+<tr><td>L2/缓存</td><td>❌ 共享</td></tr>
+<tr><td>地址空间</td><td>✅ Volta+ client 有独立地址空间</td></tr>
+<tr><td>故障域</td><td>❌ 不隔离；一个 client 的致命错误会报告给同 GPU 上所有 client，server 进入 FAULT</td></tr>
+<tr><td>P2P/NVLink</td><td>❌ 不改变 GPU 间的 P2P 语义</td></tr>
+</tbody>
+</table>
+</div>
+<p>NVIDIA MIG 文档对 MPS 的总结很准确：</p>
+<blockquote>
+<p>MPS 目前不提供客户端之间的错误隔离；虽然每个 MPS 客户端使用的 SM 可以有选择地限制为
+所有 SM 的百分比，但调度硬件仍然是共享的；内存带宽、缓存和容量在 MPS 客户端之间都是共享的。</p>
+</blockquote>
+<p>见 <a href="https://docs.nvidia.com/datacenter/tesla/mig-user-guide/index.html#cuda-concurrency-mechanisms">MIG User Guide: CUDA 并发机制</a>
+与 <a href="https://docs.nvidia.com/deploy/mps/index.html">MPS 文档</a>。</p>
+<h3 id="53-设备插件dra-里的-mps"><a class="header" href="#53-设备插件dra-里的-mps">5.3 设备插件/DRA 里的 MPS</a></h3>
+<p>device plugin 的 MPS 支持是<strong>实验性</strong>的：</p>
+<pre><code class="language-yaml">version: v1
+sharing:
+  mps:
+    resources:
+    - name: nvidia.com/gpu
+      replicas: 10
+</code></pre>
+<ul>
+<li>只支持整卡 <code>nvidia.com/gpu</code>；</li>
+<li><strong>不支持 MIG 设备</strong>（插件代码里显式报错）；</li>
+<li>每个 MPS server 由 <code>mps-control-daemon</code> 管理；插件 mount pipe/shm 目录；</li>
+<li>daemon 会设 <code>set_default_active_thread_percentage = 100 / replicas</code>，
+并设 <code>set_default_device_pinned_mem_limit = total_memory / replicas</code>；</li>
+<li>这是<strong>节点级</strong>配置：同一节点所有 GPU 用同一种共享策略，不能按 Pod 配。</li>
+</ul>
+<p>关键源码：</p>
+<ul>
+<li><a href="https://github.com/NVIDIA/k8s-device-plugin/blob/17ab9a55d400ecc8d5a6c781a35f2744907fdd60/internal/plugin/mps.go#L40-L91"><code>internal/plugin/mps.go</code></a></li>
+<li><a href="https://github.com/NVIDIA/k8s-device-plugin/blob/17ab9a55d400ecc8d5a6c781a35f2744907fdd60/cmd/mps-control-daemon/mps/daemon.go#L240-L280"><code>mps/daemon.go</code></a></li>
+</ul>
+<p>DRA 则可以把 MPS 配置放进 <strong>per-claim</strong> 的 <code>GpuConfig</code>：</p>
+<pre><code class="language-yaml">sharing:
+  strategy: MPS
+  mpsConfig:
+    defaultActiveThreadPercentage: 50
+    defaultPinnedDeviceMemoryLimit: 10Gi
+</code></pre>
+<p>这是 DRA 相对 device plugin 的一个实际优势：<strong>共享策略可以按工作负载配置，而不是按节点配置</strong>。
+见 <a href="https://github.com/NVIDIA/k8s-dra-driver-gpu/blob/0882da8720c28763137e0987778ec476ec4cf8df/demo/specs/quickstart/v1/gpu-test5.yaml#L24-L50"><code>gpu-test5.yaml</code></a>。</p>
+<h3 id="54-mps-的故障模式"><a class="header" href="#54-mps-的故障模式">5.4 MPS 的故障模式</a></h3>
+<ul>
+<li><strong>server FAULT</strong>：一个 client 触发致命错误，server 状态变 FAULT，新 client 收到
+<code>CUDA_ERROR_MPS_SERVER_NOT_READY</code>；要等所有 client 退出后 server 重建。</li>
+<li><strong>client 提前终止</strong>：未同步就 Ctrl-C/segfault 可能让 server 进入未定义状态，导致挂起。</li>
+<li><strong>内存上限不是带宽 QoS</strong>：即使每个 client 限了 10GiB，它们仍然抢同一个 HBM 带宽。</li>
+<li><strong>MPS + MIG</strong>：NVIDIA 文档说 MIG 之上支持 MPS，最大 client 数按 CI 大小缩放；但
+device plugin 的 MPS 实现不支持 MIG，二者不要混用。</li>
+</ul>
+<blockquote>
+<p>MPS v3（2026 文档）引入了 namespaces、SM partitions、memory partitioning 等新接口。
+选型时要确认你的工具链（device plugin / DRA driver / GPU Operator）实际用的是 v2 还是 v3
+控制接口；不要把 v2 的「共享内存带宽」结论直接套到 v3 的新特性上，也不要把 v3 的新能力
+当成所有环境都有。</p>
+</blockquote>
+<h2 id="六mig唯一提供硬件故障隔离的方案"><a class="header" href="#六mig唯一提供硬件故障隔离的方案">六、MIG：唯一提供硬件故障隔离的方案</a></h2>
+<h3 id="61-gici-与资源切片"><a class="header" href="#61-gici-与资源切片">6.1 GI/CI 与资源切片</a></h3>
+<p>MIG 把一张 GPU 切成多个 <strong>GPU Instance（GI）</strong>，每个 GI 包含：</p>
+<ul>
+<li>若干 memory slice（每片约 1/8 显存，含对应的 memory controller/L2/DRAM 带宽）；</li>
+<li>若干 SM slice（每片约 1/7 SM）；</li>
+<li>若干 GPU engine（DMA/copy engine、NVDEC/NVENC 等）。</li>
+</ul>
+<p>GI 还可以继续切成 <strong>Compute Instance（CI）</strong>：CI 共享父 GI 的显存和引擎，但有独立的 SM 子集。
+GI 提供内存 QoS；CI 不提供额外的内存隔离。</p>
+<pre class="mermaid">flowchart TB
+    GPU["物理 GPU&lt;br/&gt;8 memory slices / 7 SM slices"]
+    GPU --&gt; GI1["GI 1g.5gb&lt;br/&gt;1 memory slice + 1 SM slice + engines"]
+    GPU --&gt; GI2["GI 2g.10gb&lt;br/&gt;2 memory slices + 2 SM slices + engines"]
+    GPU --&gt; GI3["GI 3g.20gb&lt;br/&gt;..."]
+    GI2 --&gt; CI1["CI 1c.2g.10gb&lt;br/&gt;1 SM slice"]
+    GI2 --&gt; CI2["CI 1c.2g.10gb&lt;br/&gt;1 SM slice"]
+</pre>
+
+<h3 id="62-隔离语义"><a class="header" href="#62-隔离语义">6.2 隔离语义</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>MIG</th></tr>
+</thead>
+<tbody>
+<tr><td>显存容量</td><td>✅ 每个 GI 有专用 memory slice</td></tr>
+<tr><td>显存带宽</td><td>✅ 专用 memory controller/L2/DRAM 路径，提供 QoS</td></tr>
+<tr><td>SM/算力</td><td>✅ 专用 SM slice</td></tr>
+<tr><td>L2/缓存</td><td>✅ 专用 L2 slice</td></tr>
+<tr><td>故障域</td><td>✅ 硬件级故障隔离</td></tr>
+<tr><td>P2P/NVLink</td><td>❌ <strong>不支持 GPU-GPU P2P（PCIe 或 NVLink）</strong></td></tr>
+<tr><td>跨 GI IPC</td><td>❌ 不支持跨 GI 的 CUDA IPC；支持跨 CI 的 IPC</td></tr>
+<tr><td>动态重配</td><td>◐ 创建/销毁 GI/CI 是动态的，但切换 MIG 模式需要 GPU reset</td></tr>
+<tr><td>调度可表达性</td><td>✅ device plugin <code>mixed</code> 策略暴露 <code>nvidia.com/mig-*</code>；DRA 可发布 profile/容量</td></tr>
+</tbody>
+</table>
+</div>
+<p>NVIDIA 文档明确写：</p>
+<ul>
+<li>每个实例有独立且隔离的片上交叉开关端口、L2 cache bank、memory controller、DRAM 地址总线；</li>
+<li>不支持 GPU 到 GPU 的 P2P（PCIe 或 NVLink）；</li>
+<li>不支持跨 GPU Instance 的 CUDA IPC；支持跨 Compute Instance 的 CUDA IPC；</li>
+<li>支持 GPUDirect RDMA（从 GPU Instance 使用）。</li>
+</ul>
+<p>见 <a href="https://docs.nvidia.com/datacenter/tesla/mig-user-guide/index.html">MIG User Guide</a>。</p>
+<h3 id="63-为什么-mig-不适合分布式训练"><a class="header" href="#63-为什么-mig-不适合分布式训练">6.3 为什么 MIG 不适合分布式训练</a></h3>
+<p>分布式训练依赖 NCCL 的 collective。NCCL 会优先用 NVLink/P2P，其次 PCIe P2P，最后 host
+memory。MIG 实例之间<strong>没有 P2P</strong>，所以：</p>
+<ul>
+<li>同一张物理 GPU 上的两个 MIG 实例不能用 NVLink P2P 通信；</li>
+<li>NCCL 可能退化为通过 host memory/网络，带宽和延迟显著变差；</li>
+<li>跨节点的 MIG 训练更复杂：每个 MIG 实例的 RDMA 能力、拓扑都不同。</li>
+</ul>
+<p>MIG 更适合：</p>
+<ul>
+<li>多租户推理（每个租户一个 GI，显存/带宽/故障隔离）；</li>
+<li>小模型/开发环境（1g.5gb 之类的切片）；</li>
+<li>推理 + 轻量微调（需要确认框架是否支持 MIG 和 P2P 退化）。</li>
+</ul>
+<p>不适合：需要 TP/EP/FSDP 跨 GPU 高带宽通信的训练主路径。</p>
+<h3 id="64-mig-的调度表达"><a class="header" href="#64-mig-的调度表达">6.4 MIG 的调度表达</a></h3>
+<p>device plugin 的 <code>migStrategy</code>：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>策略</th><th>资源名</th><th>适用</th></tr>
+</thead>
+<tbody>
+<tr><td><code>none</code></td><td><code>nvidia.com/gpu</code> 只暴露整卡</td><td>不用 MIG</td></tr>
+<tr><td><code>single</code></td><td>所有 MIG 实例统一暴露为 <code>nvidia.com/gpu</code></td><td>整卡和 MIG 不混用；简单</td></tr>
+<tr><td><code>mixed</code></td><td>整卡 <code>nvidia.com/gpu</code> + <code>nvidia.com/mig-&lt;profile&gt;</code></td><td>需要按 profile 精确申请</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>mixed</code> 下的资源名形如 <code>nvidia.com/mig-1g.5gb</code>、<code>nvidia.com/mig-3g.20gb</code>。
+配置与 label 逻辑见
+<a href="https://github.com/NVIDIA/k8s-device-plugin/blob/17ab9a55d400ecc8d5a6c781a35f2744907fdd60/internal/lm/mig-strategy.go#L60-L130"><code>mig-strategy.go</code></a>。</p>
+<p>DRA 路径下，NVIDIA driver 可以把 MIG 设备作为独立 Device 发布，带 <code>profile</code>、
+<code>parentUUID</code>、<code>memory</code>、<code>multiprocessors</code> 等属性；还支持 Dynamic MIG（按 claim 创建）。
+但 GPU DRA plugin 目前仍是实验性，生产要评估成熟度。</p>
+<h3 id="65-mig-的运维注意"><a class="header" href="#65-mig-的运维注意">6.5 MIG 的运维注意</a></h3>
+<ul>
+<li><strong>切换 MIG 模式需要 GPU reset/root</strong>；A100/A30 上 MIG 模式持久化到重启，直到显式切换；</li>
+<li>切换前要停止持有驱动句柄的进程（DCGM、nvsm、监控）；</li>
+<li>profile 组合受放置约束，创建/销毁会产生碎片；<code>nvidia-smi mig -lgip</code> 看可用 profile，
+<code>-lgi</code> 看已建实例；</li>
+<li>MIG 实例的 <code>nvidia-smi -L</code> 名称与 <code>nvidia.com/mig-*</code> 资源名要能对上；</li>
+<li><strong>MIG + time-slicing</strong> 可以组合（在 MIG 实例上再时间分片），但隔离进一步减弱；</li>
+<li><strong>MIG + MPS</strong> 理论支持，但 device plugin 的 MPS 实现不支持 MIG；用 DRA 或手工配置时要验证。</li>
+</ul>
+<h2 id="七cuda-显存上限新的容量隔离工具"><a class="header" href="#七cuda-显存上限新的容量隔离工具">七、CUDA 显存上限：新的「容量隔离」工具</a></h2>
+<p>NVIDIA 驱动较新版本提供了 per-cgroup 的 GPU 显存限制接口：
+<code>nvmlDeviceSetMemoryLimits_v1(namespace, requests, limits)</code>。NVIDIA Container Toolkit 通过
+CDI hook <code>apply-cuda-memory-limits</code> 使用它：</p>
+<ul>
+<li>读取容器环境变量 <code>NVIDIA_GPU_MEMORY_REQUEST</code> / <code>NVIDIA_GPU_MEMORY_LIMIT</code>（单位 MiB）；</li>
+<li>只支持 cgroup v2；</li>
+<li>通过 <code>libnvidia-ml.so.1</code> 调 <code>SetMemoryLimits_v1</code>；</li>
+<li>限制的是<strong>显存容量</strong>，不是带宽/SM/故障域。</li>
+</ul>
+<p>源码见
+<a href="https://github.com/NVIDIA/nvidia-container-toolkit/blob/adbd28c39b60f8eb7e03115b5ac61e58703f0ce7/cmd/nvidia-cdi-hook/apply-cuda-memory-limits/apply-cuda-memory-limits.go#L36-L70"><code>apply-cuda-memory-limits.go</code></a>。</p>
+<p>适用场景：</p>
+<ul>
+<li>在 time-slicing/软共享环境里，给每个容器一个<strong>显存硬上限</strong>，避免一个容器吃掉整卡；</li>
+<li>作为 HAMi 之类的替代/补充（但 HAMi 还有算力限流）。</li>
+</ul>
+<p>边界：</p>
+<ul>
+<li>需要驱动支持；老驱动/老 GPU 可能不支持；</li>
+<li>只限容量，不限带宽；多个容器仍然抢 HBM 带宽；</li>
+<li>不是 Kubernetes 原生资源，调度器不知道这个上限；</li>
+<li>与 MIG 的容量隔离不是一回事（MIG 是硬件分区，这是驱动层配额）。</li>
+</ul>
+<h2 id="八横向比较"><a class="header" href="#八横向比较">八、横向比较</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>方案</th><th>显存容量</th><th>显存带宽</th><th>SM/算力</th><th>故障域</th><th>P2P/NVLink</th><th>调度表达</th><th>动态重配</th><th>典型用途</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>整卡独占</strong></td><td>✅</td><td>✅</td><td>✅</td><td>✅（单租户）</td><td>✅</td><td>整数 GPU</td><td>中</td><td>训练、单模型推理</td></tr>
+<tr><td><strong>约定式软共享</strong></td><td>❌</td><td>❌</td><td>❌</td><td>❌</td><td>✅</td><td>无/手工</td><td>高</td><td>开发、临时</td></tr>
+<tr><td><strong>time-slicing</strong></td><td>❌</td><td>❌</td><td>❌（时间复用）</td><td>❌</td><td>✅</td><td>replica 数</td><td>高</td><td>开发、批处理</td></tr>
+<tr><td><strong>MPS</strong></td><td>◐（Volta+ 可限）</td><td>❌</td><td>◐（百分比）</td><td>❌（错误不隔离）</td><td>✅</td><td>replica/配置</td><td>中</td><td>协作式 MPI、多个小推理</td></tr>
+<tr><td><strong>MIG</strong></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>❌</td><td><code>mig-*</code>/DRA</td><td>中（需 reset）</td><td>多租户推理、切片</td></tr>
+<tr><td><strong>HAMi</strong></td><td>◐（CUDA 拦截）</td><td>❌</td><td>◐（令牌桶）</td><td>❌</td><td>✅</td><td>自定义资源</td><td>高</td><td>软共享、成本优化</td></tr>
+<tr><td><strong>CUDA 显存上限</strong></td><td>✅（容量）</td><td>❌</td><td>❌</td><td>❌</td><td>✅</td><td>无（hook）</td><td>中</td><td>防止单容器吃满</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p>符号说明：✅ 有明确保证；◐ 部分/尽力/可配置；❌ 不保证。
+「整卡独占」的故障域隔离是相对其他容器而言；同一容器内多进程仍然共享。</p>
+</blockquote>
+<h3 id="81-一个具体的反例"><a class="header" href="#81-一个具体的反例">8.1 一个具体的反例</a></h3>
+<p>假设一张 80GB GPU，time-slicing <code>replicas: 4</code>，四个推理容器各收到一个「1 GPU」的槽位：</p>
+<ul>
+<li>每个容器都认为自己有 80GB；</li>
+<li>容器 A 的 <code>gpu_memory_utilization=0.9</code>，先吃掉 72GB；</li>
+<li>容器 B 加载模型时 <code>CUDA out of memory</code>；</li>
+<li>容器 C 的 kernel 和 A 的 kernel 时间片交错，p99 从 50ms 涨到 300ms；</li>
+<li>容器 D 触发 Xid 13，A/B/C 的 CUDA context 也可能被影响。</li>
+</ul>
+<p>调度器看到的是「4 个 GPU 槽位已分配」，监控看到的是「GPU 利用率 100%」，但没有任何一个
+租户得到了它以为的隔离。<strong>这就是「分配份额」与「隔离保证」的差距。</strong></p>
+<h2 id="九gpu--pcie--numa--nic--nvlink--rdma-的关系"><a class="header" href="#九gpu--pcie--numa--nic--nvlink--rdma-的关系">九、GPU / PCIe / NUMA / NIC / NVLink / RDMA 的关系</a></h2>
+<h3 id="91-互联层次"><a class="header" href="#91-互联层次">9.1 互联层次</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>介质</th><th>作用域</th><th>典型带宽</th><th>是否可被 GPU load/store</th><th>备注</th></tr>
+</thead>
+<tbody>
+<tr><td>HBM</td><td>单卡</td><td>数 TB/s</td><td>✅</td><td>显存本体</td></tr>
+<tr><td>NVLink</td><td>单机/机架 GPU 间</td><td>数百 GB/s 到 TB/s 级</td><td>✅（P2P）</td><td>NVSwitch 提供全互联</td></tr>
+<tr><td>PCIe</td><td>单机 CPU/GPU/NIC 间</td><td>Gen4 x16 ~32GB/s，Gen5 ~64GB/s</td><td>✅（P2P，需 ACS/IOMMU 配合）</td><td>拓扑层级决定带宽</td></tr>
+<tr><td>NUMA/UPI</td><td>多 socket CPU</td><td>数十到数百 GB/s</td><td>间接</td><td>跨 socket 访存延迟更高</td></tr>
+<tr><td>InfiniBand/RoCE</td><td>集群节点间</td><td>100–800 Gb/s</td><td>❌（需 RDMA/GPUDirect）</td><td>训练/推理 KV 传输</td></tr>
+<tr><td>NVLink-C2C</td><td>Grace CPU↔GPU</td><td>数百 GB/s</td><td>✅</td><td>硬件一致</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="92-nvidia-smi-topo-的图例"><a class="header" href="#92-nvidia-smi-topo-的图例">9.2 <code>nvidia-smi topo</code> 的图例</a></h3>
+<p><code>nvidia-smi topo -m</code> 输出 GPU、NIC、CPU 亲和矩阵，图例：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>符号</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><code>X</code></td><td>自身</td></tr>
+<tr><td><code>SYS</code></td><td>跨 PCIe + NUMA 节点之间的 SMP 互连（如 UPI/QPI）</td></tr>
+<tr><td><code>NODE</code></td><td>同一 NUMA 节点内，跨 PCIe 主桥</td></tr>
+<tr><td><code>PHB</code></td><td>经过 PCIe 主桥（通常是 CPU）</td></tr>
+<tr><td><code>PXB</code></td><td>经过多个 PCIe switch，但不经过主桥</td></tr>
+<tr><td><code>PIX</code></td><td>经过单个 PCIe switch</td></tr>
+<tr><td><code>NV#</code></td><td>经过 # 个 NVLink bond</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>nvidia-smi topo -mp</code> 只看 PCIe 连接（排除 NVLink），适合判断 GPU-NIC 是否在同一 PCIe 树。
+<code>nvidia-smi topo -p2p r/w/n/a/p</code> 查看 GPU 间 P2P 读/写/NVLink/原子/PCIe 能力。
+见 <a href="https://docs.nvidia.com/deploy/nvidia-smi/index.html">nvidia-smi 文档</a>。</p>
+<h3 id="93-怎么测"><a class="header" href="#93-怎么测">9.3 怎么测</a></h3>
+<pre><code class="language-bash"># 拓扑矩阵与 NUMA
+nvidia-smi topo -m
+nvidia-smi topo -mp
+nvidia-smi topo -C -i 0      # GPU 0 最近的 CPU NUMA
+nvidia-smi topo -M -i 0      # GPU 0 最近的 memory NUMA
+nvidia-smi topo -gnid -i 0   # GPU 0 的 NUMA ID
+nvidia-smi topo -p2p r       # P2P 读能力
+nvidia-smi topo -p2p n       # NVLink 能力
+
+# NVLink 状态/能力/错误
+nvidia-smi nvlink -s
+nvidia-smi nvlink -c
+nvidia-smi nvlink -e
+
+# PCIe 链路
+lspci -tv
+lspci -vv -s 0000:3b:00.0 | grep -E 'LnkCap|LnkSta'
+cat /sys/bus/pci/devices/0000:3b:00.0/current_link_speed
+cat /sys/bus/pci/devices/0000:3b:00.0/current_link_width
+
+# NUMA / 拓扑
+numactl -H
+lstopo --of txt
+cat /sys/bus/pci/devices/0000:3b:00.0/numa_node
+
+# 带宽/延迟
+nvbandwidth
+all_reduce_perf -b 8 -e 8G -f 2 -g 8
+ib_write_bw -d mlx5_0
+dcgmi diag -r 2
+</code></pre>
+<h3 id="94-几个容易误判的关系"><a class="header" href="#94-几个容易误判的关系">9.4 几个容易误判的关系</a></h3>
+<ul>
+<li><strong>NUMA 对齐 ≠ NVLink 对齐</strong>。GPU 0 和 GPU 1 可能在同一 NUMA，但中间隔着 PCIe switch；
+也可能跨 NUMA 但 NVLink 全互联。<code>nvidia-smi topo -m</code> 同时看 NVLink 和 PCIe。</li>
+<li><strong>NVLink 存在 ≠ NCCL 一定走 NVLink</strong>。NCCL 会根据拓扑、P2P 能力、MIG、环境变量选择路径；
+看 <code>NCCL_DEBUG=INFO</code> 的拓扑日志，而不是猜。</li>
+<li><strong>MIG 实例没有 P2P</strong>。即使父 GPU 有 NVLink，MIG 实例之间也不能 P2P；跨 MIG 的 NCCL
+会退化。</li>
+<li><strong>GPUDirect RDMA 需要 NIC 和 GPU 在同一 PCIe 树</strong>，并且加载 <code>nvidia_peermem</code>、IOMMU 配置正确；
+<code>nvidia-smi topo -m</code> 里的 NIC 列只是拓扑提示，不代表 RDMA 已经可用。</li>
+<li><strong>PCIe 链路宽度/代数会降级</strong>。<code>lspci -vv</code> 的 <code>LnkSta</code> 可能显示 x8 或 Gen3，而 GPU 标称 x16 Gen5；
+这会直接限制 P2P/RDMA，但 <code>nvidia-smi</code> 不一定告警。</li>
+</ul>
+<h3 id="95-topology-manager-能做什么不能做什么"><a class="header" href="#95-topology-manager-能做什么不能做什么">9.5 Topology Manager 能做什么、不能做什么</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>能做</th><th>不能做</th></tr>
+</thead>
+<tbody>
+<tr><td>把 CPU、memory、device 的 NUMA hint 合并</td><td>不知道 NVLink/PCIe 距离</td></tr>
+<tr><td>用 <code>restricted</code>/<code>single-numa-node</code> 拒绝跨 NUMA Pod</td><td>不会选择「同一 NVLink 域」的 GPU</td></tr>
+<tr><td><code>prefer-closest-numa-nodes</code> 优先近邻 NUMA</td><td>不保证内存带宽/延迟</td></tr>
+<tr><td>pod scope 让整个 Pod 对齐</td><td>不会迁移已运行的 Pod</td></tr>
+</tbody>
+</table>
+</div>
+<p>如果业务需要「同一 NVLink 域」「GPU 与 NIC 同 PCIe switch」，需要：</p>
+<ol>
+<li>DRA driver 把这些拓扑建模成 device attributes，用 CEL 选择；</li>
+<li>或自定义 scheduler plugin / topology-aware scheduler（如 Kueue TAS、Volcano）；</li>
+<li>或在节点池/节点标签层面预先分组，让调度器只选「拓扑正确」的节点；</li>
+<li>应用层（NCCL <code>NCCL_TOPO_FILE</code>、<code>NCCL_IB_HCA</code>）做最后确认。</li>
+</ol>
+<h2 id="十选型决策树"><a class="header" href="#十选型决策树">十、选型决策树</a></h2>
+<pre class="mermaid">flowchart TB
+    Q1{"需要故障隔离吗？"}
+    Q1 --&gt;|是| MIG["MIG&lt;br/&gt;（推理/多租户）"]
+    Q1 --&gt;|否| Q2{"需要显存/算力上限吗？"}
+    Q2 --&gt;|是| Q3{"能接受错误不隔离吗？"}
+    Q3 --&gt;|能| MPS["MPS&lt;br/&gt;（SM% + mem limit）"]
+    Q3 --&gt;|不能| MIG
+    Q2 --&gt;|否| Q4{"是生产 SLO 吗？"}
+    Q4 --&gt;|是| EXCL["整卡独占 / 独立节点池"]
+    Q4 --&gt;|否| TS["time-slicing / 软共享&lt;br/&gt;（开发、批处理）"]
+    MIG --&gt; Q5{"需要 GPU 间 P2P/NVLink 吗？"}
+    Q5 --&gt;|是| EXCL
+    Q5 --&gt;|否| OK["可用"]
+</pre>
+
+<p>补充：</p>
+<ul>
+<li>训练主路径：优先整卡独占 + 独立节点池；MIG 只用于推理/开发。</li>
+<li>推理多租户：MIG 优先；MPS 次之；time-slicing 只做溢出。</li>
+<li>开发/批处理：time-slicing 或 HAMi，接受 OOM/重试。</li>
+<li>需要显存硬上限但不想 MIG：CUDA memory limit hook（需驱动支持）或 HAMi。</li>
+</ul>
+<h2 id="十一检查清单"><a class="header" href="#十一检查清单">十一、检查清单</a></h2>
+<ul>
+<li><input disabled="" type="checkbox"> 你说的「共享」是调度槽位、时间片、SM 百分比，还是硬件分区？</li>
+<li><input disabled="" type="checkbox"> 显存容量有没有硬上限？谁执行？</li>
+<li><input disabled="" type="checkbox"> 显存带宽/SM 有没有 QoS？谁来保证？</li>
+<li><input disabled="" type="checkbox"> 一个租户崩溃会不会影响同卡其他租户？</li>
+<li><input disabled="" type="checkbox"> MIG 实例是否需要 P2P？NCCL 是否验证过？</li>
+<li><input disabled="" type="checkbox"> 是否把 <code>nvidia-smi topo -m</code> 的 <code>NV#</code> 当成「NCCL 一定走 NVLink」？</li>
+<li><input disabled="" type="checkbox"> GPU 与 NIC 是否在同一 PCIe 树？GPUDirect RDMA 是否实测？</li>
+<li><input disabled="" type="checkbox"> 是否用 Topology Manager 做 NVLink 放置？如果是，改成 DRA 属性/自定义调度。</li>
+<li><input disabled="" type="checkbox"> 是否在生产用 time-slicing 承载 p99 SLO？</li>
+</ul>
+<h2 id="参考与证据"><a class="header" href="#参考与证据">参考与证据</a></h2>
+<p><strong>NVIDIA 文档</strong></p>
+<ul>
+<li><a href="https://docs.nvidia.com/datacenter/tesla/mig-user-guide/index.html">MIG User Guide</a></li>
+<li><a href="https://docs.nvidia.com/deploy/mps/index.html">MPS Documentation</a></li>
+<li><a href="https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/gpu-sharing.html">GPU Operator: GPU Sharing</a></li>
+<li><a href="https://docs.nvidia.com/deploy/nvidia-smi/index.html">nvidia-smi Documentation</a></li>
+<li><a href="https://docs.nvidia.com/cuda/gpudirect-rdma/index.html">GPUDirect RDMA</a></li>
+<li><a href="https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/">NCCL User Guide</a></li>
+</ul>
+<p><strong>NVIDIA 源码</strong></p>
+<ul>
+<li><a href="https://github.com/NVIDIA/k8s-device-plugin/blob/17ab9a55d400ecc8d5a6c781a35f2744907fdd60/api/config/v1/sharing.go#L20-L50">device plugin sharing 配置</a></li>
+<li><a href="https://github.com/NVIDIA/k8s-device-plugin/blob/17ab9a55d400ecc8d5a6c781a35f2744907fdd60/internal/rm/device_map.go#L284-L345">device plugin replica 展开</a></li>
+<li><a href="https://github.com/NVIDIA/k8s-device-plugin/blob/17ab9a55d400ecc8d5a6c781a35f2744907fdd60/internal/plugin/mps.go#L40-L91">device plugin MPS</a></li>
+<li><a href="https://github.com/NVIDIA/k8s-device-plugin/blob/17ab9a55d400ecc8d5a6c781a35f2744907fdd60/cmd/mps-control-daemon/mps/daemon.go#L240-L280">MPS daemon 线程/内存限制</a></li>
+<li><a href="https://github.com/NVIDIA/k8s-device-plugin/blob/17ab9a55d400ecc8d5a6c781a35f2744907fdd60/internal/lm/mig-strategy.go#L60-L130">MIG strategy</a></li>
+<li><a href="https://github.com/NVIDIA/nvidia-container-toolkit/blob/adbd28c39b60f8eb7e03115b5ac61e58703f0ce7/cmd/nvidia-cdi-hook/apply-cuda-memory-limits/apply-cuda-memory-limits.go#L36-L70">CUDA memory limit hook</a></li>
+<li><a href="https://github.com/NVIDIA/k8s-dra-driver-gpu/blob/0882da8720c28763137e0987778ec476ec4cf8df/api/nvidia.com/resource/v1beta1/gpuconfig.go#L28-L70">DRA GpuConfig</a></li>
+</ul>
+<p><strong>站内</strong></p>
+<ul>
+<li><a href="../Accelerators/hami.html">HAMi</a></li>
+<li><a href="../Accelerators/hami-core.html">HAMi-core</a></li>
+<li><a href="../../../Machine_Learning/High_Performance_Computing/gpu-cluster-pooling.html">GPU 算力/显存池化</a></li>
+<li><a href="./gpu-access-chain.html">GPU 软件栈与接入链路</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../../docs/Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/gpu-operations.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../../docs/Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/training-inference-mix.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../../docs/Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/gpu-operations.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../../docs/Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/training-inference-mix.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../../highlight-abc7f01d.js"></script>
+        <script src="../../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>
