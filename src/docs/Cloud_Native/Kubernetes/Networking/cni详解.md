@@ -487,6 +487,8 @@ kind 的默认 CNI 是 **kindnetd**（DaemonSet，`kube-system/kindnet`），它
 
 所以 kind 集群里 Pod 出口源 IP 是节点 IP，`kubectl exec` 看到的对端地址也是节点地址；"kind 没有 NetworkPolicy"已经是过去式，能力随 kind 版本变化。源码见 [kindnetd](https://github.com/kubernetes-sigs/kind/tree/main/images/kindnetd)（main 分支，不固定行号）。
 
+> **kind 里能跑 BGP 吗？** 默认 kindnet 用静态路由，**不跑 BGP**。要测 BGP，需要 `networking.disableDefaultCNI: true` 并安装 Calico/Cilium 等支持 BGP 的 CNI；kind 文档把替换 CNI 称为 "power user feature with limited support"，Calico 是已知可用的。kind 的节点是 Docker 容器，BGP 只能在 kind 的 Docker 网桥上做实验；Docker 宿主机/外部网络不会自动学到 PodCIDR，除非你再跑一个 BGP peer 并配置路由。节点 IP 是容器 IP，重建集群会变。
+
 ---
 
 ## 5. 节点路由与 PodCIDR
@@ -507,7 +509,54 @@ PodCIDR 只是"地址池声明"，**K8s 核心不装跨节点路由**（云厂�
 - **overlay**：VXLAN/IPIP/Geneve 封装，节点只需 IP 可达；
 - **云路由**：cloud provider 把 PodCIDR 写进 VPC 路由表。
 
-### 5.2 相关 sysctl
+### 5.2 BGP 宣告 PodCIDR 是怎么发生的
+
+BGP 不是广播，也不是“给 Kubernetes API 发消息”；它是节点上的 **BGP daemon** 与配置好的 **peer** 建立 **TCP/179** 长连接，交换 BGP 消息。
+
+```mermaid
+sequenceDiagram
+    participant N as 节点 BGP daemon
+    participant P as ToR / RR / 另一节点
+    N->>P: TCP 179 建连
+    N->>P: OPEN（My AS = 64512）
+    P->>N: OPEN（My AS = 65000）
+    N->>P: KEEPALIVE
+    P->>N: KEEPALIVE
+    Note over N,P: 会话 Established
+    N->>P: UPDATE NLRI=10.244.1.0/24 NEXT_HOP=172.18.0.2 AS_PATH=64512
+    P-->>N: 安装 10.244.1.0/24 via 172.18.0.2
+```
+
+- `OPEN`：协商 AS、hold time、能力（MP-BGP、Graceful Restart、Add-Path 等）。
+- `UPDATE`：携带 NLRI（前缀）、NEXT_HOP、AS_PATH、communities 等；路由撤销也用它。
+- `KEEPALIVE`：维持会话；路由变化时发 UPDATE。
+- `NOTIFICATION`：出错时关闭会话。
+
+**发给谁**：给配置好的 peer，通常是 ToR 交换机、云路由器、Route Reflector，或另一个节点（full mesh）。BGP 是**单播 TCP**，不是广播/多播。
+
+**怎么发**：BGP daemon（Calico 用 BIRD，Cilium/MetalLB/kube-router 用各自实现）读配置/CRD，建立会话，把本节点 PodCIDR（或 IPAM block）编码成 UPDATE 发出去。对端收到后做 best-path，装 FIB；之后数据包按这条路由转发到节点 IP，节点再送到 Pod。
+
+> **daemon 和 peer 是什么**：daemon 是真正跑 BGP 的**进程**（BIRD/FRR/GoBGP/…），Linux 内核本身不实现 BGP；peer 是**会话对端**。路由器/交换机上的 BGP 是内置功能，但要显式配置 AS、neighbor、network/redistribute；K8s 节点上则由 Calico/Cilium/MetalLB 自带，或你部署 FRR/BIRD。
+
+两种常见拓扑：
+
+- **eBGP**：节点 AS 64512 ↔ ToR AS 65000；ToR 学到 PodCIDR，转发到节点。
+- **iBGP**：同 AS，节点 full mesh 或 Route Reflector；Calico 默认的 node-to-node mesh 就是 iBGP。
+
+> **full mesh 是什么**：每两个节点之间建一条 iBGP 会话，n 个节点有 n(n-1)/2 条；每个节点宣告自己的 PodCIDR/IPAM block，对端学路由。iBGP 有 split-horizon（从 iBGP 学到的路由不再传给其他 iBGP peer），所以要么 full mesh，要么 Route Reflector。full mesh 是控制面会话拓扑，不是数据面隧道；数据包仍按 FIB 直接转发，节点之间也不需要物理直连。
+
+常用检查：
+
+```bash
+tcpdump -ni any tcp port 179
+calicoctl node status
+birdc show protocols
+birdc show route
+cilium bgp peers
+cilium bgp routes advertised
+```
+
+### 5.3 相关 sysctl
 
 | sysctl | 作用 | 谁设置 |
 |---|---|---|
@@ -530,6 +579,18 @@ PodCIDR 只是"地址池声明"，**K8s 核心不装跨节点路由**（云厂�
 - **VXLAN / IPIP / Geneve / WireGuard**：封装（overlay），决定包怎么套外层；
 - **BGP / 纯路由**：原生路由（underlay / native），BGP 只负责"路由怎么分发"，不改变包格式；
 - **eBPF**：数据面实现技术，既能做 native routing，也能做 tunnel，还能替代 kube-proxy。
+
+**overlay 的包怎么找到远端节点？** overlay 只负责封装，不负责“发现”节点；映射由控制面/agent 预置：
+
+| overlay | 内层 PodCIDR → 远端节点的映射 |
+|---|---|
+| IPIP | 路由 `10.244.2.0/24 via <nodeB> dev tunl0` |
+| VXLAN | 路由 `dev vxlan.calico` + FDB `dst <nodeB>` |
+| Geneve | FDB / 隧道映射（OVN 控制面下发） |
+| WireGuard | peer `AllowedIPs` + endpoint |
+| Cilium | BPF tunnel map（remote PodCIDR/IP → node IP） |
+
+Pod 本身不知道 nodeB；源节点的 CNI agent 已经把映射写进路由/FDB/隧道 map，外层再由 underlay 路由到 nodeB。
 
 | 传输/转发方式 | 封装 | 每包开销（IPv4） | 1500 underlay 下 Pod MTU | 代表 |
 |---|---|---|---|---|
@@ -668,6 +729,60 @@ NetworkPolicy 的 API 只定义语义，**执行完全靠 CNI**。K8s 文档明�
 
 选型的核心问题不是"哪个功能多"，而是：**你需要 underlay 路由还是 overlay？需要 NetworkPolicy 吗？需要 eBPF/kube-proxy 替代吗？能接受 BGP/内核版本/运维复杂度吗？** 多集群场景还要看 ClusterMesh/Submariner 的兼容性，见 [多集群网络互联](./multicluster-networking.md)。
 
+### 10.1 能不能同时用两个 CNI？
+
+分三种情况：
+
+| 方式 | 是否可行 | 说明 |
+|---|---|---|
+| 两个独立 primary CNI（都做 IPAM/路由/策略） | **不建议/不支持** | 运行时只把第一个 conflist 当默认网络；两者会争 IPAM、路由、iptables/eBPF、策略，容易产生重复/冲突规则 |
+| 同一个 conflist 里 **CNI chaining** | **可行（需官方支持）** | 一个 main 插件负责 IPAM/路由，另一个以 chaining 模式做策略/LB |
+| **Multus + 多张网卡** | **可行** | 一个 primary，多个 secondary；每个 Pod 可按 annotation 挂不同 CNI |
+
+Calico + Cilium 属于第二种：Cilium 官方支持 **generic-veth chaining**，让 Calico 做 IPAM/路由（包括 BGP），Cilium 在 veth 上挂 eBPF 做 policy/LB。典型 conflist（简化示意）：
+
+```json
+{
+  "name": "generic-veth",
+  "cniVersion": "0.3.1",
+  "plugins": [
+    {"type": "calico", "datastore_type": "kubernetes",
+     "ipam": {"type": "calico-ipam"}},
+    {"type": "portmap", "capabilities": {"portMappings": true}},
+    {"type": "cilium-cni"}
+  ]
+}
+```
+
+Cilium 侧需要 `cni.chainingMode=generic-veth`、`routingMode=native`、`enableIPv4Masquerade=false`、`enableIdentityMark=false`，并注意官方列出的限制（L7 policy、IPsec 等）；已有 Pod 要重建才会应用 chaining 配置。参考 [Cilium CNI chaining](https://docs.cilium.io/en/stable/installation/cni-chaining/) 和 [Calico chaining](https://docs.cilium.io/en/stable/installation/cni-chaining-calico/)。
+
+分工要说得更准确一点：
+
+| 组件 | 在 chaining 里的职责 |
+|---|---|
+| Calico（`calico` + `calico-ipam`） | IPAM、veth、路由/BGP、Calico policy（如果启用） |
+| `cilium-cni` | 把 Calico 建好的 veth 注册成 Cilium endpoint，由 agent 挂 eBPF 程序 |
+| Cilium agent | 编译/下发 eBPF，做 policy、Service LB、Hubble 观测 |
+
+所以“Cilium 负责 NetworkPolicy”只对了一半：真正执行策略和 LB 的是 **Cilium agent + eBPF datapath**，`cilium-cni` 只是入口；而且 Calico 自己的 NetworkPolicy 仍可能存在，别同时开两套互相冲突的策略。
+
+**Cilium 的 “LB” 指什么**：主要是 **Service 流量的 eBPF 负载均衡**。Pod `connect()` 到 ClusterIP 时，Cilium 在 socket/TC hook 查 BPF LB map，选一个后端并把目的地址改写过去，不经过 iptables/IPVS；它支持随机/Maglev、会话保持、DSR 等。它和 Calico BGP 不冲突：Calico BGP 负责“Pod IP 怎么被路由到”，Cilium LB 负责“Service VIP 选哪个 Pod”。
+
+是否让 Cilium 完全替代 kube-proxy 是另一个开关（`kubeProxyReplacement`）；官方 Calico chaining 示例没有强制开启，所以部署后要看 `cilium status` 和 kube-proxy DaemonSet，确认哪些流量走 Cilium LB、哪些仍走 kube-proxy。
+
+**不要把“两个 CNI 都装上”理解成“两个 primary 同时工作”**：`/etc/cni/net.d` 里可以有多个文件，但 containerd 默认只加载第一个（`max_conf_num=1`）；两个 full CNI 同时管理同一个 Pod 网络会冲突。
+
+### 10.2 Istio CNI 是 CNI 吗？
+
+是，但它是 **chained CNI plugin**，不是 Calico/Cilium 那种 primary CNI。
+
+- **不分配 IP、不建 veth、不装路由**：Pod 的接口/IP/路由仍由 primary CNI 负责。
+- Istio 的 `istio-cni-node` DaemonSet 在每个节点安装一个 chained 插件；Pod 创建时，它在 primary 插件之后运行，往 Pod netns 写 iptables 规则，把入/出流量重定向到 Envoy sidecar（sidecar 模式）或 ztunnel（ambient 模式）。
+- **sidecar 模式可选**：它用来替代每个 Pod 的 `istio-init` init container，避免 Pod 需要 `NET_ADMIN`/`NET_RAW`；**ambient 模式必需**。
+- 它和 Calico/Cilium 可以共存；但 chaining 顺序和 iptables/eBPF 规则要确认，避免多个插件同时改同一路径。
+
+参考 [Istio CNI node agent](https://istio.io/latest/docs/setup/additional-setup/cni/)。
+
 ---
 
 ## 11. 故障模式与排查
@@ -710,7 +825,263 @@ journalctl -u containerd --since '10 min ago' | grep -i -E 'cni|sandbox'
 
 ---
 
-## 12. 参考
+## 12. 动手实验：kind + 多种 CNI
+
+目标：用一个 3 节点 kind 集群分别跑 **kindnet / flannel / Calico BGP / Cilium**，观察接口、路由、FDB、MTU、kube-proxy 的差异。每个实验用独立集群，做完即删。
+
+> 这是实验室，不是生产：kind 节点是 Docker 容器，BGP 没有真实 ToR；3 节点约 4–6 GB 内存。
+
+### 12.1 准备
+
+工具：`kind`、`kubectl`、`docker`（或 `podman`）、`helm`；`cilium`/`calicoctl` 可选。
+
+Calico/Flannel 用的基础配置 `kind-cni.yaml`：
+
+```yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  disableDefaultCNI: true
+  podSubnet: "10.244.0.0/16"
+nodes:
+- role: control-plane
+- role: worker
+- role: worker
+```
+
+Cilium 要测 kube-proxy replacement，用 `kind-cni-noproxy.yaml`（完整文件）：
+
+```yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  disableDefaultCNI: true
+  podSubnet: "10.244.0.0/16"
+  kubeProxyMode: "none"
+nodes:
+- role: control-plane
+- role: worker
+- role: worker
+```
+
+基线 kindnet 用 `kind-kindnet.yaml`（3 节点、**不关**默认 CNI）：
+
+```yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+- role: worker
+- role: worker
+```
+
+通用 helper（每个实验创建集群后调用）：
+
+```bash
+set_nodes() {
+  CLUSTER=$1
+  NODE1=$(kind get nodes --name "$CLUSTER" | grep worker | head -1)
+  NODE2=$(kind get nodes --name "$CLUSTER" | grep worker | tail -1)
+}
+
+ping_test() {
+  kubectl delete pod ping-a ping-b --ignore-not-found
+  kubectl run ping-a --image=nicolaka/netshoot \
+    --overrides="{\"spec\":{\"nodeName\":\"$NODE1\"}}" -- sleep infinity
+  kubectl run ping-b --image=nicolaka/netshoot \
+    --overrides="{\"spec\":{\"nodeName\":\"$NODE2\"}}" -- sleep infinity
+  kubectl wait --for=condition=Ready pod/ping-a --timeout=120s
+  kubectl wait --for=condition=Ready pod/ping-b --timeout=120s
+  PODB_IP=$(kubectl get pod ping-b -o jsonpath='{.status.podIP}')
+  kubectl exec ping-a -- ping -c 3 "$PODB_IP"
+}
+```
+
+> 以下命令默认在**同一个 shell** 里执行；换了 shell 就重新粘贴 helper。
+
+### 12.2 基线：kindnet
+
+```bash
+CLUSTER=cni-kindnet
+kind create cluster --name "$CLUSTER" --config kind-kindnet.yaml
+set_nodes "$CLUSTER"
+kubectl get nodes -o wide
+ping_test
+```
+
+观察：
+
+```bash
+docker exec "$NODE1" ip -d link show type veth
+docker exec "$NODE1" ip route
+docker exec "$NODE1" ip -d link show          # 不应有 cni0
+```
+
+预期：
+
+- kindnet 用 **ptp + host-local + 静态路由**；
+- 节点路由有 `10.244.x.0/24 via <另一个节点IP> dev eth0`；
+- 没有 `cni0`，Pod 流量经 veth + 主机路由；
+- MTU 1500，无封装。
+
+### 12.3 flannel VXLAN
+
+```bash
+CLUSTER=cni-flannel
+kind create cluster --name "$CLUSTER" --config kind-cni.yaml
+kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
+kubectl -n kube-flannel rollout status ds/kube-flannel --timeout=180s
+set_nodes "$CLUSTER"
+ping_test
+```
+
+如果 flannel 选错网卡（kind 节点应走 `eth0`）：
+
+```bash
+kubectl -n kube-flannel get ds kube-flannel -o yaml | grep -- '--iface'
+# 没有的话，编辑 DaemonSet，给 kube-flannel 容器加 --iface=eth0
+```
+
+观察：
+
+```bash
+docker exec "$NODE1" ip -d link show flannel.1
+docker exec "$NODE1" ip route
+docker exec "$NODE1" bridge fdb show dev flannel.1
+```
+
+预期：
+
+- `flannel.1` 是 VXLAN 设备，MTU 1450；
+- 路由类似 `10.244.x.0/24 dev flannel.1`；
+- FDB 有 `dst <另一个节点IP>`；
+- 用 netshoot 抓外层：
+  ```bash
+  docker run --rm --net=container:"$NODE1" nicolaka/netshoot \
+    tcpdump -ni eth0 -c 5 udp port 8472
+  ```
+  同时在 `ping-a` 里 ping，能看到 VXLAN 外层包。
+
+### 12.4 Calico BGP（native）
+
+```bash
+CLUSTER=cni-calico
+kind create cluster --name "$CLUSTER" --config kind-cni.yaml
+
+curl -O https://raw.githubusercontent.com/projectcalico/calico/v3.33.1/manifests/calico.yaml
+sed -i 's|192.168.0.0/16|10.244.0.0/16|g' calico.yaml
+kubectl apply -f calico.yaml
+kubectl -n kube-system rollout status ds/calico-node --timeout=180s
+```
+
+改成纯 BGP（关掉 IPIP/VXLAN），并确认 full mesh：
+
+```bash
+kubectl get ippools.crd.projectcalico.org
+kubectl patch ippools.crd.projectcalico.org default-ipv4-ippool --type=merge \
+  -p '{"spec":{"ipipMode":"Never","vxlanMode":"Never"}}'
+
+kubectl get bgpconfigurations.crd.projectcalico.org default -o yaml
+kubectl patch bgpconfigurations.crd.projectcalico.org default --type=merge \
+  -p '{"spec":{"nodeToNodeMeshEnabled":true,"asNumber":64512}}'
+
+set_nodes "$CLUSTER"
+ping_test
+```
+
+观察：
+
+```bash
+docker exec "$NODE1" ip route
+docker exec "$NODE1" ip -d link show type veth   # cali*
+# 如果装了 calicoctl：
+calicoctl node status
+```
+
+预期：
+
+- 节点路由是 `10.244.x.0/24 via <另一个节点IP> dev eth0`，**没有隧道设备**；
+- 接口是 `cali*` veth，没有 `cni0`；
+- BGP 是 iBGP full mesh（3 节点 → 3 条会话），`calicoctl node status` 显示 `Established`；
+- MTU 1500。
+
+### 12.5 Cilium（eBPF + kube-proxy replacement）
+
+```bash
+CLUSTER=cni-cilium
+kind create cluster --name "$CLUSTER" --config kind-cni-noproxy.yaml
+
+helm repo add cilium https://helm.cilium.io/
+helm install cilium cilium/cilium --version 1.20.5 -n kube-system \
+  --set kubeProxyReplacement=true \
+  --set k8sServiceHost="$CLUSTER-control-plane" \
+  --set k8sServicePort=6443 \
+  --set routingMode=native \
+  --set ipv4NativeRoutingCIDR=10.244.0.0/16 \
+  --set autoDirectNodeRoutes=true \
+  --set ipam.mode=kubernetes
+
+kubectl -n kube-system rollout status ds/cilium --timeout=180s
+set_nodes "$CLUSTER"
+ping_test
+```
+
+观察：
+
+```bash
+kubectl -n kube-system get ds kube-proxy      # 应该不存在
+cilium status | grep -i kubeProxyReplacement
+docker exec "$NODE1" ip route
+cilium bpf tunnel list                        # native 模式下为空
+```
+
+测 Service：
+
+```bash
+kubectl create deployment nginx --image=nginx
+kubectl expose deployment nginx --port=80
+kubectl run curl --image=curlimages/curl --rm -i --restart=Never -- \
+  curl -s http://nginx
+```
+
+预期：
+
+- `kubeProxyReplacement=True`，kube-proxy DaemonSet 不存在；
+- 节点走 native 路由，MTU 1500；
+- Service 流量由 Cilium eBPF 直接选后端，不经过 `KUBE-SVC` 链；
+- 如果把 `routingMode` 改成 `tunnel`，可对比 `cilium_vxlan` 设备和 MTU 1450。
+
+### 12.6 对比
+
+| 实验 | 节点接口 | 跨节点路由 | 封装 | Pod MTU | BGP | kube-proxy |
+|---|---|---|---|---|---|---|
+| **kindnet** | veth + ptp，无 `cni0` | `via <nodeIP> dev eth0` | 无 | 1500 | 无 | 有 |
+| **flannel** | `cni0` + `flannel.1` | `dev flannel.1` + FDB | VXLAN | 1450 | 无 | 有 |
+| **Calico BGP** | `cali*` veth，无 `cni0` | `via <nodeIP> dev eth0` | 无 | 1500 | iBGP full mesh | 有 |
+| **Cilium native** | `lxc*`/veth + eBPF | native | 无 | 1500 | 可选 | 被替代 |
+
+### 12.7 清理
+
+```bash
+for c in cni-kindnet cni-flannel cni-calico cni-cilium; do
+  kind delete cluster --name "$c"
+done
+```
+
+### 12.8 注意事项
+
+- **kind 不是真实 underlay**：BGP 只在 Docker 网桥上做实验，没有 ToR；外部网络不会自动学到 PodCIDR。
+- **docker vs podman**：用 podman 时把 `docker exec` 换成 `podman exec`。
+- **节点名**：kind 节点是 `<cluster>-control-plane`、`<cluster>-worker`、`<cluster>-worker2`；用 `kind get nodes --name <cluster>` 确认。
+- **flannel 网卡**：kind 节点应走 `eth0`；不确定时给 `kube-flannel` 加 `--iface=eth0`。
+- **Calico CIDR**：`calico.yaml` 默认 IPPool 是 `192.168.0.0/16`，必须改成和 kind `podSubnet` 一致。
+- **Cilium API 地址**：`k8sServiceHost` 必须是 control-plane 容器名，否则 kube-proxy 关掉后 Cilium 找不到 apiserver。
+- **Cilium IPAM**：`ipam.mode=kubernetes` 使用 Node 的 PodCIDR；如果版本不支持，改用 `cluster-pool` 并设置 `clusterPoolIPv4PodCIDRList=10.244.0.0/16`。
+- **tcpdump**：kind 节点镜像可能没有；用 `nicolaka/netshoot` 共享 netns，或 `kubectl debug node/<node>`。
+
+---
+
+## 13. 参考
 
 **规范与官方文档**
 

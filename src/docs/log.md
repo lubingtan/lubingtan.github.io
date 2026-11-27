@@ -1,5 +1,54 @@
 # Operation Log
 
+## [2026-11-26] update | 修正 kind 实验的多节点与 helper
+
+- `cni详解.md` §12：补 `kind-kindnet.yaml`（3 节点、默认 CNI），避免基线只创建单节点导致 `$NODE2` 为空。
+- helper 改为 `set_nodes` / `ping_test` 函数，各实验创建集群后调用；Calico 在切成 BGP 后再执行 ping；Calico CRD 使用全名；Cilium 增加 `rollout status`。
+
+## [2026-11-26] update | 增加 kind 多 CNI 动手实验
+
+- `cni详解.md` 新增 §12：用 3 节点 kind 分别跑 kindnet / flannel VXLAN / Calico BGP native / Cilium eBPF+kube-proxy replacement；给出 kind 配置、安装命令、节点/路由/FDB/MTU 观察点、Service 测试、对比表与清理步骤。
+- 记录 kind 实验边界（Docker 网桥上的 BGP、节点名、Calico CIDR、Cilium `k8sServiceHost`/IPAM、tcpdump 工具）；参考节顺延为 §13。
+
+## [2026-11-26] update | 补充 overlay 如何找到远端节点
+
+- `cni详解.md` §6：overlay 只负责封装，内层 PodCIDR → 远端节点的映射由控制面/agent 预置：IPIP 用 `via nodeB` 路由、VXLAN 用 FDB、Geneve 用 FDB/隧道映射、WireGuard 用 `AllowedIPs`、Cilium 用 BPF tunnel map。
+- 说明 Pod 本身不知道 nodeB；源节点 CNI agent 写映射，外层再由 underlay 路由到 nodeB。
+
+## [2026-11-26] update | 补充 BGP full mesh 的含义与规模
+
+- `cni详解.md` §5.2：full mesh 是每对节点一条 iBGP 会话，n 个节点有 n(n-1)/2 条；iBGP split-horizon 要求 full mesh 或 Route Reflector。
+- 说明 full mesh 是控制面会话拓扑，不是数据面隧道；数据包仍按 FIB 转发，节点之间不需要物理直连；大规模应改用 RR/eBGP。
+
+## [2026-11-26] update | 补充 BGP daemon / peer 的部署边界
+
+- `cni详解.md` §5.2：BGP daemon 是用户态进程（BIRD/FRR/GoBGP），Linux 内核本身不实现 BGP；peer 是会话对端。
+- 路由器/交换机的 BGP 是内置功能但需显式配置 AS/neighbor/network；K8s 节点由 Calico/Cilium/MetalLB 自带，或自行部署 FRR/BIRD。
+
+## [2026-11-26] update | 补充 BGP 宣告 PodCIDR 的具体过程
+
+- `cni详解.md` §5.2：BGP 是 peer-to-peer 的 TCP/179 会话，不是广播；OPEN/KEEPALIVE/UPDATE/NOTIFICATION；UPDATE 携带 NLRI/NEXT_HOP/AS_PATH；eBGP vs iBGP；Calico BIRD、Cilium/MetalLB 的实现差异；抓包与检查命令。
+
+## [2026-11-26] update | 补充 kind 默认 CNI 与 BGP 的边界
+
+- `cni详解.md` §4.7：kind 默认 kindnet 是 ptp + host-local + 静态路由，**不跑 BGP**；要测 BGP 需 `disableDefaultCNI: true` 并安装 Calico/Cilium。kind 文档把替换 CNI 称为 “power user feature with limited support”。
+- 说明 kind 节点是 Docker 容器：BGP 只能在 kind 的 Docker 网桥上做实验，宿主机/外部网络不会自动学到 PodCIDR；节点 IP 是容器 IP，重建集群会变。
+
+## [2026-11-26] update | 补充 Istio CNI 的定位
+
+- `cni详解.md` §10.2：Istio CNI 是 **chained plugin**，不是 primary CNI；不分配 IP、不建 veth、不装路由，只往 Pod netns 写 iptables 重定向到 Envoy/ztunnel。
+- sidecar 模式可选（替代 `istio-init`，避免 Pod 需要 `NET_ADMIN`/`NET_RAW`），ambient 模式必需；可与 Calico/Cilium 共存，但需确认 chaining 顺序与 iptables/eBPF 规则。
+
+## [2026-11-26] update | 澄清 Calico+Cilium chaining 的分工与 Cilium LB
+
+- `cni详解.md` §10.1：增加 Calico / `cilium-cni` / Cilium agent 的职责表；Cilium 不只做 NetworkPolicy，还包括 Service LB/Hubble；策略与 LB 由 agent + eBPF 执行，`cilium-cni` 只是入口；Calico policy 可能仍在，避免双开。
+- 解释 Cilium LB：Service 流量的 eBPF LB（socket/TC 查 map、选后端、DNAT，不走 iptables/IPVS），与 Calico BGP 的分工；`kubeProxyReplacement` 决定是否完全替代 kube-proxy。
+
+## [2026-11-26] update | 补充“能否同时用两个 CNI”与 Calico+Cilium chaining
+
+- `cni详解.md` §10.1：区分三种方式——两个独立 primary CNI 不建议/不支持；同一 conflist 里 CNI chaining 可行（需官方支持）；Multus 多网卡可行。
+- Calico + Cilium 走 Cilium **generic-veth chaining**：Calico 负责 IPAM/路由/BGP，Cilium 在 veth 上做 policy/LB；给出简化 conflist、Helm 关键参数与限制（L7 policy/IPsec、已有 Pod 需重建）。
+
 ## [2026-11-24] update | 审计讨论落盘并统一 ETP/ITP“无端点”表述
 
 - 审计本轮讨论：cni0、L2/L3/L4、overlay/underlay、CNI plugin/实现/方案、veth、ptp/ipvlan/macvlan、netfilter/IPVS/conntrack、ETP/ITP 均已覆盖；补上 CNI main/IPAM/meta 插件清单与 ETP 三行场景表。

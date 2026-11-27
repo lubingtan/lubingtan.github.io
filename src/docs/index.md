@@ -38,7 +38,7 @@
 
 - [Kubernetes 网络全链路：Pod、Service、LoadBalancer 与 DNS](./Cloud_Native/Kubernetes/Networking/k8s-network-path.md) — 四张地址表与五层数据面、L2/L3/L4/L7 与 overlay/underlay 术语、Pod→Pod/Service/外部入口/DNS/egress 的完整路径、iptables/IPVS/nftables/eBPF 差异、抓包证据地图与分层排障决策树
 - [Service、kube-proxy 与 LoadBalancer](./Cloud_Native/Kubernetes/Networking/6_service相关.md) — Service 语义与默认值、EndpointSlice/readiness、kube-proxy 三种模式的链布局与规则生成、conntrack、ETP/ITP/拓扑、MetalLB L2/BGP、Ingress/Gateway API
-- [CNI 详解：从 kubelet 到 veth、bridge 与 overlay](./Cloud_Native/Kubernetes/Networking/cni详解.md) — CNI 规范与调用链、运行时库 vs 插件二进制 vs 完整方案、配置组合/meta/main-IPAM 三层定制与自定义插件骨架、接口拓扑/封装/路由/数据面的分类轴、containerd 创建 netns/pause、bridge/host-local/portmap/bandwidth、ptp/ipvlan/macvlan、PodCIDR 与路由、overlay MTU、IPAM、NAT 与 NetworkPolicy 数据面
+- [CNI 详解：从 kubelet 到 veth、bridge 与 overlay](./Cloud_Native/Kubernetes/Networking/cni详解.md) — CNI 规范与调用链、运行时库 vs 插件二进制 vs 完整方案、配置组合/meta/main-IPAM 三层定制与自定义插件骨架、接口拓扑/封装/路由/数据面的分类轴、containerd 创建 netns/pause、bridge/host-local/portmap/bandwidth、ptp/ipvlan/macvlan、PodCIDR 与路由、overlay MTU、IPAM、NAT 与 NetworkPolicy 数据面、kind 多 CNI 实验（kindnet/flannel/Calico/Cilium）
 - [多集群网络互联：发现、访问、成员地址与 NAT 穿透](./Cloud_Native/Kubernetes/Networking/multicluster-networking.md) — 四种连通模型、成员集群/成员地址、地址冲突与 Globalnet、MCS-API、Submariner 隧道与端口、Cilium ClusterMesh、跨集群 DNS 与排障
 
 #### Extensibility
