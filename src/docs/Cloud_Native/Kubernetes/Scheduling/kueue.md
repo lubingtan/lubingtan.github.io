@@ -98,3 +98,4 @@ Kueue 负责「作业级准入 + 队列配额」，HAMi 负责「Pod 级设备�
 
 - [Kueue GitHub](https://github.com/kubernetes-sigs/kueue)
 - [Kueue 官方文档](https://kueue.sigs.k8s.io/)
+- 相关：[训推混部与协同放置](../../AI_Infrastructure/Heterogeneous_Resources/training-inference-mix.md)

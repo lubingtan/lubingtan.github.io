@@ -238,3 +238,4 @@ kubectl apply -f examples/nvidia/default_use.yaml
 - [CNCF 晋升公告](https://www.cncf.io/blog/2026/07/15/hami-becomes-a-cncf-incubating-project/)
 - 相关：kube-scheduler 的 [Scheduler Extender](../../Kubernetes/Scheduling/4_kube-scheduler源码分析.md#scheduler-extender扩展点)、[Kueue](../../Kubernetes/Scheduling/kueue.md)、[HAMi-core](./hami-core.md)
 - 延伸：单卡切分之外的跨节点方案见 [GPU 算力/显存池化：从 CUDA 单卡视角到跨节点透明调度](../../../Machine_Learning/High_Performance_Computing/gpu-cluster-pooling.md)
+- 对比：HAMi 在「共享/隔离/拓扑」光谱中的位置见 [共享、隔离与拓扑](../Heterogeneous_Resources/sharing-isolation-topology.md)

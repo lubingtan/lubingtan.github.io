@@ -64,6 +64,15 @@
 - [HAMi](./Cloud_Native/AI_Infrastructure/Accelerators/hami.md) — CNCF 异构 AI 算力虚拟化与调度：extender 选点、设备级策略链、14 家加速器后端、与 MIG/MPS/GPU Operator 的边界
 - [HAMi-core](./Cloud_Native/AI_Infrastructure/Accelerators/hami-core.md) — 容器内 CUDA 劫持实现：ld.so.preload / dlsym / cuGetProcAddress 三路接管、显存账本、算力令牌桶
 
+#### Heterogeneous Resources
+
+- [CPU / GPU 异构资源管理与设备运维：专题总览](./Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/overview.md) — 四段状态（reported/allocated/prepared/usable）、三个平面、十个误区，串联 CPU/GPU 资源、接入、隔离、运维与训推混部
+- [CPU、内存与节点资源基础](./Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/cpu-memory-node.md) — requests/limits 与 QoS、cgroup v1/v2 字段、CPU quota/throttling、CPU/Memory/Topology Manager、NUMA 对齐与边界、eviction 与三种 OOM
+- [GPU 软件栈与接入链路](./Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/gpu-access-chain.md) — driver/runtime/device plugin/CDI/DRA 全链路、容器内可见性、reported→usable 四段状态与失败矩阵
+- [共享、隔离与拓扑](./Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/sharing-isolation-topology.md) — 独占/约定式软共享/time-slicing/MPS/MIG 的隔离语义、GPU/PCIe/NUMA/NIC/NVLink/RDMA 测量与选型
+- [GPU 运维与故障处置](./Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/gpu-operations.md) — 掉卡、Xid/ECC/row remap、驱动与 runtime 不匹配、GPU/容器/节点 OOM、关联 node-GPU-Pod-rank 与停/隔/重试/升级 runbook
+- [训推混部与协同放置](./Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/training-inference-mix.md) — 尾延迟与吞吐干扰矩阵、容量模型、可抢占性与回收时限、Kueue 配额/借用、预热与容量保护
+
 #### Distributed Training
 
 - [云原生分布式训练：编排与稳定性专题](./Cloud_Native/AI_Infrastructure/Distributed_Training/overview.md) — 三层 membership（编排/框架/通信）总纲：角色建模、故障自愈、Checkpoint 与 RL 接入的统一框架

@@ -1,5 +1,18 @@
 # Operation Log
 
+## [2026-11-27] ingest | CPU / GPU 异构资源管理与设备运维专题
+
+Processed `raw/RESEARCH-heterogeneous-resource-management.md`（本地 clone：K8s v1.37.2 `c50e5395`、containerd v2.4.2、k8s-device-plugin v0.20.2、GPU Operator v26.7.3、DCGM v4.7.0、container-toolkit v1.20.2、k8s-dra-driver-gpu v25.12.0、Kueue v1beta2、linux v7.3 sparse；官方文档 2026-11 latest）。新建 `Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/` 6 篇：
+
+- `overview.md`：四段状态（reported/allocated/prepared/usable）、三个平面、十个误区、版本基线与阅读路径。
+- `cpu-memory-node.md`：requests/limits 分工、QoS/effective request、cgroup v1/v2 字段映射、CPU quota/throttling、static CPU Manager 及 options、MemoryQoS（1.37 默认开启但默认不生效）、eviction/OOM score、Memory/Topology Manager 与 NUMA 边界。
+- `gpu-access-chain.md`：PCIe→driver→/dev→NVML→device plugin/DRA→kubelet→CRI→CDI 全链路；device plugin 注册/Allocate/checkpoint/health；DRA ResourceSlice/Claim/NodePrepareResources/CDI/DeviceTaint；NVIDIA DRA GPU plugin 现状与边界。
+- `sharing-isolation-topology.md`：隔离维度表、整卡/约定式软共享/time-slicing/MPS/MIG/CUDA memory limit 对比、MIG 无 P2P、MPS 错误不隔离、Topology Manager 不感知 NVLink、`nvidia-smi topo`/NVLink/PCIe/NUMA/NIC/RDMA 测量。
+- `gpu-operations.md`：掉卡/设备不可见、Xid 分组表、ECC/row remap/RMA、驱动/runtime 不匹配、GPU/容器/节点三种 OOM、DCGM/device plugin/DRA 健康工具、node-GPU-Pod-rank 关联、停新分配/隔离/重试/升级 runbook。
+- `training-inference-mix.md`：训推干扰矩阵、独立池/MIG/MPS/time-slicing 分层、显存/KV/checkpoint/抢占损失模型、Kueue quota/borrow/lend/stopPolicy、PDB/HPA/拓扑打散、预热与容量保护、8×H100 案例。
+
+关键核对：device plugin unhealthy 只降 allocatable、不迁移已分配 Pod，且 NVIDIA 插件健康事件单向不可恢复；DRA 调度器不支持抢占；MIG 实例间无 GPU-GPU P2P（PCIe/NVLink）；Topology Manager 只消费 NUMA hint；Xid 13/31/43/45/109 默认被 device plugin 忽略，DCGM 默认仅 Xid 119 fatal；dcgm-exporter 默认导出 XID、row remap 393–395、NVLink throughput，但 ECC/page retirement/NVLink 错误计数/health 默认关闭。索引与 SUMMARY 同步；新增 raw 研究笔记。相对链接 32 条、pinned GitHub 链接 104 条均通过校验（`check-wiki-links.py` / `verify-links.py`）。
+
 ## [2026-11-26] update | 修正 kind 实验的多节点与 helper
 
 - `cni详解.md` §12：补 `kind-kindnet.yaml`（3 节点、默认 CNI），避免基线只创建单节点导致 `$NODE2` 为空。

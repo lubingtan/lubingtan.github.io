@@ -460,3 +460,4 @@ flowchart LR
 - [训练失败与自愈](./failure-self-healing.md)
 - [RL 后训练与业务接入](./rl-post-training.md)
 - [Kubernetes 控制面灾备与恢复](../../Kubernetes/Control_Plane/控制面灾备与恢复.md)
+- [训推混部与协同放置](../Heterogeneous_Resources/training-inference-mix.md)

@@ -423,3 +423,5 @@ flowchart TB
 - [Checkpoint 与抢占恢复](./checkpoint-preemption.md)
 - [RL 后训练与业务接入](./rl-post-training.md)
 - [Kubernetes 控制面事故处理手册](../../Kubernetes/Control_Plane/控制面事故处理手册.md)
+- [GPU 运维与故障处置](../Heterogeneous_Resources/gpu-operations.md)
+- [训推混部与协同放置](../Heterogeneous_Resources/training-inference-mix.md)
