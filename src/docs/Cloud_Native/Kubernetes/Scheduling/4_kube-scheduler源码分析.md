@@ -1,5 +1,8 @@
 # k8s scheduler 源码分析
 
+> [!WARNING]
+> **本文是旧版归档（Framework 之前的实现），仅作历史对照。** 文中 `Configurator`、`algorithmprovider`、`Policy` 等结构在 v1.23 之后已被 Scheduling Framework 与 `KubeSchedulerConfiguration` 取代；当前版本（v1.37.2）的实际主流程、队列、cache/snapshot、扩展点与失败语义，见 [kube-scheduler：对象、队列与调度主流程](./native-scheduler.md) 与 [Scheduling Framework：扩展点、状态与并发语义](./scheduling-framework.md)。本文不保证与当前版本一致，不要按文中的配置/字段直接操作生产集群。
+
 ## Scheduler 基本工作流程
 
 ### 配置初始化

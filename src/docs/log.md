@@ -1,5 +1,11 @@
 # Operation Log
 
+## [2026-11-27] ingest | 调度器源码与调度策略专题
+
+基于本地 checkout 的 Kubernetes v1.37.2（`c50e5395`）、Volcano v1.16.1（`a2543678`）、Kueue main@2026-11-23（`be7dc9d`，晚于 v0.20.8）与官方文档/KEP，新增 6 页专题：`scheduling-overview.md`（地图/版本基线/五个模型/十条结论）、`native-scheduler.md`（实体、三层队列、backoff/QueueingHint、cache/snapshot、调度/绑定周期、assume/confirm/rollback、失败矩阵、重启恢复）、`scheduling-framework.md`（Pod 级 12 个 + v1.37 workload 级扩展点、CycleState 三作用域、状态码、并发、out-of-tree 骨架）、`volcano-scheduler.md`（Session/Action/Plugin、Job→PodGroup→Pod、allocate/backfill/preempt/reclaim、gang/capacity/proportion、Statement 事务、原生对照）、`scheduling-strategy.md`（权益/准入/借用回收/公平、Gang/回填/碎片/异构卡/拓扑/DRA claim/多集群）、`scheduling-evidence.md`（6 条不变式、失败注入、指标口径、同轨迹实验、仿真 vs 生产）。
+
+关键校正：v1.37 的 `GenericWorkload`（PodGroup + gang）是 Beta **默认关闭**，原生 gang 走 `GangScheduling` 的 Permit（5 分钟超时）；Volcano v1.16.1 默认 action 只有 `enqueue, allocate, backfill`，preempt/reclaim 需显式配置；v1.16.1 的 backfill 只处理既无普通 request、也无 DRA claim 的 BestEffort task；默认配置下只有 proportion 注册 `OverusedFn`，纯 capacity 的 overused 短路恒为 false；`Queue.spec.dequeueStrategy` 在核心仓库只有 API/转换、没有 scheduler 消费点；Kueue MultiKueue 是分发而非全局最优。共 468 条 pinned-SHA 代码链接（`bad=0`）与 80+ 一手文档/KEP 链接（HTTP 200）。同步更新 `index.md`、`kueue.md` 的专题延伸、旧页 `4_kube-scheduler源码分析.md` 的归档警告与 `SUMMARY.md`。
+
 ## [2026-11-27] ingest | CPU / GPU 异构资源管理与设备运维专题
 
 Processed `raw/RESEARCH-heterogeneous-resource-management.md`（本地 clone：K8s v1.37.2 `c50e5395`、containerd v2.4.2、k8s-device-plugin v0.20.2、GPU Operator v26.7.3、DCGM v4.7.0、container-toolkit v1.20.2、k8s-dra-driver-gpu v25.12.0、Kueue v1beta2、linux v7.3 sparse；官方文档 2026-11 latest）。新建 `Cloud_Native/AI_Infrastructure/Heterogeneous_Resources/` 6 篇：

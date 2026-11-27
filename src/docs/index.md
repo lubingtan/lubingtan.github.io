@@ -31,7 +31,13 @@
 
 #### Scheduling
 
-- [kube-scheduler 源码分析](./Cloud_Native/Kubernetes/Scheduling/4_kube-scheduler源码分析.md) — scheduler 的工作流程、配置初始化与调度算法源码解读
+- [调度器源码与策略：专题导读](./Cloud_Native/Kubernetes/Scheduling/scheduling-overview.md) — 专题地图、版本基线、五个核心模型（实体/周期/暂记/权益/可行性）、阅读路径与十条结论
+- [kube-scheduler：对象、队列与调度主流程](./Cloud_Native/Kubernetes/Scheduling/native-scheduler.md) — v1.37.2 的实体/队列/cache/snapshot、调度与绑定循环、assume/confirm/rollback、失败矩阵与重启恢复
+- [Scheduling Framework：扩展点、状态与并发语义](./Cloud_Native/Kubernetes/Scheduling/scheduling-framework.md) — 全部 Pod 级与 workload 级扩展点、CycleState 三种作用域、插件配置、并发与 Status 错误语义
+- [Volcano 调度器：Session、Action 与队列模型](./Cloud_Native/Kubernetes/Scheduling/volcano-scheduler.md) — Session/Action/Plugin、Job/PodGroup/Queue、allocate/backfill/preempt/reclaim、gang/capacity/proportion 与 Statement 事务
+- [调度策略与约束：配额、Gang、拓扑与 DRA](./Cloud_Native/Kubernetes/Scheduling/scheduling-strategy.md) — 队列权益/准入/借用/回收、优先级/公平/饥饿、Gang/回填/碎片/异构卡/拓扑、DRA claim 与多集群选址
+- [调度正确性与优化证据：不变式、指标与同轨迹对比](./Cloud_Native/Kubernetes/Scheduling/scheduling-evidence.md) — 不超额/失败释放/状态重建/抢占可恢复、指标定义、同轨迹实验、仿真 vs 生产与反模式
+- [kube-scheduler 源码分析（旧版归档）](./Cloud_Native/Kubernetes/Scheduling/4_kube-scheduler源码分析.md) — Framework 之前的 predicates/priorities 实现，仅作历史对照
 - [Kueue](./Cloud_Native/Kubernetes/Scheduling/kueue.md) — Kubernetes 原生作业队列管理器：配额管理、公平共享、抢占与多集群调度
 
 #### Networking

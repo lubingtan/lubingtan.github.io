@@ -94,6 +94,10 @@ Kueue 负责「作业级准入 + 队列配额」，HAMi 负责「Pod 级设备�
 
 这与 Kueue + Volcano 的分工类似：队列层只决定「能不能开始」，设备层决定「用哪张卡、切多少」。详见 [HAMi](../../AI_Infrastructure/Accelerators/hami.md)。
 
+## 专题延伸
+
+Kueue 只覆盖「作业级准入 + 配额」，不负责 Pod 选点、Gang 的原子放置或 DRA 设备分配。把 Kueue 放回完整调度链路（队列权益 → 准入 → 放置 → 回收/抢占 → DRA/多集群）的对照分析，见 [调度策略与约束：配额、Gang、拓扑与 DRA](./scheduling-strategy.md)；与 Volcano 的 Session/Action 模型、原生 scheduler 的 queue/cache/binding 循环的差异，见 [Volcano 调度器](./volcano-scheduler.md) 与 [kube-scheduler：对象、队列与调度主流程](./native-scheduler.md)。
+
 ## 参考
 
 - [Kueue GitHub](https://github.com/kubernetes-sigs/kueue)
