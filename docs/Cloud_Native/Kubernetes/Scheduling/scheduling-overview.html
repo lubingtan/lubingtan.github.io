@@ -1,0 +1,431 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>调度器源码与策略：专题导读 - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../../searchindex-1a4ddc3e.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../../toc-1fccd013.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/Kubernetes/Scheduling/scheduling-overview.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="调度器源码与策略专题导读"><a class="header" href="#调度器源码与策略专题导读">调度器源码与策略：专题导读</a></h1>
+<p>这组页面讨论同一个问题的五个切面：<strong>一个待调度的实体，如何从队列进入调度器、被判定“能放在哪“、把资源暂时记在账上、最终确认或撤回，并在失败/重启/抢占后恢复到一个可解释的状态</strong>。它既读源码（kube-scheduler v1.37.2、Volcano v1.16.1），也讨论策略（配额、公平、Gang、回填、拓扑、DRA、多集群），最后给出“如何证明它是对的、如何比较它好不好“的证据方法。</p>
+<p>覆盖范围与边界：</p>
+<ul>
+<li><strong>覆盖</strong>：原生 kube-scheduler 的对象/队列/cache/调度与绑定循环、Scheduling Framework 的扩展点与状态语义、Volcano 的 Session/Action/Plugin 模型、队列与作业级策略、DRA claim 分配、多集群选址、正确性不变式与同轨迹评估方法。</li>
+<li><strong>不覆盖</strong>：kubelet 的 Pod 启动细节、CRI/CNI/CSI 实现、云厂商托管调度器的内部实现、具体生产集群的调参手册。这些只在必要处引用既有页面。</li>
+<li><strong>没有生产 trace</strong>：本专题不声称任何“A 比 B 快 N%“的实测结论；所有性能讨论要么是指标定义，要么是实验设计，要么明确标注“示例”。</li>
+</ul>
+<h2 id="1-版本与能力基线"><a class="header" href="#1-版本与能力基线">1. 版本与能力基线</a></h2>
+<p>所有代码链接固定到下表 commit；不同版本的默认值和扩展点可能不同，读页面时先对齐版本。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>项目</th><th>基线</th><th>固定 commit</th><th>关键能力状态</th></tr>
+</thead>
+<tbody>
+<tr><td>Kubernetes</td><td>v1.37.2</td><td><a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/scheduler.go#L69-L126"><code>c50e539</code></a></td><td>DRA GA 默认开；<code>GenericWorkload</code>（PodGroup + gang）Beta <strong>默认关</strong>；TAS、PodGroup 抢占、PodGroup 级 DRA claim 为 Alpha/Beta <strong>默认关</strong></td></tr>
+<tr><td>Volcano</td><td>v1.16.1</td><td><a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/scheduler/scheduler.go#L138-L170"><code>a254367</code></a></td><td>默认 action 仅 <code>enqueue, allocate, backfill</code>；preempt/reclaim 需显式配置</td></tr>
+<tr><td>Kueue</td><td>main@2026-11-23（晚于 v0.20.8）</td><td><a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/apis/kueue/v1beta2/clusterqueue_types.go#L86-L132"><code>be7dc9d</code></a></td><td>作业级准入/配额/借用/公平分享；MultiKueue 多集群分发</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>不要把 Kubernetes 的 <code>GenericWorkload</code>（Beta 默认关）当成“1.37 默认支持 gang“。在默认配置下，原生 scheduler 仍然逐 Pod 调度；PodGroup/gang 需要显式打开 feature gate 并创建 <code>scheduling.k8s.io/v1beta1</code> 的 PodGroup。Volcano 的 gang 则是其默认插件链的一部分，但默认 action 里没有 preempt/reclaim。</p>
+</blockquote>
+<h2 id="2-一张总图三个平面四种所有权"><a class="header" href="#2-一张总图三个平面四种所有权">2. 一张总图：三个平面，四种所有权</a></h2>
+<p>调度不是一个函数，而是<strong>准入（admission）</strong>、<strong>放置（placement）</strong>、**绑定/运行（binding/runtime）**三个平面叠加。不同项目拥有不同平面：</p>
+<pre class="mermaid">flowchart LR
+    subgraph W["工作负载层"]
+      J["Job / JobSet / LWS / 训练作业"]
+      PG["PodGroup / Workload"]
+    end
+    subgraph A["准入平面"]
+      KQ["Kueue: ClusterQueue / Cohort / AdmissionCheck"]
+      VQ["Volcano: Queue / enqueue action"]
+      NP["原生: PriorityClass + PreEnqueue&lt;br/&gt;（无队列配额）"]
+    end
+    subgraph P["放置平面"]
+      KS["kube-scheduler&lt;br/&gt;Filter / Score / Reserve / Permit"]
+      VS["Volcano scheduler&lt;br/&gt;Session / Action / Plugin"]
+    end
+    subgraph B["绑定与运行"]
+      BIND["Binding / ResourceClaim 绑定"]
+      KL["kubelet / runtime"]
+    end
+    J --&gt; PG
+    PG --&gt; A
+    KQ --&gt;|"admit / stop"| P
+    VQ --&gt;|"Inqueue / 配额检查"| P
+    NP --&gt; P
+    KS --&gt; BIND
+    VS --&gt; BIND
+    BIND --&gt; KL
+</pre>
+
+<p>读任何调度问题时，先问三个问题：</p>
+<ol>
+<li><strong>谁在做准入？</strong> 是 Kueue 决定“这个 Workload 能不能现在启动“，还是 Volcano 的 enqueue 决定 PodGroup 能否 Inqueue，还是根本没有人管队列、Pod 直接进 kube-scheduler？</li>
+<li><strong>谁在做放置？</strong> 是 kube-scheduler 的 Filter/Score，还是 Volcano 的 predicate/nodeorder，还是两者级联（Kueue 准入后仍由 kube-scheduler 选点）？</li>
+<li><strong>资源账本在哪？</strong> 是 kube-scheduler 的 cache/snapshot，还是 Volcano 的 session/cache，还是 Kueue 的 ClusterQueue 账本？三套账本各自独立，不能假设它们实时一致。</li>
+</ol>
+<h2 id="3-五个核心模型"><a class="header" href="#3-五个核心模型">3. 五个核心模型</a></h2>
+<h3 id="31-实体与队列pod-不是唯一的调度单位"><a class="header" href="#31-实体与队列pod-不是唯一的调度单位">3.1 实体与队列：Pod 不是唯一的调度单位</a></h3>
+<p>原生 v1.37 的队列可以放 <code>QueuedPodInfo</code> 或 <code>QueuedPodGroupInfo</code>；<code>GenericWorkload</code> 关闭时只有 Pod。Volcano 的调度单位是 Task（Pod）与 Job（PodGroup 的聚合视图）；Kueue 的单位是 Workload（一组 PodSet）。</p>
+<p>因此“排队“至少有三层含义：</p>
+<ul>
+<li><strong>作业准入队列</strong>：Kueue 的 LocalQueue/ClusterQueue、Volcano 的 Queue、Slurm 的 partition；</li>
+<li><strong>调度器内部队列</strong>：activeQ/backoffQ/unschedulable pool（原生）、Session 内的 Job/Task 优先队列（Volcano）；</li>
+<li><strong>API 层的门控</strong>：SchedulingGates、PreEnqueue、PodGroup phase。</li>
+</ul>
+<p>把这三层混为一谈，就会出现“队列明明有空位，为什么 Pod 还 Pending“——空位可能是配额空位、可能是调度器 activeQ 为空但 backoffQ 里有一堆 Pod、也可能是 Pod 被 gate 住。</p>
+<h3 id="32-周期与状态调度周期不是绑定周期"><a class="header" href="#32-周期与状态调度周期不是绑定周期">3.2 周期与状态：调度周期不是绑定周期</a></h3>
+<p>原生 scheduler 的 <code>ScheduleOne</code> 先做<strong>调度周期</strong>（选点、试分配、Reserve、Permit），成功后再异步开<strong>绑定周期</strong>（WaitOnPermit、PreBind、Bind、PostBind）。资源在调度周期就“暂记“了，不等绑定成功。</p>
+<p>Volcano 的 <code>Session</code> 是一个<strong>回合</strong>：打开时从 cache 做快照，所有 action 在快照上做决策，<code>Statement</code> 记录操作，<code>CloseSession</code> 才把 dirty jobs 刷回 cache。Action 内部的 <code>Allocate</code> 先改内存，<code>Commit</code> 才走 API。</p>
+<p>两种模型的共同点是“先记账、后确认“，区别是<strong>账本的粒度和事务边界</strong>：原生以 Pod 为单位、cache 为账本；Volcano 以 Session 为单位、Statement 为事务。</p>
+<h3 id="33-暂记确认撤回三个必须分开的动作"><a class="header" href="#33-暂记确认撤回三个必须分开的动作">3.3 暂记/确认/撤回：三个必须分开的动作</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>动作</th><th>原生</th><th>Volcano</th></tr>
+</thead>
+<tbody>
+<tr><td>暂记</td><td><code>Cache.AssumePod</code>，Pod 进 <code>assumedPods</code>，NodeInfo 立即扣资源</td><td><code>Session.Allocate</code> 改 session 内 Job/Task/Node 状态</td></tr>
+<tr><td>确认</td><td>Binding 被 apiserver 接受，informer 回填 <code>NodeName</code>，<code>Cache.AddPod</code> 转正</td><td><code>Statement.Commit</code> 调 cache/API；Pod 真正 bind</td></tr>
+<tr><td>撤回</td><td><code>Unreserve</code> + <code>Cache.ForgetPod</code>；失败进 unschedulable/backoff</td><td><code>Statement.Discard</code> 逆序 unallocate/unevict；或 bind 失败后 unallocate</td></tr>
+</tbody>
+</table>
+</div>
+<p>三者的失败后果不同：<strong>暂记失败</strong>通常意味着内部状态不一致（重试或报错）；<strong>确认失败</strong>意味着资源要退回并重新排队；<strong>撤回失败</strong>是最危险的，可能留下“账上已扣、实际没绑定“的泄漏。证据页会把每一条展开成可验证的不变式。</p>
+<h3 id="34-权益准入回收队列不是一个数字"><a class="header" href="#34-权益准入回收队列不是一个数字">3.4 权益/准入/回收：队列不是一个数字</a></h3>
+<p>队列策略至少有四个独立概念：</p>
+<ul>
+<li><strong>权益（entitlement）</strong>：这个队列“应得“多少（Kueue <code>nominalQuota</code>、Volcano <code>deserved</code>/<code>guarantee</code>、proportion 的 weight share）；</li>
+<li><strong>上限（capability）</strong>：这个队列“最多“能用多少（Kueue <code>borrowingLimit</code>、Volcano <code>capability</code>）；</li>
+<li><strong>实际分配（allocation）</strong>：当前账本上已记了多少；</li>
+<li><strong>需求（request/inqueue）</strong>：排队中的作业还想拿多少。</li>
+</ul>
+<p>公平性通常比较的是<strong>分配/权益</strong>或<strong>主导资源份额（DRS）</strong>，而不是绝对用量；回收通常发生在“某队列超过权益、且另一个队列有 starving 作业“时。把 <code>capability</code> 当 <code>deserved</code>、把 <code>allocated</code> 当 <code>usage</code>，是最常见的策略误读。</p>
+<h3 id="35-可行性资源够不够不只看-cpu内存"><a class="header" href="#35-可行性资源够不够不只看-cpu内存">3.5 可行性：资源够不够，不只看 CPU/内存</a></h3>
+<p>一个放置是否可行，至少要同时满足：</p>
+<ul>
+<li><strong>数量与维度</strong>：CPU/内存/GPU/自定义资源，以及 Pod 级 overhead、init container 的最大值；</li>
+<li><strong>设备</strong>：GPU 型号/显存/MIG、DRA <code>DeviceClass</code> + CEL、驱动/运行时；</li>
+<li><strong>拓扑</strong>：NUMA、NVLink/IB、机架/交换机、云可用区、本地盘；</li>
+<li><strong>策略</strong>：配额、优先级、抢占、PDB、拓扑分布、亲和/反亲和；</li>
+<li><strong>集群</strong>：多集群场景下还要加数据/镜像位置、网络连通、集群配额与故障域。</li>
+</ul>
+<p>DRA 把这套可行性从“扩展资源计数“推进到“按 claim 申请、按设备属性筛选、按 CEL 约束选择“，但并没有消除上面的任何一层；它只是把“设备“这一层变成了可编程的分配问题。</p>
+<h2 id="4-页面导航"><a class="header" href="#4-页面导航">4. 页面导航</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>页面</th><th>先读它，如果你想回答</th></tr>
+</thead>
+<tbody>
+<tr><td><a href="./native-scheduler.html">kube-scheduler：对象、队列与调度主流程</a></td><td>Pod 从 informer 到 activeQ、再到绑定，资源账本在哪一步变化？失败/重启后发生了什么？</td></tr>
+<tr><td><a href="./scheduling-framework.html">Scheduling Framework：扩展点、状态与并发语义</a></td><td>插件在哪些点被调用？CycleState 能存什么？返回 Unschedulable 和 Error 有什么区别？</td></tr>
+<tr><td><a href="./volcano-scheduler.html">Volcano 调度器：Session、Action 与队列模型</a></td><td>Volcano 的 allocate/backfill/preempt/reclaim 怎么工作？gang/capacity/proportion 各自改哪个决策？</td></tr>
+<tr><td><a href="./scheduling-strategy.html">调度策略与约束：配额、Gang、拓扑与 DRA</a></td><td>队列权益怎么算、怎么借、怎么回收？Gang/回填/碎片/异构卡/DRA/多集群如何进入同一套可行性分析？</td></tr>
+<tr><td><a href="./scheduling-evidence.html">调度正确性与优化证据：不变式、指标与同轨迹对比</a></td><td>怎么证明“不超额、失败会释放、重启能恢复“？怎么用同一负载轨迹比较等待、完成时间、碎片和进度损失？</td></tr>
+<tr><td><a href="./4_kube-scheduler源码分析.html">kube-scheduler 源码分析（旧版归档）</a></td><td>早期（Framework 之前）的 predicates/priorities 实现；仅作历史对照</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="5-十条结论先给判断细节在各自页面"><a class="header" href="#5-十条结论先给判断细节在各自页面">5. 十条结论（先给判断，细节在各自页面）</a></h2>
+<ol>
+<li><strong>“调度成功“至少有四个状态</strong>：选点成功、资源已 assume、Binding 被接受、Pod 真正 Running。只监控其中一个，会把“卡在绑定/启动“误判成“调度慢”。</li>
+<li><strong>assume 是性能优化，不是承诺</strong>。它让 scheduler 不必等绑定完成就能继续调度，代价是必须有一整套 <code>ForgetPod</code>/<code>Unreserve</code>/snapshot 清理来兜底。</li>
+<li><strong>原生队列没有配额</strong>。PriorityClass 只影响排序和抢占，不限制某个租户能用多少；队列配额必须由 Kueue/Volcano/上层系统提供。</li>
+<li><strong>原生 gang 是 Beta 默认关</strong>，实现方式是 PodGroup + Permit 等待（5 分钟超时）；Volcano 的 gang 是默认插件链的一部分，但默认 action 不含 preempt/reclaim。两者不能互相替代着讲。</li>
+<li><strong>Volcano 的 Session 是快照 + 事务</strong>。Action 在 session 内改状态，Statement 决定提交还是回滚；它和原生“逐 Pod assume + 异步 bind“是两种不同的一致性模型。</li>
+<li><strong>capacity 与 proportion 不是同义词</strong>。前者是层级队列的 guarantee/capability 模型，后者是权重份额模型；混用会把“保底“和“上限“算错。</li>
+<li><strong>借用与回收是一对</strong>。只配 borrowing 不配 reclaim，会把别人的空闲资源变成事实上的永久占用；只配 reclaim 不配 borrowing，则队列空闲时资源无法流动。</li>
+<li><strong>回填提升利用率，但会把碎片和饥饿藏起来</strong>。回填的前提是“不会延迟已承诺的 reservation“；没有这个前提的 backfill 只是“先到先占“。</li>
+<li><strong>DRA 把设备分配变成 claim 级问题</strong>，但可行性仍要过资源、拓扑、配额、优先级四关。claim 的 <code>Filter</code> 试分配、<code>Reserve</code> 记录、<code>PreBind</code> 绑定、<code>Unreserve</code> 释放是四个不同阶段，不能只看“claim 是否 allocated“。</li>
+<li><strong>仿真和生产回答不同的问题</strong>。仿真适合比较算法排序、配额公式、gang 死锁和碎片趋势；生产指标才包含真实到达过程、运行时抖动、设备故障和调度器之外的瓶颈。把两者混在一起，结论一定过拟合。</li>
+</ol>
+<h2 id="6-三条阅读路径"><a class="header" href="#6-三条阅读路径">6. 三条阅读路径</a></h2>
+<p><strong>路径 A：读源码（scheduler 开发者）</strong></p>
+<p><code>native-scheduler</code> → <code>scheduling-framework</code> → <code>volcano-scheduler</code> → <code>scheduling-evidence</code>。先建立“实体—队列—账本—事务“的模型，再看扩展点和 Volcano 的差异，最后用不变式检查自己改的代码。</p>
+<p><strong>路径 B：做平台/多租户（平台工程师）</strong></p>
+<p><code>scheduling-strategy</code> §2–§5 → <code>volcano-scheduler</code> 的 capacity/proportion → <code>kueue</code> 页面 → <code>scheduling-evidence</code> 的指标与实验。先确定“权益/准入/回收“三层由谁负责，再选型。</p>
+<p><strong>路径 C：做 AI 训练/异构资源（ML 平台）</strong></p>
+<p><code>scheduling-strategy</code> §6–§12 → <code>volcano-scheduler</code> 的 gang/backfill → <a href="../../AI_Infrastructure/Accelerators/hami.html">HAMi</a> → <a href="../../AI_Infrastructure/Distributed_Training/workload-modeling.html">工作负载建模</a> → <code>scheduling-evidence</code> 的进度损失与同轨迹对比。先确定 gang 的原子性边界，再谈拓扑和卡型。</p>
+<h2 id="7-术语表"><a class="header" href="#7-术语表">7. 术语表</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>术语</th><th>本专题的含义</th></tr>
+</thead>
+<tbody>
+<tr><td>entity</td><td>调度队列中的单位：Pod 或 PodGroup（v1.37）</td></tr>
+<tr><td>assume</td><td>把 Pod 以目标节点写入 scheduler cache，资源立即扣减，但 API 尚未绑定</td></tr>
+<tr><td>snapshot</td><td>每个调度周期开始时从 cache 同步出的只读 NodeInfo 视图，带 generation</td></tr>
+<tr><td>CycleState</td><td>一个调度周期内插件共享的 KV 状态，无锁、可信插件、可 Clone</td></tr>
+<tr><td>Reserve</td><td>资源已选定后，插件在内存中预留/记账的扩展点；失败会触发 Unreserve</td></tr>
+<tr><td>Permit</td><td>调度周期末尾的等待/放行点；可 Wait、Allow、Reject、Timeout</td></tr>
+<tr><td>PodGroup</td><td>一组 Pod 的调度单元；原生 v1beta1（Beta 默认关），Volcano 用自己的 v1beta1</td></tr>
+<tr><td>Session</td><td>Volcano 的一次调度回合，包含 Jobs/Nodes/Queues 快照与插件运行时</td></tr>
+<tr><td>Statement</td><td>Volcano 的操作日志（Allocate/Pipeline/Evict），支持 Commit/Discard</td></tr>
+<tr><td>entitlement</td><td>队列“应得“的资源，不等同于上限或实际分配</td></tr>
+<tr><td>DRS</td><td>Dominant Resource Share，主导资源份额；Kueue Fair Sharing 用它比较队列</td></tr>
+<tr><td>进度损失</td><td>抢占/重启导致训练从最后一个 checkpoint 重算的时间</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="8-证据与版本说明"><a class="header" href="#8-证据与版本说明">8. 证据与版本说明</a></h2>
+<ul>
+<li>代码证据统一使用 pinned SHA；行号在写作时逐一核对。Kueue 使用 main 快照（<code>be7dc9d</code>，2026-11-23），因为它晚于 v0.20.8 且包含本页讨论的 fair sharing / MultiKueue 代码；不要把该快照说成某个 release。</li>
+<li>官方文档链接在写入前用 HTTP 200 验证；KEP 链接指向 <code>kubernetes/enhancements</code> 的具体目录。</li>
+<li>页面中的“经验值/通常/取决于“表示非代码强制的行为；没有标注的默认值/状态码应当能在代码或文档中找到。</li>
+<li>本专题不提供生产 benchmark。<code>scheduling-evidence.md</code> 给的是指标定义、实验设计和报告模板；任何示例数值都只用于说明计算方式。</li>
+</ul>
+<h2 id="本-wiki-相关页面"><a class="header" href="#本-wiki-相关页面">本 wiki 相关页面</a></h2>
+<ul>
+<li><a href="./native-scheduler.html">kube-scheduler：对象、队列与调度主流程</a></li>
+<li><a href="./scheduling-framework.html">Scheduling Framework：扩展点、状态与并发语义</a></li>
+<li><a href="./volcano-scheduler.html">Volcano 调度器：Session、Action 与队列模型</a></li>
+<li><a href="./scheduling-strategy.html">调度策略与约束：配额、Gang、拓扑与 DRA</a></li>
+<li><a href="./scheduling-evidence.html">调度正确性与优化证据：不变式、指标与同轨迹对比</a></li>
+<li><a href="./kueue.html">Kueue</a></li>
+<li><a href="./4_kube-scheduler源码分析.html">kube-scheduler 源码分析（旧版归档）</a></li>
+<li><a href="../../AI_Infrastructure/Accelerators/hami.html">HAMi</a></li>
+<li><a href="../../AI_Infrastructure/Distributed_Training/overview.html">云原生分布式训练：编排与稳定性专题</a></li>
+<li><a href="../../../Machine_Learning/High_Performance_Computing/slurm.html">Slurm</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../../docs/Cloud_Native/Kubernetes/Scheduling/native-scheduler.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../../docs/Cloud_Native/Kubernetes/Scheduling/scheduling-evidence.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../../docs/Cloud_Native/Kubernetes/Scheduling/native-scheduler.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../../docs/Cloud_Native/Kubernetes/Scheduling/scheduling-evidence.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../../highlight-abc7f01d.js"></script>
+        <script src="../../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

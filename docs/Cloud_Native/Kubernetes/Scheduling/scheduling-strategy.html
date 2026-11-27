@@ -1,0 +1,747 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>调度策略与约束：配额、Gang、拓扑与 DRA - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../../searchindex-1a4ddc3e.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../../toc-1fccd013.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/Kubernetes/Scheduling/scheduling-strategy.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="调度策略与约束配额gang拓扑与-dra"><a class="header" href="#调度策略与约束配额gang拓扑与-dra">调度策略与约束：配额、Gang、拓扑与 DRA</a></h1>
+<p>这篇页面回答的是<strong>策略层</strong>的问题：一个作业从“提交了“到“跑起来“，中间要过哪几道门；每一道门由谁负责、改哪个对象/字段、失败时留下什么状态；以及当资源“看起来够“但作业就是起不来时，应该先怀疑哪一层。它不逐行讲 kube-scheduler 的队列与绑定循环（见 <a href="./native-scheduler.html">kube-scheduler：对象、队列与调度主流程</a>），也不展开 Volcano 的 Session/Action 内部实现（见 <a href="./volcano-scheduler.html">Volcano 调度器：Session、Action 与队列模型</a>）；这里只保留能支撑策略判断的代码位置和失败语义。</p>
+<p>版本基线：Kubernetes <strong>v1.37.2</strong>（<code>c50e5395</code>）、Volcano <strong>v1.16.1</strong>（<code>a2543678</code>）、Kueue <strong>main@2026-11-23</strong>（<code>be7dc9d</code>，晚于 v0.20.8，是未发布快照）。Kueue 的代码结论只对这份快照负责，不声称对应某个 release。</p>
+<h2 id="1-分析框架需求--权益--准入--放置--回收抢占--运行"><a class="header" href="#1-分析框架需求--权益--准入--放置--回收抢占--运行">1. 分析框架：需求 → 权益 → 准入 → 放置 → 回收/抢占 → 运行</a></h2>
+<p>策略问题经常被压缩成一句“资源够不够“。实际上至少要拆成六层，每层的输入、状态和失败后果都不同：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>层</th><th>回答的问题</th><th>主要对象/字段</th><th>典型失败表现</th></tr>
+</thead>
+<tbody>
+<tr><td>需求</td><td>这个作业要什么形状的资源？</td><td>Pod <code>requests</code>/<code>limits</code>、extended resources、<code>ResourceClaim</code>、PodSet 数量、<code>topologyKey</code>、gang size</td><td>需求建模错了，后面所有判断都错</td></tr>
+<tr><td>权益</td><td>这个租户“应该“拿到多少？</td><td>Kueue <code>ClusterQueue.nominalQuota</code>/<code>borrowingLimit</code>、Cohort；Volcano <code>Queue.spec</code>；原生 <code>PriorityClass</code></td><td>配额被邻租户借走，或长期超卖</td></tr>
+<tr><td>准入</td><td>现在允许它开始吗？</td><td>Kueue <code>Workload</code> + <code>AdmissionCheck</code>；Volcano <code>enqueue</code> + <code>JobEnqueueable</code>；原生 <code>PreEnqueue</code>/<code>SchedulingGates</code></td><td>作业停在 Pending，Pod 未创建或未入队</td></tr>
+<tr><td>放置</td><td>放到哪个节点/拓扑域？</td><td><code>Filter</code>/<code>Score</code>、<code>PodTopologySpread</code>、<code>VolumeBinding</code>、TAS <code>Placement</code>、Volcano <code>Predicate</code>/<code>NodeOrder</code></td><td>Pod Pending，事件是 <code>FailedScheduling</code></td></tr>
+<tr><td>回收/抢占</td><td>资源被谁占着，能不能拿回来？</td><td>Kueue preemption；Volcano <code>reclaim</code>/<code>preempt</code>；原生 <code>DefaultPreemption</code></td><td>抢占后 victim 未退出，preemptor 仍 Pending</td></tr>
+<tr><td>运行</td><td>绑定、设备分配、容器启动是否真的成功？</td><td><code>Binding</code>、DRA claim <code>Status.Allocation</code>、<code>ReservedFor</code>、kubelet</td><td>Pod 已绑定但容器起不来，或设备不可用</td></tr>
+</tbody>
+</table>
+</div>
+<pre class="mermaid">flowchart LR
+  A[需求 R(w)] --&gt; B[权益 entitlement]
+  B --&gt; C[准入 admission]
+  C --&gt; D[放置 placement]
+  D --&gt; E[回收/抢占 reclaim/preempt]
+  E --&gt; D
+  D --&gt; F[绑定 bind]
+  F --&gt; G[设备分配 DRA / 运行时]
+  G --&gt; H[运行]
+  E --&gt; I[失败: 队列/权益不变, 作业继续等]
+  D --&gt; J[失败: Pod Unschedulable]
+  F --&gt; K[失败: Unreserve + 重新排队]
+</pre>
+
+<p>三个必须分开的三元组：</p>
+<ol>
+<li><strong>权益 / 容量 / 用量</strong>：<code>nominalQuota</code>、<code>capability</code>、<code>guarantee</code>、<code>deserved</code> 是权益侧的四个不同概念；<code>allocated</code> 是已经发生的用量；集群实际可分配容量又是第三个东西。把 <code>deserved</code> 当“配额“、把 <code>capability</code> 当“保证“，是最常见的误读。</li>
+<li><strong>准入 / 放置 / 绑定</strong>：Kueue/Volcano 的准入门发生在 kube-scheduler 之前；放置是选节点；绑定是一次 API 写。准入成功不等于 Pod 能放下，放置成功也不等于绑定和运行时成功。</li>
+<li><strong>回收 / 抢占 / 驱逐</strong>：回收（reclaim）通常是“跨队列把借出去的权益拿回来“；抢占（preempt）通常是“高优先级把低优先级挤走“；驱逐（evict）是 API 层删除 Pod。三者都可能调用同一套 victim 选择，但不是同一件事。</li>
+</ol>
+<p>表中把 <code>Filter</code>/<code>Score</code> 与 Volcano 的 <code>Predicate</code>/<code>NodeOrder</code> 并列，只是为了说明“放置“这一层，<strong>不是名称映射</strong>：原生 <code>Filter</code> 是 per-node 的 Framework 扩展点，由 runtime 按扩展点顺序调用；Volcano 的 predicate 是 plugin 注册的 <code>PredicateFn</code>，在 action 内部被调用。两者的调用者、状态作用域、失败码和能否参与抢占都不同，见 <a href="./scheduling-framework.html">Scheduling Framework</a> 与 <a href="./volcano-scheduler.html">Volcano 调度器</a> 的对照。</p>
+<p>下面每一节都按“哪一层、哪个对象/字段、哪段代码、失败会怎样“来写。</p>
+<h2 id="2-需求资源向量之外还有拓扑与设备集合"><a class="header" href="#2-需求资源向量之外还有拓扑与设备集合">2. 需求：资源向量之外，还有拓扑与设备集合</a></h2>
+<p>一个作业的需求不是单个标量。对 PodSet <code>ps</code>，一个简化的有效请求是：</p>
+<pre><code>r(ps) = max( Σ_{普通容器 c} req(c), max_{init 容器 c} req(c) ) + overhead
+R(w)  = Σ_{ps ∈ PodSets(w)} count(ps) · r(ps)
+</code></pre>
+<p>这个式子省略了 sidecar 重启策略、hugepages、Pod-level resources 等细节，但足以说明两件事：<strong>gang 的规模是乘出来的</strong>，且<strong>同一作业的不同 PodSet 可以有不同形状</strong>。更完整的建模见 <a href="../../AI_Infrastructure/Distributed_Training/workload-modeling.html">工作负载建模</a>。</p>
+<p>对 GPU 类资源，需求至少有三个维度：</p>
+<ul>
+<li><strong>数量</strong>：<code>nvidia.com/gpu: N</code> 是 extended resource，只能是整数；它由 device plugin 上报，调度器只看到“节点上有 N 个可用“，看不到型号、显存、算力、MIG 切分。</li>
+<li><strong>属性</strong>：型号（A100/H100/昇腾）、显存（80GB/40GB）、算力、NUMA/NVLink 位置。这些在 device plugin 模型里通常靠节点标签 + 设备插件内部逻辑表达；在 DRA 里由 <code>DeviceClass</code> 的 CEL selector 和 <code>ResourceSlice</code> 的 <code>Device.attributes</code>/<code>capacity</code> 表达。</li>
+<li><strong>拓扑</strong>：这些卡是否在同一台机器、同一个机架、同一个 NVLink domain。它决定“4 张卡“能不能当成一个 4 卡作业来用。</li>
+</ul>
+<p>DRA 的需求更不是向量：一个 <code>ResourceClaim</code> 可以包含多个 request，每个 request 可以是 <code>exactly</code>（精确数量）或 <code>firstAvailable</code>（按顺序尝试的候选列表）：</p>
+<pre><code class="language-yaml"># 语义示意，不是完整对象
+devices:
+  requests:
+  - name: gpu
+    firstAvailable:        # 依次尝试，第一个能满足的胜出
+    - name: a100-80g
+      deviceClassName: a100-80g
+      count: 4
+    - name: h100-80g
+      deviceClassName: h100-80g
+      count: 4
+</code></pre>
+<p><code>firstAvailable</code> 的注释明确说 DRA 目前<strong>不做 scoring</strong>，只选第一组满足条件的设备，节点选择交给其它调度特性（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/resource/v1/types.go#L1313-L1336"><code>types.go</code> L1313-L1336</a>）。所以“DRA 能选最优卡“是过度承诺；它能表达属性约束，但优化能力有限。</p>
+<h2 id="3-权益三套队列模型与公式"><a class="header" href="#3-权益三套队列模型与公式">3. 权益：三套队列模型与公式</a></h2>
+<h3 id="31-原生priorityclass--queuesort没有队列配额"><a class="header" href="#31-原生priorityclass--queuesort没有队列配额">3.1 原生：PriorityClass + QueueSort，没有队列配额</a></h3>
+<p>原生 kube-scheduler 的队列里只有实体（Pod，或 <code>GenericWorkload</code> 开启后的 PodGroup），没有“队列对象“，也没有“租户配额账本“。默认插件集里与排序有关的只有 <code>SchedulingGates</code> 和 <code>PrioritySort</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/apis/config/v1/default_plugins.go#L31-L60"><code>default_plugins.go</code> L31-L60</a>）；<code>PrioritySort.Less</code> 只比较 priority，priority 相同再比时间戳（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/plugins/queuesort/priority_sort.go#L40-L47"><code>priority_sort.go</code> L40-L47</a>）：</p>
+<pre><code class="language-go">func (pl *PrioritySort) Less(entity1, entity2 fwk.QueuedEntityInfo) bool {
+	p1 := entity1.GetPriority()
+	p2 := entity2.GetPriority()
+	return (p1 &gt; p2) || (p1 == p2 &amp;&amp; entity1.GetTimestamp().Before(entity2.GetTimestamp()))
+}
+</code></pre>
+<p><code>PriorityClass</code> 本身只有 <code>value</code>、<code>globalDefault</code>、<code>preemptionPolicy</code> 三个有调度意义的字段（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/scheduling/v1/types.go#L38-L60"><code>types.go</code> L38-L60</a>）。它能表达“谁先谁后“和“能不能抢占“，不能表达“这个租户最多用 64 张卡“。</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>原生并非完全没有配额：<code>ResourceQuota</code>/<code>LimitRange</code> 在 apiserver 准入侧限制命名空间的对象数和资源总量（<a href="https://kubernetes.io/docs/concepts/policy/resource-quotas/">官方文档</a>）。但它是<strong>命名空间准入</strong>，不是调度队列权益：不参与 <code>QueueSort</code>，不做 cohort 借用，不做 fair sharing，也不感知 PodGroup。把它当“队列配额“会在多租户场景下漏掉调度侧的争用。</p>
+</blockquote>
+<p>失败后果：没有队列上限时，一个低优先级租户可以把集群吃满；只有更高优先级的 Pod 到来时，<code>DefaultPreemption</code> 才会尝试驱逐。若 victim 有 <code>preemptionPolicy: Never</code>，或 PDB 违规代价让该候选节点不可接受（原生会优先 reprieve 造成 PDB 违规的 victim，但<strong>不保证零违规</strong>），抢占可能失败或换一个更差的节点，高优先级 Pod 继续 Pending——这不是“配额没生效“，而是“原生只有优先级，没有预留/借用“。</p>
+<h3 id="32-kueuenominal--borrowing--lending--cohort--fair-sharing"><a class="header" href="#32-kueuenominal--borrowing--lending--cohort--fair-sharing">3.2 Kueue：nominal / borrowing / lending / cohort / fair sharing</a></h3>
+<p>Kueue 的对象关系是：<code>LocalQueue</code>（命名空间入口）→ <code>ClusterQueue</code>（集群级配额）→ <code>Cohort</code>（可借用的队列组）；<code>ResourceFlavor</code> 用 <code>nodeLabels</code>/<code>nodeTaints</code> 把配额绑定到一类节点（<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/apis/kueue/v1beta2/resourceflavor_types.go#L50-L64"><code>resourceflavor_types.go</code> L50-L64</a>）；<code>Workload</code> 是准入单元。<code>ClusterQueue</code> 的 <code>cohortName</code> 为空时<strong>不能</strong>借用，也不能被借用（<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/apis/kueue/v1beta2/clusterqueue_types.go#L103-L116"><code>clusterqueue_types.go</code> L103-L116</a>）。</p>
+<p>配额字段的语义（<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/apis/kueue/v1beta2/clusterqueue_types.go#L332-L374"><code>clusterqueue_types.go</code> L332-L374</a>）：</p>
+<ul>
+<li><code>nominalQuota</code>：这个 <code>[flavor, resource]</code> 在某一时刻可供本 CQ 准入的基准量；</li>
+<li><code>borrowingLimit</code>：最多能从同 cohort 的其它 CQ 借多少；<code>null</code> 表示无限；</li>
+<li><code>lendingLimit</code>：最多能把多少未用配额借给别人；<code>null</code> 表示全部 <code>nominalQuota</code> 都可出借。</li>
+</ul>
+<p>代码里的账本不是一个减法，而是沿 cohort 树递归。设节点（CQ 或 Cohort）的 <code>T</code> 为 <code>SubtreeQuota</code>（CQ 等于 <code>nominalQuota</code>；Cohort 是自身配额加子树聚合），<code>l</code> 为 <code>LendingLimit</code>，<code>b</code> 为 <code>BorrowingLimit</code>（空表示无限），<code>u</code> 为 <code>Usage</code>；<code>l</code> 为空表示“全部可出借“，此时 <code>localQuota=0</code>，而不是 <code>T</code>：</p>
+<pre><code>localQuota(fr)      = 0                                # 若 l 为空（全部可出借）
+                    = max(0, T(fr) - l(fr))          # 若 l 非空：只属于本子树、绝不外借的部分
+localAvailable(fr)  = max(0, localQuota(fr) - u(fr))
+borrowCapacity(fr)  = (T - localQuota) - max(0, u - localQuota) + b
+available(fr)       = T(fr) - u(fr)                    # 无父
+                    = localAvailable(fr) + min(available(parent), borrowCapacity(fr))  # 有父
+</code></pre>
+<p><code>localQuota</code> 和 <code>available</code> 的实现分别在 <a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/pkg/cache/scheduler/resource_node.go#L78-L85"><code>resource_node.go</code> L78-L85</a> 与 <a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/pkg/cache/scheduler/resource_node.go#L111-L135"><code>resource_node.go</code> L111-L135</a>。<code>available</code> 的注释明确允许返回负数：配额被删、CQ 换了 cohort、或已经 overadmission 时，账本会是负的，后续准入被挡住。这就是“回收失败/配置变更后的权益暂时为负“。</p>
+<p><code>addUsage</code> 只把<strong>超过 <code>localAvailable</code> 的部分</strong>上推到父 Cohort（<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/pkg/cache/scheduler/resource_node.go#L157-L168"><code>resource_node.go</code> L157-L168</a>）。因此父 Cohort 看到的 <code>Usage</code> 是“子树借走的部分“，不是全部用量；这也是为什么 <code>borrowingLimit</code> 能在父层被检查。</p>
+<p>Cohort 还可以有层级：<code>Cohort.spec.parentName</code>，根 Cohort 没有父；如果形成环，webhook 会禁用整棵子树（<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/apis/kueue/v1beta2/cohort_types.go#L24-L60"><code>cohort_types.go</code> L24-L60</a>）。Cohort 自身的 <code>nominalQuota</code> 是“在子 CQ 配额之外额外提供的共享池“，不是子 CQ 配额的替代。</p>
+<p><strong>Fair sharing 用的是 DRS，不是 <code>allocated/deserved</code>。</strong> Kueue 的 <code>FairSharing.Weight</code> 默认 1，weight 为 0 且正在借用时 share 为 <code>+Inf</code>（<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/apis/kueue/v1beta2/fairsharing_types.go#L25-L40"><code>fairsharing_types.go</code> L25-L40</a>）。<code>dominantResourceShare</code> 对每个 resource 算：</p>
+<pre><code>borrowed(fr) = max(0, usage(fr) - subtreeQuota(fr))
+ratio        = 1000 * max_fr( borrowed(fr) / lendable_parent(fr) )   # 仅当 lendable &gt; 0
+weightedShare = ratio / weight
+</code></pre>
+<p>代码用千分比保存未加权比率（<code>PerThousandOf</code>），比较时只看相对大小；<code>PreciseWeightedShare</code> 再除以 weight（<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/pkg/cache/scheduler/fair_sharing.go#L97-L112"><code>fair_sharing.go</code> L97-L112</a>、<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/pkg/cache/scheduler/fair_sharing.go#L166-L205"><code>fair_sharing.go</code> L166-L205</a>）。两个边界值得记住：没有父 Cohort 的 CQ 永远 <code>borrowing=false</code>，DRS 为 0；正在借用但父 Cohort 没有可借资源（<code>lendable=0</code>）时，比率仍为 0，<code>IsZero()</code> 为真——不是“没借用“，而是“借了但没有可比的出借池“。</p>
+<p>fair sharing 开启时，准入不是全局按 DRS 排序，而是用 <code>fairSharingIterator</code> 在 cohort 树上逐层做锦标赛（<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/pkg/scheduler/fair_sharing_iterator.go#L50-L118"><code>fair_sharing_iterator.go</code> L50-L118</a>）：每个 CQ 先按 <code>compareEntries</code> 排自己的候选，再在每一层比较 DRS，选出该层最该被准入的 CQ，然后从它取一个 entry。这样“公平“是逐层比较，不是把所有 Workload 拉成一条全局队列。</p>
+<p>不开 fair sharing 时，<code>compareEntries</code> 的顺序是（<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/pkg/scheduler/scheduler.go#L1293-L1360"><code>scheduler.go</code> L1293-L1360</a>）：</p>
+<ol>
+<li>已经预留 quota 的 entry 优先（可能是第二轮）；</li>
+<li><strong>不借用的 Workload 先于借用的</strong>；</li>
+<li><code>PrioritySortingWithinCohort</code> 开启时，高优先级先；</li>
+<li>最后按 eviction/creation 时间 FIFO。</li>
+</ol>
+<p>注意第 2 条在第 3 条之前：一个低优先级但“在 nominal 内“的 Workload，可能排在一个高优先级但“要借用“的 Workload 前面。这不是 bug，而是 Kueue 的显式取舍：先保护不借用的份额，再谈优先级。</p>
+<p><code>QueueingStrategy</code> 只有两种：<code>StrictFIFO</code> 和 <code>BestEffortFIFO</code>，默认后者（<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/apis/kueue/v1beta2/clusterqueue_types.go#L118-L131"><code>clusterqueue_types.go</code> L118-L131</a>）。<code>StrictFIFO</code> 下，队头不能被准入就会挡住后面的 Workload；<code>BestEffortFIFO</code> 下，队头不可准入时，等价的不可准入 Workload 会被移到 inadmissible 集合，后面的 Workload 可以继续试（<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/pkg/cache/queue/cluster_queue.go#L849-L863"><code>cluster_queue.go</code> L849-L863</a>）。这是“队头阻塞“与“绕过“在 Kueue 里的准确含义；不存在第三种 <code>traverse</code> 策略，<code>traverse</code> 是 Volcano 的 Queue 字段。</p>
+<h3 id="33-volcanoweight--capability--guarantee--deserved"><a class="header" href="#33-volcanoweight--capability--guarantee--deserved">3.3 Volcano：weight / capability / guarantee / deserved</a></h3>
+<p>Volcano 的 <code>Queue</code> 是集群级对象，<code>QueueSpec</code> 的字段（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/staging/src/volcano.sh/apis/pkg/apis/scheduling/v1beta1/types.go#L622-L668"><code>types.go</code> L622-L668</a>）：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>字段</th><th>语义</th><th>用在哪</th></tr>
+</thead>
+<tbody>
+<tr><td><code>weight</code></td><td>竞争剩余资源时的权重（默认 1，范围 1–65535）</td><td><code>proportion</code> 计算 deserved、QueueOrder</td></tr>
+<tr><td><code>capability</code></td><td>队列上限（硬顶），没设则视为无限</td><td><code>proportion</code>/<code>capacity</code> 的 <code>realCapability</code>、入队检查</td></tr>
+<tr><td><code>guarantee</code></td><td>预留下限，任何情况下尽量不被抢走</td><td><code>capacity</code> 的 reclaim 保护、proportion 的 deserved 下限</td></tr>
+<tr><td><code>deserved</code></td><td>期望份额/回收阈值；不设则视为 best-effort 队列</td><td><code>capacity</code> 的 share、Reclaimable/Preemptive</td></tr>
+<tr><td><code>reclaimable</code></td><td>是否允许别人回收</td><td><code>Queue.spec.reclaimable</code> 与插件回调</td></tr>
+<tr><td><code>parent</code></td><td>层级队列的父</td><td><code>capacity</code> 的祖先回收</td></tr>
+<tr><td><code>priority</code></td><td>队列优先级</td><td>两个插件的 QueueOrder 都先比它</td></tr>
+<tr><td><code>dequeueStrategy</code></td><td><code>fifo</code> 或 <code>traverse</code>（默认）</td><td>API 层声明，见下面的 caveat</td></tr>
+</tbody>
+</table>
+</div>
+<p>注意 <code>Queue.spec.priority</code> 与 Pod/Job 的 <code>priorityClassName</code> 是两层：前者决定<strong>队列之间</strong>的顺序，后者在队列内由 <code>priority</code> 插件排 Job/Task；不要用 Queue priority 代替作业优先级。</p>
+<p><strong>proportion 是权重份额模型。</strong> 它每一轮把所有队列的 <code>request</code> 和 <code>weight</code> 拿来迭代：先按 <code>weight/totalWeight</code> 分剩余资源，再用 <code>realCapability</code>（= <code>(totalResource - totalGuarantee) + guarantee</code>，再被 <code>capability</code> 截断）、<code>request</code> 和 <code>guarantee</code> 夹逼，直到没有队列还能增加（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/scheduler/plugins/proportion/proportion.go#L206-L258"><code>proportion.go</code> L206-L258</a>）。<code>deserved</code> 是<strong>每轮根据 request 重新计算的动态份额</strong>，不是静态配额；<code>share = max_r allocated_r/deserved_r</code>（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/scheduler/plugins/proportion/proportion.go#L614-L626"><code>proportion.go</code> L614-L626</a>）。<code>Overused</code> 的定义是 <code>deserved &lt;= allocated</code>（所有维度都到顶才算 overused），<code>QueueOrder</code> 先比 <code>priority</code> 再比 <code>share</code> 升序（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/scheduler/plugins/proportion/proportion.go#L273-L292"><code>proportion.go</code> L273-L292</a>、<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/scheduler/plugins/proportion/proportion.go#L326-L338"><code>proportion.go</code> L326-L338</a>）。</p>
+<p><strong>capacity 是层级保证 + 显式 deserved 模型。</strong> 它不按 weight 分；<code>deserved</code> 由 <code>Queue.spec.deserved</code> 给出，没给就退回 <code>guarantee</code>；父队列把 <code>realCapability</code> 减去子队列 guarantee 总和，再加子队列自己的 guarantee，并受子 <code>capability</code> 截断（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/scheduler/plugins/capacity/capacity.go#L1501-L1538"><code>capacity.go</code> L1501-L1538</a>）。<code>share</code> 同样是 <code>max_r allocated/deserved</code>，但没配 <code>deserved</code> 的队列被视为 best-effort，<code>share</code> 固定为 1，永远排在有 <code>deserved</code> 且 <code>share&lt;1</code> 的队列之后（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/scheduler/plugins/capacity/capacity.go#L1895-L1922"><code>capacity.go</code> L1895-L1922</a>）。capacity 没有注册 <code>OverusedFn</code>，<code>Overused</code> 只在 <code>OnSessionClose</code> 里作为指标写 <code>share &gt; 1</code>；它的回收判断主要落在 <code>Reclaimable</code> 和 <code>Preemptive</code> 上。</p>
+<p><strong>两者最关键的差异：</strong></p>
+<ul>
+<li>proportion：<code>weight</code> 决定份额，<code>deserved</code> 是算出来的；<code>Overused</code> 是“所有维度都达到 deserved“；<code>Allocatable</code> 检查 <code>futureUsed &lt;= deserved</code>，所以队列在每轮都不能超过当前 deserved。</li>
+<li>capacity：<code>deserved</code> 是配置出来的（或 guarantee），<code>weight</code> 不参与；支持父子层级、祖先回收；<code>Preemptive</code> 只要求<strong>存在一个维度</strong> <code>deserved &gt; allocated</code>，就可能允许回收，比 proportion 的 overused 更宽松。</li>
+</ul>
+<p>不要把 Volcano 的 <code>capacity</code> 和 Kueue 的 <code>ClusterQueue</code> 当同义词：前者是插件 + 队列字段 + 层级回收算法，后者是 CRD + cohort 借用账本 + 准入调度器；两者的公式、状态作用域和失败语义都不同。</p>
+<h3 id="34-对照表"><a class="header" href="#34-对照表">3.4 对照表</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>原生</th><th>Kueue</th><th>Volcano</th></tr>
+</thead>
+<tbody>
+<tr><td>队列对象</td><td>无</td><td><code>ClusterQueue</code>/<code>Cohort</code>/<code>LocalQueue</code></td><td><code>Queue</code></td></tr>
+<tr><td>基准量</td><td><code>PriorityClass.value</code></td><td><code>nominalQuota</code></td><td><code>guarantee</code>/<code>deserved</code>/<code>capability</code></td></tr>
+<tr><td>借用</td><td>无</td><td><code>borrowingLimit</code> + cohort 树</td><td>proportion 动态份额 / capacity 祖先回收</td></tr>
+<tr><td>出借上限</td><td>无</td><td><code>lendingLimit</code></td><td><code>reclaimable</code> + <code>capability</code></td></tr>
+<tr><td>公平</td><td>无（只有优先级）</td><td>DRS + weight；或 <code>share</code> 语义的 fair sharing</td><td><code>share=allocated/deserved</code>；DRF 插件另有实现</td></tr>
+<tr><td>队头绕过</td><td>无</td><td><code>BestEffortFIFO</code></td><td><code>dequeueStrategy=traverse</code>（API 声明，见 §5.2）</td></tr>
+<tr><td>准入单位</td><td>Pod</td><td>Workload</td><td>Job（PodGroup Inqueue）</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="4-准入作业级与-pod-级是两道门"><a class="header" href="#4-准入作业级与-pod-级是两道门">4. 准入：作业级与 Pod 级是两道门</a></h2>
+<h3 id="41-kueueworkload-准入--admissioncheck"><a class="header" href="#41-kueueworkload-准入--admissioncheck">4.1 Kueue：Workload 准入 + AdmissionCheck</a></h3>
+<p>Kueue 的调度循环先 <code>Heads</code> 取各队列头，再 <code>Snapshot</code>，再 <code>nominate</code> 计算 flavor/借用，再按 <code>compareEntries</code>/fair sharing 顺序 <code>admit</code>（<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/pkg/scheduler/scheduler.go#L360-L405"><code>scheduler.go</code> L360-L405</a>）。<code>AdmissionCheck</code> 是外部闸门：Workload 的 <code>Admitted</code> 需要所有 required check 为 <code>Ready</code>；MultiKueue 的 worker 准入就是一个 check。它不改变 <code>nominalQuota</code>/<code>borrowingLimit</code> 的公式，只决定“配额预留之后，外部条件是否允许继续“。</p>
+<p>关键边界：Kueue 的准入是<strong>作业级</strong>的。它决定 Workload 能不能被 admit，从而让 Job 控制器创建/恢复 Pod；它不决定 Pod 放哪个节点，也不提供 gang 的原子放置。把 Kueue 当 gang 调度器，会得到“作业被准入但 Pod 仍然部分 Pending“的结果。</p>
+<h3 id="42-volcanoenqueue-的-jobenqueueable--queuestate--capability"><a class="header" href="#42-volcanoenqueue-的-jobenqueueable--queuestate--capability">4.2 Volcano：enqueue 的 JobEnqueueable / QueueState / capability</a></h3>
+<p>Volcano 的 <code>enqueue</code> action 把 PodGroup 从 <code>Pending</code> 推到 <code>Inqueue</code>；插件通过 <code>JobEnqueueable</code> 回调投票。<code>proportion</code> 的检查顺序是：队列必须 <code>Open</code>；没设 <code>realCapability</code> 就直接 Permit；<code>MinResources</code> 为空也 Permit；否则检查 <code>minReq + allocated + inqueue - elastic &lt;= realCapability</code>（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/scheduler/plugins/proportion/proportion.go#L409-L440"><code>proportion.go</code> L409-L440</a>）。<code>capacity</code> 的版本还要检查是否 leaf queue、层级上的 <code>checkJobEnqueueableHierarchically</code>。注意这里的 <code>capability</code> 是硬顶，不是 deserved；入队通过不代表 allocate 时一定能拿到资源。</p>
+<h3 id="43-原生preenqueue-只做门控"><a class="header" href="#43-原生preenqueue-只做门控">4.3 原生：PreEnqueue 只做门控</a></h3>
+<p>原生的 <code>SchedulingGates</code> 插件在 <code>PreEnqueue</code> 阶段检查 <code>Pod.spec.schedulingGates</code>，非空就返回 <code>UnschedulableAndUnresolvable</code>，Pod 不进 activeQ（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/plugins/schedulinggates/scheduling_gates.go#L45-L55"><code>scheduling_gates.go</code> L45-L55</a>）。它只做门控：没有配额、没有借用、没有队列优先级；门一旦被移除，Pod 还是按 <code>PrioritySort</code> 进队。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>准入问题</th><th>谁回答</th><th>失败后 Pod 在哪</th></tr>
+</thead>
+<tbody>
+<tr><td>作业能否开始</td><td>Kueue <code>Workload.Admitted</code> / AdmissionCheck</td><td>未 admit，Job 控制器不创建/不恢复 Pod</td></tr>
+<tr><td>PodGroup 能否入队</td><td>Volcano <code>enqueue</code> + <code>JobEnqueueable</code></td><td>PodGroup 仍 Pending，Pod 可存在但不被调度</td></tr>
+<tr><td>这个 Pod 能否进调度队列</td><td>原生 <code>PreEnqueue</code>（SchedulingGates/资源门控）</td><td>不进 activeQ，等待 gate 消除事件</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="5-回收抢占优先级与公平"><a class="header" href="#5-回收抢占优先级与公平">5. 回收、抢占、优先级与公平</a></h2>
+<h3 id="51-借用归还overusedvictim-与回滚"><a class="header" href="#51-借用归还overusedvictim-与回滚">5.1 借用归还：overused、victim 与回滚</a></h3>
+<p><strong>Kueue</strong> 没有独立的 <code>reclaim</code> action；它在 preemption 里完成“把借出去的配额拿回来“。<code>classicalPreemptionStrategy</code> 的候选分三类：层级候选（preemptor 在层级上更接近配额，可以无视优先级）、优先级候选（看 priority 和 <code>BorrowWithinCohort</code> 配置）、同队列候选；它会尝试 <code>allowBorrowing=true/false</code> 两种方案（<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/pkg/scheduler/preemption/classical_strategy.go#L36-L78"><code>classical_strategy.go</code> L36-L78</a>）。fair sharing 开启时改用 <code>fairPreemptionStrategy</code>，按 DRS 规则选 victim，并在模拟中把 preemptor 的用量加进去（<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/pkg/scheduler/preemption/fair_strategy.go#L42-L60"><code>fair_strategy.go</code> L42-L60</a>）。</p>
+<p><strong>Volcano</strong> 有两个不同 action：</p>
+<ul>
+<li><code>reclaim</code>：只处理 starving job；队列如果是 overused（通过 <code>OverusedFn</code>）就跳过，因为它自己都超了，没有资格回收别人（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/scheduler/actions/reclaim/reclaim.go#L106-L115"><code>reclaim.go</code> L106-L115</a>）。victim 由 <code>Reclaimable</code> 回调选出；capacity 会先检查 victim 是否还能保持在 guarantee 之上，再检查 <code>allocated &gt; deserved</code>；proportion 则用 <code>deserved</code> 判断（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/scheduler/plugins/capacity/capacity.go#L466-L520"><code>capacity.go</code> L466-L520</a>）。</li>
+<li><code>preempt</code>：只处理 starving job；先同队列内、再同 Job 内；victim 还要过 priority 和 gang 的 <code>Preemptable</code> 回调；带 <code>networkTopology</code> 的 Job 直接跳过（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/scheduler/actions/preempt/preempt.go#L132-L137"><code>preempt.go</code> L132-L137</a>）。这是 v1.16.1 的明确限制，不是“拓扑作业只是慢一点“。</li>
+</ul>
+<p><strong>回滚</strong>：Volcano 用 <code>Statement</code> 记录 allocate/evict，commit 才写 cache/API，discard 逆序回滚；Kueue 的 preemption 先写 <code>Workload</code> 的 eviction 状态，再由控制器删除 Pod，失败时重新排队。两者的失败窗口不同：Volcano 在 session 内可以整体丢弃；Kueue 一旦发出 eviction，就要等 victim 真正退出。</p>
+<h3 id="52-优先级与-fifostrictbest-effort-与-traverse"><a class="header" href="#52-优先级与-fifostrictbest-effort-与-traverse">5.2 优先级与 FIFO：strict、best-effort 与 traverse</a></h3>
+<p>三种“FIFO“要分开：</p>
+<ol>
+<li><strong>原生 <code>PrioritySort</code></strong>：不是 FIFO，是 priority 降序 + 同优先级时间戳升序。原生没有显式的 FIFO 策略开关；队头 Pod 失败后会被移入 unschedulable/backoff（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/queue/scheduling_queue.go#L1073-L1080"><code>scheduling_queue.go</code> L1073-L1080</a>），队列继续处理下一个实体，所以它既不是严格 FIFO，也没有“队头优先“保证。</li>
+<li><strong>Kueue <code>QueueingStrategy</code></strong>：<code>StrictFIFO</code> 队头阻塞；<code>BestEffortFIFO</code> 让等价的不可准入 Workload 让路。默认是 <code>BestEffortFIFO</code>。</li>
+<li><strong>Volcano <code>Queue.spec.dequeueStrategy</code></strong>：API 定义 <code>fifo</code>（队头不可调度就不试后面的）与 <code>traverse</code>（跳过队头继续试），默认 <code>traverse</code>（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/staging/src/volcano.sh/apis/pkg/apis/scheduling/v1beta1/types.go#L683-L695"><code>types.go</code> L683-L695</a>）。<strong>但在这份 v1.16.1 的核心仓库里，<code>grep DequeueStrategy</code> 只找到 API 类型、转换和 <code>NamespaceQueue</code> 到 <code>Queue</code> 的映射，没有找到 scheduler 的消费点</strong>；因此它目前更像“声明能力“，部署前必须在目标版本确认实际生效路径。</li>
+</ol>
+<p>原生的抢占默认是 Pod 级：<code>DefaultPreemption</code> 只有在 <code>GenericWorkload</code> 开启时才实例化 PodGroup evaluator；即使如此，PodGroup 的 <code>preemptionPolicy</code> 字段还要 <code>PodGroupPreemptionPolicy</code> gate（Alpha 默认关闭）才会被读取，否则回退到组内 Pod 的策略（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/preemption/types.go#L44-L58"><code>preemption/types.go</code> L44-L58</a>、<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/features/kube_features.go#L1956-L1960"><code>kube_features.go</code> L1956-L1960</a>、<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/scheduling/v1beta1/types.go#L290-L300"><code>types.go</code> L290-L300</a>）。所以“gang 会按组策略整组抢占“不是默认能力。</p>
+<p>队头阻塞与饥饿的差别：</p>
+<ul>
+<li>队头阻塞是<strong>顺序问题</strong>：一个大 gang 在队头，后面的小作业即使放得下也进不来。StrictFIFO（以及 API 上声明的 <code>fifo</code>，如果目标版本确实生效）会放大它；<code>BestEffortFIFO</code>（以及 <code>traverse</code>，如果生效）会缓解它，但可能让大作业长期排不上（饥饿）。</li>
+<li>饥饿是<strong>分配问题</strong>：即使每轮都跳过队头，大作业仍可能因为“永远有更小的作业填满空隙“而拿不到资源。Kueue 用 fair sharing/DRS + 优先级缓解；Volcano 用 <code>share</code>/<code>deserved</code> + <code>JobStarving</code> + preempt/reclaim 缓解；原生没有内建公平，只有优先级和抢占。</li>
+</ul>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p><code>BestEffortFIFO</code> 不是“公平“：它只保证队头不可准入时不阻塞后面，不保证落后的大作业最终能拿到份额。公平要看 share/DRS 和等待时间分布，不能只看“有没有跳过队头“。</p>
+</blockquote>
+<h3 id="53-公平的度量"><a class="header" href="#53-公平的度量">5.3 公平的度量</a></h3>
+<p>至少四个口径，不能混：</p>
+<ul>
+<li><strong>队列 share</strong>：Volcano 的 <code>max_r allocated_r/deserved_r</code>；Kueue 的 DRS 是“借用超出配额的部分 / 父 cohort 可出借量“，再除以 weight。两者分母不同，不能直接比数值。</li>
+<li><strong>DRS</strong>：Kueue 的 dominant resource share，强调“最紧的那个资源“；适合判断谁在借用上占便宜。</li>
+<li><strong>等待时间分布</strong>：按作业大小、队列、优先级分组的 P50/P95/P99；平均值会掩盖大作业的长尾。</li>
+<li><strong>分配率/利用率</strong>：<code>allocated/deserved</code> 或 <code>allocated/capability</code>；高利用率不等于公平，也不等于没有碎片。</li>
+</ul>
+<p>DRF 是另一套：Volcano 的 <code>drf</code> 插件按 dominant resource 的 <code>share/weight</code> 做队列/Job 排序（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/scheduler/plugins/drf/drf.go#L168-L181"><code>drf.go</code> L168-L181</a>），适合多资源形状差异大的批作业；它和 proportion 的 <code>share=allocated/deserved</code> 不是同一公式。aging 方面，原生没有内建 aging；Volcano 用 <code>JobStarving</code> + preempt/reclaim 缓解，Kueue 用 fair sharing/优先级/重试，但都不保证有界等待。</p>
+<p>具体指标定义和同轨迹对比方法见 <a href="./scheduling-evidence.html">调度正确性与优化证据</a>，这里不重复公式。</p>
+<h2 id="6-gang原子性的边界在哪里"><a class="header" href="#6-gang原子性的边界在哪里">6. Gang：原子性的边界在哪里</a></h2>
+<h3 id="61-原生-podgroupmincount--permit5-分钟超时"><a class="header" href="#61-原生-podgroupmincount--permit5-分钟超时">6.1 原生 PodGroup：minCount + Permit，5 分钟超时</a></h3>
+<p><code>GenericWorkload</code> 是 Beta 但默认关闭（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/features/kube_features.go#L1622-L1625"><code>kube_features.go</code> L1622-L1625</a>）。开启后，Pod 通过 <code>spec.schedulingGroup.podGroupName</code> 关联到 <code>PodGroup</code>；<code>GangSchedulingPolicy.minCount</code> 是准入门槛（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/scheduling/v1beta1/types.go#L443-L460"><code>types.go</code> L443-L460</a>）。</p>
+<p>执行分两段：</p>
+<ol>
+<li><code>PreEnqueue</code>：PodGroup 不存在，或 <code>AllPodsCount &lt; minCount</code>，Pod 不进队列（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/plugins/gangscheduling/gangscheduling.go#L204-L215"><code>gangscheduling.go</code> L204-L215</a>）。这里数的是“调度器已知的 Pod 数“，不是“能放下的 Pod 数“。</li>
+<li><code>Permit</code>：<code>ScheduledPodsCount</code>（assumed + assigned）达到 <code>minCount</code> 才允许；否则返回 <code>Wait</code>，超时 <code>5 * time.Minute</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/plugins/gangscheduling/gangscheduling.go#L38-L42"><code>gangscheduling.go</code> L38-L42</a>、<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/plugins/gangscheduling/gangscheduling.go#L396-L409"><code>gangscheduling.go</code> L396-L409</a>）。</li>
+</ol>
+<p>超时不是“重新等 5 分钟“：<code>waitingPod</code> 的 timer 到期会 <code>Reject</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/runtime/waiting_pods_map.go#L95-L106"><code>waiting_pods_map.go</code> L95-L106</a>），<code>WaitOnPermit</code> 返回 rejected，绑定周期失败，<code>unreserveAndForget</code> 释放 assume 的资源，Pod 被写 <code>Unschedulable</code> 并回到不可调度池（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/schedule_one.go#L433-L447"><code>schedule_one.go</code> L433-L447</a>）。所以 native gang 的“原子性“是<strong>准入原子性</strong>，不是绑定原子性：quorum 满足后会逐个 <code>Allow</code>，之后每个 Pod 各自 Bind；某个 Bind 失败不会回滚已经绑定的 Pod。</p>
+<p>这部分细节在 <a href="./native-scheduler.html">native-scheduler.md</a> 的绑定周期和失败矩阵里有更完整的时序，这里只保留策略含义。</p>
+<h3 id="62-volcanominmember--minavailable提交时才提交"><a class="header" href="#62-volcanominmember--minavailable提交时才提交">6.2 Volcano：minMember / MinAvailable，提交时才提交</a></h3>
+<p>Volcano Job 的 <code>spec.minAvailable</code> 由 job controller 写进 PodGroup 的 <code>spec.minMember</code>（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/controllers/job/job_controller_actions.go#L851-L852"><code>job_controller_actions.go</code> L851-L852</a>）；调度器侧 <code>JobInfo.MinAvailable</code> 在 <code>SetPodGroup</code> 里直接取 <code>MinMember</code>（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/scheduler/api/job_info.go#L555-L558"><code>job_info.go</code> L555-L558</a>）。<code>IsReady()</code> 的判定是 <code>ReadyTaskNum() + PendingBestEffortTaskNum() &gt;= MinAvailable</code>（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/scheduler/api/job_info.go#L1352-L1354"><code>job_info.go</code> L1352-L1354</a>）。<code>PendingBestEffortTaskNum</code> 只数“没有普通请求也没有 DRA claim“的 Pending task（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/scheduler/api/job_info.go#L1041-L1053"><code>job_info.go</code> L1041-L1053</a>）——这意味着 BestEffort Pod 可以在没有被分配的情况下帮助 gang 达标，是一个容易忽略的语义变化。</p>
+<p><code>gang</code> 插件注册 <code>JobValid</code>（有效 task 数 &lt; <code>MinAvailable</code> 就拒绝）、<code>Preemptable</code>/<code>Reclaimable</code>（victim 的 Job 已 ready 数必须大于 <code>MinAvailable</code> 才能抢）和 <code>JobReady</code>（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/scheduler/plugins/gang/gang.go#L57-L130"><code>gang.go</code> L57-L130</a>）。<code>allocate</code> action 只有在 <code>JobReady</code> 时才 <code>Commit</code> statement；没 ready 就 <code>Discard</code>，中间分配不落到 cache。这避免了“A、B 两个 gang 各占一部分资源、互相等对方“的死锁，但代价是<strong>大 gang 在容量不足时不会部分占位</strong>，它会一直等，直到 preempt/reclaim 或新容量出现。</p>
+<h3 id="63-kueue作业级准入不是-gang"><a class="header" href="#63-kueue作业级准入不是-gang">6.3 Kueue：作业级准入不是 gang</a></h3>
+<p>Kueue 的 <code>Admit</code> 是 Workload 级的，粒度是“这个作业能不能开始“；它没有 Pod 级 <code>Permit</code>，也不保证同一 Workload 的 Pod 同时被放置。<code>waitForPodsReady</code> 这类配置可以让“上一个作业的 Pod 没 ready 就不放行下一个“，但那是<strong>串行化</strong>，不是<strong>同时放置</strong>。所以：</p>
+<ul>
+<li>Kueue + 原生 gang：Kueue 先准入，Pod 创建后由 kube-scheduler 的 <code>GangScheduling</code> 插件做 minCount/Permit。</li>
+<li>Kueue + Volcano：Kueue 管队列与准入，Volcano 管 PodGroup 的放置与 gang；两者不是替代关系。</li>
+<li>Kueue 单独：只有作业级队列，没有 gang 原子性。</li>
+</ul>
+<h3 id="64-jobset--lws--训练作业"><a class="header" href="#64-jobset--lws--训练作业">6.4 JobSet / LWS / 训练作业</a></h3>
+<p>JobSet、LeaderWorkerSet 和训练 operator 本身通常只表达“副本、启动顺序、角色“，不提供调度器级的配额/原子准入；gang 语义取决于它们是否创建 PodGroup、以及集群里跑的是哪个调度器/插件。在提供调度集成的版本里，它们可能创建 PodGroup 并写入 minCount（例如 LWS 的 Volcano provider），但<strong>最终能不能原子放置仍由调度器决定</strong>。不要从“用了 JobSet/LWS“推断“一定有 gang“。具体工作负载形状见 <a href="../../AI_Infrastructure/Distributed_Training/workload-modeling.html">工作负载建模</a>。</p>
+<h3 id="65-失败模式"><a class="header" href="#65-失败模式">6.5 失败模式</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>失败模式</th><th>触发条件</th><th>后果</th><th>观测点</th></tr>
+</thead>
+<tbody>
+<tr><td>部分绑定</td><td>quorum 满足后，个别 Pod Bind 失败</td><td>已绑定的 Pod 不会回滚，作业可能半跑</td><td>Bind 错误、Pod 分布、Job 状态</td></tr>
+<tr><td>Permit 超时</td><td>minCount 在 5 分钟内没达到</td><td>全部 assume 释放，Pod 变 Unschedulable</td><td><code>FailedScheduling</code> 事件、Permit wait 指标</td></tr>
+<tr><td>互等/自旋</td><td>多个 gang 各占一部分资源</td><td>最多等 5 分钟，之后超时释放；期间容量被占着</td><td>调度吞吐、Permit 等待时长</td></tr>
+<tr><td>死锁（Volcano）</td><td>多个 job 互相等，但 allocate 不提交</td><td>不会占住资源，但大 job 可能长期饥饿</td><td><code>JobStarving</code>、pending 时长</td></tr>
+<tr><td>碎片导致放不下</td><td>总空闲够，但单个节点/域不够</td><td>gang 整体 Pending</td><td><code>FailedScheduling</code> 的节点分布、域内空闲</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="7-回填三种完全不同的东西"><a class="header" href="#7-回填三种完全不同的东西">7. 回填：三种完全不同的东西</a></h2>
+<h3 id="71-原生没有内建-backfill"><a class="header" href="#71-原生没有内建-backfill">7.1 原生：没有内建 backfill</a></h3>
+<p>原生调度器没有“未来时间轴“和“reservation“对象。<code>PriorityQueue.Pop</code> 只取堆顶（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/queue/scheduling_queue.go#L1335-L1338"><code>scheduling_queue.go</code> L1335-L1338</a>），<code>schedulingAlgorithm</code> 只在当前 snapshot 上做 Filter/Score（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/schedule_one.go#L250-L260"><code>schedule_one.go</code> L250-L260</a>）。没有“不放弃当前队头、先用空闲资源启动后面作业“的 reservation/backfill 逻辑，也没有“为高优先级作业预留未来时间窗“的机制；失败 Pod 会被移入 unschedulable/backoff，队列继续处理下一个实体，但那是重试/旁路，不是回填。</p>
+<p>可用的替代不是 backfill，而是：</p>
+<ul>
+<li><code>PreEnqueue</code>/<code>SchedulingGates</code>：把 Pod 挡在队列外，等外部控制器一起放行（常用于 gang 组队、数据就绪）。</li>
+<li><code>nominatedNodeName</code> + 抢占：为 preemptor 提名一个节点，但这不是 reservation，victim 没退出前资源仍被占。</li>
+<li>Kueue 的 <code>BestEffortFIFO</code>：在<strong>准入层</strong>跳过队头，不是节点层的回填。</li>
+</ul>
+<h3 id="72-volcanov1161-的-backfill-只处理-besteffort"><a class="header" href="#72-volcanov1161-的-backfill-只处理-besteffort">7.2 Volcano：v1.16.1 的 backfill 只处理 BestEffort</a></h3>
+<p>这是本页最需要按代码复核的一条。Volcano 默认 action 是 <code>enqueue, allocate, backfill</code>（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/scheduler/util.go#L38-L51"><code>util.go</code> L38-L51</a>），但 <code>pickUpPendingTasks</code> 里对每个 Pending/Pipelined task 都做了同一个过滤：</p>
+<pre><code class="language-go">// Backfill handles only tasks with neither ordinary requests nor DRA claims.
+if task.HasSchedulingResourceRequests() {
+    continue
+}
+</code></pre>
+<p>（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/scheduler/actions/backfill/backfill.go#L137-L180"><code>backfill.go</code> L137-L180</a>）<code>HasSchedulingResourceRequests</code> 为真表示 task 有普通请求或有 <code>ResourceClaims</code>。也就是说，<strong>带 requests 的小作业不会走 v1.16.1 的 backfill</strong>，只有 BestEffort（无请求）Pod 会被捡起来做 first-fit + node order。它不检查 gang 是否 ready，也不为未来预留；它的价值是“把空隙用零请求 Pod 填上“，不是“让带 GPU 的小作业插队“。</p>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>如果你的集群依赖“backfill 让带 requests 的小作业填满大作业留下的空隙“，请先在目标版本验证这条路径。这份代码的语义与很多旧文档/直觉不同。</p>
+</blockquote>
+<h3 id="73-slurm保守回填靠-reservation-证明不延迟"><a class="header" href="#73-slurm保守回填靠-reservation-证明不延迟">7.3 Slurm：保守回填靠 reservation 证明“不延迟“</a></h3>
+<p>Slurm 的 <code>sched/backfill</code> 是另一种东西：它按优先级从高到低建立 <code>node_space</code> 时间切片，为高优先级作业在时间轴上预留资源，然后只启动那些“不会推迟任何已承诺 reservation“的低优先级作业。<code>bf_interval</code> 默认 30 秒，<code>bf_resolution</code> 默认 60 秒，<code>bf_max_job_test</code> 当前文档默认 500，<code>bf_max_time</code> 默认等于 <code>bf_interval</code>（<a href="https://slurm.schedmd.com/slurm.conf.html"><code>slurm.conf</code></a>、<a href="https://slurm.schedmd.com/sched_config.html"><code>sched_config</code></a>）；这些值随版本变化，旧资料常引用 100，部署时以本机文档为准。</p>
+<p>“保守“的核心不是算法，而是<strong>可证明性</strong>：作业有 time limit，reservation 有明确的开始/结束时间，所以可以判断“低优先级作业在当前空闲上跑，会不会侵入高优先级作业的预留窗口”。没有 time limit / reservation 的系统，无法做这种证明。Kubernetes 的 Job 可以有 <code>activeDeadlineSeconds</code>，但它不是调度器承诺的结束时间，不能拿来当 Slurm 式 reservation。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>系统</th><th>回填对象</th><th>是否看未来时间</th><th>是否保护 reservation</th><th>主要风险</th></tr>
+</thead>
+<tbody>
+<tr><td>原生</td><td>无内建</td><td>否</td><td>不适用</td><td>大作业队头阻塞；无绕过</td></tr>
+<tr><td>Volcano v1.16.1</td><td>仅 BestEffort task</td><td>否</td><td>无 reservation 概念</td><td>带请求的小作业不被回填；大作业可能饥饿</td></tr>
+<tr><td>Slurm</td><td>低优先级 pending job</td><td>是（<code>node_space</code>）</td><td>是</td><td>估算不准/上限触发时退化为不启动</td></tr>
+</tbody>
+</table>
+</div>
+<p>回填对利用率/等待/碎片的影响要分开看：它提高短期利用率，但会把空闲资源切成更小的块，增加后续大作业的碎片和等待；保守回填用 reservation 保护高优先级作业，代价是低优先级作业可能被反复跳过。用同轨迹对比时，必须把“backfill 启动的小作业“和“被推迟的大作业“分开统计，否则利用率上升会掩盖大作业等待变差。</p>
+<h2 id="8-碎片容量够不等于放得下"><a class="header" href="#8-碎片容量够不等于放得下">8. 碎片：容量够不等于放得下</a></h2>
+<h3 id="81-三种碎片"><a class="header" href="#81-三种碎片">8.1 三种碎片</a></h3>
+<ul>
+<li><strong>资源碎片</strong>：各维度总空闲都够，但没有一个节点能同时满足一个 Pod 的所有维度。例如总空闲 16 CPU/64GiB，但每个节点只剩 2 CPU/32GiB，一个要 4 CPU/8GiB 的 Pod 仍可能放不下（取决于节点分布）。</li>
+<li><strong>拓扑碎片</strong>：总空闲跨多个域够，但 gang 要求所有 Pod 在同一个 rack/NVLink domain，单个域不够。TAS 和 Volcano hard topology 都会放大这种碎片。</li>
+<li><strong>设备碎片</strong>：空闲 GPU 数量够，但型号/显存/MIG 组合不匹配。4 张空闲卡里 2 张 A100、2 张 H100，一个 4×A100 的请求就是不可行。</li>
+</ul>
+<p>形式化地说：容量判断是 <code>∀r: Σ_nodes free_r &gt;= demand_r</code>；放置判断是 <code>∃ assignment: 每个 Pod 的每个维度都满足，且拓扑/设备约束满足</code>。<strong>后者为假、前者为真，就是碎片</strong>。</p>
+<h3 id="82-binpack-vs-spread"><a class="header" href="#82-binpack-vs-spread">8.2 binpack vs spread</a></h3>
+<ul>
+<li><strong>binpack</strong>：优先填满已用节点（<code>MostAllocated</code>、Volcano <code>binpack</code>、HAMi 节点 binpack）。它减少“半空节点“数量，降低资源碎片，但可能把负载集中到少数节点，放大故障域和热/网络争用。</li>
+<li><strong>spread</strong>：优先空闲节点（<code>LeastAllocated</code>、<code>PodTopologySpread</code>、HAMi spread）。它提升故障隔离和带宽，但会把空闲资源打散，增加“总够但放不下大作业“的概率。</li>
+</ul>
+<p>原生的 <code>NodeResourcesFit</code> 默认是 <code>LeastAllocated</code>（spread）（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/apis/config/v1/defaults.go#L232-L240"><code>defaults.go</code> L232-L240</a>），可以切到 <code>MostAllocated</code>/<code>RequestedToCapacityRatio</code>；<code>NodeResourcesBalancedAllocation</code> 又会把 CPU/内存的平衡拉回来。Volcano 用 <code>nodeorder</code> 做常规打分，另有 <code>binpack</code> 插件给“已用节点“加权；两者是不同插件，不是同一个打分器。HAMi 的节点/设备策略见 <a href="../../AI_Infrastructure/Accelerators/hami.html">HAMi：Kubernetes 异构 AI 算力虚拟化与调度</a>。</p>
+<p>binpack 不是无脑更好：对 gang + 拓扑敏感的作业，binpack 可能把同一 gang 的 Pod 塞进一个域，反而降低跨域可用性；对延迟敏感的服务，spread 更合适。策略要按负载类型选，不能全局一个默认。</p>
+<h3 id="83-怎么判断还有资源但放不下大作业"><a class="header" href="#83-怎么判断还有资源但放不下大作业">8.3 怎么判断“还有资源但放不下大作业“</a></h3>
+<p>按顺序做四件事：</p>
+<ol>
+<li><strong>看总量</strong>：<code>Σ free</code> 是否 &gt;= 作业需求；如果总量都不够，是容量问题，不是碎片。</li>
+<li><strong>看单节点/单域</strong>：对每个候选节点/域，计算“能容纳的最大同形状 Pod 数“；如果 <code>max_domain_capacity &lt; gang_size</code>，是拓扑/资源碎片。</li>
+<li><strong>看设备属性</strong>：按 DeviceClass/型号/显存分组统计空闲设备，而不是只数 <code>nvidia.com/gpu</code>。</li>
+<li><strong>看失败原因分布</strong>：<code>FailedScheduling</code> 里是 <code>Insufficient cpu</code>、<code>node(s) didn't match PodTopologySpread</code>、<code>resourceclaim not available</code>，还是 <code>must be in same topology domain</code>；不同原因对应不同层。</li>
+</ol>
+<p>可定义的度量（不是实测值）：</p>
+<pre><code>fragmentation_index(r) = 1 - max_{feasible pod shape} size(r) / total_free(r)
+unplaceable_ratio       = pending_large_job_demand / total_free_capacity
+</code></pre>
+<p>前者按维度看“最大可放置请求/总空闲“，后者看“放不下的大作业需求占比“。这两个指标都依赖“大作业“的定义，报告时必须写清楚阈值，否则不可比。</p>
+<h2 id="9-异构卡型从-nodeselector-到设备属性"><a class="header" href="#9-异构卡型从-nodeselector-到设备属性">9. 异构卡型：从 nodeSelector 到设备属性</a></h2>
+<p>GPU 型号/显存/算力/MIG 不是一回事：</p>
+<ul>
+<li><strong>型号</strong>：A100/H100/昇腾 910B……决定架构、算子兼容性、NVLink 拓扑。</li>
+<li><strong>显存</strong>：80GB/40GB/24GB；决定 batch size、能否放下模型/激活。</li>
+<li><strong>算力</strong>：同一型号的不同 SKU（如 80GB PCIe vs SXM）或不同代际；决定吞吐。</li>
+<li><strong>MIG</strong>：一张物理卡切成多个 GPU instance；每个 instance 有独立显存/算力，资源名和调度方式取决于 device plugin/DRA driver。</li>
+</ul>
+<p>把它们压缩成一个 <code>nodeSelector: gpu-type=a100</code> 会丢失三件事：节点上可能混插不同卡；Pod 需要的是“设备“而不是“节点“；同一节点上的多张卡可能属于不同 NUMA/NVLink 域。</p>
+<p>三层设备选择：</p>
+<ol>
+<li><strong>队列层</strong>：Kueue <code>ResourceFlavor</code> 把“一类节点“映射成一个 flavor，配额按 flavor 记；Volcano 用 Queue 的 <code>capability</code>/<code>deserved</code> 按资源名（含 extended resource）做配额。这里决定“这个租户能用多少 A100“。</li>
+<li><strong>节点层</strong>：kube-scheduler 的 <code>NodeAffinity</code>/<code>NodeResourcesFit</code>/<code>PodTopologySpread</code> 选节点；Volcano <code>predicates</code>/<code>nodeorder</code> 选节点；HAMi 的节点策略也在此层。</li>
+<li><strong>设备层</strong>：device plugin 的整数计数、HAMi 的 device-level 调度、DRA 的 <code>DeviceClass</code>/CEL/<code>ResourceSlice</code> 选具体设备。</li>
+</ol>
+<p>HAMi 的设备级调度是“节点内“的：它把每张卡注册成多个虚拟槽位，按 <code>gpumem</code>/<code>gpucores</code> 切分，支持 <code>use-gputype</code>/<code>nouse-gputype</code>、<code>mutex</code>、<code>topology-aware</code>、NUMA 绑定；节点级用分布式锁避免同一 PodGroup 的成员抢锁失败（详见 <a href="../../AI_Infrastructure/Accelerators/hami.html">HAMi 页面</a>）。它解决的是“一张卡切给多个 Pod“和“选哪张卡“，不是队列公平。</p>
+<p>DRA 把设备属性变成一等公民：</p>
+<ul>
+<li><code>DeviceClass.spec.selectors</code> 是 CEL 表达式，按 <code>Device.attributes</code>/<code>capacity</code> 过滤（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/resource/v1/types.go#L2422-L2429"><code>types.go</code> L2422-L2429</a>）；</li>
+<li><code>ResourceSlice</code> 由 driver 发布，包含 pool、device、attributes、capacity、node 信息；</li>
+<li><code>firstAvailable</code> 允许“优先 A100，退而求其次 H100“；</li>
+<li>设备 taint/toleration、partitionable devices、consumable capacity 等是额外的可行性维度。</li>
+</ul>
+<p>Kueue 的 <code>ResourceFlavor</code> 负责“把配额绑到一类节点/设备“；Kueue 的 DRA 集成进一步把 DRA-backed extended resource 从 flavor 的节点容量计算中<strong>委托</strong>出去，避免“节点上 <code>nvidia.com/gpu</code> 计数“和“DeviceClass 设备“双重计数（<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/pkg/scheduler/flavorassigner/dra_flavorassigner.go#L31-L56"><code>dra_flavorassigner.go</code> L31-L56</a>）。它不做设备选择；设备选择仍是 DRA allocator 的事。</p>
+<h2 id="10-拓扑约束域与-gang-的交互"><a class="header" href="#10-拓扑约束域与-gang-的交互">10. 拓扑：约束、域与 gang 的交互</a></h2>
+<h3 id="101-原生三件套"><a class="header" href="#101-原生三件套">10.1 原生三件套</a></h3>
+<ul>
+<li><code>PodTopologySpread</code>：按 <code>topologyKey</code> 统计域内匹配 Pod 数，要求 <code>maxSkew</code> 不超过阈值；<code>whenUnsatisfiable: DoNotSchedule</code> 是硬约束，<code>ScheduleAnyway</code> 只影响打分；<code>minDomains</code> 防止“域太少导致 skew 失真“；<code>nodeAffinityPolicy</code>/<code>nodeTaintsPolicy</code> 决定哪些节点计入。Filter 在节点层执行（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/plugins/podtopologyspread/filtering.go#L318-L340"><code>filtering.go</code> L318-L340</a>）。</li>
+<li><code>InterPodAffinity</code>：required/preferred 的 Pod 亲和/反亲和，按 <code>topologyKey</code> 判断“同域“；required 不满足直接不可调度（<code>UnschedulableAndUnresolvable</code>）；它是全集群视角的，成本高，且与 spread 可能互相打架。</li>
+<li><code>VolumeBinding</code>：<code>WaitForFirstConsumer</code> 把 PV 绑定推迟到 Pod 调度时；PreFilter 检查未绑定的 immediate PVC，Filter 检查节点拓扑与 PV 是否匹配（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/plugins/volumebinding/volume_binding.go#L351-L386"><code>volume_binding.go</code> L351-L386</a>）。存储拓扑和计算拓扑在这里耦合：卷在 rack A，Pod 就不能去 rack B。</li>
+</ul>
+<h3 id="102-taskep-5732workload-级拓扑"><a class="header" href="#102-taskep-5732workload-级拓扑">10.2 TAS（KEP-5732）：workload 级拓扑</a></h3>
+<p><code>TopologyAwareWorkloadScheduling</code> 是 Alpha 默认关闭（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/features/kube_features.go#L2231-L2235"><code>kube_features.go</code> L2231-L2235</a>）。PodGroup 的 <code>spec.schedulingConstraints.topology[0].key</code> 要求“组内所有 Pod 在同一域实例“（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/scheduling/v1beta1/types.go#L846-L857"><code>types.go</code> L846-L857</a>）。<code>TopologyPlacement.GeneratePlacements</code> 按 topologyKey 把候选节点分成多个 <code>Placement</code>（每个域一个），如果已有 Pod 被调度，则只保留那个域（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/plugins/topologyaware/topology_placement.go#L60-L99"><code>topology_placement.go</code> L60-L99</a>）。</p>
+<p>与 gang 的交互：</p>
+<ul>
+<li>gang 的 <code>PlacementFeasible</code> 在<strong>每个 Placement 内</strong>检查 minCount；因此“集群总容量够、但没有任何一个域能容纳 minCount“时，整个 gang 不可调度。</li>
+<li>TAS 只支持单个 topology constraint（API 目前 <code>maxItems=1</code>），不要假设可以同时表达“同 rack + 同 NUMA“。</li>
+<li>TAS 没有“soft“模式；要降级只能关掉 TAS 或改用 <code>PodTopologySpread</code> 的 <code>ScheduleAnyway</code>，这是语义变化，不是无损降级。</li>
+</ul>
+<h3 id="103-volcano-network-topology-aware--hypernode"><a class="header" href="#103-volcano-network-topology-aware--hypernode">10.3 Volcano network-topology-aware / HyperNode</a></h3>
+<p>Volcano 用 <code>HyperNode</code> CRD 表达网络拓扑树（tier、父节点、节点集合），Job 的 <code>networkTopology.mode</code> 是 <code>hard</code>/<code>soft</code>，<code>highestTierAllowed</code> 限制可跨的最高层（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/staging/src/volcano.sh/apis/pkg/apis/batch/v1alpha1/job.go#L124-L150"><code>job.go</code> L124-L150</a>）。<code>network-topology-aware</code> 插件注册 HyperNode 候选/排序回调，hard 模式把候选限制在允许的 tier 内（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/scheduler/plugins/network-topology-aware/network_topology_aware.go#L271-L305"><code>network_topology_aware.go</code> L271-L305</a>）。</p>
+<p>两个限制要记住：</p>
+<ol>
+<li>hard 模式下，如果某个 tier 内的资源不够整个 gang，作业不可调度；soft 模式允许跨域，但插件仍会对 HyperNode 打分（binpack 相关权重），不能保证“不跨“。</li>
+<li>v1.16.1 的 <code>preempt</code> 明确跳过带 <code>networkTopology</code> 的 Job（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/scheduler/actions/preempt/preempt.go#L132-L137"><code>preempt.go</code> L132-L137</a>）。也就是说，拓扑敏感的 gang 不能靠抢占腾位置；只能靠 reclaim（如果插件允许）或等资源。</li>
+</ol>
+<p>拓扑约束的降级策略必须显式写进策略：<code>PodTopologySpread</code> 用 <code>ScheduleAnyway</code>，Volcano 用 <code>soft</code> 或提高 <code>highestTierAllowed</code>，TAS 只能关 gate/改约束。不要用“把 maxSkew 调大“来假装软约束——它仍然是硬 Filter，只是更容易满足。</p>
+<h2 id="11-dra把设备可行性做成一等公民"><a class="header" href="#11-dra把设备可行性做成一等公民">11. DRA：把设备可行性做成一等公民</a></h2>
+<h3 id="111-对象与分配流程"><a class="header" href="#111-对象与分配流程">11.1 对象与分配流程</a></h3>
+<ul>
+<li><code>ResourceClaim</code>：Pod 引用；<code>ResourceClaimTemplate</code>：每个 Pod 从模板生成一个 claim；<code>DeviceClass</code>：driver + CEL selector + config；<code>ResourceSlice</code>：driver 发布的设备清单（pool/device/attributes/capacity/node）。</li>
+<li>DRA 的 GA 形态是 <strong>structured parameters</strong>：claim 写 <code>deviceClassName</code>/<code>selectors</code>/<code>count</code>，由调度器分配设备，而不是 driver 自定义的 opaque 分配；这也是“设备可行性可以进入调度器“的前提。</li>
+<li><code>DynamicResourceAllocation</code> 在 v1.37 已 GA、默认开启（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/features/kube_features.go#L1579-L1585"><code>kube_features.go</code> L1579-L1585</a>）。<code>DRAPrioritizedList</code> 也已 GA（v1.36 起默认 true），所以 <code>firstAvailable</code> 是默认能力，不是 beta 惊喜。</li>
+</ul>
+<p>调度器里的四段：</p>
+<ol>
+<li><strong>PreFilter</strong>：解析 Pod 的 claims/templates；已分配但不可 reserved 的 claim 直接 <code>Unschedulable</code>（“resourceclaim in use”）；检查 DeviceClass 是否存在；构建 allocator（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/plugins/dynamicresources/dynamicresources.go#L575-L600"><code>dynamicresources.go</code> L575-L600</a>）。</li>
+<li><strong>Filter</strong>：对每个节点，先检查已分配 claim 的 node selector / binding conditions，再调用 <code>allocator.Allocate(node, claimsToAllocate)</code> 做试分配；成功结果缓存在 <code>state.nodeAllocations[node]</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/plugins/dynamicresources/dynamicresources.go#L936-L958"><code>dynamicresources.go</code> L936-L958</a>）。<code>ErrFailedAllocationOnNode</code> 是“这个节点不行“，可继续试别的节点；CEL 编译/运行时错误是 <code>Error</code>，会中止并重试。</li>
+<li><strong>Reserve</strong>：不写 API，只把 allocation 写进内存中的 claim 副本，并 <code>SignalClaimPendingAllocation</code> 记录 pending allocation；PodGroup 场景还会把 claim 记入 <code>pendingAllocations</code>，供同组后续 Pod 复用（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/plugins/dynamicresources/dynamicresources.go#L1473-L1584"><code>dynamicresources.go</code> L1473-L1584</a>）。</li>
+<li><strong>PreBind</strong>：<code>bindClaim</code> 真正更新 <code>ResourceClaim.Status.Allocation</code> 和 <code>ReservedFor</code>；失败会触发 Unreserve（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/plugins/dynamicresources/dynamicresources.go#L1664-L1695"><code>dynamicresources.go</code> L1664-L1695</a>）。<code>Unreserve</code> 负责撤销 pending allocation、恢复 assumed claim；如果这是最后一个引用者，allocation 才会被真正释放。</li>
+</ol>
+<p><code>Allocator</code> 的接口注释说得很清楚：<code>Allocate</code> 只针对一个节点算分配，失败返回 nil 表示“这个节点不行“，只有输入数据（例如 CEL）坏了才返回 fatal error（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/dynamic-resource-allocation/structured/allocator.go#L92-L121"><code>allocator.go</code> L92-L121</a>）。这就是“试分配“的语义边界。</p>
+<h3 id="112-候选设备筛选"><a class="header" href="#112-候选设备筛选">11.2 候选设备筛选</a></h3>
+<p><code>isSelectable</code> 逐个 device 检查：feature gate、class selector、request selector、per-device node selection（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/dynamic-resource-allocation/structured/internal/stable/allocator_stable.go#L1027-L1076"><code>allocator_stable.go</code> L1027-L1076</a>）。selector 是 CEL，<code>selectorsMatch</code> 编译并执行 <code>DeviceMatches</code>，把 device 的 attributes/capacity 传给表达式（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/dynamic-resource-allocation/structured/internal/stable/allocator_stable.go#L1079-L1100"><code>allocator_stable.go</code> L1079-L1100</a>）。此外还会检查设备 taint、可用 counter、partitionable/consumable capacity。</p>
+<p>因此 DRA 的可行性不是“节点有 N 张卡“，而是“存在一个设备集合，满足 class + request 的所有 CEL、数量、capacity、taint、拓扑、可用性约束“。这是组合问题，不能用一个标量比较替代。</p>
+<h3 id="113-podgroup-级-claimkep-5729"><a class="header" href="#113-podgroup-级-claimkep-5729">11.3 PodGroup 级 claim（KEP-5729）</a></h3>
+<p><code>DRAWorkloadResourceClaims</code> 是 Beta 默认关闭（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/features/kube_features.go#L1545-L1549"><code>kube_features.go</code> L1545-L1549</a>）。KEP-5729 允许 <code>PodGroup</code> 引用 <code>ResourceClaim</code>/<code>ResourceClaimTemplate</code>，claim 为整个 PodGroup 保留，而不是单个 Pod（<a href="https://github.com/kubernetes/enhancements/tree/master/keps/sig-scheduling/5729-resourceclaim-support-for-workloads">KEP-5729</a>）。</p>
+<p>与 native gang 的交互：同一个 PodGroup 的多个 Pod 可以共享一个 pending allocation；<code>PreFilter</code> 会复用 <code>podGroupState.pendingAllocations</code>（上面 <code>dynamicresources.go</code> 的 L665 附近），<code>Reserve</code> 记录，<code>PreBind</code> 只绑定一次。失败时 <code>Unreserve</code> 必须等所有共享者都释放才真正撤销——这是引用计数，不是单个 Pod 的清理。策略上要记住：<strong>共享 claim 把“设备分配“和“gang 准入“绑得更紧，任何部分失败都会影响整组</strong>。</p>
+<h3 id="114-kueue-的-dra-角色"><a class="header" href="#114-kueue-的-dra-角色">11.4 Kueue 的 DRA 角色</a></h3>
+<p>Kueue 的 DRA 集成有两个不同的动作，不要混：</p>
+<ul>
+<li><strong>配额记账</strong>：把 DeviceClass 映射成逻辑资源，让 <code>ClusterQueue</code> 能按设备类别/数量做配额与借用；partitionable/consumable capacity 有单独的 gate。</li>
+<li><strong>委托设备可行性</strong>：<code>delegateDRABackedExtendedResources</code> 在 flavor assignment 时把 DRA-backed extended resource 清零，避免“节点容量“重复决定；是否在准入前做逐节点设备可行性检查由 <code>KueueDRADeviceFeasibility</code> 控制（<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/pkg/features/kube_features.go#L653-L659"><code>kube_features.go</code> L653-L659</a>）。它不替代 kube-scheduler 的 DRA allocator。</li>
+</ul>
+<h3 id="115-dra-与-gang拓扑多集群"><a class="header" href="#115-dra-与-gang拓扑多集群">11.5 DRA 与 gang/拓扑/多集群</a></h3>
+<ul>
+<li><strong>gang</strong>：DRA 的试分配是 per-node 的；gang 需要“所有成员在同一节点/域都能拿到设备“，这只能由 gang 的 placement 检查 + DRA 的 Filter 共同保证。未启用 KEP-5729 的 PodGroup 共享 claim 时，DRA 分配是 per-Pod 的；即使启用，共享 claim 也只覆盖同一个 claim，不等于整组的所有设备一次性原子分配。</li>
+<li><strong>拓扑</strong>：DeviceClass 的 CEL 可以按 <code>Device.attributes</code> 里的拓扑属性过滤；TAS 的 placement 域必须和 DRA 的 node selector 一致，否则一个说“同 rack“、一个说“设备只在另一 rack“。</li>
+<li><strong>多集群</strong>：ResourceClaim 是集群内对象；MultiKueue 分发 Workload 时，worker 集群必须有自己的 DeviceClass/ResourceSlice/claim 模板。设备库存不同，不能在 manager 侧“预分配“。</li>
+</ul>
+<h2 id="12-多集群容量数据网络配额故障域"><a class="header" href="#12-多集群容量数据网络配额故障域">12. 多集群：容量、数据、网络、配额、故障域</a></h2>
+<h3 id="121-kueue-multikueue分发不是全局最优"><a class="header" href="#121-kueue-multikueue分发不是全局最优">12.1 Kueue MultiKueue：分发，不是全局最优</a></h3>
+<p>MultiKueue 的分工是：manager 集群持有 <code>Workload</code> 和一个 <code>MultiKueue</code> AdmissionCheck；worker 集群各跑一套 Kueue；dispatcher 选择 worker，worker 的 Kueue 做准入，manager 同步状态。内置两种 dispatcher：</p>
+<ul>
+<li><code>all-at-once</code>（默认）：把所有可用 worker 都提名，谁先接受就用谁；<code>NominatedClusterNames</code> 一次性写入（<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/pkg/controller/admissionchecks/multikueue/workload.go#L1262-L1288"><code>workload.go</code> L1262-L1288</a>）。</li>
+<li><code>incremental</code>：先提名最多 3 个 worker，再按 <code>stepSize</code>（默认 3）扩展（<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/apis/config/v1beta2/configuration_types.go#L442-L449"><code>configuration_types.go</code> L442-L449</a>）。</li>
+<li>外部 dispatcher：通过 <code>DispatcherName</code> 指定，代码路径与 incremental 共用“读取已有提名“的分支。</li>
+</ul>
+<p>失败回切：<code>WorkerLostTimeout</code> 默认 15 分钟（<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/apis/config/v1beta2/configuration_types.go#L394-L399"><code>configuration_types.go</code> L394-L399</a>），在连接丢失期间保持 AC <code>Ready</code>；worker 上 Workload 被驱逐或 out-of-sync 时，把 AC 置 <code>Retry</code> 重新分发，并清理远端对象（<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/pkg/controller/admissionchecks/multikueue/workload.go#L650-L668"><code>workload.go</code> L650-L668</a>、<a href="https://github.com/kubernetes-sigs/kueue/blob/be7dc9d31470258dd324e5bd6d84f7eaf90f5f69/pkg/controller/admissionchecks/multikueue/workload.go#L729-L744"><code>workload.go</code> L729-L744</a>）。它不是“跨集群 gang“，也不搬运数据：数据集、镜像、PVC、网络连通都要预先就绪。</p>
+<h3 id="122-volcano有-hyperjob-api但没有生产级多集群调度器"><a class="header" href="#122-volcano有-hyperjob-api但没有生产级多集群调度器">12.2 Volcano：有 HyperJob API，但没有生产级多集群调度器</a></h3>
+<p>Volcano 核心仓库有 <code>HyperJob</code> API（<code>training.volcano.sh/v1alpha1</code>），字段包括 <code>replicatedJobs</code>、<code>minAvailable</code>、<code>maxDomains</code>、<code>clusterNames</code>、<code>splitPolicy</code>（static/auto）（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/staging/src/volcano.sh/apis/pkg/apis/training/v1alpha1/hyperjob.go#L37-L76"><code>hyperjob.go</code> L37-L76</a>）。设计文档明确把 <strong>cluster federation / 网络 / 数据管理</strong> 列为 out of scope，并说自动 split 是 future work。核心仓库里也没有 HyperJob controller 的实现；<code>Queue.spec.extendClusters</code> 触发 Job 的 forwarding 标记（annotation）（<a href="https://github.com/volcano-sh/volcano/blob/a2543678633b4e30fda413f8ad386fc34e10f8ae/pkg/controllers/job/job_controller_actions.go#L394-L400"><code>job_controller_actions.go</code> L394-L400</a>），实际的跨集群投递/联邦不在核心调度器里，要靠外部系统。</p>
+<p>所以结论要写清楚：<strong>Volcano 核心仓库不含生产级多集群调度</strong>；HyperJob 是 API/设计层的前瞻，不是一个开箱可用的全局调度器。</p>
+<h3 id="123-多集群可行性--容量--数据镜像--网络--配额--故障域"><a class="header" href="#123-多集群可行性--容量--数据镜像--网络--配额--故障域">12.3 多集群可行性 = 容量 + 数据/镜像 + 网络 + 配额 + 故障域</a></h3>
+<p>不要简化成“选一个集群“。至少检查：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>要问的问题</th><th>失败表现</th></tr>
+</thead>
+<tbody>
+<tr><td>容量</td><td>每个候选集群的 free/allocatable 是否满足作业形状（含 gang/拓扑/设备）</td><td>worker 准入失败，或 Pod Pending</td></tr>
+<tr><td>数据/镜像</td><td>数据集在不在？PVC 是否 RWX/可跨集群？镜像是否预热？</td><td>启动慢、挂载失败、重复拉取</td></tr>
+<tr><td>网络</td><td>跨集群带宽/延迟/NCCL 拓扑是否满足训练通信？</td><td>训练吞吐下降，甚至超时</td></tr>
+<tr><td>配额</td><td>每个集群的 Kueue/Volcano 配额是否允许？manager 的配额和 worker 的配额是否重复计算？</td><td>分发成功但 worker 拒绝准入</td></tr>
+<tr><td>故障域</td><td>两个集群是否共享电源/网络/区域？故障是否相关？</td><td>同时失效，gang 全灭</td></tr>
+</tbody>
+</table>
+</div>
+<p>MultiKueue 的 “first accepting wins” 只解决“哪里能跑“，不解决“哪里跑得最好“；它不做全局 binpack，也不做跨集群抢占。需要全局最优时，得在 manager 侧自己收集容量/数据/网络指标，做候选排序，再把结果表达成 worker 的提名/配额，而不是指望 MultiKueue 替你做。</p>
+<h2 id="13-决策表与检查清单"><a class="header" href="#13-决策表与检查清单">13. 决策表与检查清单</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>负载</th><th>先看哪一层</th><th>关键对象/字段</th><th>首调手段</th><th>不要做什么</th></tr>
+</thead>
+<tbody>
+<tr><td>单 Pod / 小作业</td><td>放置</td><td>requests、NodeResourcesFit、nodeSelector</td><td>调 requests/limits、节点池、score 策略</td><td>为它引入 gang/队列配额</td></tr>
+<tr><td>多租户批作业</td><td>权益 + 准入</td><td>Kueue CQ/cohort 或 Volcano Queue</td><td>nominal/borrowing、capability/deserved、FairSharing</td><td>把 PriorityClass 当配额</td></tr>
+<tr><td>大 gang 训练</td><td>准入 + gang + 拓扑</td><td><code>minCount</code>/<code>minMember</code>、Permit、TAS/hard topology</td><td>先保证 gang 能整体放下，再谈利用率</td><td>把 Kueue 准入当 gang</td></tr>
+<tr><td>异构 GPU</td><td>设备 + 队列</td><td>DeviceClass/CEL、ResourceFlavor、HAMi 资源</td><td>按 flavor/DeviceClass 做配额，按设备属性选卡</td><td>只用 nodeSelector 选卡型</td></tr>
+<tr><td>拓扑敏感</td><td>拓扑</td><td>topologyKey、TAS、HyperNode</td><td>先确认域内容量，再选 hard/soft</td><td>用 maxSkew 假装软约束</td></tr>
+<tr><td>DRA 设备</td><td>设备 + 放置</td><td>claim/template、DeviceClass、ResourceSlice</td><td>用 CEL 表达属性，用 firstAvailable 兜底</td><td>把 DRA 当 extended resource 计数</td></tr>
+<tr><td>多集群</td><td>容量 + 数据 + 网络 + 配额</td><td>MultiKueue、worker 配额、存储/镜像</td><td>先做候选集群可行性矩阵</td><td>把 MultiKueue 当全局最优调度</td></tr>
+</tbody>
+</table>
+</div>
+<p>检查清单（按顺序）：</p>
+<ul>
+<li><input disabled="" type="checkbox"> 需求是否按 PodSet 展开，gang size、拓扑、设备属性是否都进了需求？</li>
+<li><input disabled="" type="checkbox"> 权益用的是 nominal/borrowing、capability/deserved，还是只有一个 PriorityClass？</li>
+<li><input disabled="" type="checkbox"> 准入失败时，是 Workload 未 admit、PodGroup 未 Inqueue，还是 Pod 未入 activeQ？</li>
+<li><input disabled="" type="checkbox"> gang 的 <code>minCount</code>/<code>minMember</code> 与副本数、<code>maxReplicas</code>、<code>parallelism</code> 是否一致？</li>
+<li><input disabled="" type="checkbox"> 回填/抢占是否依赖了目标版本并不存在的语义（尤其是 Volcano backfill 只处理 BestEffort）？</li>
+<li><input disabled="" type="checkbox"> 碎片判断是否看了“总空闲“以外的单节点/单域/设备属性？</li>
+<li><input disabled="" type="checkbox"> 拓扑约束在不可满足时，降级是显式的吗？降级后 gang 的原子性还成立吗？</li>
+<li><input disabled="" type="checkbox"> DRA claim 的 <code>Reserve</code>/<code>PreBind</code>/<code>Unreserve</code> 失败是否有可观测的 condition/event？</li>
+<li><input disabled="" type="checkbox"> 多集群是否把数据、镜像、网络、配额、故障域都当成可行性条件，而不是只看 CPU/GPU 总数？</li>
+</ul>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p>常见反模式：把 Kueue 当 gang；把 Volcano <code>capacity</code> 当 Kueue <code>ClusterQueue</code>；用 nodeSelector 代替设备属性；用平均利用率证明“没有碎片“；把 MultiKueue 当全局最优；把 Volcano v1.16.1 的 backfill 当成“带请求的小作业回填“。这些都会让策略结论在真实负载下失效。</p>
+</blockquote>
+<h2 id="参考资料"><a class="header" href="#参考资料">参考资料</a></h2>
+<h3 id="官方文档"><a class="header" href="#官方文档">官方文档</a></h3>
+<ul>
+<li>Kubernetes：<a href="https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/">Pod 优先级与抢占</a>、<a href="https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/">Pod 拓扑分布约束</a>、<a href="https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/">DRA</a>、<a href="https://kubernetes.io/docs/concepts/scheduling-eviction/gang-scheduling/">Gang Scheduling</a>、<a href="https://kubernetes.io/docs/concepts/scheduling-eviction/topology-aware-scheduling/">Topology Aware Scheduling</a>、<a href="https://kubernetes.io/docs/concepts/policy/resource-quotas/">ResourceQuota</a></li>
+<li>Kueue：<a href="https://kueue.sigs.k8s.io/docs/concepts/cluster_queue/">ClusterQueue</a>、<a href="https://kueue.sigs.k8s.io/docs/concepts/cohort/">Cohort</a>、<a href="https://kueue.sigs.k8s.io/docs/concepts/fair_sharing/">Fair Sharing</a>、<a href="https://kueue.sigs.k8s.io/docs/concepts/preemption/">Preemption</a>、<a href="https://kueue.sigs.k8s.io/docs/concepts/multikueue/">MultiKueue</a>、<a href="https://kueue.sigs.k8s.io/docs/concepts/dynamic_resource_allocation/">DRA</a>、<a href="https://kueue.sigs.k8s.io/docs/concepts/resource_flavor/">ResourceFlavor</a>、<a href="https://kueue.sigs.k8s.io/docs/concepts/admission_check/">AdmissionCheck</a></li>
+<li>Volcano：<a href="https://volcano.sh/docs/Scheduler/Overview/">Scheduler Overview</a>、<a href="https://volcano.sh/docs/Scheduler/Actions/">Actions</a>、<a href="https://volcano.sh/docs/Concepts/Queue/">Queue</a>、<a href="https://volcano.sh/docs/Scheduler/Plugins/gang/">Gang</a>、<a href="https://volcano.sh/docs/Scheduler/Plugins/proportion/">Proportion</a>、<a href="https://volcano.sh/en/docs/network_topology_aware_scheduling/">Network Topology Aware</a></li>
+<li>Slurm：<a href="https://slurm.schedmd.com/sched_config.html">sched_config</a>、<a href="https://slurm.schedmd.com/slurm.conf.html">slurm.conf</a></li>
+</ul>
+<h3 id="kep"><a class="header" href="#kep">KEP</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/enhancements/tree/master/keps/sig-scheduling/4671-gang-scheduling">KEP-4671 Gang Scheduling</a></li>
+<li><a href="https://github.com/kubernetes/enhancements/tree/master/keps/sig-scheduling/5710-workload-aware-preemption">KEP-5710 Workload Aware Preemption</a></li>
+<li><a href="https://github.com/kubernetes/enhancements/tree/master/keps/sig-scheduling/5729-resourceclaim-support-for-workloads">KEP-5729 DRA ResourceClaim Support for Workloads</a></li>
+<li><a href="https://github.com/kubernetes/enhancements/tree/master/keps/sig-scheduling/5732-topology-aware-workload-scheduling">KEP-5732 Topology Aware Workload Scheduling</a></li>
+</ul>
+<h3 id="源码固定-commit"><a class="header" href="#源码固定-commit">源码（固定 commit）</a></h3>
+<ul>
+<li>Kubernetes <code>c50e5395</code>：<code>pkg/features/kube_features.go</code>、<code>pkg/scheduler/framework/plugins/{queuesort,schedulinggates,gangscheduling,dynamicresources,topologyaware,podtopologyspread,volumebinding}</code>、<code>staging/src/k8s.io/api/scheduling/v1beta1/types.go</code>、<code>staging/src/k8s.io/dynamic-resource-allocation/structured/</code></li>
+<li>Volcano <code>a2543678</code>：<code>pkg/scheduler/{util.go,api/job_info.go,actions/{allocate,backfill,preempt,reclaim},plugins/{proportion,capacity,gang,network-topology-aware,predicates}}</code>、<code>staging/src/volcano.sh/apis/pkg/apis/{scheduling/v1beta1,batch/v1alpha1,training/v1alpha1}</code></li>
+<li>Kueue <code>be7dc9d</code>（main@2026-11-23，晚于 v0.20.8）：<code>apis/kueue/v1beta2/{clusterqueue,cohort,fairsharing}_types.go</code>、<code>pkg/cache/scheduler/{resource_node,fair_sharing}.go</code>、<code>pkg/scheduler/{scheduler.go,fair_sharing_iterator.go,preemption,flavorassigner}</code>、<code>pkg/controller/admissionchecks/multikueue/</code></li>
+</ul>
+<h3 id="延伸阅读"><a class="header" href="#延伸阅读">延伸阅读</a></h3>
+<ul>
+<li><a href="./native-scheduler.html">kube-scheduler：对象、队列与调度主流程</a></li>
+<li><a href="./scheduling-framework.html">Scheduling Framework：扩展点、状态与并发语义</a></li>
+<li><a href="./volcano-scheduler.html">Volcano 调度器：Session、Action 与队列模型</a></li>
+<li><a href="./scheduling-evidence.html">调度正确性与优化证据</a></li>
+</ul>
+<h2 id="本-wiki-相关页面"><a class="header" href="#本-wiki-相关页面">本 wiki 相关页面</a></h2>
+<ul>
+<li><a href="./scheduling-overview.html">调度器源码与策略：专题导读</a></li>
+<li><a href="./native-scheduler.html">kube-scheduler：对象、队列与调度主流程</a></li>
+<li><a href="./scheduling-framework.html">Scheduling Framework：扩展点、状态与并发语义</a></li>
+<li><a href="./volcano-scheduler.html">Volcano 调度器：Session、Action 与队列模型</a></li>
+<li><a href="./scheduling-evidence.html">调度正确性与优化证据</a></li>
+<li><a href="./kueue.html">Kueue: Kubernetes 原生作业队列管理器</a></li>
+<li><a href="../../AI_Infrastructure/Accelerators/hami.html">HAMi：Kubernetes 异构 AI 算力虚拟化与调度</a></li>
+<li><a href="../../../Machine_Learning/High_Performance_Computing/slurm.html">Slurm: HPC 集群工作负载管理器</a></li>
+<li><a href="../../AI_Infrastructure/Distributed_Training/workload-modeling.html">工作负载建模</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../../docs/Cloud_Native/Kubernetes/Scheduling/scheduling-evidence.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../../linux_container.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../../docs/Cloud_Native/Kubernetes/Scheduling/scheduling-evidence.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../../linux_container.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../../highlight-abc7f01d.js"></script>
+        <script src="../../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

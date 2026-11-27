@@ -1,0 +1,663 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>kube-scheduler：对象、队列与调度主流程 - Bingtan&#x27;s Wiki</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../../../css/general-2459343d.css">
+        <link rel="stylesheet" href="../../../../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../../../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../../../searchindex-1a4ddc3e.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../../../toc-1fccd013.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Bingtan&#x27;s Wiki</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/lubingtan/lubingtan.github.io/edit/main/src/docs/Cloud_Native/Kubernetes/Scheduling/native-scheduler.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="kube-scheduler对象队列与调度主流程"><a class="header" href="#kube-scheduler对象队列与调度主流程">kube-scheduler：对象、队列与调度主流程</a></h1>
+<p>这篇页面回答一个具体问题：<strong>一个 Pending 的 Pod（或一个开启了 <code>GenericWorkload</code> 的 PodGroup），在 kube-scheduler 内部到底经过了哪些对象、哪几个队列、哪两段周期，资源账本什么时候被扣、什么时候被确认、失败时怎么退回去、scheduler 重启后怎么重建。</strong> 它不讲全部 Filter 插件的语义，也不讲 Volcano 的内部实现；扩展点的逐个说明见 <a href="./scheduling-framework.html">Scheduling Framework</a>，策略取舍见 <a href="./scheduling-strategy.html">调度策略与约束</a>。</p>
+<p>版本基线是 Kubernetes <strong>v1.37.2</strong>，代码链接全部固定到 commit <code>c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32</code>。一个必须先说清楚的边界：v1.37 里 <code>GenericWorkload</code>（PodGroup/Workload API + gang）是 <strong>Beta 但默认关闭</strong>，所以<strong>默认配置下的 scheduler 仍然逐 Pod 调度</strong>，队列里只有 <code>QueuedPodInfo</code>。把 PodGroup 当成 1.37 的默认能力是本专题最常见的误读。</p>
+<h2 id="1-版本与能力基线"><a class="header" href="#1-版本与能力基线">1. 版本与能力基线</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Feature gate</th><th>v1.37.2 状态</th><th>对本文的影响</th></tr>
+</thead>
+<tbody>
+<tr><td><code>GenericWorkload</code></td><td>Beta，<strong>默认 false</strong>（1.35 引入为 Alpha）</td><td>决定队列能否持有 <code>QueuedPodGroupInfo</code>、<code>GangScheduling</code> 插件是否注册、PodGroup informer 是否启动</td></tr>
+<tr><td><code>DynamicResourceAllocation</code></td><td>GA，默认 true 且自 1.35 起 LockToDefault</td><td>DRA 插件默认在插件链里，但本文只指出它在 Filter/Reserve/PreBind 的位置</td></tr>
+<tr><td><code>PodGroupPreemptionPolicy</code></td><td>Alpha，<strong>默认 false</strong></td><td>PodGroup 级抢占策略；本文不展开</td></tr>
+<tr><td><code>TopologyAwareWorkloadScheduling</code></td><td>Alpha，<strong>默认 false</strong></td><td>workload 级拓扑扩展点；见 <a href="./scheduling-strategy.html">调度策略与约束</a></td></tr>
+<tr><td><code>DRAWorkloadResourceClaims</code></td><td>Beta，<strong>默认 false</strong></td><td>PodGroup 级共享 claim；见策略页</td></tr>
+<tr><td><code>CompositePodGroup</code></td><td>Alpha，<strong>默认 false</strong></td><td>多级 PodGroup 层级；本文只提一句</td></tr>
+<tr><td><code>SchedulerPopFromBackoffQ</code></td><td>Beta，默认 true（1.33 起）</td><td>让 backoffQ 具备“到期即按优先级弹出”的排序窗口语义</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>GenericWorkload</code> 的定义见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/features/kube_features.go#L1622-L1625">kube_features.go#L1622-L1625</a>，DRA 见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/features/kube_features.go#L1579-L1586">#L1579-L1586</a>，PodGroup 抢占见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/features/kube_features.go#L1956-L1958">#L1956-L1958</a>，TAS 见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/features/kube_features.go#L2231-L2233">#L2231-L2233</a>，DRA workload claims 见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/features/kube_features.go#L1545-L1548">#L1545-L1548</a>。官方文档对 PodGroup 的标注同样是 “Beta since v1.37; disabled by default”。</p>
+<p><code>GangScheduling</code> 插件不是独立 gate，而是 <code>GenericWorkload</code> 打开后由默认插件函数追加：</p>
+<pre><code class="language-go">func applyFeatureGates(config *v1.Plugins) {
+	if utilfeature.DefaultFeatureGate.Enabled(features.DynamicResourceAllocation) {
+		applyDynamicResources(config)
+	}
+	if utilfeature.DefaultFeatureGate.Enabled(features.GenericWorkload) {
+		applyGangScheduling(config)
+	}
+	...
+}
+</code></pre>
+<p>见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/apis/config/v1/default_plugins.go#L62-L87">default_plugins.go#L62-L87</a>。所以“v1.37 有 gang”这句话只在“显式开了 gate 并配置了 PodGroup”时成立。</p>
+<h2 id="2-对象图"><a class="header" href="#2-对象图">2. 对象图</a></h2>
+<pre class="mermaid">flowchart TD
+    API["apiserver 对象&lt;br/&gt;Pod / Node / PodGroup / Workload"] --&gt; IF["informer&lt;br/&gt;Pod, Node, (PodGroup)"]
+    IF --&gt; Q["SchedulingQueue&lt;br/&gt;activeQ / backoffQ / unschedulableEntities"]
+    IF --&gt; C["Cache&lt;br/&gt;podStates + assumedPods + NodeInfo"]
+    C --&gt;|UpdateSnapshot&lt;br/&gt;每周期一次| S["Snapshot&lt;br/&gt;generation + NodeInfo 列表"]
+    Q --&gt;|Pop 阻塞| SO["ScheduleOne&lt;br/&gt;串行"]
+    SO --&gt; F["Framework（按 schedulerName 选 Profile）"]
+    S --&gt; F
+    SO --&gt;|成功| A["assume + Reserve + Permit&lt;br/&gt;资源已扣"]
+    A --&gt;|goroutine| B["绑定周期&lt;br/&gt;WaitOnPermit → PreBind → Bind"]
+    B --&gt;|Binding API| API
+    API --&gt;|NodeName 回填| IF
+</pre>
+
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>对象</th><th>作用</th><th>生命周期</th><th>持久化</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Pod</code></td><td>调度请求的载体；<code>spec.schedulerName</code> 选 profile，<code>spec.schedulingGroup.podGroupName</code> 选 PodGroup</td><td>由 API 决定</td><td>是（etcd）</td></tr>
+<tr><td><code>Node</code></td><td>资源与约束来源；<code>NodeInfo</code> 是它在 cache 中的投影</td><td>由 kubelet/云控制器驱动</td><td>是</td></tr>
+<tr><td><code>PodGroup</code>（<code>scheduling.k8s.io/v1beta1</code>）</td><td>组级策略载体：<code>spec.schedulingPolicy.gang.minCount</code>、拓扑约束、组级 claim</td><td><code>GenericWorkload</code> 开启时由控制器创建</td><td>是</td></tr>
+<tr><td><code>Workload</code>（同组）</td><td>PodGroup 模板 + 策略模板，供控制器生成 PodGroup</td><td>同上</td><td>是</td></tr>
+<tr><td><code>Profile</code> / <code>Framework</code></td><td>一个 <code>schedulerName</code> 对应一个框架实例，持有插件集与等待队列</td><td>进程内</td><td>否</td></tr>
+<tr><td><code>QueuedPodInfo</code> / <code>QueuedPodGroupInfo</code></td><td>队列中的实体，带 <code>QueueingParams</code>（时间戳、尝试次数、backoff、失败插件集合）</td><td>进程内</td><td>否</td></tr>
+<tr><td><code>PodInfo</code> / <code>NodeInfo</code></td><td>不可变的 Pod 视图 + 带资源账本的节点视图（<code>Requested</code> 含 assumed Pods）</td><td>进程内</td><td>否</td></tr>
+<tr><td><code>Cache</code> / <code>Snapshot</code></td><td>cache 是权威账本；snapshot 是每周期的一致性读视图</td><td>进程内</td><td>否</td></tr>
+<tr><td><code>Extender</code></td><td>老式外置 HTTP 扩展（Filter/Score/Bind），与 Framework 并存</td><td>进程内</td><td>否</td></tr>
+</tbody>
+</table>
+</div>
+<p>实体定义的入口：<code>QueuedPodInfo</code> 在 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/types.go#L693-L701">types.go#L693-L701</a>，<code>QueuedPodGroupInfo</code> 在 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/types.go#L783-L791">#L783-L791</a>，<code>QueueingParams</code>（含 <code>UnschedulableCount</code> 与 <code>ConsecutiveErrorsCount</code> 两个不同计数器）在 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/types.go#L574-L622">#L574-L622</a>。<code>Scheduler</code> 结构体本身见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/scheduler.go#L69-L126">scheduler.go#L69-L126</a>。</p>
+<p><code>NodeInfo.Requested</code> 的注释直接说明了账本口径：<strong>“This includes assumed pods, which scheduler has sent for binding, but may not be scheduled yet.”</strong>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/types.go#L193-L216">types.go#L193-L216</a>）。这句话是理解后面所有“暂记/撤回”的锚点。</p>
+<h2 id="3-入口informer-事件如何进入队列"><a class="header" href="#3-入口informer-事件如何进入队列">3. 入口：informer 事件如何进入队列</a></h2>
+<p>调度器启动时先注册 handler，再 <code>WaitForCacheSync</code>，最后等所有 handler 的初始 list 处理完（<code>WaitForHandlersSync</code>）才开始调度（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/eventhandlers.go#L611-L620">eventhandlers.go#L611-L620</a>）。<code>PodGroup</code> informer 只在 <code>GenericWorkload</code> 打开时注册（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/eventhandlers.go#L661-L671">#L661-L671</a>）。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>事件</th><th>处理</th><th>结果</th></tr>
+</thead>
+<tbody>
+<tr><td>Pod Add，未绑定</td><td><code>addPodToSchedulingQueue</code>：先 <code>Cache.AddPodGroupMember</code>，再 <code>Queue.Add</code></td><td>走 PreEnqueue，通过则进 activeQ，否则进 unschedulable(pool) 并被标记 gated</td></tr>
+<tr><td>Pod Add，已绑定</td><td><code>addAssignedPodToCache</code>：<code>Cache.AddPod</code> + <code>MoveAllToActiveOrBackoffQueue(AssignedPodAdd)</code></td><td>把 assumed 转正；并唤醒等待该资源的 Pod</td></tr>
+<tr><td>Pod Update，未绑定→已绑定</td><td>视为 binding 完成：<code>addAssignedPodToCache</code> + <code>deletePodFromSchedulingQueue(oldPod, true)</code></td><td>从队列移除，避免重复调度</td></tr>
+<tr><td>Pod Update，仍未绑定</td><td><code>SchedulingQueue.Update</code>：按“调度属性是否变化”决定是否从 unschedulable 移到 activeQ</td><td>见下方 QueueingHint</td></tr>
+<tr><td>Pod Delete</td><td>已绑定则删 cache；未绑定则删队列</td><td>—</td></tr>
+<tr><td>Node Add/Delete</td><td>更新 cache，并发 Node Add/Delete cluster event</td><td>触发 unschedulable 里的 Pod 重排</td></tr>
+<tr><td>Node Update</td><td>更新 cache；按 <code>NodeSchedulingPropertiesChange</code> 只发出“变好”的事件</td><td>避免无关节点的状态抖动引发大规模重排</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>addPodToSchedulingQueue</code> 的实现在 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/eventhandlers.go#L238-L248">eventhandlers.go#L238-L248</a>，已绑定 Pod 的回填在 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/eventhandlers.go#L401-L412">#L401-L412</a>，Update 的分支判断在 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/eventhandlers.go#L146-L194">#L146-L194</a>。</p>
+<p><strong>PreEnqueue 是“入队前的门”。</strong> 队列在 <code>moveToActiveQ</code> 里对实体跑一遍 <code>PreEnqueue</code> 插件；任一 Pod 返回非 Success，整个实体就被标成 <code>Gated</code>，不进入 activeQ，而是留在 <code>unschedulableEntities</code> 里等它的 gating 事件（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/queue/scheduling_queue.go#L707-L729">scheduling_queue.go#L707-L729</a>）。<code>SchedulingGates</code> 插件把“Pod 还有未移除的 scheduling gate”这件事变成 gated 状态；<code>GangScheduling</code> 的 <code>PreEnqueue</code> 把“PodGroup 对象还没出现”或“组内 Pod 数不足 <code>minCount</code>”变成 gated（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/plugins/gangscheduling/gangscheduling.go#L206-L240">gangscheduling.go#L206-L240</a>）。gated 的实体不会被 <code>Pop</code> 到，所以<strong>它不消耗调度周期</strong>。</p>
+<p><code>schedulerName</code> 不匹配任何 profile 的 Pod 根本不会进入这个调度器的队列（<code>responsibleForPod</code> 判断），这也是多调度器共存的边界：每个调度器只看自己的 Pod。</p>
+<h2 id="4-队列三层backoff-与-queueinghint"><a class="header" href="#4-队列三层backoff-与-queueinghint">4. 队列三层、backoff 与 QueueingHint</a></h2>
+<h3 id="41-三层结构与不变量"><a class="header" href="#41-三层结构与不变量">4.1 三层结构与不变量</a></h3>
+<p><code>PriorityQueue</code> 的注释把三层写得很直白（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/queue/scheduling_queue.go#L186-L207">scheduling_queue.go#L186-L207</a>）：</p>
+<ul>
+<li><strong>activeQ</strong>：按 <code>QueueSort</code>（默认 PrioritySort：优先级降序、同优先级按入队时间）排序的堆，<code>Pop</code> 在这里阻塞等待；</li>
+<li><strong>backoffQ</strong>：v1.37 里其实是<strong>两个堆</strong>——<code>entityBackoffQ</code>（可调度性失败）与 <code>entityErrorBackoffQ</code>（内部错误），都按 backoff 到期时间排序；</li>
+<li><strong>unschedulableEntities</strong>：等待 cluster event 或超时 flush 的池子，不再是“永久不可调度”的意思。</li>
+</ul>
+<p>开启 <code>GenericWorkload</code> 后还有三个辅助结构保证 Pod 与 PodGroup 的生命周期不变量：PodGroup 对象未观测到时 Pod 进 <code>incompletePodGroupPods</code>；PodGroup 在飞时新到的 Pod 进 <code>pendingPodGroupPods</code>；其余情况 Pod 被封装进 <code>QueuedPodGroupInfo</code> 排在上面三个队列之一（同一条注释的后半段）。</p>
+<p>接口层见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/queue/scheduling_queue.go#L98-L176">scheduling_queue.go#L98-L176</a>：<code>Pop</code> 阻塞、<code>Done</code> 必须被调用、<code>MoveAllToActiveOrBackoffQueue</code> 是事件驱动的重排入口。</p>
+<h3 id="42-in-flight-与-done为什么队列要记住正在处理的-pod"><a class="header" href="#42-in-flight-与-done为什么队列要记住正在处理的-pod">4.2 in-flight 与 Done：为什么队列要记住“正在处理的 Pod”</a></h3>
+<p><code>activeQ</code> 维护 <code>inFlightPods</code>（已 Pop、尚未 Done）和 <code>inFlightEvents</code>（这些 Pod 在飞行期间收到的 cluster event）两条结构（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/queue/active_queue.go#L181-L203">active_queue.go#L181-L203</a>）。这件事的意义：</p>
+<ul>
+<li>调度一个 Pod 期间，集群可能变了（节点被删、别的 Pod 释放了资源）。如果只按“当前状态”判断，会漏掉“飞行期间发生、但已经足以让它变可调度”的事件；</li>
+<li>所以失败回收时不是简单“扔回 unschedulable”，而是先用 <code>clusterEventsForPod</code> 取回飞行期间的事件，再让每个 rejector 插件的 <code>QueueingHint</code> 判断这些事件是否值得重试（<code>determineSchedulingHintForInFlightPod</code>，<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/queue/scheduling_queue.go#L1032-L1069">scheduling_queue.go#L1032-L1069</a>）；</li>
+<li><code>Done</code> 会在 <code>inFlightPods</code> 里删除该 Pod 并剪掉只被它引用的过期事件（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/queue/active_queue.go#L508-L545">active_queue.go#L508-L545</a>）。漏调 <code>Done</code> 就是内存泄漏 + 后续事件被错误归因。</li>
+</ul>
+<p>绑定周期里有一个值得记住的顺序：<code>WaitOnPermit</code> 成功后立刻调用 <code>Done</code>，<strong>早于</strong> PreBind/Bind。代码注释给的理由是“尽早释放队列里的事件，省内存”，代价是从此之后队列不再为该 Pod 积累事件——这也解释了为什么 PreBind/Bind 失败后必须显式 <code>MoveAllToActiveOrBackoffQueue(EventAssignedPodDelete)</code> 来补偿（见 §8）。</p>
+<h3 id="43-backoff-公式与两个计数器"><a class="header" href="#43-backoff-公式与两个计数器">4.3 backoff 公式与两个计数器</a></h3>
+<pre><code class="language-go">func (bq *backoffQueue) calculateBackoffDuration(count int, entitySize int) time.Duration {
+	if count == 0 {
+		return 0
+	}
+	maxBackoff := bq.podMaxBackoff
+	if entitySize &gt; 1 { // PodGroup：按 Pod 数的平方根放大上限
+		maxBackoff = time.Duration(float64(maxBackoff) * math.Sqrt(float64(entitySize)))
+	}
+	shift := count - 1
+	if bq.podInitialBackoff &gt; maxBackoff&gt;&gt;shift {
+		return maxBackoff
+	}
+	return time.Duration(bq.podInitialBackoff &lt;&lt; shift)
+}
+</code></pre>
+<p>见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/queue/backoff_queue.go#L246-L266">backoff_queue.go#L246-L266</a>。即 <code>backoff = min(initial &lt;&lt; (count-1), max * sqrt(entitySize))</code>，<code>entitySize=1</code> 时退化为 <code>min(initial &lt;&lt; (count-1), max)</code>。</p>
+<ul>
+<li><code>initial</code> / <code>max</code> 默认 <strong>1s / 10s</strong>，来自 scheduler 配置 <code>podInitialBackoffSeconds</code> / <code>podMaxBackoffSeconds</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/apis/config/v1/defaults.go#L160-L166">defaults.go#L160-L166</a>），队列侧默认值同值（<code>DefaultPodInitialBackoffDuration</code>/<code>DefaultPodMaxBackoffDuration</code>）。</li>
+<li><code>count</code> <strong>不是</strong> <code>Attempts</code>。<code>getBackoffTime</code> 先取 <code>UnschedulableCount</code>，若 <code>ConsecutiveErrorsCount &gt; 0</code> 则改用后者（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/queue/backoff_queue.go#L219-L244">backoff_queue.go#L219-L244</a>）。两个计数器在 <code>AddUnschedulablePodIfNotPresent</code> 里按“有没有 rejector 插件”互斥地自增（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/queue/scheduling_queue.go#L1097-L1105">scheduling_queue.go#L1097-L1105</a>）：有插件拒绝 → <code>UnschedulableCount++</code> 且错误计数清零；无插件拒绝（网络/内部错误）→ <code>ConsecutiveErrorsCount++</code>。这把“浪费调度周期的惩罚”和“保护 apiserver 的退避”分开了。</li>
+<li><code>podMaxBackoff = 0</code> 时退避被完全禁用（<code>getBackoffTime</code> 直接返回零值时间）。</li>
+<li>启用 <code>SchedulerPopFromBackoffQ</code> 时，到期时间会被截断到 1s 的排序窗口（<code>backoffQOrderingWindowDuration</code>，<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/queue/backoff_queue.go#L36-L38">backoff_queue.go#L36-L38</a>），窗口内按 activeQ 的排序规则决出先后。所以“1s 初始退避”在观测上通常是按秒取整的。</li>
+</ul>
+<p><strong>flush 超时</strong>：实体在 <code>unschedulableEntities</code> 里停留超过 <code>podMaxInUnschedulablePodsDuration</code>（默认 <strong>5min</strong>）会被强制移到 activeQ/backoffQ，并打上 <code>WasFlushedFromUnschedulable</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/queue/scheduling_queue.go#L1306-L1333">scheduling_queue.go#L1306-L1333</a>）。这是防止 <code>QueueingHint</code> 写错导致 Pod 永久卡死的<strong>安全网</strong>；如果某个 Pod 总是“flush 之后马上被调度成功”，指标 <code>scheduler_pod_scheduled_after_flush_total</code>（<code>PodScheduledAfterFlush</code>，<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/metrics/metrics.go#L389-L395">metrics.go#L389-L395</a>）会增长，通常意味着某个插件的 hint 漏了事件。</p>
+<h3 id="44-queueinghint事件是否值得重排"><a class="header" href="#44-queueinghint事件是否值得重排">4.4 QueueingHint：事件是否值得重排</a></h3>
+<p><code>QueueingHint</code> 只有两个值：<code>QueueSkip</code>（这个事件不会让该 Pod 变可调度）和 <code>Queue</code>（值得重试）（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/kube-scheduler/framework/types.go#L241-L260">types.go#L241-L260</a>）。运行时的判定规则很关键：</p>
+<ol>
+<li>只有<strong>当初拒绝过这个 Pod 的插件</strong>（<code>UnschedulablePlugins ∪ PendingPlugins</code>）注册的 hint 会被调用；没有 rejector 时直接 <code>queueAfterBackoff</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/queue/scheduling_queue.go#L587-L621">scheduling_queue.go#L587-L621</a>）。</li>
+<li>hint 返回 <code>Queue</code> 且插件属于 <code>PendingPlugins</code> → <code>queueImmediately</code>（跳过 backoff，直接进 activeQ）。</li>
+<li>hint 返回 <code>Queue</code> 且插件属于 <code>UnschedulablePlugins</code> → <code>queueAfterBackoff</code>（尊重剩余退避时间）。</li>
+<li>hint 函数<strong>返回 error 时按 <code>Queue</code> 处理</strong>，这是“宁可多试一次也不要卡死”的取向。</li>
+<li>通配事件（例如 §4.3 的 flush、<code>EventForceActivate</code>）对所有实体生效，是 QueueingHint 之外的强制唤醒通道。</li>
+</ol>
+<p>三种排队策略的枚举见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/queue/scheduling_queue.go#L518-L526">scheduling_queue.go#L518-L526</a>，落队逻辑见 <code>requeueEntityWithQueueingStrategy</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/queue/scheduling_queue.go#L1894-L1916">#L1894-L1916</a>）。PodGroup 的 hint 判定是“任一 Pod 值得重排则整组值得”，并取最高优先级策略（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/queue/scheduling_queue.go#L564-L579">#L564-L579</a>）。</p>
+<h2 id="5-调度周期scheduling-cycle"><a class="header" href="#5-调度周期scheduling-cycle">5. 调度周期（scheduling cycle）</a></h2>
+<p><code>ScheduleOne</code> 是个死循环体：<code>NextEntity</code> 阻塞取实体，按类型分派到 <code>scheduleOnePod</code> 或 <code>scheduleOnePodGroup</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/schedule_one.go#L67-L90">schedule_one.go#L67-L90</a>）。注释明确说它 <strong>“serialized on the scheduling algorithm’s host fitting”</strong>：调度周期是串行的，并发来自 Score 内部和绑定周期。</p>
+<p><code>scheduleOnePod</code> 做四件事：按 <code>schedulerName</code> 找 Framework、跳过删除中/已 assumed 的 Pod、建 <code>CycleState</code> 与 <code>podsToActivate</code>、调 <code>schedulingCycle</code> 并在成功后 <code>go runBindingCycle</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/schedule_one.go#L93-L142">schedule_one.go#L93-L142</a>）。“已 assumed 就跳过”很关键：一个 Pod 在自己的调度周期里若收到 Update 被重新入队，再次被 Pop 时不能重复调度（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/schedule_one.go#L548-L567">#L548-L570</a>）。</p>
+<pre><code class="language-go">func (sched *Scheduler) schedulingCycle(...) (ScheduleResult, *framework.QueuedPodInfo, *fwk.Status) {
+	if err := sched.Cache.UpdateSnapshot(ctx, sched.nodeInfoSnapshot); err != nil {
+		return ScheduleResult{nominatingInfo: clearNominatedNode}, podInfo, fwk.AsStatus(err)
+	}
+	scheduleResult, status := sched.schedulingAlgorithm(ctx, state, schedFramework, podInfo, start)
+	if !status.IsSuccess() {
+		return scheduleResult, podInfo, status
+	}
+	assumedPodInfo, status := sched.prepareForBindingCycle(ctx, state, schedFramework, podInfo, podsToActivate, scheduleResult)
+	if !status.IsSuccess() {
+		return ScheduleResult{nominatingInfo: clearNominatedNode}, assumedPodInfo, status
+	}
+	return scheduleResult, assumedPodInfo, nil
+}
+</code></pre>
+<p>见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/schedule_one.go#L168-L192">schedule_one.go#L168-L192</a>。</p>
+<h3 id="51-updatesnapshot一致性读视图"><a class="header" href="#51-updatesnapshot一致性读视图">5.1 UpdateSnapshot：一致性读视图</a></h3>
+<p><code>UpdateSnapshot</code> 在每个调度周期开始时把 cache 增量同步进 <code>nodeInfoSnapshot</code>：按 <code>NodeInfo.Generation</code> 只克隆发生变化的节点，并把 snapshot 的 <code>generation</code> 推到最后（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/cache/cache.go#L200-L274">cache.go#L200-L274</a>）。<strong>它在增量同步之前会先调 <code>forgetAllAssumedPods</code></strong>：把上一周期遗留、没被 Forget 的 assumed Pod 从快照里清掉——这是“上周期 assume 泄漏”的安全网，正常路径下应该什么都不做。</p>
+<p>注意 generation 的所有权：cache 里的 <code>NodeInfo.Generation</code> 是权威值，snapshot 里克隆出来的 <code>NodeInfo</code> 在 <code>AssumePod</code>/<code>ForgetPod</code> 时会临时改动 generation，然后<strong>再改回原值</strong>，以免污染下一次增量比较（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/cache/snapshot.go#L581-L600">snapshot.go#L581-L600</a>）。</p>
+<h3 id="52-prefilter--filter--score"><a class="header" href="#52-prefilter--filter--score">5.2 PreFilter / Filter / Score</a></h3>
+<p><code>schedulePod</code> 先看 <code>NumNodesInPlacement()==0</code> 直接返回 <code>ErrNoNodesAvailable</code>，否则 <code>findNodesThatFitPod</code> 跑 PreFilter 与 Filter，再对可行节点跑 Score（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/schedule_one.go#L569-L640">schedule_one.go#L569-L640</a>）。三个反直觉的点：</p>
+<ul>
+<li><strong>只有一个可行节点时不跑 Score</strong>，直接选它（省掉整个打分阶段）；</li>
+<li>Filter 通过后再用 <code>numFeasibleNodesToFind</code> 决定“找到多少可行节点就停止搜索”，这是为了让每条调度周期有上界、同时保留分散性（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/schedule_one.go#L866-L895">#L866-L895</a>）；</li>
+<li>Score 阶段对每个插件按节点并行，<code>RunScorePlugins</code> 内部起 goroutine 并在最后归一化（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/runtime/framework.go#L1405">framework.go#L1405</a>）。Score 对 <code>NodeInfo</code> 只读，插件不能在这里改状态。</li>
+</ul>
+<h3 id="53-nominated-pods-双跑"><a class="header" href="#53-nominated-pods-双跑">5.3 nominated pods 双跑</a></h3>
+<p>Filter 不是“只跑一次”。<code>RunFilterPluginsWithNominatedPods</code> 会对同一节点最多跑两遍（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/runtime/framework.go#L1275-L1320">framework.go#L1275-L1320</a>）：</p>
+<ol>
+<li>第一遍：把该节点上<strong>优先级 ≥ 当前 Pod</strong> 的 nominated pods（<code>nominatedNodeName == 本节点</code>，通常是抢占的受益者）临时加入 <code>NodeInfo</code> 与 <code>CycleState</code>，再跑 Filter。这一步让资源类/反亲和类约束把“即将到来的 Pod”算进去；</li>
+<li>只有在第一遍<strong>全部通过</strong>、且确实加过 nominated pods 时，才跑第二遍：不加这些 Pod 再跑一次。这一步让亲和类约束（加入之后反而不满足）也能通过。</li>
+</ol>
+<p>两遍都成功才算可行。设计意图是“保守”：既不能抢占一个已经承诺给更高优先级 Pod 的位置，也不能因为承诺而拒绝一个本来能放下的 Pod。这段代码也解释了为什么 Preemption 复用同一个函数（先移除 victim，再加 nominated pods）。</p>
+<h3 id="54-postfilter失败之后才有的一次机会"><a class="header" href="#54-postfilter失败之后才有的一次机会">5.4 PostFilter：失败之后才有的一次机会</a></h3>
+<p><code>ErrNoNodesAvailable</code> 直接映射成 <code>UnschedulableAndUnresolvable</code>；真正的 Filter 失败（<code>*framework.FitError</code>）才会跑 PostFilter（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/schedule_one.go#L250-L312">schedule_one.go#L250-L312</a>）。默认 <code>DefaultPreemption</code> 在这里挑 victim 并把提名写进 <code>NominatingInfo</code>。<code>GenericWorkload</code> 下，PodGroup 成员在组周期内<strong>不跑</strong> PostFilter，而是整组失败后由 <code>PodGroupPostFilter</code> 统一处理（同一段代码的 <code>IsPodGroupSchedulingCycle</code> 分支）。</p>
+<h3 id="55-assumeandreserve资源在这里被暂记"><a class="header" href="#55-assumeandreserve资源在这里被暂记">5.5 assumeAndReserve：资源在这里被暂记</a></h3>
+<pre><code class="language-go">assumedPodInfo := podInfo.DeepCopy()
+assumedPodInfo.Pod.Spec.NodeName = scheduleResult.SuggestedHost
+if err := sched.assume(logger, state, assumedPodInfo, scheduleResult.SuggestedHost); err != nil {
+	return assumedPodInfo, fwk.AsStatus(err)   // 视为 Error，退回队列重试
+}
+if sts := schedFramework.RunReservePluginsReserve(ctx, state, assumedPod, scheduleResult.SuggestedHost); !sts.IsSuccess() {
+	_ = sched.unreserveAndForget(ctx, state, schedFramework, assumedPodInfo, scheduleResult.SuggestedHost)
+	...  // 构造 FitError，把该节点标成拒绝原因
+}
+</code></pre>
+<p>见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/schedule_one.go#L314-L361">schedule_one.go#L314-L361</a>。</p>
+<p><code>assume</code> 做三件事（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/schedule_one.go#L1060-L1095">schedule_one.go#L1060-L1095</a>）：把 <code>Spec.NodeName</code> 写成选中节点；调用 <code>Cache.AssumePod</code>（PodGroup 周期内改为 <code>Snapshot.AssumePod</code>）；把该 Pod 从 nominator 里删掉（它已经不需要被“提名”了）。<code>Cache.AssumePod</code> 在 Pod 已存在时直接报错 <code>pod ... is in the cache, so can't be assumed</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/cache/cache.go#L447-L459">cache.go#L447-L459</a>）——所以重复 assume 是内部 bug，不是可忽略的竞态。</p>
+<p><strong>此时 API 里 Pod 仍未绑定</strong>，但 <code>NodeInfo.Requested</code> 已经扣掉了它的 request，后来的调度周期看到的就是“已占用”。这就是“先记账、后确认”。</p>
+<h3 id="56-permit唯一的等待型扩展点"><a class="header" href="#56-permit唯一的等待型扩展点">5.6 Permit：唯一的“等待型”扩展点</a></h3>
+<p><code>RunPermitPlugins</code> 收集所有 <code>Wait</code> 状态的最长等待时间并返回 <code>Wait</code>，然后 <code>schedFramework.AddWaitingPod</code> 为该 Pod 建一个 <code>waitingPod</code>，每个插件一个 <code>time.Timer</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/runtime/framework.go#L2097-L2142">framework.go#L2097-L2142</a>）。两个上限：</p>
+<ul>
+<li>框架层 <code>maxTimeout = 15 * time.Minute</code>，插件返回值会被截断到它；</li>
+<li>原生 gang 的 <code>permitTimeoutDuration = 5 * time.Minute</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/plugins/gangscheduling/gangscheduling.go#L36-L42">gangscheduling.go#L36-L42</a>）。</li>
+</ul>
+<p>gang 的语义在 <code>permitPodGroup</code>：若 <code>scheduledPodsCount &lt; minCount</code>，先 <code>Activate</code> 组内未调度的 Pod 让它们一起去抢资源，然后返回 <code>Wait</code>；一旦达到 quorum，就把组内所有等待中的 Pod 一起 <code>Allow</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/plugins/gangscheduling/gangscheduling.go#L396-L420">gangscheduling.go#L396-L420</a>）。注意 <code>minCount</code> 是 <code>PodGroup.Spec.SchedulingPolicy.Gang.MinCount</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/scheduling/v1beta1/types.go#L444-L461">types.go#L444-L461</a>）。超时后 <code>waitingPod</code> 会以 Reject 结束，走 §8 的 Permit 失败路径。</p>
+<p><code>prepareForBindingCycle</code> 里 <code>Wait</code> 只是注册，不会阻塞调度周期；真正阻塞发生在绑定周期的 <code>WaitOnPermit</code>。这是“Permit 允许异步”的实现方式。</p>
+<h2 id="6-绑定周期binding-cycle"><a class="header" href="#6-绑定周期binding-cycle">6. 绑定周期（binding cycle）</a></h2>
+<pre><code class="language-go">// runBindingCycle
+status := sched.bindingCycle(bindingCycleCtx, state, schedFramework, scheduleResult, assumedPodInfo, start, podsToActivate)
+if !status.IsSuccess() {
+	sched.handleBindingCycleError(bindingCycleCtx, state, schedFramework, assumedPodInfo, start, scheduleResult, status)
+	return
+}
+</code></pre>
+<p>每个 Pod 一个 goroutine，由 <code>scheduler_goroutines{operation="binding"}</code> 计数（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/schedule_one.go#L144-L164">schedule_one.go#L144-L164</a>）。<code>bindingCycle</code> 的顺序与“不可回头点”如下（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/schedule_one.go#L399-L505">#L399-L505</a>）：</p>
+<ol>
+<li><code>WaitOnPermit</code>：如果该 Pod 在 <code>waitingPods</code> 里，阻塞直到 Allow/Reject/超时；返回值直接决定成败（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/runtime/framework.go#L2250-L2275">framework.go#L2250-L2275</a>）。</li>
+<li><strong>不可回头点</strong>：<code>Done(uid)</code>。注释写明“PreBind 或 Bind 失败不应再被视为 unschedulable，而应回 BackoffQ 重试”。</li>
+<li><code>RunPreBindPlugins</code>：内部支持并行插件集合（<code>GetParallelPreBindPlugins</code>），失败<strong>不能</strong>把 Pod 判成 unschedulable（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/runtime/framework.go#L1763-L1790">framework.go#L1763-L1790</a>）。</li>
+<li><code>bind</code>：先 extender（如果有），否则 <code>RunBindPlugins</code>；<code>DefaultBinder</code> 发出 <code>pods/binding</code> 子资源请求（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/schedule_one.go#L1097-L1111">schedule_one.go#L1097-L1111</a>、<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/runtime/framework.go#L1929-L1966">framework.go#L1929-L1965</a>）。</li>
+<li><code>RunPostBindPlugins</code> + 成功指标（<code>scheduler_pod_scheduling_attempts</code>、<code>scheduler_pod_scheduling_sli_duration_seconds</code> 等，<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/metrics/metrics.go#L340-L392">metrics.go#L340-L392</a>）与 <code>podsToActivate</code> 的唤醒。</li>
+</ol>
+<p>一个容易被忽略的细节：<code>bind</code> 成功只是“apiserver 接受了 Binding 对象”，<strong>真正把 assumed 转正的是随后到达的 Pod Add/Update 事件</strong>。所以从 Bind 返回到 cache 转正之间存在一个短暂窗口，窗口内 cache 认为 Pod 是 assumed（资源已扣、<code>podStates</code> 里 <code>pod.Spec.NodeName</code> 已写）。这个窗口不会导致资源被重复分配，因为 assumed 已经扣过了；它只影响“这个 Pod 是 assumed 还是 added”的观测口径。</p>
+<h2 id="7-资源账本assume--转正--撤回"><a class="header" href="#7-资源账本assume--转正--撤回">7. 资源账本：assume / 转正 / 撤回</a></h2>
+<h3 id="71-四个状态与写入者"><a class="header" href="#71-四个状态与写入者">7.1 四个状态与写入者</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>状态</th><th>谁记录</th><th><code>NodeInfo.Requested</code></th><th>API 视角</th><th>重启后</th></tr>
+</thead>
+<tbody>
+<tr><td>未绑定、排队中</td><td><code>QueuedPodInfo</code>（activeQ/backoffQ/unschedulable）</td><td>未扣</td><td>无 <code>NodeName</code></td><td>从 informer 重新入队</td></tr>
+<tr><td><strong>assumed</strong></td><td><code>Cache.assumedPods</code> 集合 + <code>podStates</code></td><td><strong>已扣</strong></td><td>仍无 <code>NodeName</code>（或刚写入 Binding）</td><td><strong>不恢复</strong>（进程内状态）</td></tr>
+<tr><td>bound（cache 已确认）</td><td><code>Cache.podStates</code>，不在 <code>assumedPods</code></td><td>已扣</td><td>有 <code>NodeName</code></td><td>从 informer 重建</td></tr>
+<tr><td>unschedulable</td><td><code>unschedulableEntities</code> + Pod condition</td><td>未扣</td><td><code>PodScheduled=False</code></td><td>condition 保留，队列重建</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="72-assumepod--addpod--forgetpod--removeassumedpod"><a class="header" href="#72-assumepod--addpod--forgetpod--removeassumedpod">7.2 AssumePod / AddPod / ForgetPod / RemoveAssumedPod</a></h3>
+<pre><code class="language-go">func (cache *cacheImpl) AddPod(logger klog.Logger, pod *v1.Pod) error {
+	...
+	switch {
+	case ok &amp;&amp; cache.assumedPods.Has(key):
+		// assumed → added：先 update（内部 remove+add，清掉 assumed 标记）
+		if err = cache.updatePod(logger, currState.pod, pod); err != nil { ... }
+		if currState.pod.Spec.NodeName != pod.Spec.NodeName {
+			// 被假定到 A，实际绑定到 B：只记日志，不报错
+			return nil
+		}
+	case !ok:
+		cache.addPod(logger, pod, false)   // 从 informer 首次见到
+	default:
+		return fmt.Errorf("pod %v(%v) was already in added state", key, klog.KObj(pod))
+	}
+	return nil
+}
+</code></pre>
+<p>见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/cache/cache.go#L609-L639">cache.go#L609-L639</a>。四个方法的职责差异：</p>
+<ul>
+<li><strong><code>AssumePod</code></strong>：<code>addPod(assumePod=true)</code>，把 key 放进 <code>assumedPods</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/cache/cache.go#L447-L459">cache.go#L447-L459</a>）；</li>
+<li><strong><code>AddPod</code></strong>：informer 说“这个 Pod 现在长这样”，assumed 分支把它转正；</li>
+<li><strong><code>ForgetPod</code></strong>：撤回 assume，<strong>Pod 仍然存在</strong>，是 <code>AssumePod</code> 的逆操作（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/cache/cache.go#L475-L495">cache.go#L475-L495</a>）；</li>
+<li><strong><code>RemoveAssumedPod</code></strong>：Pod 从集群里<strong>被删除</strong>时清理 assumed 状态，与 <code>ForgetPod</code> 的差别在于如何处理 PodGroup 成员（前者从组状态里移除成员，后者把它退回组的 unscheduled 集合）（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/cache/cache.go#L497-L519">cache.go#L497-L519</a>）。</li>
+</ul>
+<p><code>ForgetPod</code> 与 <code>RemoveAssumedPod</code> 的共同前置校验是 <code>validateAssumedPod</code>：<code>NodeName</code> 必须一致、key 必须在 <code>assumedPods</code> 里，否则报错而不是静默修复。这个严格性是有意的——撤回错对象比泄漏更危险。</p>
+<h3 id="73-snapshot-里的-assume-与-generation-安全网"><a class="header" href="#73-snapshot-里的-assume-与-generation-安全网">7.3 Snapshot 里的 assume 与 generation 安全网</a></h3>
+<p>PodGroup 周期不能在 cache 上 assume（一组 Pod 要么整体成功、要么整体不留痕），所以它 assume 到 <strong>snapshot</strong>：<code>Snapshot.AssumePod</code> 把 Pod 加进 <code>nodeInfoMap</code> 并记录 <code>assumedPodState</code>（用于逆操作），同时保持 <code>NodeInfo.Generation</code> 不变（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/cache/snapshot.go#L581-L641">snapshot.go#L581-L641</a>）。撤回是 <code>Snapshot.ForgetPod</code>，它按 <strong>LIFO</strong> 契约撤销对快照级索引（亲和/反亲和列表、PVC 引用计数）的追加（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/cache/snapshot.go#L643-L701">snapshot.go#L643-L701</a>）。LIFO 是硬约束：不是最后一个 assume 的 Pod 被 Forget 时会打错误日志并拒绝撤销索引。</p>
+<p>下一周期的 <code>UpdateSnapshot</code> 会调 <code>forgetAllAssumedPods</code> 逆序清理残留（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/backend/cache/snapshot.go#L703-L724">snapshot.go#L703-L724</a>）。它会在日志里输出 <code>Found assumed pods in the snapshot that were not forgotten</code> —— 这条日志出现即代表一次调度周期内的 assume 没有被正确撤回，是排查“资源看起来被占但实际没绑定”的第一现场证据。</p>
+<h2 id="8-失败矩阵谁回滚进哪个队列condition-写什么"><a class="header" href="#8-失败矩阵谁回滚进哪个队列condition-写什么">8. 失败矩阵：谁回滚、进哪个队列、condition 写什么</a></h2>
+<h3 id="81-失败点与后果"><a class="header" href="#81-失败点与后果">8.1 失败点与后果</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>失败点</th><th>返回码</th><th>谁回滚</th><th>队列去向</th><th>Pod condition</th></tr>
+</thead>
+<tbody>
+<tr><td>PreFilter/Filter 无可行节点</td><td><code>Unschedulable</code></td><td>未 assume，无需回滚</td><td>unschedulable（或按 PostFilter 提名）</td><td><code>PodScheduled=False</code>, <code>reason=Unschedulable</code></td></tr>
+<tr><td>无节点（<code>ErrNoNodesAvailable</code>）</td><td><code>UnschedulableAndUnresolvable</code></td><td>无</td><td>同上</td><td>同上</td></tr>
+<tr><td><code>Cache.AssumePod</code> 失败</td><td><code>Error</code></td><td>无（本次 assume 未写入；报“已在 cache”说明重复 assume）</td><td>backoff（错误退避，<code>ConsecutiveErrorsCount++</code>）</td><td><code>SchedulerError</code></td></tr>
+<tr><td>Reserve 失败</td><td>插件返回码</td><td><code>Unreserve</code> + <code>ForgetPod</code></td><td>通常 unschedulable</td><td>通常 <code>Unschedulable</code></td></tr>
+<tr><td>Permit Reject</td><td><code>Unschedulable</code></td><td><code>Unreserve</code> + <code>ForgetPod</code></td><td>unschedulable</td><td><code>Unschedulable</code></td></tr>
+<tr><td>Permit 超时</td><td><code>Unschedulable</code></td><td><code>Unreserve</code> + <code>ForgetPod</code>（在绑定周期）</td><td>unschedulable</td><td><code>Unschedulable</code></td></tr>
+<tr><td>PreBind / Bind 失败</td><td><code>Error</code></td><td><code>Unreserve</code> + <code>ForgetPod</code> + <code>AssignedPodDelete</code> 事件</td><td>backoff（<strong>不再</strong>判 unschedulable）</td><td><code>SchedulerError</code></td></tr>
+<tr><td>Bind 返回 Conflict/超时（apiserver 侧其实已绑定）</td><td><code>Error</code></td><td><code>Unreserve</code> + <code>ForgetPod</code>（资源退回，随后由 informer 重新 Add）</td><td><strong>不入队</strong>（informer 中已有 <code>NodeName</code>）</td><td>仍会 patch 一次 <code>SchedulerError</code>，随后被 kubelet 重算的 <code>PodScheduled=True</code> 覆盖</td></tr>
+</tbody>
+</table>
+</div>
+<p>这张表可以从两个函数读出来：调度周期里的失败统一交给 <code>FailureHandler</code>（即 <code>handleSchedulingFailure</code>），绑定周期的失败先由 <code>handleBindingCycleError</code> 回滚再交给同一个 handler（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/schedule_one.go#L507-L538">schedule_one.go#L507-L538</a>）。</p>
+<p><code>unreserveAndForget</code> 是撤回的唯一入口（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/schedule_one.go#L363-L396">schedule_one.go#L363-L396</a>）：先 <code>RunReservePluginsUnreserve</code>（<strong>按 Reserve 的逆序</strong>调用，<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/framework/runtime/framework.go#L2056-L2080">framework.go#L2056-L2080</a>），再 <code>Cache.ForgetPod</code>；若当前是 PodGroup 周期则改为 <code>Snapshot.ForgetPod</code>，并把 assume 时删掉的 nomination 加回去。</p>
+<p><code>handleBindingCycleError</code> 里有一处顺序值得记住：只有当 <code>Unreserve+Forget</code> <strong>成功</strong>时才发 <code>EventAssignedPodDelete</code>；并且对 <code>IsRejected</code> 的 status 用 <code>defer</code> 延后发出，避免这条事件被还在飞行的 assumed Pod 自己吃掉（代码注释在 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/schedule_one.go#L510-L535">#L510-L535</a>）。</p>
+<h3 id="82-handleschedulingfailurecondition-是写回-api-的"><a class="header" href="#82-handleschedulingfailurecondition-是写回-api-的">8.2 handleSchedulingFailure：condition 是写回 API 的</a></h3>
+<p><code>handleSchedulingFailure</code> 做五件事（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/schedule_one.go#L1150-L1263">schedule_one.go#L1150-L1263</a>）：</p>
+<ol>
+<li><strong>确定 reason</strong>：<code>status.IsRejected()</code> → <code>Unschedulable</code>，否则 <code>SchedulerError</code>；并分别计入 <code>PodUnschedulable</code> / <code>PodScheduleError</code> 指标；</li>
+<li><strong>防止重复入队</strong>：先从 informer 里取同名 Pod。若它<strong>已经有 <code>NodeName</code></strong>，说明“extender bind 成功但响应超时”之类的情况，直接放弃入队（<code>Pod has been assigned to node. Abort adding it back to queue.</code>）；若 UID 变了（Pod 被重建），也放弃（<code>Pod was recreated while handling scheduling failure</code>）；</li>
+<li><strong>刷新排队对象</strong>：用 informer 里的 Pod 覆盖 <code>podInfo.PodInfo</code>——这非常重要，因为 assumed 后的内存副本带着 <code>NodeName</code>，不能拿它入队；</li>
+<li><strong>写入队状态</strong>：<code>AddUnschedulablePodIfNotPresent</code>（内部会调 <code>Done</code>），并把 PostFilter 的提名写进 nominator；</li>
+<li><strong>写 API</strong>：<code>updatePod</code> 用一次 status patch 同时更新 <code>PodScheduled=False</code> condition 与 <code>status.nominatedNodeName</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/schedule_one.go#L1275-L1307">#L1275-L1307</a>）；同时发一条 <code>FailedScheduling</code> Event。</li>
+</ol>
+<p>condition 的 <code>reason</code> 只有两个取值（<code>Unschedulable</code> / <code>SchedulerError</code>），定义见 <a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/staging/src/k8s.io/api/core/v1/types.go#L3774-L3784">core/v1 types.go#L3774-L3784</a>。<code>updatePod</code> 有两条实现路径：开启异步 API 调用时走 <code>APICacher.PatchPodStatus</code>，否则走 <code>util.PatchPodStatus</code>；后者会先比较 condition/nominatedNodeName 是否真的变化，没变化就不发请求。<code>ObservedGeneration</code> 用 <code>CalculatePodConditionObservedGeneration</code> 计算，避免把旧 generation 的 condition 当成当前结论。</p>
+<blockquote class="blockquote-tag blockquote-tag-warning">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Warning</p>
+<p><code>PodScheduled=False</code> 并不等于“永远调不上”。condition 只是<strong>上一次尝试的结论</strong>；Pod 仍在队列里等事件/超时。判读时要同时看 <code>reason</code>、<code>message</code> 和 events，不要把 condition 当终态。</p>
+</blockquote>
+<h3 id="83-一个完整的撤回序列"><a class="header" href="#83-一个完整的撤回序列">8.3 一个完整的撤回序列</a></h3>
+<p>典型路径：Reserve 成功 → Permit 被 gang 插件 Wait → 5 分钟后超时 Reject。</p>
+<pre><code class="language-text">schedulingCycle: assume(扣资源) → Reserve(插件记账) → Permit Wait(注册 waitingPod)
+bindingCycle:    WaitOnPermit 阻塞 → timer 到期 Reject
+handleBindingCycleError:
+  unreserveAndForget → Unreserve(逆序) → Cache.ForgetPod(资源退回)
+  MoveAllToActiveOrBackoffQueue(AssignedPodDelete)   // 唤醒等资源的 Pod
+  handleSchedulingFailure → condition Unschedulable + 入 unschedulable
+</code></pre>
+<h2 id="9-重启恢复与多实例边界"><a class="header" href="#9-重启恢复与多实例边界">9. 重启恢复与多实例边界</a></h2>
+<h3 id="91-从-informer-重建而不是从磁盘恢复"><a class="header" href="#91-从-informer-重建而不是从磁盘恢复">9.1 从 informer 重建，而不是从磁盘恢复</a></h3>
+<p><code>Scheduler.Run</code> 只做三件事：启动队列 goroutine、启动 <code>ScheduleOne</code> 循环、等 ctx 结束后关闭（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/scheduler.go#L538-L565">scheduler.go#L538-L565</a>）。没有任何“把队列写盘”的代码。重启后的状态全部来自 informer：</p>
+<ul>
+<li><strong>cache</strong>：已绑定 Pod 通过 Pod Add 事件进入 <code>Cache.AddPod</code>（<code>!ok</code> 分支），Node 通过 Node Add 进入 <code>Cache.AddNode</code>；</li>
+<li><strong>队列</strong>：未绑定的 Pod 由 informer 初始 list 的 Add 事件重新入队，重新过 PreEnqueue 与 QueueingHint；</li>
+<li><strong>assume</strong>：进程内状态，<strong>不持久化</strong>。重启后所有 assumed Pod 都“消失”，如果它们的 Binding 已经写进 apiserver，就会以已绑定 Pod 的身份回到 cache；如果 Binding 没写，它们会被当作普通未绑定 Pod 重新排队。</li>
+</ul>
+<p><code>DelayCacheUntilActive</code> 关闭时，informer 在拿到 leader 之前就启动；开启时则等到 <code>OnStartedLeading</code> 才 <code>startInformersAndWaitForSync</code>。这决定了“重启后多久能开始调度”，也决定了热备实例的 cache 新鲜度（见 <a href="../Control_Plane/控制面高可用方案.html">控制面高可用方案</a>）。</p>
+<h3 id="92-binding-为什么天然幂等"><a class="header" href="#92-binding-为什么天然幂等">9.2 Binding 为什么天然幂等</a></h3>
+<p>绑定是一次 <code>pods/binding</code> 子资源写入：<code>Binding{ObjectMeta{Namespace,Name,UID}, Target{Node}}</code>。<code>BindPod</code> 只在 <code>IsInternalError</code> / <code>IsServiceUnavailable</code> / <code>IsConnectionRefused</code> 时重试（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/scheduler/util/utils.go#L100-L117">utils.go#L100-L117</a>），<strong>Conflict（已绑定）不在重试集合里</strong>，所以“重复绑定”会直接返回错误而不是覆盖。</p>
+<p>因此幂等性不来自 scheduler 的去重逻辑，而来自 API 语义：同一 Pod 只能被绑定一次；第二次尝试得到错误 → 走 §8 的失败路径回滚 → 但 Pod 实际上已经是绑定状态 → informer 随后把 <code>NodeName</code> 带回来 → <code>handleSchedulingFailure</code> 的第 2 步检测到 <code>cachedPod.Spec.NodeName != ""</code> 并放弃入队。<strong>这条“先看 informer 再入队”的检查是幂等闭环的最后一块。</strong> 注意它只跳过<strong>入队</strong>、不跳过 condition patch：所以绑定竞争窗口里 Pod 可能短暂出现 <code>PodScheduled=False</code>，kubelet 在状态同步时会重新生成 <code>PodScheduled=True</code>（<a href="https://github.com/kubernetes/kubernetes/blob/c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32/pkg/kubelet/kubelet_pods.go#L2014-L2018">kubelet_pods.go#L2014-L2018</a>）。</p>
+<h3 id="93-nominatednodename-与抢占的跨重启恢复"><a class="header" href="#93-nominatednodename-与抢占的跨重启恢复">9.3 nominatedNodeName 与抢占的跨重启恢复</a></h3>
+<p><code>status.nominatedNodeName</code> 是唯一写回 API 的“抢占中间态”。它让 cluster autoscaler 之类的组件知道“这个 Pod 即将占用哪个节点”，也让重启后的 scheduler 能从 Pod 对象重建 nomination（<code>AddNominatedPod</code> 在入队时无条件调用）。它不是承诺：victim 可能没被驱逐、Pod 可能改绑别的节点，所以代码里它是 <code>ModeOverride</code> 语义，失败时会被清空（<code>clearNominatedNode</code>）。</p>
+<h3 id="94-多-scheduler--leader-election-的边界"><a class="header" href="#94-多-scheduler--leader-election-的边界">9.4 多 scheduler / leader election 的边界</a></h3>
+<ul>
+<li><strong>同一个 <code>schedulerName</code> 只能有一个活跃实例</strong>：多个实例同时调度同一批 Pod 会各自 assume、各自 bind，靠 API 层的“只能绑一次”收敛，但会造成大量无效周期与 condition 抖动；</li>
+<li><strong>不同 <code>schedulerName</code> 天然隔离</strong>：<code>responsibleForPod</code> 让每个实例只处理自己的 Pod，<code>Profiles</code> 按名字索引；</li>
+<li><strong>cache 不跨实例共享</strong>：每个实例有自己的 <code>Cache</code> 与 <code>Snapshot</code>，看到的是同一个 API 的不同视图，因此“另一个调度器刚 assume 的 Pod”在本实例看来仍是未绑定。</li>
+</ul>
+<h2 id="10-端到端时序图"><a class="header" href="#10-端到端时序图">10. 端到端时序图</a></h2>
+<pre class="mermaid">sequenceDiagram
+    autonumber
+    participant API as apiserver
+    participant IF as informer
+    participant Q as SchedulingQueue
+    participant S as ScheduleOne
+    participant C as Cache
+    participant F as Framework
+    participant K as kubelet
+
+    API-&gt;&gt;IF: Pod Add（未绑定）
+    IF-&gt;&gt;Q: Add → PreEnqueue → activeQ
+    S-&gt;&gt;Q: Pop（阻塞，取队首）
+    Q--&gt;&gt;S: QueuedPodInfo（进入 inFlightPods）
+    S-&gt;&gt;C: UpdateSnapshot（清残留 assumed，推进 generation）
+    S-&gt;&gt;F: PreFilter / Filter（nominated pods 双跑）
+    alt 无可行节点
+        S-&gt;&gt;F: PostFilter（可能提名 victim）
+        S-&gt;&gt;Q: AddUnschedulablePodIfNotPresent
+        S-&gt;&gt;API: Patch condition Unschedulable + nominatedNodeName
+    else 有可行节点
+        S-&gt;&gt;F: Score（按节点并行）
+        S-&gt;&gt;C: AssumePod（NodeName=host，资源扣除，进 assumedPods）
+        S-&gt;&gt;F: Reserve
+        S-&gt;&gt;F: Permit
+        alt Permit Wait
+            S-&gt;&gt;F: AddWaitingPod（timer 开始）
+        end
+        S--&gt;&gt;S: go runBindingCycle
+        S-&gt;&gt;F: WaitOnPermit（阻塞）
+        S-&gt;&gt;Q: Done（释放 in-flight 事件）
+        S-&gt;&gt;F: PreBind
+        S-&gt;&gt;API: Bind（pods/binding）
+        API--&gt;&gt;IF: Pod Update（带 NodeName）
+        IF-&gt;&gt;C: AddPod（assumed → added）
+        IF-&gt;&gt;Q: MoveAllToActiveOrBackoffQueue
+        S-&gt;&gt;F: PostBind
+        API--&gt;&gt;K: 调度到本节点的 Pod
+    end
+</pre>
+
+<h2 id="11-与其它页面的分工"><a class="header" href="#11-与其它页面的分工">11. 与其它页面的分工</a></h2>
+<ul>
+<li>插件在哪些点被调用、<code>CycleState</code> 的作用域、错误码与并发语义 → <a href="./scheduling-framework.html">Scheduling Framework</a>；</li>
+<li>队列权益、Gang、回填、碎片、DRA、拓扑、多集群的<strong>策略选择</strong> → <a href="./scheduling-strategy.html">调度策略与约束</a>；</li>
+<li>本文这些机制如何被验证（不变式、失败注入、指标、同轨迹对比） → <a href="./scheduling-evidence.html">调度正确性与优化证据</a>；</li>
+<li>对照实现（Session/Action/Statement、gang/capacity/proportion） → <a href="./volcano-scheduler.html">Volcano 调度器</a>；</li>
+<li>专题地图与阅读路径 → <a href="./scheduling-overview.html">调度器源码与策略：专题导读</a>。</li>
+</ul>
+<p>一个必须反复强调的差异：原生 scheduler 的“暂记”是<strong>以 Pod 为单位、cache 为账本、informer 为确认源</strong>；Volcano 的“暂记”是<strong>以 Session 为单位、内存 statement 为事务、Commit 才落盘</strong>。两者的扩展点也不能按名字映射——原生的 Filter 是每节点调用的框架扩展点，Volcano 的 predicate 是 action 内部调用的插件回调，调用者、状态作用域与失败语义都不同。</p>
+<h2 id="参考资料"><a class="header" href="#参考资料">参考资料</a></h2>
+<h3 id="官方文档"><a class="header" href="#官方文档">官方文档</a></h3>
+<ul>
+<li><a href="https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/">kube-scheduler</a> —— 调度器的职责、<code>schedulerName</code>、默认行为。</li>
+<li><a href="https://kubernetes.io/docs/concepts/scheduling-eviction/scheduling-framework/">Scheduling Framework</a> —— 扩展点顺序与语义（本页只做流程串联）。</li>
+<li><a href="https://kubernetes.io/docs/concepts/scheduling-eviction/gang-scheduling/">Gang Scheduling</a> / <a href="https://kubernetes.io/docs/concepts/workloads/podgroup-api/">PodGroup API</a> —— PodGroup 的 Beta 状态与“disabled by default”。</li>
+<li><a href="https://kubernetes.io/docs/concepts/workloads/pods/scheduling-group/">Pod Scheduling Group</a> —— Pod 如何通过 <code>spec.schedulingGroup</code> 关联 PodGroup。</li>
+<li><a href="https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/">Pod Priority and Preemption</a> —— <code>nominatedNodeName</code> 与抢占提名的官方口径。</li>
+<li><a href="https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/">Assigning Pods to Nodes</a> —— Filter 阶段常见约束的来源。</li>
+<li><a href="https://kubernetes.io/docs/concepts/scheduling-eviction/dynamic-resource-allocation/">Dynamic Resource Allocation</a> —— DRA 在 Filter/Reserve/PreBind 的位置。</li>
+<li><a href="https://kubernetes.io/docs/reference/config-api/kube-scheduler-config.v1/">kube-scheduler configuration (v1)</a> —— <code>podInitialBackoffSeconds</code>、<code>podMaxBackoffSeconds</code>、<code>percentageOfNodesToScore</code> 等字段。</li>
+<li><a href="https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/">Feature Gates</a> —— 本文 §1 各 gate 的官方状态。</li>
+</ul>
+<h3 id="kep"><a class="header" href="#kep">KEP</a></h3>
+<ul>
+<li><a href="https://github.com/kubernetes/enhancements/tree/master/keps/sig-scheduling/4671-gang-scheduling">KEP-4671: Gang Scheduling</a> —— PodGroup/Workload API 与 Permit 等待的设计。</li>
+</ul>
+<h3 id="源码固定-commit-c50e539"><a class="header" href="#源码固定-commit-c50e539">源码（固定 commit <code>c50e539</code>）</a></h3>
+<ul>
+<li><code>pkg/scheduler/scheduler.go</code> —— Scheduler 结构、<code>New</code>、<code>Run</code>。</li>
+<li><code>pkg/scheduler/schedule_one.go</code> —— <code>ScheduleOne</code>、调度/绑定周期、assume/Reserve/Permit、<code>handleSchedulingFailure</code>。</li>
+<li><code>pkg/scheduler/schedule_one_podgroup.go</code> —— PodGroup 周期、<code>PodGroupPostFilter</code>、组级 condition。</li>
+<li><code>pkg/scheduler/backend/queue/{scheduling_queue,backoff_queue,active_queue}.go</code> —— 三层队列、backoff、QueueingHint、in-flight。</li>
+<li><code>pkg/scheduler/backend/cache/{cache,snapshot}.go</code> —— 账本、Snapshot generation、LIFO assume/forget。</li>
+<li><code>pkg/scheduler/eventhandlers.go</code> —— informer → cache/queue 的分发。</li>
+<li><code>pkg/scheduler/framework/{types.go,runtime/framework.go}</code> —— 实体定义与扩展点运行时。</li>
+<li><code>pkg/scheduler/framework/plugins/gangscheduling/gangscheduling.go</code> —— Permit 等待与 5 分钟超时。</li>
+</ul>
+<h2 id="本-wiki-相关页面"><a class="header" href="#本-wiki-相关页面">本 wiki 相关页面</a></h2>
+<ul>
+<li><a href="./scheduling-framework.html">Scheduling Framework：扩展点、状态与并发语义</a></li>
+<li><a href="./scheduling-evidence.html">调度正确性与优化证据：不变式、指标与同轨迹对比</a></li>
+<li><a href="./volcano-scheduler.html">Volcano 调度器：Session、Action 与队列模型</a></li>
+<li><a href="./scheduling-overview.html">调度器源码与策略：专题导读</a></li>
+<li><a href="./4_kube-scheduler源码分析.html">k8s scheduler 源码分析（旧版，Framework 之前的实现，已归档）</a></li>
+<li><a href="./kueue.html">Kueue：Kubernetes 原生作业队列管理器</a></li>
+<li><a href="../Control_Plane/flowschema.html">API Priority and Fairness：FlowSchema 与 PriorityLevelConfiguration</a></li>
+<li><a href="../Control_Plane/控制面高可用方案.html">控制面高可用方案</a></li>
+<li><a href="../Node_Runtime/kubelet原理.html">Kubelet 原理</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../../docs/Cloud_Native/Kubernetes/Scheduling/4_kube-scheduler源码分析.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../../../docs/Cloud_Native/Kubernetes/Scheduling/scheduling-overview.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../../docs/Cloud_Native/Kubernetes/Scheduling/4_kube-scheduler源码分析.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../../../docs/Cloud_Native/Kubernetes/Scheduling/scheduling-overview.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../../../mark-09e88c2c.min.js"></script>
+        <script src="../../../../searcher-c2a407aa.js"></script>
+
+        <script src="../../../../clipboard-1626706a.min.js"></script>
+        <script src="../../../../highlight-abc7f01d.js"></script>
+        <script src="../../../../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../../theme/giscus-edff37af.js"></script>
+        <script src="../../../../theme/goatcounter-6da6732a.js"></script>
+        <script src="../../../../theme/mermaid-336df803.min.js"></script>
+        <script src="../../../../theme/mermaid-init-7cdebe5d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

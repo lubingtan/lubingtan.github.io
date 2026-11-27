@@ -35,10 +35,10 @@
             const path_to_root = "../../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../../searchindex-883cd035.js";
+            window.path_to_searchindex_js = "../../../../searchindex-1a4ddc3e.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../../toc-003a6783.js"></script>
+        <script src="../../../../toc-1fccd013.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -264,6 +264,8 @@
 <li>作业被 Kueue 准入后，Pod 仍由 HAMi 调度器（extender）完成 GPU 设备选择与绑定，Kueue 不关心具体落在哪张卡。</li>
 </ul>
 <p>这与 Kueue + Volcano 的分工类似：队列层只决定「能不能开始」，设备层决定「用哪张卡、切多少」。详见 <a href="../../AI_Infrastructure/Accelerators/hami.html">HAMi</a>。</p>
+<h2 id="专题延伸"><a class="header" href="#专题延伸">专题延伸</a></h2>
+<p>Kueue 只覆盖「作业级准入 + 配额」，不负责 Pod 选点、Gang 的原子放置或 DRA 设备分配。把 Kueue 放回完整调度链路（队列权益 → 准入 → 放置 → 回收/抢占 → DRA/多集群）的对照分析，见 <a href="./scheduling-strategy.html">调度策略与约束：配额、Gang、拓扑与 DRA</a>；与 Volcano 的 Session/Action 模型、原生 scheduler 的 queue/cache/binding 循环的差异，见 <a href="./volcano-scheduler.html">Volcano 调度器</a> 与 <a href="./native-scheduler.html">kube-scheduler：对象、队列与调度主流程</a>。</p>
 <h2 id="参考"><a class="header" href="#参考">参考</a></h2>
 <ul>
 <li><a href="https://github.com/kubernetes-sigs/kueue">Kueue GitHub</a></li>
@@ -279,7 +281,7 @@
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../../../../docs/Cloud_Native/Kubernetes/Scheduling/4_kube-scheduler源码分析.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../../../../docs/Cloud_Native/Kubernetes/Scheduling/scheduling-framework.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -293,7 +295,7 @@
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../../../../docs/Cloud_Native/Kubernetes/Scheduling/4_kube-scheduler源码分析.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../../../../docs/Cloud_Native/Kubernetes/Scheduling/scheduling-framework.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
